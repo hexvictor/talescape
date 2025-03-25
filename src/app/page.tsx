@@ -3,6 +3,8 @@ import Link from "next/link";
 import { LatestPost } from "@/app/_components/post";
 import { auth } from "@/server/auth";
 import { HydrateClient, api } from "@/trpc/server";
+import { mockImages, type MockImage } from "utils/mockImages";
+import Image from "next/image";
 
 export default async function Home() {
 	const hello = await api.post.hello({ text: "from tRPC" });
@@ -14,7 +16,21 @@ export default async function Home() {
 
 	return (
 		<HydrateClient>
-			<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+			<main className="">
+				<div className=" grid hidden grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-2 p-2">
+					{mockImages.map((image: MockImage) => {
+						return (
+							<div key={image.key} className="relative aspect-square w-full ">
+								<Image
+									src={image.url}
+									alt={image.name}
+									fill
+									className="object-cover"
+								/>
+							</div>
+						);
+					})}
+				</div>
 				Talescape (work in progress)
 			</main>
 		</HydrateClient>
