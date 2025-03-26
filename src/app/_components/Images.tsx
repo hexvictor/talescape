@@ -9,8 +9,10 @@ export function LatestImages() {
 	const [images] = api.image.getImages.useSuspenseQuery();
 
 	const utils = api.useUtils();
-	const [name, setName] = useState("");
-	const [url, setUrl] = useState("");
+	const [name, setName] = useState("Kaladin_war");
+	const [url, setUrl] = useState(
+		"https://j3tih4mo16.ufs.sh/f/wlJs17qptHefhcTd8K0AatTgHFvipNXyuCek05MfDWrPlVGZ",
+	);
 	const createImage = api.image.create.useMutation({
 		onSuccess: async () => {
 			await utils.image.invalidate();
@@ -48,14 +50,14 @@ export function LatestImages() {
 					placeholder="Title"
 					value={name}
 					onChange={(e) => setName(e.target.value)}
-					className="w-full rounded-full bg-white/10 px-4 py-2 text-white"
+					className="w-full rounded-full bg-black/10 px-4 py-2 text-black"
 				/>
 				<input
 					type="text"
 					placeholder="Url"
 					value={url}
 					onChange={(e) => setUrl(e.target.value)}
-					className="w-full rounded-full bg-white/10 px-4 py-2 text-white"
+					className="w-full rounded-full bg-black/10 px-4 py-2 text-black"
 				/>
 				<button
 					type="submit"
