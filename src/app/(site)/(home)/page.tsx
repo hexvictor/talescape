@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-import { LatestPost } from "@/app/_components/post";
+import { LatestImages } from "@/app/_components/Images";
 import { auth } from "@/server/auth";
 import { HydrateClient, api } from "@/trpc/server";
 import { mockImages, type MockImage } from "@/utils/mockImages";
@@ -11,34 +11,27 @@ import { Page } from "../../_components/layout/Page";
 import { db } from "@/server/db";
 
 export default async function Home() {
-	const hello = await api.post.hello({ text: "from tRPC" });
+	const hello = await api.image.hello({ text: "from tRPC" });
 	const session = await auth();
 
-	const posts = await db.query.posts.findMany();
-	console.log(posts);
+	const images = await db.query.images.findMany();
+	console.log(images);
 
 	if (session?.user) {
-		void api.post.getLatest.prefetch();
+		void api.image.getImages.prefetch();
 	}
 
 	return (
 		<HydrateClient>
 			<div className=" grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-2 p-2">
-				{posts.map(
-					(post: {
-						id: number;
-						name: string | null;
-						createdById: string;
-						createdAt: Date;
-						updatedAt: Date | null;
-					}) => {
-						return (
-							<div key={post.id} className="relative aspect-square w-full ">
-								{post.name}
-							</div>
-						);
-					},
-				)}
+				<LatestImages />
+				{/* {images.map((image) => {
+					return (
+						<div key={image.id} className="relative aspect-square w-full ">
+							{image.name}
+						</div>
+					);
+				})}
 				{mockImages.map((image: MockImage) => {
 					return (
 						<div key={image.key} className="relative aspect-square w-full ">
@@ -50,7 +43,7 @@ export default async function Home() {
 							/>
 						</div>
 					);
-				})}
+				})} */}
 			</div>
 			Talescape (work in progress)
 		</HydrateClient>

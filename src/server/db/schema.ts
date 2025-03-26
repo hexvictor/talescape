@@ -10,12 +10,13 @@ import type { AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = pgTableCreator((name) => `talescape_${name}`);
 
-export const posts = createTable(
-	"post",
+export const images = createTable(
+	"image",
 	(d) => ({
 		id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-		name: d.varchar({ length: 256 }),
-		createdById: d
+		name: d.varchar({ length: 256 }).notNull(),
+		url: d.varchar({ length: 1024 }).notNull(),
+		uploadedBy: d
 			.varchar({ length: 255 })
 			.notNull()
 			.references(() => users.id),
@@ -26,7 +27,7 @@ export const posts = createTable(
 		updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 	}),
 	(t) => [
-		index("created_by_idx").on(t.createdById),
+		index("uploaded_by_idx").on(t.uploadedBy),
 		index("name_idx").on(t.name),
 	],
 );

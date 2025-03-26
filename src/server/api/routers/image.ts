@@ -5,9 +5,9 @@ import {
 	protectedProcedure,
 	publicProcedure,
 } from "@/server/api/trpc";
-import { posts } from "@/server/db/schema";
+import { images } from "@/server/db/schema";
 
-export const postRouter = createTRPCRouter({
+export const imageRouter = createTRPCRouter({
 	hello: publicProcedure
 		.input(z.object({ text: z.string() }))
 		.query(({ input }) => {
@@ -16,21 +16,22 @@ export const postRouter = createTRPCRouter({
 			};
 		}),
 
-	create: protectedProcedure
-		.input(z.object({ name: z.string().min(1) }))
+	create: publicProcedure
+		.input(z.object({ name: z.string().min(1), url: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
-			await ctx.db.insert(posts).values({
+			await ctx.db.insert(images).values({
 				name: input.name,
-				createdById: ctx.session.user.id,
+				url: input.url,
+				uploadedBy: "1",
 			});
 		}),
 
-	getLatest: protectedProcedure.query(async ({ ctx }) => {
-		const post = await ctx.db.query.posts.findFirst({
-			orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+	getImages: publicProcedure.query(async ({ ctx }) => {
+		const image = await ctx.db.query.images.findMany({
+			orderBy: (images, { desc }) => [desc(images.createdAt)],
 		});
 
-		return post ?? null;
+		return image ?? null;
 	}),
 
 	getSecretMessage: protectedProcedure.query(() => {
