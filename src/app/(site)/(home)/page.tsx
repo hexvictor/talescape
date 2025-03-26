@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 import { LatestPost } from "@/app/_components/post";
 import { auth } from "@/server/auth";
 import { HydrateClient, api } from "@/trpc/server";
