@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { IconX } from "../Icons";
 
 interface ModalProps {
@@ -11,15 +11,23 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, children }: ModalProps) {
+	const [mounted, setMounted] = useState(false);
+
 	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	useEffect(() => {
+		if (!mounted || !isOpen) return;
+
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key === "Escape") onClose();
 		};
 		document.addEventListener("keydown", onKey);
 		return () => document.removeEventListener("keydown", onKey);
-	}, [onClose]);
+	}, [onClose, mounted, isOpen]);
 
-	if (!isOpen) return null;
+	if (!mounted || !isOpen) return null;
 
 	return createPortal(
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

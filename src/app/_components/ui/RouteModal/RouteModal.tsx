@@ -3,15 +3,24 @@ import Link from "next/link";
 import { IconX } from "../Icons";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function RouteModal({
 	children,
 }: { children: React.ReactNode }) {
 	const router = useRouter();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const handleClose = () => {
 		router.back();
 	};
+
+	if (!mounted) return null; // evita tentar usar `document` no SSR
+
 	return createPortal(
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 			<div

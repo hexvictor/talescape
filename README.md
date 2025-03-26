@@ -5,7 +5,8 @@
 
 - [x] Make it deploy (Vercel)
 - [x] Scaffold basic UI with mock data
-- [ ] Route structure
+- [x] Route structure
+- [ ] Tidy up build process
 - [ ] Set up a database (Vercel PostgreSQL)
 - [ ] Attach database to UI
 - [ ] Add authentication (w/ clerk)
@@ -15,3 +16,4 @@
 - [ ] Delete button (w/ Server Actions)
 - [ ] Analytics (PostHog)
 - [ ] Ratelimiting (Upstash)
+- [ ] Re-enable ESLint and TypeScript checks in build
