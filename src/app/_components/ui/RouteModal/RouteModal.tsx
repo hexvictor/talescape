@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { IconX } from "../Icons";
+import { IconX } from "@/utils/icons";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

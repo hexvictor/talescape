@@ -16,20 +16,14 @@ export const images = createTable(
 		id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 		name: d.varchar({ length: 256 }).notNull(),
 		url: d.varchar({ length: 1024 }).notNull(),
-		uploadedBy: d
-			.varchar({ length: 255 })
-			.notNull()
-			.references(() => users.id),
+		uploadedBy: d.varchar({ length: 255 }).notNull(),
 		createdAt: d
 			.timestamp({ withTimezone: true })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 	}),
-	(t) => [
-		index("uploaded_by_idx").on(t.uploadedBy),
-		index("name_idx").on(t.name),
-	],
+	(t) => [index("name_idx").on(t.name)],
 );
 
 export const users = createTable("user", (d) => ({

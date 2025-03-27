@@ -6,14 +6,13 @@ import {
 	IconPerson,
 	IconQuestion,
 	IconSun,
-} from "../../ui/Icons";
+} from "@/utils/icons";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { AvatarSkeleton } from "../../ui/Avatar";
 import { useState } from "react";
 
 export default function UserMenu() {
 	const { isLoaded, user } = useUser();
-	console.log(user);
 
 	if (!isLoaded) {
 		return <AvatarSkeleton />;

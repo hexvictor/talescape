@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { dark } from "@clerk/themes";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
 
 export const metadata: Metadata = {
 	title: "Talescape",
@@ -23,6 +26,15 @@ export default function RootLayout({
 		<ClerkProvider appearance={{ baseTheme: dark }}>
 			<html lang="en" className={`${geist.variable}`}>
 				<body className="flex min-h-screen w-full flex-col">
+					<NextSSRPlugin
+						/**
+						 * The `extractRouterConfig` will extract **only** the route configs
+						 * from the router to prevent additional information from being
+						 * leaked to the client. The data passed to the client is the same
+						 * as if you were to fetch `/api/uploadthing` directly.
+						 */
+						routerConfig={extractRouterConfig(ourFileRouter)}
+					/>
 					<TRPCReactProvider>{children}</TRPCReactProvider>
 				</body>
 			</html>
