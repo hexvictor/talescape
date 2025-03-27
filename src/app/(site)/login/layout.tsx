@@ -1,26 +1,25 @@
+import { Header } from "@/app/_components/layout/Header";
+import { Page } from "@/app/_components/layout/Page";
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import { TRPCReactProvider } from "@/trpc/react";
-import { Header } from "../_components/layout/Header";
+import type { PropsWithChildren, ReactNode } from "react";
 
 export const metadata: Metadata = {
-	title: "Taleviewer | Talescape",
+	title: "Login | Talescape",
 	description: "The community-driven hub of interactive tales",
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function TaleviewerLayout({
+export default function LoginLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<>
 			<Header />
-			{/* TaleViewerWrapper */}
-			{children}
-			{/* TaleViewerWrapper */}
+			<Page>{children}</Page>
 		</>
 	);
 }

@@ -1,24 +1,25 @@
-"use client";
-
-import { useState } from "react";
-
 import { api } from "@/trpc/react";
 import Image from "next/image";
+import { db } from "@/server/db";
 
-export function LatestImages() {
-	const [images] = api.image.getImages.useSuspenseQuery();
+export async function Images() {
+	// const [images] = api.image.getImages.useSuspenseQuery();
 
-	const utils = api.useUtils();
-	const [name, setName] = useState("Kaladin_war");
-	const [url, setUrl] = useState(
-		"https://j3tih4mo16.ufs.sh/f/wlJs17qptHefhcTd8K0AatTgHFvipNXyuCek05MfDWrPlVGZ",
-	);
-	const createImage = api.image.create.useMutation({
-		onSuccess: async () => {
-			await utils.image.invalidate();
-			setName("");
-		},
+	const images = await db.query.images.findMany({
+		orderBy: (model, { desc }) => desc(model.id),
 	});
+
+	// const utils = api.useUtils();
+	// const [name, setName] = useState("Kaladin_war");
+	// const [url, setUrl] = useState(
+	// 	"https://j3tih4mo16.ufs.sh/f/wlJs17qptHefhcTd8K0AatTgHFvipNXyuCek05MfDWrPlVGZ",
+	// );
+	// const createImage = api.image.create.useMutation({
+	// 	onSuccess: async () => {
+	// 		await utils.image.invalidate();
+	// 		setName("");
+	// 	},
+	// });
 
 	return (
 		<div className=" grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-2 p-2">
@@ -38,7 +39,7 @@ export function LatestImages() {
 			) : (
 				<p>You have no images yet.</p>
 			)}
-			<form
+			{/* <form
 				onSubmit={(e) => {
 					e.preventDefault();
 					createImage.mutate({ name, url });
@@ -66,7 +67,7 @@ export function LatestImages() {
 				>
 					{createImage.isPending ? "Submitting..." : "Submit"}
 				</button>
-			</form>
+			</form> */}
 		</div>
 	);
 }

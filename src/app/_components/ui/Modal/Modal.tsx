@@ -6,11 +6,11 @@ import { IconX } from "../Icons";
 
 interface ModalProps {
 	isOpen: boolean;
-	onClose: () => void;
+	handleClose: () => void;
 	children: React.ReactNode;
 }
 
-export default function Modal({ isOpen, onClose, children }: ModalProps) {
+export default function Modal({ isOpen, handleClose, children }: ModalProps) {
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
@@ -21,17 +21,30 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
 		if (!mounted || !isOpen) return;
 
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
+			if (e.key === "Escape") handleClose();
 		};
 		document.addEventListener("keydown", onKey);
 		return () => document.removeEventListener("keydown", onKey);
-	}, [onClose, mounted, isOpen]);
+	}, [handleClose, mounted, isOpen]);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Escape") handleClose();
+	};
 
 	if (!mounted || !isOpen) return null;
 
 	return createPortal(
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-			<div className="absolute inset-0" onClick={onClose} onKeyDown={onClose} />
+		<dialog
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			aria-modal="true"
+		>
+			<div
+				className="absolute inset-0"
+				onClick={handleClose}
+				tabIndex={-1}
+				onKeyDown={handleKeyDown}
+				aria-label="Close modal"
+			/>
 			<div
 				className="relative z-10 w-full max-w-lg rounded-lg bg-white p-6 shadow-lg"
 				onClick={(e) => e.stopPropagation()}
@@ -39,15 +52,16 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
 			>
 				<button
 					type="button"
-					onClick={onClose}
+					onClick={handleClose}
+					onKeyDown={handleKeyDown}
 					className="absolute top-2 right-2 text-gray-500 hover:text-black"
-					aria-label="Close"
+					aria-label="Close modal"
 				>
 					<IconX />
 				</button>
 				{children}
 			</div>
-		</div>,
+		</dialog>,
 		document.body,
 	);
 }

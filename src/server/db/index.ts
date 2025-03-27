@@ -6,7 +6,9 @@ import * as schema from "./schema";
 
 config({ path: ".env" }); // or .env.local
 
+console.log("POSTGRES_URL:", process.env.POSTGRES_URL); // add this
 if (!process.env.POSTGRES_URL) {
+	console.log(process.env);
 	throw new Error("POSTGRES_URL is not defined");
 }
 

@@ -6,25 +6,18 @@ type MenuItemProps = {
 	children: ReactNode;
 	isActive?: boolean;
 	className?: string;
+	onClick?: (() => void) | undefined;
 };
 
 export default function MenuItem({
 	href,
 	children,
-	isActive = false,
 	className = "",
+	onClick,
 }: MenuItemProps) {
 	return (
-		<li>
-			<Link
-				href={href}
-				className={`text-white transition hover:underline ${
-					isActive ? "font-semibold underline" : ""
-				} ${className}`}
-				aria-current={isActive ? "page" : undefined}
-			>
-				{children}
-			</Link>
+		<li className={`${className}`} onClick={onClick} onKeyDown={onClick}>
+			{children}
 		</li>
 	);
 }

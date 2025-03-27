@@ -1,4 +1,17 @@
+import { Footer } from "@/app/_components/layout/Footer";
+import { Header } from "@/app/_components/layout/Header";
+import { Page } from "@/app/_components/layout/Page";
+import "@/styles/globals.css";
+
+import type { Metadata } from "next";
+
 import type { PropsWithChildren, ReactNode } from "react";
+
+export const metadata: Metadata = {
+	title: "Home | Talescape",
+	description: "The community-driven hub of interactive tales",
+	icons: [{ rel: "icon", url: "/favicon.ico" }],
+};
 
 export type HomeLayoutProps = Readonly<
 	PropsWithChildren<{
@@ -9,7 +22,9 @@ export type HomeLayoutProps = Readonly<
 export default function HomeLayout({ children, modals }: HomeLayoutProps) {
 	return (
 		<>
-			{children}
+			<Header />
+			<Page>{children}</Page>
+			<Footer />
 			{modals}
 		</>
 	);
