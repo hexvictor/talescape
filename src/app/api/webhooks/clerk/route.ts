@@ -7,19 +7,12 @@ export async function POST(req: NextRequest) {
 	const payload = await req.text();
 	const headers = Object.fromEntries(req.headers.entries());
 
-	const isDev = process.env.NODE_ENV === "development";
-
-	console.log(isDev);
-	const secret = isDev
-		? process.env.CLERK_WEBHOOK_SECRET_DEV
-		: process.env.CLERK_WEBHOOK_SECRET_PROD;
-
-	if (!secret) {
+	if (!process.env.CLERK_WEBHOOK_SECRET) {
 		console.error("Missing Clerk webhook secret");
 		return new Response("Server misconfigured", { status: 500 });
 	}
 
-	const wh = new Webhook(secret);
+	const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
 	// biome-ignore lint/suspicious/noExplicitAny: webhook type is dynamic
 	let evt: any;
