@@ -14,12 +14,12 @@ export async function POST(req: NextRequest) {
 		? process.env.CLERK_WEBHOOK_SECRET_DEV
 		: process.env.CLERK_WEBHOOK_SECRET_PROD;
 
-	if (!process.env.CLERK_WEBHOOK_SECRET_PROD) {
+	if (!secret) {
 		console.error("Missing Clerk webhook secret");
 		return new Response("Server misconfigured", { status: 500 });
 	}
 
-	const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET_PROD);
+	const wh = new Webhook(secret);
 
 	// biome-ignore lint/suspicious/noExplicitAny: webhook type is dynamic
 	let evt: any;
