@@ -39,13 +39,13 @@ export const ourFileRouter = {
 			await db.insert(images).values({
 				name: file.name,
 				url: file.ufsUrl,
-				uploadedBy: metadata.userId,
+				userId: metadata.userId,
 			});
 
 			console.log("file url", file.ufsUrl);
 
 			// !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-			return { uploadedBy: metadata.userId };
+			return { userId: metadata.userId };
 		}),
 } satisfies FileRouter;
 

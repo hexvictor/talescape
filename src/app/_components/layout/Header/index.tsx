@@ -1,2 +1,4 @@
 import Header from "./Header";
-export { Header };
+import HeaderShell from "./HeaderShell";
+import HoverHeader from "./HoverHeader";
+export { Header, HoverHeader, HeaderShell };

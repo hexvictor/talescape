@@ -1,10 +1,10 @@
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { Header } from "../_components/layout/Header";
+import { HoverHeader } from "../_components/layout/Header";
 
 export const metadata: Metadata = {
 	title: "Taleviewer | Talescape",
@@ -17,7 +17,7 @@ export default function TaleviewerLayout({
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<>
-			<Header />
+			<HoverHeader />
 			{/* TaleViewerWrapper */}
 			{children}
 			{/* TaleViewerWrapper */}

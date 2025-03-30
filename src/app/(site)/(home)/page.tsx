@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { UploadImage } from "@/app/_components/forms/UploadImage";
 import { Images } from "@/app/_components/Images";
 import { HydrateClient } from "@/trpc/server";

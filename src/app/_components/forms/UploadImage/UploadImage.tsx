@@ -9,6 +9,7 @@ function UploadImage() {
 		<UploadButton
 			endpoint="imageUploader"
 			onClientUploadComplete={(res) => {
+				console.log("files:", res);
 				// Do something with the response
 				// console.log("Files: ", res);
 				router.refresh();
