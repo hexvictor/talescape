@@ -39,7 +39,7 @@ export default function HeaderShell({
 				<ThemeToggle />
 				<SignedOut>
 					<Link
-						href="/login"
+						href="/sign-in"
 						className="rounded-sm bg-black px-4 py-2 font-semibold text-white"
 					>
 						Log in

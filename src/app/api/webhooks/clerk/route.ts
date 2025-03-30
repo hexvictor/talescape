@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
 
 	const isDev = process.env.NODE_ENV === "development";
 
+	console.log(isDev);
 	const secret = isDev
 		? process.env.CLERK_WEBHOOK_SECRET_DEV
 		: process.env.CLERK_WEBHOOK_SECRET_PROD;
