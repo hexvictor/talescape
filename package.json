@@ -12,7 +12,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"dev": "next dev --turbo",
+		"dev": "next dev",
 		"preview": "next build && next start",
 		"start": "next start",
 		"typecheck": "tsc --noEmit"
@@ -22,6 +22,7 @@
 		"@clerk/nextjs": "^6.12.11",
 		"@clerk/themes": "^2.2.25",
 		"@neondatabase/serverless": "^1.0.0",
+		"@sentry/nextjs": "^9.11.0",
 		"@t3-oss/env-nextjs": "^0.12.0",
 		"@tanstack/react-query": "^5.69.0",
 		"@trpc/client": "^11.0.0",

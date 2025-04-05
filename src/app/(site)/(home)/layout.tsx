@@ -26,6 +26,7 @@ export default function HomeLayout({ children, modals }: HomeLayoutProps) {
 			<Page>{children}</Page>
 			<Footer />
 			{modals}
+			<div id="modal-root" />
 		</>
 	);
 }
