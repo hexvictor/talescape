@@ -6,7 +6,7 @@ import {
 	IconPerson,
 	IconQuestion,
 	IconSun,
-} from "@/utils/icons";
+} from "~/utils/icons";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { AvatarSkeleton } from "../../ui/Avatar";
 import { useState } from "react";

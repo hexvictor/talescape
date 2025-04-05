@@ -4,8 +4,8 @@ import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
-} from "@/server/api/trpc";
-import { images } from "@/server/db/schema";
+} from "~/server/api/trpc";
+import { images } from "~/server/db/schema";
 
 export const imageRouter = createTRPCRouter({
 	hello: publicProcedure

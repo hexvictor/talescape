@@ -1,5 +1,5 @@
 import React from "react";
-import { IconPerson } from "@/utils/icons";
+import { IconPerson } from "~/utils/icons";
 
 function AvatarSkeleton() {
 	return (

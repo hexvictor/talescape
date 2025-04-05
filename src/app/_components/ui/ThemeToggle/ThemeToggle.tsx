@@ -1,7 +1,7 @@
 "use client";
 import type React from "react";
 import { useState } from "react";
-import { IconMoon, IconSun } from "@/utils/icons";
+import { IconMoon, IconSun } from "~/utils/icons";
 import type { IconType } from "react-icons";
 
 function ThemeToggle() {

@@ -1,5 +1,5 @@
 "use client";
-import { UploadButton } from "@/utils/uploadThing";
+import { UploadButton } from "~/utils/uploadThing";
 import { useRouter } from "next/navigation";
 import React from "react";
 

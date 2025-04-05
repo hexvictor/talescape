@@ -2,7 +2,7 @@
 
 import { useRef, useState, type MouseEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { useClickOutside } from "~/hooks/useClickOutside";
 import HeaderShell from "./HeaderShell";
 
 export default function HoverHeader() {

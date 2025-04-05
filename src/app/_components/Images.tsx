@@ -1,14 +1,10 @@
-import { api } from "@/trpc/react";
+import { api } from "~/trpc/react";
 import Image from "next/image";
-import { db } from "@/server/db";
+import { db } from "~/server/db";
+import { getMyImages } from "~/server/db/queries/images";
 
 export async function Images() {
-	// const [images] = api.image.getImages.useSuspenseQuery();
-
-	const images = await db.query.images.findMany({
-		orderBy: (model, { desc }) => desc(model.id),
-	});
-
+	const images = await getMyImages();
 	// const utils = api.useUtils();
 	// const [name, setName] = useState("Kaladin_war");
 	// const [url, setUrl] = useState(

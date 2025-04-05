@@ -1,8 +1,8 @@
-import "@/styles/globals.css";
+import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 
-import { TRPCReactProvider } from "@/trpc/react";
+import { TRPCReactProvider } from "~/trpc/react";
 import { Header } from "../_components/layout/Header";
 import { HoverHeader } from "../_components/layout/Header";
 

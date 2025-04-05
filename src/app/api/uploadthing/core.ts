@@ -1,8 +1,7 @@
-import { db } from "@/server/db";
-import { images } from "@/server/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { addImage } from "~/server/db/queries/images";
 
 const f = createUploadthing();
 
@@ -16,7 +15,7 @@ export const ourFileRouter = {
 			 * @see https://docs.uploadthing.com/file-routes#route-config
 			 */
 			maxFileSize: "4MB",
-			maxFileCount: 1,
+			maxFileCount: 10,
 		},
 	})
 		// Set permissions and file types for this FileRoute
@@ -33,16 +32,7 @@ export const ourFileRouter = {
 		})
 		.onUploadComplete(async ({ metadata, file }) => {
 			// This code RUNS ON YOUR SERVER after upload
-			console.log("Upload complete for userId:", metadata.userId);
-
-			console.log(file.name, file.ufsUrl, metadata.userId);
-			await db.insert(images).values({
-				name: file.name,
-				url: file.ufsUrl,
-				userId: metadata.userId,
-			});
-
-			console.log("file url", file.ufsUrl);
+			addImage({ name: file.name, url: file.ufsUrl, userId: metadata.userId });
 
 			// !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
 			return { userId: metadata.userId };

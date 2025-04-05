@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
-import { IconX } from "@/utils/icons";
+import { IconX } from "~/utils/icons";
 
 interface ModalProps {
 	isOpen: boolean;

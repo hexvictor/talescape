@@ -1,6 +1,6 @@
-import { UploadImage } from "@/app/_components/forms/UploadImage";
-import { Images } from "@/app/_components/Images";
-import { HydrateClient } from "@/trpc/server";
+import { UploadImage } from "~/app/_components/forms/UploadImage";
+import { Images } from "~/app/_components/Images";
+import { HydrateClient } from "~/trpc/server";
 import { Suspense } from "react";
 
 export default function Home() {
