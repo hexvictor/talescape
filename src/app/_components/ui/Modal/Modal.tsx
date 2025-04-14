@@ -1,67 +1,98 @@
 "use client";
-
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
-import { IconX } from "~/utils/icons";
+import { useRouter } from "next/navigation";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import ModalBackdrop from "./ModalBackdrop";
+import ModalWrapper from "./ModalWrapper";
 
-interface ModalProps {
-	isOpen: boolean;
-	handleClose: () => void;
+type ModalProps = {
 	children: React.ReactNode;
-}
+	fitContent?: boolean;
+	rounded?: boolean;
+	dismissOnEsc?: boolean;
+	showCloseButton?: boolean;
+	hasBackdrop?: boolean;
+	blockInteraction?: boolean;
+};
 
-export default function Modal({ isOpen, handleClose, children }: ModalProps) {
+type ModalContextProps = {
+	// exposed to user-defined children
+	onDismiss?: () => void;
+	onKeyDown?: (e: React.KeyboardEvent) => void;
+
+	// used internally by Modal components (Backdrop, Content)
+	dismissOnEsc?: boolean;
+	hasBackdrop?: boolean;
+	blockInteraction?: boolean;
+	rounded?: boolean;
+	showCloseButton?: boolean;
+	fitContent?: boolean;
+};
+
+/* 🧠 1. Create the context at the top of the file */
+const ModalContext = createContext<ModalContextProps | undefined>(undefined);
+
+/* 🪄 2. Custom hook to access the context safely */
+export const useModal = () => {
+	const modalContext = useContext(ModalContext);
+	if (!modalContext) throw new Error("useModal must be used within a <Modal>");
+	return modalContext;
+};
+
+export default function Modal({
+	children,
+	fitContent = false,
+	showCloseButton = true,
+	rounded = true,
+	hasBackdrop = true,
+	dismissOnEsc = true,
+	blockInteraction = true,
+}: ModalProps) {
+	const router = useRouter();
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
 
-	useEffect(() => {
-		if (!mounted || !isOpen) return;
+	const onDismiss = useCallback(() => {
+		router.back();
+	}, [router]);
 
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") handleClose();
-		};
-		document.addEventListener("keydown", onKey);
-		return () => document.removeEventListener("keydown", onKey);
-	}, [handleClose, mounted, isOpen]);
+	const onKeyDown = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === "Escape") router.back();
+		},
+		[router],
+	);
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Escape") handleClose();
-	};
-
-	if (!mounted || !isOpen) return null;
+	if (!mounted) return null; // evita tentar usar `document` no SSR
+	const modalRoot = document.getElementById("modal-root") ?? document.body;
 
 	return createPortal(
-		<dialog
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-			aria-modal="true"
+		<ModalContext.Provider
+			value={{
+				onDismiss,
+				onKeyDown,
+				dismissOnEsc,
+				fitContent,
+				showCloseButton,
+				rounded,
+				hasBackdrop,
+				blockInteraction,
+			}}
 		>
-			<div
-				className="absolute inset-0"
-				onClick={handleClose}
-				tabIndex={-1}
-				onKeyDown={handleKeyDown}
-				aria-label="Close modal"
-			/>
-			<div
-				className="relative z-10 w-full max-w-lg rounded-lg bg-white p-6 shadow-lg"
-				onClick={(e) => e.stopPropagation()}
-				onKeyDown={(e) => e.stopPropagation()}
-			>
-				<button
-					type="button"
-					onClick={handleClose}
-					onKeyDown={handleKeyDown}
-					className="absolute top-2 right-2 text-gray-500 hover:text-black"
-					aria-label="Close modal"
-				>
-					<IconX />
-				</button>
-				{children}
-			</div>
-		</dialog>,
-		document.body,
+			<ModalBackdrop>
+				<ModalWrapper>{children}</ModalWrapper>
+			</ModalBackdrop>
+		</ModalContext.Provider>,
+		modalRoot,
 	);
 }

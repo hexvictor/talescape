@@ -9,12 +9,14 @@ import Link from "next/link";
 import type { HTMLAttributes, ReactNode } from "react";
 
 type HeaderShellProps = HTMLAttributes<HTMLElement> & {
+	hideLoginButton?: boolean;
 	leftProps?: HTMLAttributes<HTMLDivElement>;
 	rightProps?: HTMLAttributes<HTMLDivElement>;
 	children?: ReactNode;
 };
 
 export default function HeaderShell({
+	hideLoginButton = false,
 	leftProps,
 	rightProps,
 	children,
@@ -37,17 +39,21 @@ export default function HeaderShell({
 
 			<div className="flex items-center gap-4" {...rightProps}>
 				<ThemeToggle />
-				<SignedOut>
-					<Link
-						href="/sign-in"
-						className="rounded-sm bg-black px-4 py-2 font-semibold text-white"
-					>
-						Log in
-					</Link>
-				</SignedOut>
-				<SignedIn>
-					<UserMenu />
-				</SignedIn>
+				{!hideLoginButton && (
+					<>
+						<SignedOut>
+							<Link
+								href="/sign-in"
+								className="rounded-sm bg-black px-4 py-2 font-semibold text-white"
+							>
+								Sign in
+							</Link>
+						</SignedOut>
+						<SignedIn>
+							<UserMenu />
+						</SignedIn>
+					</>
+				)}
 			</div>
 
 			{children}
