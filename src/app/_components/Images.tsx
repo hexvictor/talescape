@@ -25,3 +25,20 @@ export async function Images() {
 		</div>
 	);
 }
+
+// const session = await auth();
+
+// 	if (!session.userId) {
+// 		return <>No images</>;
+// 	}
+
+// 	return (
+// 		<HydrateClient>
+// 			<UploadImage />
+// 			<div className=" grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-2 p-2">
+// 				<Suspense fallback={<>Loading...</>}>
+// 					<Images />
+// 				</Suspense>
+// 			</div>
+// 		</HydrateClient>
+// 	);

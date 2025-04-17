@@ -1,13 +1,8 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createTable } from "../schema-helpers";
 import { users } from "./users";
 import { storyBlocks } from "./storyBlocks";
-
-type StoryBlockPermissionType =
-	| "viewer"
-	| "embedder"
-	| "collaborator"
-	| "cloner";
+import type { StoryBlockPermissionType } from "../types/storyBlock";
 
 export const storyBlockPermissions = createTable(
 	"story_block_permission",
@@ -33,5 +28,19 @@ export const storyBlockPermissions = createTable(
 			.timestamp({ withTimezone: true })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
+	}),
+);
+
+export const storyBlockPermissionsRelations = relations(
+	storyBlockPermissions,
+	({ one }) => ({
+		user: one(users, {
+			fields: [storyBlockPermissions.userId],
+			references: [users.id],
+		}),
+		storyBlock: one(storyBlocks, {
+			fields: [storyBlockPermissions.storyBlockId],
+			references: [storyBlocks.id],
+		}),
 	}),
 );

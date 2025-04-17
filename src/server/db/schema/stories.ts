@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createTable } from "../schema-helpers";
 import { index } from "drizzle-orm/pg-core";
 import { users } from "./users";
@@ -17,4 +17,15 @@ export const stories = createTable("story", (d) => ({
 		.default(sql`CURRENT_TIMESTAMP`)
 		.notNull(),
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+}));
+
+export const storiesRelations = relations(stories, ({ one }) => ({
+	user: one(users, {
+		fields: [stories.userId],
+		references: [users.id],
+	}),
+	book: one(books, {
+		fields: [stories.bookId],
+		references: [books.id],
+	}),
 }));

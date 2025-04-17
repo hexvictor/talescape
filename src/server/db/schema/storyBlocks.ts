@@ -1,17 +1,11 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createTable } from "../schema-helpers";
 import { stories } from "./stories";
 import { users } from "./users";
-
-type SectionType =
-	| "text"
-	| "image"
-	| "chapter"
-	| "segment"
-	| "divider"
-	| "transition"
-	| "codex-entry";
-type Shareability = "private" | "public" | "shared";
+import type {
+	StoryBlockSectionType,
+	StoryBlockShareability,
+} from "../types/storyBlock";
 
 export const storyBlocks = createTable("story_block", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -23,7 +17,10 @@ export const storyBlocks = createTable("story_block", (d) => ({
 		.references(() => users.id), // OWNER
 
 	order: d.integer().notNull(),
-	sectionType: d.varchar({ length: 32 }).notNull().$type<SectionType>(),
+	sectionType: d
+		.varchar({ length: 32 })
+		.notNull()
+		.$type<StoryBlockSectionType>(),
 	chapterNumber: d.integer(),
 
 	isVisibleInToc: d.boolean().notNull().default(false),
@@ -32,12 +29,12 @@ export const storyBlocks = createTable("story_block", (d) => ({
 		.varchar({ length: 32 })
 		.notNull()
 		.default("private")
-		.$type<Shareability>(),
+		.$type<StoryBlockShareability>(),
 	cloneable: d
 		.varchar({ length: 32 })
 		.notNull()
 		.default("private")
-		.$type<Shareability>(),
+		.$type<StoryBlockShareability>(),
 
 	data: d.json().notNull(),
 
@@ -46,4 +43,15 @@ export const storyBlocks = createTable("story_block", (d) => ({
 		.default(sql`CURRENT_TIMESTAMP`)
 		.notNull(),
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+}));
+
+export const storyBlockRelations = relations(storyBlocks, ({ one }) => ({
+	user: one(users, {
+		fields: [storyBlocks.userId],
+		references: [users.id],
+	}),
+	story: one(stories, {
+		fields: [storyBlocks.storyId],
+		references: [stories.id],
+	}),
 }));

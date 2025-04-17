@@ -10,7 +10,7 @@ export default function Page({
 }: PageProps): React.ReactNode {
 	return (
 		<main
-			className={`flex-1 p-2 ${centered ? "flex items-center justify-center" : ""}`}
+			className={`flex-1 p-4 ${centered ? "flex items-center justify-center" : ""}`}
 		>
 			{children}
 		</main>
