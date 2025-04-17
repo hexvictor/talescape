@@ -8,7 +8,7 @@ import {
 	IconSun,
 } from "~/utils/icons";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
-import { AvatarSkeleton } from "../../ui/Avatar";
+import { AvatarSkeleton } from "../../../../components/ui/Avatar";
 import { useState } from "react";
 
 export default function UserMenu() {

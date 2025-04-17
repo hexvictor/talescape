@@ -1,5 +1,5 @@
-import { Menu, MenuItem } from "../../ui/Menu";
-import NavItem from "../../ui/Menu/NavItem";
+import { Menu, MenuItem } from "../../../../components/ui/Menu";
+import NavItem from "../../../../components/ui/Menu/NavItem";
 import { SignedIn } from "@clerk/nextjs";
 
 export default function MainNav() {

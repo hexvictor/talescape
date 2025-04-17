@@ -3,11 +3,9 @@
 import { useRef, useState, type MouseEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useClickOutside } from "~/hooks/useClickOutside";
-import HeaderShell from "./HeaderShell";
-import { publicRoutes, useIsPublicRoute } from "~/hooks/useIsPublicRoute";
+import Header from "./Header";
 
 export default function HoverHeader() {
-	const isProtectedPage = useIsPublicRoute(publicRoutes);
 	const [isHovered, setIsHovered] = useState(false);
 	const [isLocked, setIsLocked] = useState(false);
 
@@ -44,15 +42,14 @@ export default function HoverHeader() {
 							transition={{ duration: 0.3 }}
 							className="bg-white shadow-md"
 						>
-							<HeaderShell
-								hideLoginButton={isProtectedPage}
+							<Header
 								onClick={onToggleLocked} // this works now!
 								leftProps={stopPropagationProps}
 								rightProps={stopPropagationProps}
 								className={isLocked ? "bg-red-500" : ""}
 							>
 								{/* Optional client-only content */}
-							</HeaderShell>
+							</Header>
 						</motion.div>
 					)}
 				</AnimatePresence>
