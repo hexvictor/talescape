@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 import type { BookWithAuthor } from "~/server/db/schema";
 import type { BookProps } from "~/server/db/types/book";
@@ -30,9 +31,11 @@ const BookCard = ({
 
 			<div className="p-4">
 				<h3 className="font-semibold text-lg">{title}</h3>
-				<p className="mb-1 text-gray-500 text-sm">
-					{author?.name ?? "Unknown Author"}
-				</p>
+				<Link href={`/library/author/${author?.id}`}>
+					<p className="mb-1 text-gray-500 text-sm">
+						{author?.name ?? "Unknown Author"}
+					</p>
+				</Link>
 				<p className="line-clamp-3 text-gray-700 text-sm">{description}</p>
 
 				<div className="mt-4 flex justify-end text-gray-400 text-xs">
