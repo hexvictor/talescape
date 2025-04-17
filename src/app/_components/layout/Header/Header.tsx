@@ -1,17 +1,10 @@
 "use client";
 import { usePathname, useSelectedLayoutSegments } from "next/navigation";
 import HeaderShell from "./HeaderShell";
+import { publicRoutes, useIsPublicRoute } from "~/hooks/useIsPublicRoute";
 
 export default function Header() {
-	const pathname = usePathname();
-	const segments = useSelectedLayoutSegments();
-
-	// List of full-page unauthorized routes
-	const unauthorizedPaths = ["/sign-in", "/sign-up", "/forgot-password"];
-	// Checks if the current page is authorized in order to hide the Login button
-	const isUnauthorizedPage =
-		unauthorizedPaths.includes(pathname) &&
-		segments.some((segment) => unauthorizedPaths.includes(`/${segment}`));
+	const isUnauthorizedPage = useIsPublicRoute(publicRoutes);
 
 	return <HeaderShell hideLoginButton={isUnauthorizedPage} />;
 }
