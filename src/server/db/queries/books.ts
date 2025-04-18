@@ -33,10 +33,6 @@ export async function getBookById(id: number) {
 
 // Add filters in the future
 export async function getPublishedBooks() {
-	const user = await auth();
-
-	if (!user.userId) throw new Error("Unauthorized");
-
 	const books = await db.query.books.findMany({
 		where: (model, { eq }) => eq(model.status, "published"),
 		orderBy: (model, { desc }) => desc(model.id),

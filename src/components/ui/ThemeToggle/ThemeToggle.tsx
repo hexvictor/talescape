@@ -1,7 +1,7 @@
 "use client";
 import type React from "react";
 import { useState } from "react";
-import { IconMoon, IconSun } from "~/utils/icons";
+import { MoonIcon, SunIcon } from "~/utils/icons";
 import type { IconType } from "react-icons";
 
 function ThemeToggle() {
@@ -18,8 +18,8 @@ function ThemeToggle() {
 	};
 
 	const ThemeIcon = (props: { className: string }) => {
-		if (isDarkTheme) return <IconMoon {...props} />;
-		return <IconSun {...props} />;
+		if (isDarkTheme) return <MoonIcon {...props} />;
+		return <SunIcon {...props} />;
 	};
 	return (
 		<button type="button" onClick={onToggleTheme} onKeyDown={handleKeyDown}>

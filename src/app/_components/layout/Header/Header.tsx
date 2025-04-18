@@ -1,10 +1,10 @@
 // Header.tsx
-import { Logo } from "../../../../components/ui/Logo";
-import { Divider } from "../../../../components/ui/Divider";
+import { Logo } from "~/components/ui/Logo";
+import { Divider } from "~/components/ui/Divider";
 import { MainNav } from "../MainNav";
-import { ThemeToggle } from "../../../../components/ui/ThemeToggle";
+import { ThemeToggle } from "~/components/ui/ThemeToggle";
 import type { HTMLAttributes, ReactNode } from "react";
-import { AuthButtonSwitcher } from "../../ui";
+import { AuthButtonSwitcher } from "../../ui/AuthButtonSwitcher";
 
 type HeaderProps = HTMLAttributes<HTMLElement> & {
 	leftProps?: HTMLAttributes<HTMLDivElement>;

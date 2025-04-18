@@ -6,7 +6,7 @@ export function useIsPublicRoute(unauthorizedPaths: string[]): boolean {
 	const pathname = usePathname();
 	const segments = useSelectedLayoutSegments();
 
-	// Checks if the current page is authorized in order to hide the Login button
+	// Checks if the current page is authorized in order to hide the Sign in button
 	return Boolean(
 		unauthorizedPaths.includes(pathname) &&
 			segments.some((segment) => unauthorizedPaths.includes(`/${segment}`)),

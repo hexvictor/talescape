@@ -1,4 +1,4 @@
-import { SignUp } from "@clerk/nextjs";
+import { SignUp as ClerkSignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import React from "react";
 
@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 	description: "The community-driven hub of interactive tales",
 };
 
-function Login() {
-	return <SignUp routing="hash" />;
+function SignUp() {
+	return <ClerkSignUp />;
 }
 
-export default Login;
+export default SignUp;

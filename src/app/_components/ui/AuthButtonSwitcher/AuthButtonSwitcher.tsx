@@ -4,7 +4,7 @@ import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import { SkeletonSignInButton } from "~/components/ui/SkeletonSignInButton";
 import { publicRoutes, useIsPublicRoute } from "~/hooks/useIsPublicRoute";
-import { UserMenu } from "../layout/UserMenu";
+import { UserMenu } from "../../layout/UserMenu";
 
 const AuthButtonSwitcher = () => {
 	const isPublicRoute = useIsPublicRoute(publicRoutes);

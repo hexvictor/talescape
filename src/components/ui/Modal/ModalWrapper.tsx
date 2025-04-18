@@ -1,6 +1,6 @@
 "use client";
 
-import { IconX } from "~/utils/icons";
+import { XIcon } from "~/utils/icons";
 import { useModal } from "./Modal";
 
 type ModalWrapperProps = {
@@ -32,7 +32,7 @@ export default function ModalWrapper({ children }: ModalWrapperProps) {
 					onKeyDown={onKeyDown}
 					className="close-button absolute top-[10px] right-[10px] flex h-5 w-5 cursor-pointer items-center justify-center rounded-[20px] border-none bg-transparent font-medium text-[14px] text-white hover:bg-gray-100/70 hover:text-black"
 				>
-					<IconX />
+					<XIcon />
 				</button>
 			)}
 		</div>
