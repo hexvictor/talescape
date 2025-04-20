@@ -1,15 +1,34 @@
 "use client";
-
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { Input } from "~/components/ui/Input";
+import { Textarea } from "~/components/ui/Textarea";
+import { Button } from "~/components/ui/Button";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "~/components/ui/Form";
 import {
 	bookFormSchema,
 	type BookFormData,
 } from "~/lib/validators/bookFormSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useUser } from "@clerk/nextjs";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/Select";
+import { statusOptions, typeOptions } from "~/lib/constants";
+
 type BookFormProps = {
 	defaultValues?: Partial<BookFormData>;
-	onSubmitAction: (data: BookFormData) => void;
+	onSubmitAction: (data: BookFormData) => Promise<void>;
 	mode?: "create" | "edit";
 };
 
@@ -18,70 +37,139 @@ export default function BookForm({
 	onSubmitAction,
 	mode = "create",
 }: BookFormProps) {
-	const { user } = useUser();
-
-	console.log(user);
-	const initialValues: BookFormData = {
-		title: "",
-		authorId: 0,
-		description: "",
-		coverImageUrl: "",
-		type: "user",
-		status: "draft",
-		userId: undefined,
-	};
-
-	const {
-		register,
-		handleSubmit,
-		formState: { errors },
-	} = useForm<BookFormData>({
+	const form = useForm<BookFormData>({
 		resolver: zodResolver(bookFormSchema),
-		defaultValues: defaultValues ?? initialValues,
+		defaultValues: {
+			title: "",
+			description: "",
+			authorId: 0,
+			coverImageUrl: "",
+			...defaultValues,
+		},
 	});
 
 	return (
-		<form onSubmit={handleSubmit(onSubmitAction)} className="space-y-4">
-			<div>
-				<label htmlFor="title-input">Title</label>
-				<input {...register("title")} id="title-input" className="input" />
-				{errors.title && <p className="text-red-500">{errors.title.message}</p>}
-			</div>
-
-			<div>
-				<label htmlFor="description-input">Description</label>
-				<textarea
-					{...register("description")}
-					id="description-input"
-					className="input"
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmitAction)} className="space-y-4">
+				<FormField
+					control={form.control}
+					name="title"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel htmlFor="title-input">Title</FormLabel>
+							<FormControl>
+								<Input id="title-input" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
 				/>
-			</div>
 
-			<div>
-				<label htmlFor="authorId-input">Author ID</label>
-				<input
-					type="number"
-					{...register("authorId", { valueAsNumber: true })}
-					id="authorId-input"
-					className="input"
+				<FormField
+					control={form.control}
+					name="description"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel htmlFor="description-input">Description</FormLabel>
+							<FormControl>
+								<Textarea id="description-input" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
 				/>
-				{errors.authorId && (
-					<p className="text-red-500">{errors.authorId.message}</p>
-				)}
-			</div>
 
-			<div>
-				<label htmlFor="coverImageUrl-input">Cover Image URL</label>
-				<input
-					{...register("coverImageUrl")}
-					id="coverImageUrl-input"
-					className="input"
+				<FormField
+					control={form.control}
+					name="authorId"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel htmlFor="authorId-input">Author ID</FormLabel>
+							<FormControl>
+								<Input
+									id="authorId-input"
+									type="number"
+									{...field}
+									onChange={(e) => field.onChange(Number(e.target.value))}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
 				/>
-			</div>
 
-			<button type="submit" className="btn">
-				{mode === "edit" ? "Update Book" : "Create Book"}
-			</button>
-		</form>
+				<FormField
+					control={form.control}
+					name="coverImageUrl"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel htmlFor="coverImageUrl-input">
+								Cover Image URL
+							</FormLabel>
+							<FormControl>
+								<Input id="coverImageUrl-input" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				{/* Type Select Field */}
+				<FormField
+					control={form.control}
+					name="type"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Type</FormLabel>
+							<FormControl>
+								<Select onValueChange={field.onChange} value={field.value}>
+									<SelectTrigger>
+										<SelectValue placeholder="Select type" />
+									</SelectTrigger>
+									<SelectContent>
+										{typeOptions.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				{/* Status Select Field */}
+				<FormField
+					control={form.control}
+					name="status"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Status</FormLabel>
+							<FormControl>
+								<Select onValueChange={field.onChange} value={field.value}>
+									<SelectTrigger>
+										<SelectValue placeholder="Select status" />
+									</SelectTrigger>
+									<SelectContent>
+										{statusOptions.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<Button type="submit">
+					{mode === "edit" ? "Update Book" : "Create Book"}
+				</Button>
+			</form>
+		</Form>
 	);
 }
