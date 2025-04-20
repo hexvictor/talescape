@@ -8,6 +8,8 @@ import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export const metadata: Metadata = {
 	title: "Talescape",
 	description: "The community-driven hub of interactive tales",
@@ -25,6 +27,11 @@ export default function RootLayout({
 	return (
 		<ClerkProvider appearance={{ baseTheme: dark }}>
 			<html lang="en" className={`${geist.variable}`}>
+				<head>
+					{isDev && (
+						<script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+					)}
+				</head>
 				<body className="flex min-h-screen w-full flex-col">
 					<NextSSRPlugin
 						/**
