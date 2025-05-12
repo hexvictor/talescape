@@ -1,26 +1,30 @@
 "use client";
-import React from "react";
-import { BookForm } from "../_components/BookForm";
-import type { BookFormData } from "~/lib/validators/bookFormSchema";
+import {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetTitle,
+} from "~/components/ui/Sheet";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { RouteSheet } from "~/app/_components/layout/RouteSheet/RouteSheet";
+import { Form } from "~/components/ui/Form";
+import { useBookForm } from "~/features/books/hooks/useBookForm";
+import { BookFormFields } from "~/features/books/components";
+import { Button } from "~/components/ui/Button";
 
-function AddBookPage() {
-	const onSubmit = async (data: BookFormData) => {
-		try {
-			// Process the form data, e.g., send to an API
-			console.log(data);
-			// await createBook(data);
-			// Optionally, navigate to another page or show a success message
-		} catch (error) {
-			// Handle any errors that occur during submission
-			console.error("Submission error:", error);
-		}
-	};
+export default function AddBookPage() {
+	const { form, onSubmit } = useBookForm({ mode: "create" });
 
 	return (
-		<div>
-			<BookForm onSubmitAction={onSubmit} mode="create" />
-		</div>
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+				<BookFormFields form={form} />
+			</form>
+			<Button type="submit">Create book</Button>
+		</Form>
 	);
 }
-
-export default AddBookPage;
