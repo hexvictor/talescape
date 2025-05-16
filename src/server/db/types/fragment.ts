@@ -1,4 +1,4 @@
-export type StoryBlockSectionType =
+export type FragmentType =
 	| "text"
 	| "image"
 	| "chapter"
@@ -6,8 +6,8 @@ export type StoryBlockSectionType =
 	| "divider"
 	| "transition"
 	| "codex-entry";
-export type StoryBlockShareability = "private" | "public" | "shared";
-export type StoryBlockPermissionType =
+export type FragmentShareability = "private" | "public" | "shared";
+export type FragmentPermissionType =
 	| "viewer"
 	| "embedder"
 	| "collaborator"

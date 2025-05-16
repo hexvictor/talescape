@@ -3,15 +3,7 @@ import type { DefaultSession, NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "~/server/db";
-import {
-	books,
-	images,
-	stories,
-	storyBlockPermissions,
-	storyBlocks,
-	storyPermissions,
-	users,
-} from "~/server/db/schema";
+import { users } from "~/server/db/schema";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -54,12 +46,6 @@ export const authConfig = {
 	],
 	adapter: DrizzleAdapter(db, {
 		usersTable: users,
-		booksTable: books,
-		imagesTable: images,
-		storiesTable: stories,
-		storyBlockPermissionsTable: storyBlockPermissions,
-		storyBlocksTable: storyBlocks,
-		storyPermissionsTable: storyPermissions,
 	}),
 	callbacks: {
 		session: ({ session, user }) => ({

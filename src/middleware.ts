@@ -9,10 +9,10 @@ export const clerkMiddlewareConfig = {
 const isProtectedRoute = createRouteMatcher([
 	"/library/book/add",
 	"/library/book/:bookId/edit",
-	"/library/story/add",
-	"/library/story/:storyId/edit",
-	"/library/story-block/add",
-	"/library/story-block/:storyBlockId/edit",
+	"/library/tale/add",
+	"/library/tale/:taleId/edit",
+	"/library/fragment/add",
+	"/library/fragment/:fragmentId/edit",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

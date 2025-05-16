@@ -1,22 +1,22 @@
 import { relations, sql } from "drizzle-orm";
 import { createTable } from "../schema-helpers";
 import { users } from "./users";
-import { stories } from "./stories";
-import type { StoryPermissionType } from "../types/story";
+import { tales } from "./tales";
+import type { TalePermissionType } from "../types/tale";
 
-export const storyPermissions = createTable("story_permission", (d) => ({
+export const talePermissions = createTable("tale_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 
-	storyId: d
+	taleId: d
 		.integer()
 		.notNull()
-		.references(() => stories.id),
+		.references(() => tales.id),
 	userId: d
 		.varchar({ length: 255 })
 		.notNull()
 		.references(() => users.id),
 
-	permissionTypes: d.text().array().notNull().$type<StoryPermissionType[]>(),
+	permissionTypes: d.text().array().notNull().$type<TalePermissionType[]>(),
 
 	createdAt: d
 		.timestamp({ withTimezone: true })
@@ -24,16 +24,16 @@ export const storyPermissions = createTable("story_permission", (d) => ({
 		.notNull(),
 }));
 
-export const storyPermissionsRelations = relations(
-	storyPermissions,
+export const talePermissionsRelations = relations(
+	talePermissions,
 	({ one }) => ({
 		user: one(users, {
-			fields: [storyPermissions.userId],
+			fields: [talePermissions.userId],
 			references: [users.id],
 		}),
-		story: one(stories, {
-			fields: [storyPermissions.storyId],
-			references: [stories.id],
+		tale: one(tales, {
+			fields: [talePermissions.taleId],
+			references: [tales.id],
 		}),
 	}),
 );

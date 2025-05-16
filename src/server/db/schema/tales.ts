@@ -4,7 +4,7 @@ import { index } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { books } from "./books";
 
-export const stories = createTable("story", (d) => ({
+export const tales = createTable("tale", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 	title: d.varchar({ length: 255 }).notNull(),
 	bookId: d.integer().references(() => books.id),
@@ -19,13 +19,13 @@ export const stories = createTable("story", (d) => ({
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
-export const storiesRelations = relations(stories, ({ one }) => ({
+export const talesRelations = relations(tales, ({ one }) => ({
 	user: one(users, {
-		fields: [stories.userId],
+		fields: [tales.userId],
 		references: [users.id],
 	}),
 	book: one(books, {
-		fields: [stories.bookId],
+		fields: [tales.bookId],
 		references: [books.id],
 	}),
 }));
