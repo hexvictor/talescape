@@ -1,20 +1,27 @@
-import type { IconType } from "react-icons";
 import {
-	FaBookOpen,
-	FaGear,
-	FaQuestion,
-	FaSun,
-	FaUser,
-	FaUserGear,
-	FaX,
-} from "react-icons/fa6";
-import { FaMoon } from "react-icons/fa";
+	BookOpenIcon as BookOpenLucideIcon,
+	ChevronDownIcon as ChevronDownLucideIcon,
+	CircleHelpIcon as CircleHelpLucideIcon,
+	MoonIcon as MoonLucideIcon,
+	SettingsIcon as SettingsLucideIcon,
+	SunIcon as SunLucideIcon,
+	UserCogIcon as UserCogLucideIcon,
+	UserIcon as UserLucideIcon,
+	XIcon as XLucideIcon,
+	EyeIcon as EyeLucideIcon,
+	EyeOffIcon as EyeOffLucideIcon,
+} from "lucide-react";
 
-export const XIcon: IconType = (props) => <FaX {...props} />;
-export const MoonIcon: IconType = (props) => <FaMoon {...props} />;
-export const SunIcon: IconType = (props) => <FaSun {...props} />;
-export const PersonIcon: IconType = (props) => <FaUser {...props} />;
-export const QuestionIcon: IconType = (props) => <FaQuestion {...props} />;
-export const UserGearIcon: IconType = (props) => <FaUserGear {...props} />;
-export const GearIcon: IconType = (props) => <FaGear {...props} />;
-export const BookOpenIcon: IconType = (props) => <FaBookOpen {...props} />;
+export {
+	BookOpenLucideIcon as BookOpenIcon,
+	ChevronDownLucideIcon as ChevronDownIcon,
+	CircleHelpLucideIcon as CircleHelpIcon,
+	MoonLucideIcon as MoonIcon,
+	SettingsLucideIcon as SettingsIcon,
+	SunLucideIcon as SunIcon,
+	UserCogLucideIcon as UserCogIcon,
+	UserLucideIcon as UserIcon,
+	XLucideIcon as XIcon,
+	EyeLucideIcon as EyeIcon,
+	EyeOffLucideIcon as EyeOffIcon,
+};

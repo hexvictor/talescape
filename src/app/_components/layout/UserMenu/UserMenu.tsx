@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpenIcon, QuestionIcon } from "~/utils/icons";
+import { BookOpenIcon, CircleHelpIcon } from "~/utils/icons";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { AvatarSkeleton } from "../../../../components/ui/Avatar";
 import { useState } from "react";
@@ -17,7 +17,7 @@ export default function UserMenu() {
 			<UserButton.UserProfilePage label="security" />
 			<UserButton.UserProfilePage
 				label="Help"
-				labelIcon={<QuestionIcon />}
+				labelIcon={<CircleHelpIcon />}
 				url="help"
 			>
 				<div>
@@ -34,7 +34,7 @@ export default function UserMenu() {
 				<UserButton.Action
 					label="Help"
 					open="help"
-					labelIcon={<QuestionIcon />}
+					labelIcon={<CircleHelpIcon />}
 				/>
 			</UserButton.MenuItems>
 		</UserButton>

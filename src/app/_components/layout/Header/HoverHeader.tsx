@@ -26,7 +26,7 @@ export default function HoverHeader() {
 	};
 
 	return (
-		<div className="mb-14">
+		<div>
 			<div
 				ref={headerRef}
 				onMouseEnter={() => !isLocked && setIsHovered(true)}
