@@ -1,5 +1,5 @@
-import { imageRouter } from "@/server/api/routers/image";
-import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
+import { imageRouter } from "~/server/api/routers/image";
+import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
  * This is the primary router for your server.

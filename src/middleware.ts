@@ -1,11 +1,23 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/view(.*)"]);
+export const clerkMiddlewareConfig = {
+	signInUrl: "/sign-in", // 👈 Custom sign-in route
+	signUpUrl: "/sign-up", // Optional
+};
+
+const isProtectedRoute = createRouteMatcher([
+	"/library/book/add",
+	"/library/book/:bookId/edit",
+	"/library/tale/add",
+	"/library/tale/:taleId/edit",
+	"/library/fragment/add",
+	"/library/fragment/:fragmentId/edit",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
 	if (isProtectedRoute(req)) await auth.protect();
-});
+}, clerkMiddlewareConfig);
 
 export const config = {
 	matcher: [

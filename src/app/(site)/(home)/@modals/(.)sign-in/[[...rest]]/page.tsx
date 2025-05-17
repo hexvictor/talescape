@@ -1,10 +1,10 @@
-import { RouteModal } from "@/app/_components/ui/RouteModal";
+import { Modal } from "~/components/ui/Modal";
 import { SignedIn, SignIn, useAuth } from "@clerk/nextjs";
 
-export default function LoginModalPage() {
+export default function SignInModalPage() {
 	return (
-		<RouteModal minimal>
+		<Modal fitContent>
 			<SignIn routing="hash" />
-		</RouteModal>
+		</Modal>
 	);
 }

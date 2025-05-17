@@ -1,7 +1,8 @@
 import { Webhook } from "svix";
 import type { NextRequest } from "next/server";
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
+import { db } from "~/server/db";
+import { users } from "~/server/db/schema";
+import { addUser } from "~/server/db/queries/users";
 
 export async function POST(req: NextRequest) {
 	const payload = await req.text();
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
 		const { id, email_addresses, username, image_url, first_name, last_name } =
 			eventData;
 
-		await db.insert(users).values({
+		addUser({
 			id,
 			email: email_addresses[0]?.email_address ?? "",
 			username: username,

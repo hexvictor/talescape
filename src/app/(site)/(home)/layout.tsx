@@ -1,7 +1,7 @@
-import { Footer } from "@/app/_components/layout/Footer";
-import { Header } from "@/app/_components/layout/Header";
-import { Page } from "@/app/_components/layout/Page";
-import "@/styles/globals.css";
+import { Footer } from "~/app/_components/layout/Footer";
+import { Header } from "~/app/_components/layout/Header";
+import { Page } from "~/app/_components/layout/Page";
+import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 
@@ -26,6 +26,7 @@ export default function HomeLayout({ children, modals }: HomeLayoutProps) {
 			<Page>{children}</Page>
 			<Footer />
 			{modals}
+			<div id="modal-root" />
 		</>
 	);
 }

@@ -1,12 +1,14 @@
-import "@/styles/globals.css";
+import "~/styles/globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { TRPCReactProvider } from "@/trpc/react";
+import { TRPCReactProvider } from "~/trpc/react";
 import { dark } from "@clerk/themes";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
-import { ourFileRouter } from "@/app/api/uploadthing/core";
+import { ourFileRouter } from "~/app/api/uploadthing/core";
+
+const isDev = process.env.NODE_ENV === "development";
 
 export const metadata: Metadata = {
 	title: "Talescape",
@@ -25,6 +27,11 @@ export default function RootLayout({
 	return (
 		<ClerkProvider appearance={{ baseTheme: dark }}>
 			<html lang="en" className={`${geist.variable}`}>
+				<head>
+					{isDev && (
+						<script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+					)}
+				</head>
 				<body className="flex min-h-screen w-full flex-col">
 					<NextSSRPlugin
 						/**

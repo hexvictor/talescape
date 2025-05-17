@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createTable } from "../schema-helpers";
 import { index } from "drizzle-orm/pg-core";
 import { users } from "./users";
@@ -21,3 +21,10 @@ export const images = createTable(
 	}),
 	(t) => [index("name_idx").on(t.name)],
 );
+
+export const imagesRelations = relations(images, ({ one }) => ({
+	user: one(users, {
+		fields: [images.userId],
+		references: [users.id],
+	}),
+}));

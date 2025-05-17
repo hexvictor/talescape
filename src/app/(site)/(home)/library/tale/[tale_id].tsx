@@ -1,7 +1,7 @@
 import React from "react";
 
-function TaleOverview() {
-	return <div>TaleOverview</div>;
+function StoryOverview() {
+	return <div>StoryOverview</div>;
 }
 
-export default TaleOverview;
+export default StoryOverview;

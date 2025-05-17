@@ -2,8 +2,8 @@
 
 import { useRef, useState, type MouseEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { useClickOutside } from "@/hooks/useClickOutside";
-import HeaderShell from "./HeaderShell";
+import { useClickOutside } from "~/hooks/useClickOutside";
+import Header from "./Header";
 
 export default function HoverHeader() {
 	const [isHovered, setIsHovered] = useState(false);
@@ -26,7 +26,7 @@ export default function HoverHeader() {
 	};
 
 	return (
-		<div className="mb-14">
+		<div>
 			<div
 				ref={headerRef}
 				onMouseEnter={() => !isLocked && setIsHovered(true)}
@@ -42,14 +42,14 @@ export default function HoverHeader() {
 							transition={{ duration: 0.3 }}
 							className="bg-white shadow-md"
 						>
-							<HeaderShell
+							<Header
 								onClick={onToggleLocked} // this works now!
 								leftProps={stopPropagationProps}
 								rightProps={stopPropagationProps}
 								className={isLocked ? "bg-red-500" : ""}
 							>
 								{/* Optional client-only content */}
-							</HeaderShell>
+							</Header>
 						</motion.div>
 					)}
 				</AnimatePresence>
