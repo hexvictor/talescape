@@ -10,11 +10,17 @@ export default function PageProgressBar() {
 
 	if (!bookEntries?.length) return null;
 
+	// Total number of appPages before the current entry
 	const pagesBefore = bookEntries
 		.slice(0, currentEntry)
-		.reduce((acc, entry) => acc + entry.pages, 0);
+		.reduce((acc, entry) => acc + entry.pages.length, 0);
 
-	const totalPages = bookEntries.reduce((acc, entry) => acc + entry.pages, 0);
+	// Total number of appPages in the entire book
+	const totalPages = bookEntries.reduce(
+		(acc, entry) => acc + entry.pages.length,
+		0,
+	);
+
 	const currentProgress = pagesBefore + currentPage;
 
 	const progress = Math.min((currentProgress / totalPages) * 100, 100);

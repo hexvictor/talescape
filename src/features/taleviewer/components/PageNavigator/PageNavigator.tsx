@@ -1,7 +1,7 @@
 "use client";
 
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
-import { bookEntries } from "~/lib/data";
+import { bookEntries, type BookEntry } from "~/lib/data";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,31 +10,52 @@ import {
 import { Button } from "~/components/ui/Button";
 import { Slider } from "~/components/ui/Slider";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import clsx from "clsx";
 
-type PageItem = number | "...";
+interface PageNavigatorProps {
+	scrollToEntryAction: (entryNumber: number) => void;
+	scrollToPageAction: (entryNumber: number, pageNumber: number) => void;
+}
 
-export default function PageNavigator() {
+export default function PageNavigator({
+	scrollToPageAction,
+	scrollToEntryAction,
+}: PageNavigatorProps) {
 	const currentEntry = useTaleReaderStore((s) => s.currentEntry);
 	const currentPage = useTaleReaderStore((s) => s.currentPage);
 	const setCurrentPage = useTaleReaderStore((s) => s.setCurrentPage);
 	const setCurrentEntry = useTaleReaderStore((s) => s.setCurrentEntry);
+	const uiVisible = useTaleReaderStore((s) => s.uiVisible);
 
 	const currentBookEntry = bookEntries[currentEntry];
-	const totalPages = currentBookEntry?.pages ?? 1;
+	const totalPages = currentBookEntry?.pages.length ?? 1;
 
 	if (!currentBookEntry) return null;
 
 	const isFirstPage = currentPage === 1;
 	const isLastPage = currentPage === totalPages;
 
+	function goToPage(pageNumber: number) {
+		setCurrentPage(pageNumber);
+		scrollToPageAction(currentEntry, pageNumber - 1);
+	}
+
 	function goToPrevPage() {
 		if (isFirstPage) {
 			if (currentEntry > 0) {
 				const previousEntry = bookEntries[currentEntry - 1];
-				setCurrentEntry(currentEntry - 1, previousEntry?.pages ?? 1);
+				const lastPageOfPreviousEntry = previousEntry?.pages.length ?? 1;
+				setCurrentEntry(currentEntry - 1, lastPageOfPreviousEntry);
+				if (currentEntry - 1 === 0) {
+					requestAnimationFrame(() => {
+						scrollToEntryAction(0);
+					});
+				} else {
+					scrollToPageAction(currentEntry - 1, lastPageOfPreviousEntry - 1);
+				}
 			}
 		} else {
-			setCurrentPage(currentPage - 1);
+			goToPage(currentPage - 1);
 		}
 	}
 
@@ -42,50 +63,94 @@ export default function PageNavigator() {
 		if (isLastPage) {
 			if (currentEntry < bookEntries.length - 1) {
 				setCurrentEntry(currentEntry + 1, 1);
+				scrollToPageAction(currentEntry + 1, 0);
 			}
 		} else {
-			setCurrentPage(currentPage + 1);
+			goToPage(currentPage + 1);
 		}
 	}
+	type PageItem =
+		| { number: number; id: string; firstPage: number; lastPage: number }
+		| "...";
 
-	// --- Pagination logic ---
 	const maxVisible = 15;
-	const visibleNumeric = maxVisible - 2; // reserve 2 for potential ellipses
+	const visibleNumeric = maxVisible - 2;
 
-	const generatePages = (): PageItem[] => {
-		if (totalPages <= maxVisible) {
-			return Array.from({ length: totalPages }, (_, i) => i + 1);
+	const generatePages = (currentPage: number, entryPages: any[]): any[] => {
+		const total = entryPages.length;
+		if (total === 0) return [];
+
+		if (total <= maxVisible) {
+			return entryPages.map((p, i) => ({
+				number: i + 1,
+				id: p.id,
+				firstPage: p.firstPage,
+				lastPage: p.lastPage,
+			}));
 		}
 
-		const pages: PageItem[] = [1];
-		const half = Math.floor((visibleNumeric - 2) / 2); // for centering
+		const pages: PageItem[] = [
+			{
+				number: 1,
+				id: entryPages[0].id,
+				firstPage: entryPages[0].firstPage,
+				lastPage: entryPages[0].lastPage,
+			},
+		];
 
-		let start = Math.max(2, currentPage - half);
-		let end = Math.min(totalPages - 1, currentPage + half);
+		const half = Math.floor((visibleNumeric - 2) / 2);
+		let start = Math.max(1, currentPage - half);
+		let end = Math.min(total - 2, currentPage + half - 1);
 
-		// adjust window if we're too close to start or end
 		if (currentPage <= half + 2) {
-			start = 2;
-			end = visibleNumeric;
-		} else if (currentPage >= totalPages - half - 1) {
-			start = totalPages - visibleNumeric + 1;
-			end = totalPages - 1;
+			start = 1;
+			end = visibleNumeric - 1;
+		} else if (currentPage >= total - half - 1) {
+			start = total - visibleNumeric + 1;
+			end = total - 2;
 		}
 
-		if (start > 2) pages.push("..." as const);
+		if (start > 1) pages.push("...");
+
 		for (let i = start; i <= end; i++) {
-			pages.push(i);
+			const p = entryPages[i];
+			if (p) {
+				pages.push({
+					number: i + 1,
+					id: p.id,
+					firstPage: p.firstPage,
+					lastPage: p.lastPage,
+				});
+			}
 		}
-		if (end < totalPages - 1) pages.push("..." as const);
 
-		pages.push(totalPages);
+		if (end < total - 2) pages.push("...");
+
+		const last = entryPages[total - 1];
+		if (last) {
+			pages.push({
+				number: total,
+				id: last.id,
+				firstPage: last.firstPage,
+				lastPage: last.lastPage,
+			});
+		}
+
 		return pages;
 	};
 
-	const pages: PageItem[] = generatePages();
+	const pages = currentBookEntry?.pages
+		? generatePages(currentPage, currentBookEntry.pages)
+		: [];
 
 	return (
-		<div className="fixed right-6 bottom-6 z-50 flex items-center gap-2">
+		<div
+			className={clsx(
+				"fixed right-6 bottom-6 z-50 flex items-center gap-2",
+				"transition-opacity duration-300",
+				uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
+			)}
+		>
 			<Button
 				variant="outline"
 				size="icon"
@@ -98,9 +163,14 @@ export default function PageNavigator() {
 			</Button>
 
 			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
+				<DropdownMenuTrigger disabled={totalPages === 1} asChild>
 					<Button variant="outline" className="min-w-[120px] cursor-pointer">
-						Page {currentPage} of {totalPages}
+						Page{" "}
+						{bookEntries
+							.slice(0, currentEntry)
+							.reduce((acc, entry) => acc + entry.pages.length, 0) +
+							currentPage}{" "}
+						of {bookEntries.reduce((acc, entry) => acc + entry.pages.length, 0)}
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="center">
@@ -117,7 +187,7 @@ export default function PageNavigator() {
 							step={1}
 							onValueChange={(value) => {
 								if (typeof value[0] === "number") {
-									setCurrentPage(value[0]);
+									goToPage(value[0]);
 								}
 							}}
 							className="mb-4"
@@ -137,13 +207,18 @@ export default function PageNavigator() {
 									</Button>
 								) : (
 									<Button
-										key={page}
-										variant={currentPage === page ? "default" : "outline"}
+										key={page.id}
+										variant={
+											currentPage === page.number ? "default" : "outline"
+										}
 										size="sm"
-										className="h-8 w-8 p-0"
-										onClick={() => setCurrentPage(page)}
+										className="flex h-auto flex-col p-1"
+										onClick={() => goToPage(page.number)}
 									>
-										{page}
+										<span>{page.number}</span>
+										<span className="text-[10px] text-muted-foreground">
+											{page.firstPage}-{page.lastPage}
+										</span>
 									</Button>
 								),
 							)}

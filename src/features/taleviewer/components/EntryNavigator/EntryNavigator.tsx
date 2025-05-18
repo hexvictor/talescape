@@ -1,9 +1,29 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import {
+	ChevronUp,
+	ChevronDown,
+	QuoteIcon,
+	MailIcon,
+	DramaIcon,
+	MapIcon,
+	TableOfContentsIcon,
+	BookAIcon,
+	ScrollTextIcon,
+	PaperclipIcon,
+	BrainIcon,
+	BookMarkedIcon,
+	HourglassIcon,
+	ListEndIcon,
+	ListStartIcon,
+	MoonStarIcon,
+	NotepadTextIcon,
+	CircleHelpIcon,
+	BookOpenIcon,
+} from "lucide-react";
 
 import { Button } from "~/components/ui/Button";
 import {
@@ -13,51 +33,49 @@ import {
 	TooltipTrigger,
 } from "~/components/ui/Tooltip";
 
-import type { BookEntry } from "~/lib/data";
+import { bookEntries, type BookEntry } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 
-const ICON_MAP: Record<string, string> = {
-	prologue: "🚪",
-	epilogue: "📜",
-	timeline: "🕰️",
-	codex: "📖",
-	flashback: "🧠",
-	quote: "❝",
-	dream: "💤",
-	letter: "✉️",
-	interlude: "🎭",
-	map: "🗺️",
-	table_of_contents: "📚",
-	vocabulary: "🔤",
-	appendix: "📎",
-	poem: "📝",
-	note: "🗒️",
-	unknown: "❓",
+const ICON_MAP: any = {
+	cover: <BookOpenIcon className="inline" />,
+	prologue: <ListStartIcon className="inline" />,
+	epilogue: <ListEndIcon className="inline" />,
+	timeline: <HourglassIcon className="inline" />,
+	codex: <BookMarkedIcon className="inline" />,
+	flashback: <BrainIcon className="inline" />,
+	quote: <QuoteIcon className="inline" />,
+	dream: <MoonStarIcon className="inline" />,
+	letter: <MailIcon className="inline" />,
+	interlude: <DramaIcon className="inline" />,
+	map: <MapIcon className="inline" />,
+	table_of_contents: <TableOfContentsIcon className="inline" />,
+	vocabulary: <BookAIcon className="inline" />,
+	appendix: <PaperclipIcon className="inline" />,
+	poem: <ScrollTextIcon className="inline" />,
+	note: <NotepadTextIcon className="inline" />,
+	unknown: <CircleHelpIcon className="inline" />,
 };
 
 interface EntryNavigatorProps {
 	entries: BookEntry[];
 	visibleCount?: number;
+	scrollToEntryAction: (entryNumber: number) => void;
 }
 
 export default function EntryNavigator({
 	entries,
 	visibleCount = 7,
+	scrollToEntryAction,
 }: EntryNavigatorProps) {
 	const uiVisible = useTaleReaderStore((s) => s.uiVisible);
 	const currentEntry = useTaleReaderStore((s) => s.currentEntry);
 	const setCurrentEntry = useTaleReaderStore((s) => s.setCurrentEntry);
 
-	const goTo = (i: number) => setCurrentEntry(i, 1);
+	const goTo = (i: number) => {
+		setCurrentEntry(i, 1);
+	};
 
 	const activeRef = useRef<HTMLButtonElement | null>(null);
-
-	useEffect(() => {
-		activeRef.current?.scrollIntoView({
-			behavior: "smooth",
-			block: "center",
-		});
-	}, [currentEntry]);
 
 	if (entries.length <= 1) return null;
 
@@ -76,7 +94,8 @@ export default function EntryNavigator({
 		<div
 			className={clsx(
 				"-translate-y-1/2 fixed top-1/2 right-6 z-100 hidden md:flex",
-				!uiVisible && "pointer-events-none opacity-0",
+				"transition-opacity duration-300",
+				uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
 			)}
 		>
 			<TooltipProvider>
@@ -100,7 +119,11 @@ export default function EntryNavigator({
 											size="icon"
 											className="h-6 w-6 rounded-full"
 											aria-label="Previous"
-											onClick={() => goTo(Math.max(0, currentEntry - 1))}
+											onClick={() => {
+												const previousEntry = Math.max(0, currentEntry - 1);
+												goTo(previousEntry);
+												scrollToEntryAction(previousEntry);
+											}}
 										>
 											<ChevronUp className="h-4 w-4" />
 										</Button>
@@ -140,7 +163,10 @@ export default function EntryNavigator({
 										>
 											<button
 												ref={isActive ? activeRef : null}
-												onClick={() => goTo(globalIndex)}
+												onClick={() => {
+													goTo(globalIndex);
+													scrollToEntryAction(globalIndex);
+												}}
 												aria-label={`Go to ${entry.type}: ${entry.title}`}
 												type="button"
 												className={clsx(
@@ -160,7 +186,7 @@ export default function EntryNavigator({
 												{entry.type.replace(/_/g, " ")}: {entry.title}
 											</div>
 											<div className="text-muted-foreground text-xs">
-												{entry.pages} pages
+												{entry.pages.length} pages
 											</div>
 										</div>
 									</TooltipContent>
@@ -185,9 +211,16 @@ export default function EntryNavigator({
 											size="icon"
 											className="h-6 w-6 rounded-full"
 											aria-label="Next"
-											onClick={() =>
-												goTo(Math.min(entries.length - 1, currentEntry + 1))
-											}
+											onClick={() => {
+												const nextEntry = Math.min(
+													entries.length - 1,
+													currentEntry + 1,
+												);
+												goTo(nextEntry);
+												requestAnimationFrame(() => {
+													scrollToEntryAction(nextEntry);
+												});
+											}}
 										>
 											<ChevronDown className="h-4 w-4" />
 										</Button>

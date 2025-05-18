@@ -1,21 +1,32 @@
-import * as motion from "motion/react-client";
-import React from "react";
+"use client";
+import { useEffect } from "react";
 import { CoverPage } from "~/features/taleviewer/components/CoverPage";
 import { EntryNavigator } from "~/features/taleviewer/components/EntryNavigator";
+import { EntryPage } from "~/features/taleviewer/components/EntryPage";
 import PageNavigator from "~/features/taleviewer/components/PageNavigator/PageNavigator";
 import PageProgressBar from "~/features/taleviewer/components/PageProgressBar/PageProgressBar";
 import { ScrollIndicator } from "~/features/taleviewer/components/ScrollIndicator";
 import { UiToggleButton } from "~/features/taleviewer/components/UiToggleButton/UiToggleButton";
+import { useScrollNavigation } from "~/hooks/useScrollNavigation";
 import { bookEntries } from "~/lib/data";
+import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 
 function StoryView() {
+	const { scrollToEntry, scrollToPage } = useScrollNavigation();
+
 	return (
-		<div className="relative h-[2000px]">
+		<div className="relative flex h-[2000px] flex-col">
 			<PageProgressBar />
-			<EntryNavigator entries={bookEntries} />
-			<PageNavigator />
+			<EntryNavigator
+				entries={bookEntries}
+				scrollToEntryAction={scrollToEntry}
+			/>
+			<PageNavigator
+				scrollToPageAction={scrollToPage}
+				scrollToEntryAction={scrollToEntry}
+			/>
 			<UiToggleButton />
-			<CoverPage>
+			{/* <CoverPage>
 				div. Story
 				<motion.div
 					initial={{ scale: 0 }}
@@ -24,8 +35,11 @@ function StoryView() {
 				>
 					Story
 				</motion.div>
-				<ScrollIndicator />
-			</CoverPage>
+			</CoverPage> */}
+			{/* Entries and Pages */}
+			{bookEntries.map((entry) => (
+				<EntryPage key={entry.id} entry={entry} />
+			))}
 		</div>
 	);
 }
