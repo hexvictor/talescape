@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { CoverPage } from "~/features/taleviewer/components/CoverPage";
+import { BookEntries } from "~/features/taleviewer/components/BookEntries";
 import { EntryNavigator } from "~/features/taleviewer/components/EntryNavigator";
 import { EntryPage } from "~/features/taleviewer/components/EntryPage";
 import PageNavigator from "~/features/taleviewer/components/PageNavigator/PageNavigator";
@@ -8,6 +8,7 @@ import PageProgressBar from "~/features/taleviewer/components/PageProgressBar/Pa
 import { ScrollIndicator } from "~/features/taleviewer/components/ScrollIndicator";
 import { UiToggleButton } from "~/features/taleviewer/components/UiToggleButton/UiToggleButton";
 import { useScrollNavigation } from "~/hooks/useScrollNavigation";
+import { useScrollToHash } from "~/hooks/useScrollToHash";
 import { bookEntries } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 
@@ -26,20 +27,8 @@ function StoryView() {
 				scrollToEntryAction={scrollToEntry}
 			/>
 			<UiToggleButton />
-			{/* <CoverPage>
-				div. Story
-				<motion.div
-					initial={{ scale: 0 }}
-					animate={{ scale: 1 }}
-					className="bg-purple-500"
-				>
-					Story
-				</motion.div>
-			</CoverPage> */}
 			{/* Entries and Pages */}
-			{bookEntries.map((entry) => (
-				<EntryPage key={entry.id} entry={entry} />
-			))}
+			<BookEntries bookEntries={bookEntries} />
 		</div>
 	);
 }

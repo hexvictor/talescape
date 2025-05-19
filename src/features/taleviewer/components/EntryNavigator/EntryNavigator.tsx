@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -33,28 +33,9 @@ import {
 	TooltipTrigger,
 } from "~/components/ui/Tooltip";
 
-import { bookEntries, type BookEntry } from "~/lib/data";
+import { bookEntries, type BookEntry, type EntryType } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
-
-const ICON_MAP: any = {
-	cover: <BookOpenIcon className="inline" />,
-	prologue: <ListStartIcon className="inline" />,
-	epilogue: <ListEndIcon className="inline" />,
-	timeline: <HourglassIcon className="inline" />,
-	codex: <BookMarkedIcon className="inline" />,
-	flashback: <BrainIcon className="inline" />,
-	quote: <QuoteIcon className="inline" />,
-	dream: <MoonStarIcon className="inline" />,
-	letter: <MailIcon className="inline" />,
-	interlude: <DramaIcon className="inline" />,
-	map: <MapIcon className="inline" />,
-	table_of_contents: <TableOfContentsIcon className="inline" />,
-	vocabulary: <BookAIcon className="inline" />,
-	appendix: <PaperclipIcon className="inline" />,
-	poem: <ScrollTextIcon className="inline" />,
-	note: <NotepadTextIcon className="inline" />,
-	unknown: <CircleHelpIcon className="inline" />,
-};
+import { ICON_MAP } from "./entryIcons";
 
 interface EntryNavigatorProps {
 	entries: BookEntry[];
@@ -79,12 +60,18 @@ export default function EntryNavigator({
 
 	if (entries.length <= 1) return null;
 
-	let start = Math.max(0, currentEntry - Math.floor(visibleCount / 2));
-	const end = Math.min(entries.length - 1, start + visibleCount - 1);
-	if (end === entries.length - 1) start = Math.max(0, end - visibleCount + 1);
+	const { visibleEntries, start } = useMemo(() => {
+		let start = Math.max(0, currentEntry - Math.floor(visibleCount / 2));
+		const end = Math.min(entries.length - 1, start + visibleCount - 1);
+		if (end === entries.length - 1) {
+			start = Math.max(0, end - visibleCount + 1);
+		}
+		return { start, visibleEntries: entries.slice(start, end + 1) };
+	}, [entries, currentEntry, visibleCount]);
 
-	const visibleEntries = entries.slice(start, end + 1);
-	const numberedEntries = entries.filter((entry) => entry.type === "chapter");
+	const numberedEntries = useMemo(() => {
+		return entries.filter((entry) => entry.type === "chapter");
+	}, [entries]);
 
 	const entryHeight = 40;
 	const buttonOffset = 64;

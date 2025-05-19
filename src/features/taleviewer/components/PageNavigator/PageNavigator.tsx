@@ -1,7 +1,7 @@
 "use client";
 
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
-import { bookEntries, type BookEntry } from "~/lib/data";
+import { bookEntries, type Page, type BookEntry } from "~/lib/data";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -17,131 +17,197 @@ interface PageNavigatorProps {
 	scrollToPageAction: (entryNumber: number, pageNumber: number) => void;
 }
 
-export default function PageNavigator({
-	scrollToPageAction,
-	scrollToEntryAction,
-}: PageNavigatorProps) {
+// Define the type of each page item in the pagination list
+// Either an actual page (with metadata) or an ellipsis placeholder
+
+// Example: { type: "page", number: 3, id: "abc", firstPage: 4, lastPage: 6 }
+// or: { type: "ellipsis", key: "ellipsis-before-xyz" }
+type PageItem =
+	| {
+			type: "page";
+			number: number;
+			id: string;
+			firstPage: number;
+			lastPage: number;
+	  }
+	| {
+			type: "ellipsis";
+			key: string;
+	  };
+
+const MAX_VISIBLE = 15;
+const VISIBLE_NUMERIC = MAX_VISIBLE - 2;
+
+/**
+ * Generates a paginated list of visible page items (actual pages and ellipses)
+ * based on the current page index.
+ *
+ * @param currentPage - 1-based index of the current page
+ * @param entryPages - array of Page objects belonging to the current entry
+ * @returns PageItem[] including visible page buttons and ellipses
+ */
+function generatePages(currentPage: number, entryPages: Page[]): PageItem[] {
+	const total = entryPages.length;
+	if (total === 0) return [];
+
+	// If the total pages fit in the visible limit, return them all
+	if (total <= MAX_VISIBLE) {
+		return entryPages.map((p, i) => ({
+			type: "page",
+			number: i + 1,
+			id: p.id,
+			firstPage: p.firstPage,
+			lastPage: p.lastPage,
+		}));
+	}
+
+	const pages: PageItem[] = [];
+
+	// Determine visible window around the current page (centered window)
+	const half = Math.floor((VISIBLE_NUMERIC - 2) / 2);
+	let start = Math.max(1, currentPage - half);
+	let end = Math.min(total - 2, currentPage + half - 1);
+
+	// Clamp ranges to the beginning or end of list if near the edges
+	if (currentPage <= half + 2) {
+		start = 1;
+		end = VISIBLE_NUMERIC - 1;
+	} else if (currentPage >= total - half - 1) {
+		start = total - VISIBLE_NUMERIC + 1;
+		end = total - 2;
+	}
+
+	// Create a helper to standardize page creation
+	const pushPage = (p: Page, i: number): PageItem => ({
+		type: "page",
+		number: i + 1,
+		id: p.id,
+		firstPage: p.firstPage,
+		lastPage: p.lastPage,
+	});
+
+	// Always include the first page
+	const firstPage = entryPages[0];
+	if (firstPage) pages.push(pushPage(firstPage, 0));
+
+	// Insert leading ellipsis if needed
+	const prevPage = entryPages[start - 1];
+	if (start > 1 && prevPage) {
+		pages.push({ type: "ellipsis", key: `ellipsis-before-${prevPage.id}` });
+	}
+
+	// Middle page range
+	for (let i = start; i <= end; i++) {
+		const midPage = entryPages[i];
+		if (midPage) pages.push(pushPage(midPage, i));
+	}
+
+	// Insert trailing ellipsis if needed
+	const nextPage = entryPages[end + 1];
+	if (end < total - 2 && nextPage) {
+		pages.push({ type: "ellipsis", key: `ellipsis-after-${nextPage.id}` });
+	}
+
+	// Always include the last page
+	const lastPage = entryPages[total - 1];
+	if (lastPage) pages.push(pushPage(lastPage, total - 1));
+
+	return pages;
+}
+
+/**
+ * Convenience hook to extract and bundle reader store state.
+ * Includes the current entry and page, setters, and visibility flag.
+ */
+function usePageNavigatorState() {
 	const currentEntry = useTaleReaderStore((s) => s.currentEntry);
 	const currentPage = useTaleReaderStore((s) => s.currentPage);
 	const setCurrentPage = useTaleReaderStore((s) => s.setCurrentPage);
 	const setCurrentEntry = useTaleReaderStore((s) => s.setCurrentEntry);
 	const uiVisible = useTaleReaderStore((s) => s.uiVisible);
 
-	const currentBookEntry = bookEntries[currentEntry];
-	const totalPages = currentBookEntry?.pages.length ?? 1;
+	return {
+		currentEntry,
+		currentPage,
+		setCurrentPage,
+		setCurrentEntry,
+		uiVisible,
+		currentBookEntry: bookEntries[currentEntry],
+	};
+}
+
+/**
+ * Main pagination navigation component.
+ * Handles navigating between pages within an entry and between entries.
+ */
+export default function PageNavigator({
+	scrollToPageAction,
+	scrollToEntryAction,
+}: PageNavigatorProps) {
+	const {
+		currentEntry,
+		currentPage,
+		setCurrentPage,
+		setCurrentEntry,
+		uiVisible,
+		currentBookEntry,
+	} = usePageNavigatorState();
 
 	if (!currentBookEntry) return null;
-
+	const totalPages = currentBookEntry.pages.length;
 	const isFirstPage = currentPage === 1;
 	const isLastPage = currentPage === totalPages;
 
+	/**
+	 * Navigates to a specific page within the current entry.
+	 */
 	function goToPage(pageNumber: number) {
 		setCurrentPage(pageNumber);
 		scrollToPageAction(currentEntry, pageNumber - 1);
 	}
 
+	/**
+	 * Handles logic for navigating to the previous page or previous entry.
+	 * If already on the first page and there's a previous entry, it jumps to its last page.
+	 */
 	function goToPrevPage() {
-		if (isFirstPage) {
-			if (currentEntry > 0) {
-				const previousEntry = bookEntries[currentEntry - 1];
-				const lastPageOfPreviousEntry = previousEntry?.pages.length ?? 1;
-				setCurrentEntry(currentEntry - 1, lastPageOfPreviousEntry);
-				if (currentEntry - 1 === 0) {
-					requestAnimationFrame(() => {
-						scrollToEntryAction(0);
-					});
-				} else {
-					scrollToPageAction(currentEntry - 1, lastPageOfPreviousEntry - 1);
-				}
-			}
-		} else {
+		if (isFirstPage && currentEntry > 0) {
+			const previousEntry = bookEntries[currentEntry - 1];
+			const lastPage = previousEntry?.pages.length ?? 1;
+			setCurrentEntry(currentEntry - 1, lastPage);
+			const scrollAction =
+				currentEntry - 1 === 0 ? scrollToEntryAction : scrollToPageAction;
+			scrollAction(currentEntry - 1, lastPage - 1);
+		} else if (!isFirstPage) {
 			goToPage(currentPage - 1);
 		}
 	}
 
+	/**
+	 * Handles logic for navigating to the next page or next entry.
+	 */
 	function goToNextPage() {
-		if (isLastPage) {
-			if (currentEntry < bookEntries.length - 1) {
-				setCurrentEntry(currentEntry + 1, 1);
-				scrollToPageAction(currentEntry + 1, 0);
-			}
-		} else {
+		if (isLastPage && currentEntry < bookEntries.length - 1) {
+			setCurrentEntry(currentEntry + 1, 1);
+			scrollToPageAction(currentEntry + 1, 0);
+		} else if (!isLastPage) {
 			goToPage(currentPage + 1);
 		}
 	}
-	type PageItem =
-		| { number: number; id: string; firstPage: number; lastPage: number }
-		| "...";
 
-	const maxVisible = 15;
-	const visibleNumeric = maxVisible - 2;
+	const pages = generatePages(currentPage, currentBookEntry.pages);
 
-	const generatePages = (currentPage: number, entryPages: any[]): any[] => {
-		const total = entryPages.length;
-		if (total === 0) return [];
+	// Calculates the absolute page number across the entire book
+	const absolutePage =
+		bookEntries
+			.slice(0, currentEntry)
+			.reduce((acc, e) => acc + e.pages.length, 0) + currentPage;
 
-		if (total <= maxVisible) {
-			return entryPages.map((p, i) => ({
-				number: i + 1,
-				id: p.id,
-				firstPage: p.firstPage,
-				lastPage: p.lastPage,
-			}));
-		}
-
-		const pages: PageItem[] = [
-			{
-				number: 1,
-				id: entryPages[0].id,
-				firstPage: entryPages[0].firstPage,
-				lastPage: entryPages[0].lastPage,
-			},
-		];
-
-		const half = Math.floor((visibleNumeric - 2) / 2);
-		let start = Math.max(1, currentPage - half);
-		let end = Math.min(total - 2, currentPage + half - 1);
-
-		if (currentPage <= half + 2) {
-			start = 1;
-			end = visibleNumeric - 1;
-		} else if (currentPage >= total - half - 1) {
-			start = total - visibleNumeric + 1;
-			end = total - 2;
-		}
-
-		if (start > 1) pages.push("...");
-
-		for (let i = start; i <= end; i++) {
-			const p = entryPages[i];
-			if (p) {
-				pages.push({
-					number: i + 1,
-					id: p.id,
-					firstPage: p.firstPage,
-					lastPage: p.lastPage,
-				});
-			}
-		}
-
-		if (end < total - 2) pages.push("...");
-
-		const last = entryPages[total - 1];
-		if (last) {
-			pages.push({
-				number: total,
-				id: last.id,
-				firstPage: last.firstPage,
-				lastPage: last.lastPage,
-			});
-		}
-
-		return pages;
-	};
-
-	const pages = currentBookEntry?.pages
-		? generatePages(currentPage, currentBookEntry.pages)
-		: [];
+	// Total number of pages in the full book (all entries combined)
+	const totalBookPages = bookEntries.reduce(
+		(acc, e) => acc + e.pages.length,
+		0,
+	);
 
 	return (
 		<div
@@ -156,7 +222,6 @@ export default function PageNavigator({
 				size="icon"
 				onClick={goToPrevPage}
 				disabled={currentEntry === 0 && isFirstPage}
-				className="cursor-pointer"
 				aria-label="Previous page"
 			>
 				<ArrowLeft className="h-4 w-4" />
@@ -165,12 +230,7 @@ export default function PageNavigator({
 			<DropdownMenu>
 				<DropdownMenuTrigger disabled={totalPages === 1} asChild>
 					<Button variant="outline" className="min-w-[120px] cursor-pointer">
-						Page{" "}
-						{bookEntries
-							.slice(0, currentEntry)
-							.reduce((acc, entry) => acc + entry.pages.length, 0) +
-							currentPage}{" "}
-						of {bookEntries.reduce((acc, entry) => acc + entry.pages.length, 0)}
+						Page {absolutePage} of {totalBookPages}
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="center">
@@ -185,25 +245,23 @@ export default function PageNavigator({
 							min={1}
 							max={totalPages}
 							step={1}
-							onValueChange={(value) => {
-								if (typeof value[0] === "number") {
-									goToPage(value[0]);
-								}
-							}}
+							onValueChange={(value) =>
+								typeof value[0] === "number" && goToPage(value[0])
+							}
 							className="mb-4"
 						/>
 
 						<div className="grid grid-cols-5 gap-2">
-							{pages.map((page, i) =>
-								page === "..." ? (
+							{pages.map((page) =>
+								page.type === "ellipsis" ? (
 									<Button
-										key={`ellipsis-${i}`}
+										key={page.key}
 										variant="ghost"
 										size="sm"
 										className="h-8 w-8 p-0"
 										disabled
 									>
-										...
+										…
 									</Button>
 								) : (
 									<Button
@@ -231,7 +289,6 @@ export default function PageNavigator({
 				variant="outline"
 				size="icon"
 				onClick={goToNextPage}
-				className="cursor-pointer"
 				disabled={currentEntry === bookEntries.length - 1 && isLastPage}
 				aria-label="Next page"
 			>

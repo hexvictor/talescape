@@ -17,6 +17,8 @@ export function useScrollNavigation() {
 
 			scrollTimeout.current = setTimeout(() => {
 				isProgrammaticScroll.current = false;
+				// In the future update the progress in the DB when scrolling to the entry.
+				// history.replaceState(null, "", `#entry-${entry?.id}`);
 			}, 600); // shorter timeout since you debounce it
 		}
 	}
@@ -33,11 +35,28 @@ export function useScrollNavigation() {
 
 			scrollTimeout.current = setTimeout(() => {
 				isProgrammaticScroll.current = false;
+				// In the future update the progress in the DB when scrolling to the page.
+				// history.replaceState(null, "", `#page-${page?.id}`);
 			}, 600);
 		}
 	}
 
 	useEffect(() => {
+		// In the future save the progress of the tale in the DB and then scroll to the current page the user was on.
+
+		// const hash = window.location.hash;
+		// if (hash) {
+		// 	const el = document.getElementById(hash.substring(1));
+		// 	if (el) {
+		// 		isProgrammaticScroll.current = true;
+		// 		el.scrollIntoView({ behavior: "auto", block: "start" });
+
+		// 		scrollTimeout.current = setTimeout(() => {
+		// 			isProgrammaticScroll.current = false;
+		// 		}, 600);
+		// 	}
+		// }
+
 		const threshold = 0.6;
 		const store = useTaleReaderStore.getState();
 
@@ -52,6 +71,9 @@ export function useScrollNavigation() {
 						if (index !== -1) {
 							requestAnimationFrame(() => {
 								store.setCurrentEntry(index);
+								// In the future update the progress in the DB when scrolling to the page.
+
+								// history.replaceState(null, "", `#page-${id}`);
 							});
 						}
 					}
@@ -79,6 +101,9 @@ export function useScrollNavigation() {
 								requestAnimationFrame(() => {
 									store.setCurrentEntry(entryIndex);
 									store.setCurrentPage(pageIndex + 1);
+									// In the future update the progress in the DB when scrolling to the page.
+
+									// history.replaceState(null, "", `#entry-${id}`);
 								});
 								break;
 							}

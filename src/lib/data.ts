@@ -7,6 +7,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "92cd98c2-8d40-4837-9aa7-1ff5b783de11",
 				bookPages: 1,
+				type: "book",
 				firstPage: 1,
 				lastPage: 1,
 				fragments: [
@@ -27,6 +28,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "83406608-1fb8-462d-b244-1bd589f2f8b0",
 				bookPages: 3,
+				type: "book",
 				firstPage: 2,
 				lastPage: 4,
 				fragments: [
@@ -40,6 +42,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "1564d99d-bae5-4b58-8f9a-545de1600c1a",
 				bookPages: 1,
+				type: "book",
 				firstPage: 5,
 				lastPage: 5,
 				fragments: [
@@ -53,6 +56,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "6584fe5c-fbec-4247-9f06-02a457aff4ee",
 				bookPages: 6,
+				type: "book",
 				firstPage: 6,
 				lastPage: 11,
 				fragments: [
@@ -73,6 +77,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "92cd98c2-8d40-4837-9aa7-1ff5b783de5e",
 				bookPages: 28,
+				type: "book",
 				firstPage: 12,
 				lastPage: 39,
 				fragments: [
@@ -93,6 +98,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "e773d605-f037-45ef-b4d0-3f2258b8e047",
 				bookPages: 32,
+				type: "book",
 				firstPage: 40,
 				lastPage: 71,
 				fragments: [
@@ -113,6 +119,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "719b59d0-a483-42a0-8e84-36a8f78bd479",
 				bookPages: 25,
+				type: "book",
 				firstPage: 72,
 				lastPage: 96,
 				fragments: [
@@ -133,6 +140,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "9b2b9a9f-d00f-4cb7-ae73-534bf2d543b6",
 				bookPages: 4,
+				type: "book",
 				firstPage: 97,
 				lastPage: 100,
 				fragments: [
@@ -153,6 +161,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "32417562-7883-4755-8bd7-17ab02b97bcc",
 				bookPages: 3,
+				type: "book",
 				firstPage: 101,
 				lastPage: 103,
 				fragments: [
@@ -173,6 +182,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "eb64b567-0242-4ba6-98fb-fa372d36d5e0",
 				bookPages: 30,
+				type: "book",
 				firstPage: 104,
 				lastPage: 133,
 				fragments: [
@@ -193,6 +203,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "2a21b81c-3b04-4ee4-a5be-691349ffcb54",
 				bookPages: 35,
+				type: "book",
 				firstPage: 134,
 				lastPage: 168,
 				fragments: [
@@ -213,6 +224,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "caf02050-f19e-4872-861d-15dec0ec4749",
 				bookPages: 5,
+				type: "book",
 				firstPage: 169,
 				lastPage: 173,
 				fragments: [
@@ -233,6 +245,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "d5d60371-0630-4bfa-b755-5596ecdbbc3e",
 				bookPages: 22,
+				type: "book",
 				firstPage: 174,
 				lastPage: 195,
 				fragments: [
@@ -253,6 +266,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "62315535-b529-4c58-a9b9-565ec01e2472",
 				bookPages: 1,
+				type: "book",
 				firstPage: 196,
 				lastPage: 196,
 				fragments: [
@@ -273,6 +287,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "1b5ec6cb-f216-47f7-be63-9090617967f9",
 				bookPages: 26,
+				type: "book",
 				firstPage: 197,
 				lastPage: 222,
 				fragments: [
@@ -293,6 +308,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "8e7f3f50-3e62-4234-9fc5-024bec337e1d",
 				bookPages: 31,
+				type: "book",
 				firstPage: 223,
 				lastPage: 253,
 				fragments: [
@@ -313,6 +329,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "4671c741-72b3-484f-9dbf-b205488279b7",
 				bookPages: 2,
+				type: "book",
 				firstPage: 254,
 				lastPage: 255,
 				fragments: [
@@ -333,6 +350,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "307b2a79-99e6-4924-8ac9-f246926f25dc",
 				bookPages: 29,
+				type: "book",
 				firstPage: 256,
 				lastPage: 284,
 				fragments: [
@@ -353,6 +371,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "a174ea69-7dc6-44c8-ac2b-1d2de6eb7d06",
 				bookPages: 33,
+				type: "book",
 				firstPage: 285,
 				lastPage: 317,
 				fragments: [
@@ -373,6 +392,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "c3e26d31-6935-4f01-aa66-fdb36642ad05",
 				bookPages: 3,
+				type: "book",
 				firstPage: 318,
 				lastPage: 320,
 				fragments: [
@@ -393,6 +413,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "cf4f4b3e-1db1-4af1-a928-562cb42cc9e1",
 				bookPages: 27,
+				type: "book",
 				firstPage: 321,
 				lastPage: 347,
 				fragments: [
@@ -413,6 +434,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "afe08105-00ec-43d9-b523-b476ac2c5c4e",
 				bookPages: 6,
+				type: "book",
 				firstPage: 348,
 				lastPage: 353,
 				fragments: [
@@ -433,6 +455,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "f01797e6-b2d5-44d0-9c80-2fc1d966b0ef",
 				bookPages: 24,
+				type: "book",
 				firstPage: 354,
 				lastPage: 377,
 				fragments: [
@@ -453,6 +476,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "ce5b21af-6611-4e1d-a6b0-99491751d659",
 				bookPages: 30,
+				type: "book",
 				firstPage: 378,
 				lastPage: 407,
 				fragments: [
@@ -473,6 +497,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "c7ad76ae-1e88-4f8e-86bd-44191ca2b0d1",
 				bookPages: 2,
+				type: "book",
 				firstPage: 408,
 				lastPage: 409,
 				fragments: [
@@ -493,6 +518,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "6468ad0c-5071-4434-9b4e-e9e19ce7db08",
 				bookPages: 3,
+				type: "book",
 				firstPage: 410,
 				lastPage: 412,
 				fragments: [
@@ -513,6 +539,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "e124ff13-9c56-42d1-950e-d979bbff62ab",
 				bookPages: 28,
+				type: "book",
 				firstPage: 413,
 				lastPage: 440,
 				fragments: [
@@ -533,6 +560,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "0709f8bc-4a33-4342-a774-c99a054545f1",
 				bookPages: 32,
+				type: "book",
 				firstPage: 441,
 				lastPage: 472,
 				fragments: [
@@ -553,6 +581,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "fdddf7f7-d6f9-4f3f-886f-1db8298b6aef",
 				bookPages: 2,
+				type: "book",
 				firstPage: 473,
 				lastPage: 474,
 				fragments: [
@@ -573,6 +602,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "cd5a6e68-ba52-4b12-9788-74aaf83c76f2",
 				bookPages: 4,
+				type: "book",
 				firstPage: 475,
 				lastPage: 478,
 				fragments: [
@@ -593,6 +623,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "f065df1c-4f12-4fe3-8b38-76875ca9ec14",
 				bookPages: 6,
+				type: "book",
 				firstPage: 479,
 				lastPage: 484,
 				fragments: [
@@ -613,6 +644,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "1291f6d3-2a36-45e9-bd2c-857a03ed8b0a",
 				bookPages: 1,
+				type: "book",
 				firstPage: 485,
 				lastPage: 485,
 				fragments: [
@@ -633,6 +665,7 @@ export const bookEntries: BookEntry[] = [
 			{
 				id: "95c664ea-4a39-49ef-bd27-7777df17a191",
 				bookPages: 2,
+				type: "book",
 				firstPage: 486,
 				lastPage: 487,
 				fragments: [
@@ -654,6 +687,7 @@ export type Fragment = {
 
 export type Page = {
 	id: string;
+	type: PageType;
 	bookPages: number;
 	firstPage: number;
 	lastPage: number;
@@ -677,7 +711,10 @@ export type EntryType =
 	| "vocabulary"
 	| "appendix"
 	| "poem"
-	| "note";
+	| "note"
+	| "unknown";
+
+export type PageType = "book" | "comic";
 
 export type BookEntry = {
 	id: string;
