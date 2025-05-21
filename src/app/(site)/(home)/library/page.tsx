@@ -1,7 +1,7 @@
 import { getPublishedBooks } from "~/server/db/queries/books";
-import { Button } from "~/components/ui/Button";
 import Link from "next/link";
-import { BookGrid } from "../../../../features/books/components/BookGrid";
+import { Button } from "~/components/ui/Button";
+import { BookGrid } from "~/features/library/books/components";
 
 async function Library() {
 	const books = await getPublishedBooks();

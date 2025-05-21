@@ -3,7 +3,7 @@
 import { useRef, useState, type MouseEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useClickOutside } from "~/hooks/useClickOutside";
-import Header from "./Header";
+import Header from ".";
 
 export default function HoverHeader() {
 	const [isHovered, setIsHovered] = useState(false);

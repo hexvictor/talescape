@@ -1,5 +1,5 @@
-import { Modal } from "~/components/ui/Modal";
 import { SignedIn, SignIn, useAuth } from "@clerk/nextjs";
+import Modal from "~/components/ui/Modal";
 
 export default function SignInModalPage() {
 	return (

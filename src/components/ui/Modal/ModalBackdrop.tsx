@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useModal } from "./Modal";
+import { useModal } from ".";
 
 type ModalBackdropProps = {
 	children: React.ReactNode;

@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "~/utils/icons";
-import { useModal } from "./Modal";
+import { useModal } from ".";
 
 type ModalWrapperProps = {
 	children: React.ReactNode;

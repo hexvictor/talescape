@@ -3,17 +3,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-type MenuItemProps = {
+type NavItemProps = {
 	href: string;
 	children: ReactNode;
 	className?: string;
 };
 
-export default function MenuItem({
+export default function NavItem({
 	href,
 	children,
 	className = "",
-}: MenuItemProps) {
+}: NavItemProps) {
 	const pathname = usePathname();
 	const isActive = href === pathname;
 	return (
