@@ -1,12 +1,8 @@
-import type { BookEntry } from "~/lib/data";
+import { bookEntries, type BookEntry } from "~/lib/data";
 import React from "react";
 import EntryPage from "../EntryPage";
 
-interface BookEntriesProps {
-	bookEntries: BookEntry[];
-}
-
-const BookEntriesComponent = ({ bookEntries }: BookEntriesProps) => {
+const BookEntriesComponent = () => {
 	return (
 		<>
 			{bookEntries.map((entry) => (

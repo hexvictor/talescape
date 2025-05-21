@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 
-import { Button } from "~/components/ui/Button";
 import {
 	Tooltip,
 	TooltipContent,
@@ -16,18 +15,18 @@ import {
 import { bookEntries, type BookEntry, type EntryType } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 import { ICON_MAP } from "./entryIcons";
+import { useTaleReaderContext } from "~/features/talereader/contexts/TaleReaderContext";
+import { Button } from "~/components/ui/Button";
 
 interface EntryNavigatorProps {
-	entries: BookEntry[];
 	visibleCount?: number;
-	scrollToEntryAction: (entryNumber: number) => void;
 }
 
 export default function EntryNavigator({
-	entries,
 	visibleCount = 7,
-	scrollToEntryAction,
 }: EntryNavigatorProps) {
+	const { scrollToEntry } = useTaleReaderContext();
+
 	const uiVisible = useTaleReaderStore((s) => s.uiVisible);
 	const currentEntry = useTaleReaderStore((s) => s.currentEntry);
 	const setCurrentEntry = useTaleReaderStore((s) => s.setCurrentEntry);
@@ -38,20 +37,20 @@ export default function EntryNavigator({
 
 	const activeRef = useRef<HTMLButtonElement | null>(null);
 
-	if (entries.length <= 1) return null;
+	if (bookEntries.length <= 1) return null;
 
 	const { visibleEntries, start } = useMemo(() => {
 		let start = Math.max(0, currentEntry - Math.floor(visibleCount / 2));
-		const end = Math.min(entries.length - 1, start + visibleCount - 1);
-		if (end === entries.length - 1) {
+		const end = Math.min(bookEntries.length - 1, start + visibleCount - 1);
+		if (end === bookEntries.length - 1) {
 			start = Math.max(0, end - visibleCount + 1);
 		}
-		return { start, visibleEntries: entries.slice(start, end + 1) };
-	}, [entries, currentEntry, visibleCount]);
+		return { start, visibleEntries: bookEntries.slice(start, end + 1) };
+	}, [currentEntry, visibleCount]);
 
 	const numberedEntries = useMemo(() => {
-		return entries.filter((entry) => entry.type === "chapter");
-	}, [entries]);
+		return bookEntries.filter((entry) => entry.type === "chapter");
+	}, []);
 
 	const entryHeight = 40;
 	const buttonOffset = 64;
@@ -89,7 +88,7 @@ export default function EntryNavigator({
 											onClick={() => {
 												const previousEntry = Math.max(0, currentEntry - 1);
 												goTo(previousEntry);
-												scrollToEntryAction(previousEntry);
+												scrollToEntry(previousEntry);
 											}}
 										>
 											<ChevronUp className="h-4 w-4" />
@@ -132,7 +131,7 @@ export default function EntryNavigator({
 												ref={isActive ? activeRef : null}
 												onClick={() => {
 													goTo(globalIndex);
-													scrollToEntryAction(globalIndex);
+													scrollToEntry(globalIndex);
 												}}
 												aria-label={`Go to ${entry.type}: ${entry.title}`}
 												type="button"
@@ -163,7 +162,7 @@ export default function EntryNavigator({
 					</div>
 
 					<AnimatePresence mode="wait">
-						{currentEntry < entries.length - 1 && (
+						{currentEntry < bookEntries.length - 1 && (
 							<motion.div
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
@@ -180,12 +179,12 @@ export default function EntryNavigator({
 											aria-label="Next"
 											onClick={() => {
 												const nextEntry = Math.min(
-													entries.length - 1,
+													bookEntries.length - 1,
 													currentEntry + 1,
 												);
 												goTo(nextEntry);
 												requestAnimationFrame(() => {
-													scrollToEntryAction(nextEntry);
+													scrollToEntry(nextEntry);
 												});
 											}}
 										>

@@ -11,11 +11,7 @@ import { Slider } from "~/components/ui/Slider";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "~/components/ui/Button";
-
-interface PageNavigatorProps {
-	scrollToEntryAction: (entryNumber: number) => void;
-	scrollToPageAction: (entryNumber: number, pageNumber: number) => void;
-}
+import { useTaleReaderContext } from "~/features/talereader/contexts/TaleReaderContext";
 
 // Define the type of each page item in the pagination list
 // Either an actual page (with metadata) or an ellipsis placeholder
@@ -116,42 +112,17 @@ function generatePages(currentPage: number, entryPages: Page[]): PageItem[] {
 }
 
 /**
- * Convenience hook to extract and bundle reader store state.
- * Includes the current entry and page, setters, and visibility flag.
+ * Main pagination navigation component.
+ * Handles navigating between pages within an entry and between entries.
  */
-function usePageNavigatorState() {
+export default function PageNavigator() {
+	const { scrollToPage, scrollToEntry } = useTaleReaderContext();
 	const currentEntry = useTaleReaderStore((s) => s.currentEntry);
 	const currentPage = useTaleReaderStore((s) => s.currentPage);
 	const setCurrentPage = useTaleReaderStore((s) => s.setCurrentPage);
 	const setCurrentEntry = useTaleReaderStore((s) => s.setCurrentEntry);
 	const uiVisible = useTaleReaderStore((s) => s.uiVisible);
-
-	return {
-		currentEntry,
-		currentPage,
-		setCurrentPage,
-		setCurrentEntry,
-		uiVisible,
-		currentBookEntry: bookEntries[currentEntry],
-	};
-}
-
-/**
- * Main pagination navigation component.
- * Handles navigating between pages within an entry and between entries.
- */
-export default function PageNavigator({
-	scrollToPageAction,
-	scrollToEntryAction,
-}: PageNavigatorProps) {
-	const {
-		currentEntry,
-		currentPage,
-		setCurrentPage,
-		setCurrentEntry,
-		uiVisible,
-		currentBookEntry,
-	} = usePageNavigatorState();
+	const currentBookEntry = bookEntries[currentEntry];
 
 	if (!currentBookEntry) return null;
 	const totalPages = currentBookEntry.pages.length;
@@ -163,7 +134,7 @@ export default function PageNavigator({
 	 */
 	function goToPage(pageNumber: number) {
 		setCurrentPage(pageNumber);
-		scrollToPageAction(currentEntry, pageNumber - 1);
+		scrollToPage(currentEntry, pageNumber - 1);
 	}
 
 	/**
@@ -176,7 +147,7 @@ export default function PageNavigator({
 			const lastPage = previousEntry?.pages.length ?? 1;
 			setCurrentEntry(currentEntry - 1, lastPage);
 			const scrollAction =
-				currentEntry - 1 === 0 ? scrollToEntryAction : scrollToPageAction;
+				currentEntry - 1 === 0 ? scrollToEntry : scrollToPage;
 			scrollAction(currentEntry - 1, lastPage - 1);
 		} else if (!isFirstPage) {
 			goToPage(currentPage - 1);
@@ -189,7 +160,7 @@ export default function PageNavigator({
 	function goToNextPage() {
 		if (isLastPage && currentEntry < bookEntries.length - 1) {
 			setCurrentEntry(currentEntry + 1, 1);
-			scrollToPageAction(currentEntry + 1, 0);
+			scrollToPage(currentEntry + 1, 0);
 		} else if (!isLastPage) {
 			goToPage(currentPage + 1);
 		}

@@ -1,32 +1,28 @@
 "use client";
 import {
 	BookEntries,
+	ContentsNavigator,
 	EntryNavigator,
 	PageNavigator,
 	ReaderUiToggle,
 	TaleProgress,
 } from "~/features/talereader/components/reader";
+import { TaleReaderProvider } from "~/features/talereader/contexts/TaleReaderContext";
 import { useScrollNavigation } from "~/hooks/useScrollNavigation";
 import { bookEntries } from "~/lib/data";
 
 function StoryView() {
-	const { scrollToEntry, scrollToPage } = useScrollNavigation();
-
 	return (
-		<div className="relative flex h-[2000px] flex-col">
-			<TaleProgress />
-			<EntryNavigator
-				entries={bookEntries}
-				scrollToEntryAction={scrollToEntry}
-			/>
-			<PageNavigator
-				scrollToPageAction={scrollToPage}
-				scrollToEntryAction={scrollToEntry}
-			/>
-			<ReaderUiToggle />
-			{/* Entries and Pages */}
-			<BookEntries bookEntries={bookEntries} />
-		</div>
+		<TaleReaderProvider>
+			<div className="relative flex h-[2000px] flex-col">
+				<ContentsNavigator />
+				<TaleProgress />
+				<EntryNavigator />
+				<PageNavigator />
+				<ReaderUiToggle />
+				<BookEntries />
+			</div>
+		</TaleReaderProvider>
 	);
 }
 

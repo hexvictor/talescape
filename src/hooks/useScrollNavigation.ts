@@ -5,6 +5,7 @@ import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 export function useScrollNavigation() {
 	const isProgrammaticScroll = useRef(false);
 	const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const timeout = 1200;
 
 	function scrollToEntry(entryNumber: number) {
 		if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
@@ -19,7 +20,7 @@ export function useScrollNavigation() {
 				isProgrammaticScroll.current = false;
 				// In the future update the progress in the DB when scrolling to the entry.
 				// history.replaceState(null, "", `#entry-${entry?.id}`);
-			}, 600); // shorter timeout since you debounce it
+			}, timeout); // shorter timeout since you debounce it
 		}
 	}
 
@@ -37,7 +38,7 @@ export function useScrollNavigation() {
 				isProgrammaticScroll.current = false;
 				// In the future update the progress in the DB when scrolling to the page.
 				// history.replaceState(null, "", `#page-${page?.id}`);
-			}, 600);
+			}, timeout);
 		}
 	}
 
