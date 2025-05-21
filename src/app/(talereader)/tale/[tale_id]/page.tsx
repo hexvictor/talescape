@@ -14,7 +14,7 @@ import { bookEntries } from "~/lib/data";
 function StoryView() {
 	return (
 		<TaleReaderProvider>
-			<div className="relative flex h-[2000px] flex-col">
+			<div className="relative flex min-h-[2000px] flex-col">
 				<ContentsNavigator />
 				<TaleProgress />
 				<EntryNavigator />

@@ -60,7 +60,7 @@ export default function ContentsNavigator() {
 						className="flex items-center gap-1"
 					>
 						<span className="flex items-center gap-1 text-sm">
-							<BookOpenIcon /> Contents
+							{activeEntry.title}
 						</span>
 						<ChevronDown className="h-4 w-4" />
 					</Button>

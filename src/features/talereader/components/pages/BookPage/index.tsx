@@ -8,7 +8,7 @@ export interface BookPageProps {
 
 function BookPageComponent({ page }: BookPageProps): JSX.Element {
 	return (
-		<div className="flex flex-col gap-4 p-6">
+		<div className=" flex min-h-[500px] flex-col gap-4 p-6">
 			<div className="text-muted-foreground text-sm italic">
 				Pages {page.firstPage}–{page.lastPage}
 			</div>
