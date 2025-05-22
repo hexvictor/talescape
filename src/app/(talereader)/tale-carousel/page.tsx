@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Button } from "~/components/ui/Button";
 import {
 	Carousel,
 	CarouselContent,
 	CarouselItem,
 	type CarouselApi,
-} from "~/components/ui/carousel";
-import { Button } from "~/components/ui/button";
+} from "~/components/ui/Carousel";
 
 const verticalSlides = [
 	{ id: 1, label: "Vertical Slide 1", color: "bg-blue-300" },
