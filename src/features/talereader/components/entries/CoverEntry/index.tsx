@@ -16,6 +16,7 @@ export function CoverEntryComponent({ entry }: CoverEntryProps) {
 				<h1 className="font-bold text-5xl">{entry.title}</h1>
 			</div>
 			<ScrollIndicator />
+			-Bug in scroll -
 			{entry.pages.map((page) => (
 				<div
 					id={`page-${page.id}`}

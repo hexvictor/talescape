@@ -1,3 +1,5 @@
+import type { Book } from "~/server/db/schema";
+
 export const bookEntries: BookEntry[] = [
 	{
 		id: "c2b19d3c-89a5-4a21-959e-1513fe911755",
@@ -679,6 +681,20 @@ export const bookEntries: BookEntry[] = [
 		],
 	},
 ];
+
+export const bookData: Book = {
+	id: 0,
+	title: "The Way of Kings",
+	authorId: 1,
+	description:
+		"An epic fantasy novel by Brandon Sanderson, first in the Stormlight Archive.",
+	coverImageUrl: "https://example.com/images/way-of-kings.jpg",
+	type: "official",
+	userId: "user-123",
+	status: "published", // assuming BookStatus is something like "draft" | "published"
+	createdAt: new Date("2020-03-04T12:00:00Z"),
+	updatedAt: new Date("2021-07-10T15:30:00Z"),
+};
 export type Fragment = {
 	id: string;
 	type: "text" | "image"; // extend if needed
