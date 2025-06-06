@@ -1,9 +1,9 @@
-import type { BookEntry, EntryType } from "~/lib/data";
+import type { EntryType, TaleEntry } from "~/lib/data";
 import CoverEntry from "./CoverEntry";
 import type { FC } from "react";
 import ChapterEntry from "./ChapterEntry";
 
-type EntryComponent = FC<{ entry: BookEntry }>;
+type EntryComponent = FC<{ entry: TaleEntry }>;
 
 const entryComponents: Record<EntryType, EntryComponent> = {
 	cover: CoverEntry,

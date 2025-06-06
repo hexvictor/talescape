@@ -1,21 +1,31 @@
-import BookEntries from "./BookEntries";
+import TaleContent from "./TaleContent";
 import ContentsNavigator from "./ContentsNavigator";
 import EntryNavigator from "./EntryNavigator";
-import EntryPage from "./EntryPage";
+import ScrollSection from "./ScrollSection";
 import PageNavigator from "./PageNavigator";
 import ReaderUiToggle from "./ReaderUiToggle";
 import ScrollIndicator from "./ScrollIndicator";
 import TalePage from "./TalePage";
 import TaleProgress from "./TaleProgress";
+import TaleSection from "./TaleSection";
+import ReelSection from "./ReelSection";
+import TaleReader from "./TaleReader";
+import TaleBlock from "./TaleBlock";
+import TaleFragment from "./TaleFragment";
 
 export {
-	BookEntries,
-	ContentsNavigator,
-	EntryNavigator,
-	EntryPage,
-	PageNavigator,
-	ScrollIndicator,
-	TalePage,
-	TaleProgress,
-	ReaderUiToggle,
+  TaleContent,
+  TaleSection,
+  TaleBlock,
+  TaleFragment,
+  TaleReader,
+  ContentsNavigator,
+  EntryNavigator,
+  ScrollSection,
+  ReelSection,
+  PageNavigator,
+  ScrollIndicator,
+  TalePage,
+  TaleProgress,
+  ReaderUiToggle,
 };

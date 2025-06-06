@@ -1,29 +1,14 @@
-"use client";
-import {
-	BookEntries,
-	ContentsNavigator,
-	EntryNavigator,
-	PageNavigator,
-	ReaderUiToggle,
-	TaleProgress,
-} from "~/features/talereader/components/reader";
-import { TaleReaderProvider } from "~/features/talereader/contexts/TaleReaderContext";
-import { useScrollNavigation } from "~/hooks/useScrollNavigation";
-import { bookEntries } from "~/lib/data";
 
-function StoryView() {
-	return (
-		<TaleReaderProvider>
-			<div className="relative flex min-h-[2000px] flex-col">
-				<ContentsNavigator />
-				<TaleProgress />
-				<EntryNavigator />
-				<PageNavigator />
-				<ReaderUiToggle />
-				<BookEntries />
-			</div>
-		</TaleReaderProvider>
-	);
+import { TaleReader } from "~/features/talereader/components/reader";
+import { tale, type Tale } from "~/lib/data";
+
+type PageProps = {
+	params: { taleId: string };
+};
+
+export default async function TalePage({ params }: PageProps) {
+	// const taleData = await getTaleById(params.taleId);
+	const taleData: Tale = tale;
+
+	return <TaleReader tale={taleData} />;
 }
-
-export default StoryView;

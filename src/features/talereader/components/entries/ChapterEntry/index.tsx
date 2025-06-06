@@ -1,15 +1,15 @@
-import type { BookEntry } from "~/lib/data";
+import type { TaleEntry } from "~/lib/data";
 import React from "react";
 import { TalePage } from "../../reader";
 
 type ChapterEntryProps = {
-	entry: BookEntry;
+	entry: TaleEntry;
 };
 
 export function ChapterEntryComponent({ entry }: ChapterEntryProps) {
 	return (
 		<div
-			id={`entry-${entry.id}`}
+			id={`anchor-${entry.id}`}
 			className="mx-auto min-h-screen max-w-3xl space-y-12 px-4 sm:px-6 lg:px-8"
 		>
 			<div className="mt-8 mb-12 text-center">
@@ -20,7 +20,7 @@ export function ChapterEntryComponent({ entry }: ChapterEntryProps) {
 			</div>
 			{entry.pages.map((page) => (
 				<div
-					id={`page-${page.id}`}
+					id={`anchor-${page.id}`}
 					key={page.id}
 					className="scroll-target border-t pt-6"
 				>

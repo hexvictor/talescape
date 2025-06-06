@@ -1,145 +1,136 @@
 import { useEffect, useRef } from "react";
-import { bookEntries } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
+import useScrollTimeout from "./useScrollTimeout";
 
 export function useScrollNavigation() {
-	const isProgrammaticScroll = useRef(false);
-	const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const timeout = 1200;
+  const isAutoScrolling = useTaleReaderStore((s) => s.isAutoScrolling);
+  const isAutoScrollingRef = useRef(isAutoScrolling);
 
-	function scrollToEntry(entryNumber: number) {
-		if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+  const setIsAutoScrolling = useTaleReaderStore((s) => s.setIsAutoScrolling);
+  const { clearScrollTimeOut, setScrollTimeOut } = useScrollTimeout();
+  const taleEntries = useTaleReaderStore((s) => s.tale.entries);
+  const setNavigation = useTaleReaderStore((s) => s.setNavigation);
 
-		const entry = bookEntries[entryNumber];
-		const el = document.getElementById(`entry-${entry?.id}`);
-		if (el) {
-			isProgrammaticScroll.current = true;
-			el.scrollIntoView({ behavior: "smooth", block: "start" });
+  function scrollToBlock(entryNumber: number, pageNumber?: number) {
+    clearScrollTimeOut();
 
-			scrollTimeout.current = setTimeout(() => {
-				isProgrammaticScroll.current = false;
-				// In the future update the progress in the DB when scrolling to the entry.
-				// history.replaceState(null, "", `#entry-${entry?.id}`);
-			}, timeout); // shorter timeout since you debounce it
-		}
-	}
+    const entry = taleEntries[entryNumber];
+    if (!entry) return;
 
-	function scrollToPage(entryNumber: number, pageNumber: number) {
-		if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    const page = pageNumber !== undefined ? entry.pages[pageNumber] : undefined;
 
-		const entry = bookEntries[entryNumber];
-		const page = entry?.pages[pageNumber];
-		const el = document.getElementById(`page-${page?.id}`);
-		if (el) {
-			isProgrammaticScroll.current = true;
-			el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Try page anchor first if pageNumber is defined, otherwise fallback logic
+    let el = document.getElementById(`anchor-${page?.id ?? entry.id}`);
 
-			scrollTimeout.current = setTimeout(() => {
-				isProgrammaticScroll.current = false;
-				// In the future update the progress in the DB when scrolling to the page.
-				// history.replaceState(null, "", `#page-${page?.id}`);
-			}, timeout);
-		}
-	}
+    // If pageNumber is undefined and the element for the entry is not found,
+    // try falling back to the first page
+    if (!pageNumber && !el && entry.pages.length > 0) {
+      const fallbackPage = entry.pages[0];
+      el = document.getElementById(`anchor-${fallbackPage?.id}`);
+    }
 
-	useEffect(() => {
-		// In the future save the progress of the tale in the DB and then scroll to the current page the user was on.
+    if (el) {
+      setNavigation(entryNumber, pageNumber);
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
 
-		// const hash = window.location.hash;
-		// if (hash) {
-		// 	const el = document.getElementById(hash.substring(1));
-		// 	if (el) {
-		// 		isProgrammaticScroll.current = true;
-		// 		el.scrollIntoView({ behavior: "auto", block: "start" });
+      setIsAutoScrolling(true);
+      setScrollTimeOut(() => {
+        setIsAutoScrolling(false);
+      });
+    }
+  }
 
-		// 		scrollTimeout.current = setTimeout(() => {
-		// 			isProgrammaticScroll.current = false;
-		// 		}, 600);
-		// 	}
-		// }
+  useEffect(() => {
+    isAutoScrollingRef.current = isAutoScrolling;
+  }, [isAutoScrolling]);
 
-		const threshold = 0.6;
-		const store = useTaleReaderStore.getState();
+  useEffect(() => {
+    // In the future save the progress of the tale in the DB and then scroll to the current page the user was on.
 
-		const entryObserver = new IntersectionObserver(
-			(entries) => {
-				if (isProgrammaticScroll.current) return;
+    // const hash = window.location.hash;
+    // if (hash) {
+    // 	const el = document.getElementById(hash.substring(1));
+    // 	if (el) {
+    // 		isProgrammaticScroll.current = true;
+    // 		el.scrollIntoView({ behavior: "auto", block: "start" });
 
-				for (const entry of entries) {
-					if (entry.isIntersecting && entry.intersectionRatio > threshold) {
-						const id = entry.target.getAttribute("data-entry-id");
-						const index = bookEntries.findIndex((e) => e.id === id);
-						if (index !== -1) {
-							requestAnimationFrame(() => {
-								store.setCurrentEntry(index);
-								// In the future update the progress in the DB when scrolling to the page.
+    // 		scrollTimeout.current = setTimeout(() => {
+    // 			isProgrammaticScroll.current = false;
+    // 		}, 600);
+    // 	}
+    // }
 
-								// history.replaceState(null, "", `#page-${id}`);
-							});
-						}
-					}
-				}
-			},
-			{ threshold },
-		);
+    const threshold = 0.6;
 
-		const pageObserver = new IntersectionObserver(
-			(entries) => {
-				if (isProgrammaticScroll.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!isAutoScrollingRef.current) {
+          for (const entry of entries) {
+            if (!entry.isIntersecting || entry.intersectionRatio <= threshold)
+              continue;
 
-				for (const entry of entries) {
-					if (entry.isIntersecting && entry.intersectionRatio > threshold) {
-						const id = entry.target.getAttribute("data-page-id");
-						for (
-							let entryIndex = 0;
-							entryIndex < bookEntries.length;
-							entryIndex++
-						) {
-							const entry = bookEntries[entryIndex];
-							if (!entry) continue;
-							const pageIndex = entry.pages.findIndex((p) => p.id === id);
-							if (pageIndex !== -1) {
-								requestAnimationFrame(() => {
-									store.setCurrentEntry(entryIndex);
-									store.setCurrentPage(pageIndex + 1);
-									// In the future update the progress in the DB when scrolling to the page.
+            const id = entry.target.getAttribute("data-anchor-id");
+            const type = entry.target.getAttribute("data-anchor-type");
 
-									// history.replaceState(null, "", `#entry-${id}`);
-								});
-								break;
-							}
-						}
-					}
-				}
-			},
-			{ threshold },
-		);
+            if (!id || !type) continue;
 
-		for (const entry of bookEntries) {
-			const entryEl = document.getElementById(`entry-${entry.id}`);
-			if (entryEl) {
-				entryEl.setAttribute("data-entry-id", entry.id);
-				entryObserver.observe(entryEl);
-			}
-			for (const page of entry.pages) {
-				const pageEl = document.getElementById(`page-${page.id}`);
-				if (pageEl) {
-					pageEl.setAttribute("data-page-id", page.id);
-					pageObserver.observe(pageEl);
-				}
-			}
-		}
+            if (type === "entry") {
+              const entryIndex = taleEntries.findIndex((e) => e.id === id);
+              if (entryIndex !== -1) {
+                requestAnimationFrame(() => {
+                  setNavigation(entryIndex);
+                });
+                continue; // If it's an entry, skip page logic
+              }
+            }
 
-		return () => {
-			entryObserver.disconnect();
-			pageObserver.disconnect();
-			if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-		};
-	}, []);
+            if (type === "page") {
+              for (
+                let entryIndex = 0;
+                entryIndex < taleEntries.length;
+                entryIndex++
+              ) {
+                const entry = taleEntries[entryIndex];
+                const pageIndex = entry?.pages.findIndex((p) => p.id === id);
+                if (pageIndex !== undefined && pageIndex !== -1) {
+                  requestAnimationFrame(() => {
+                    setNavigation(entryIndex, pageIndex);
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        }
+      },
+      { threshold }
+    );
 
-	return {
-		scrollToEntry,
-		scrollToPage,
-		isProgrammaticScroll,
-	};
+    for (const entry of taleEntries) {
+      const entryEl = document.getElementById(`anchor-${entry.id}`);
+      if (entryEl) {
+        entryEl.setAttribute("data-anchor-id", entry.id);
+        entryEl.setAttribute("data-anchor-type", "entry");
+        observer.observe(entryEl);
+      }
+
+      for (const page of entry.pages) {
+        const pageEl = document.getElementById(`anchor-${page.id}`);
+        if (pageEl) {
+          pageEl.setAttribute("data-anchor-id", page.id);
+          pageEl.setAttribute("data-anchor-type", "page");
+          observer.observe(pageEl);
+        }
+      }
+    }
+
+    return () => {
+      observer.disconnect();
+      clearScrollTimeOut();
+    };
+  }, []);
+
+  return {
+    scrollToBlock,
+  };
 }

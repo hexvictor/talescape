@@ -71,9 +71,8 @@ export default function NestedCarousel() {
 			<Carousel
 				orientation="vertical"
 				setApi={setOuterApi}
-				draggable={"false"}
 				className="h-full w-full"
-				opts={{ align: "start" }}
+				opts={{ align: "start", watchDrag: false }}
 			>
 				<CarouselContent className="m-0 h-screen flex-col p-0">
 					{verticalSlides.map((slide) =>
@@ -85,8 +84,7 @@ export default function NestedCarousel() {
 								<Carousel
 									orientation="horizontal"
 									setApi={setInnerApi}
-									draggable={"false"}
-									opts={{ align: "start" }}
+									opts={{ align: "start", watchDrag: false }}
 									className="h-screen w-screen"
 								>
 									<CarouselContent className="m-0">

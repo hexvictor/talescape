@@ -11,40 +11,40 @@ import { ourFileRouter } from "~/app/api/uploadthing/core";
 const isDev = process.env.NODE_ENV === "development";
 
 export const metadata: Metadata = {
-	title: "Talescape",
-	description: "The community-driven hub of interactive tales",
-	icons: [{ rel: "icon", url: "/favicon.ico" }],
+  title: "Talescape",
+  description: "The community-driven hub of interactive tales",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
 const geist = Geist({
-	subsets: ["latin"],
-	variable: "--font-geist-sans",
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
 });
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{ children: React.ReactNode }>) {
-	return (
-		<ClerkProvider appearance={{ baseTheme: dark }}>
-			<html lang="en" className={`${geist.variable}`}>
-				<head>
-					{isDev && (
-						<script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-					)}
-				</head>
-				<body className="flex min-h-screen w-full flex-col">
-					<NextSSRPlugin
-						/**
-						 * The `extractRouterConfig` will extract **only** the route configs
-						 * from the router to prevent additional information from being
-						 * leaked to the client. The data passed to the client is the same
-						 * as if you were to fetch `/api/uploadthing` directly.
-						 */
-						routerConfig={extractRouterConfig(ourFileRouter)}
-					/>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
-				</body>
-			</html>
-		</ClerkProvider>
-	);
+  return (
+    <ClerkProvider appearance={{ baseTheme: dark }}>
+      <html lang="en" className={`${geist.variable}`}>
+        <head>
+          {isDev && (
+            <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+          )}
+        </head>
+        <body className="relative flex flex-col">
+          <NextSSRPlugin
+            /**
+             * The `extractRouterConfig` will extract **only** the route configs
+             * from the router to prevent additional information from being
+             * leaked to the client. The data passed to the client is the same
+             * as if you were to fetch `/api/uploadthing` directly.
+             */
+            routerConfig={extractRouterConfig(ourFileRouter)}
+          />
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </body>
+      </html>
+    </ClerkProvider>
+  );
 }
