@@ -41,8 +41,8 @@ export function ReelSectionComponent({ section }: ReelSectionProps) {
   const prev = () => {
     const newIndex = getState().currentBlockIndex - 1;
     if (newIndex >= 0) {
-      console.log("next-index", newIndex);
-      console.log("current", getState().currentBlockIndex);
+      // console.log("next-index", newIndex);
+      // console.log("current", getState().currentBlockIndex);
       setCurrentBlockIndex(newIndex);
     }
   };
