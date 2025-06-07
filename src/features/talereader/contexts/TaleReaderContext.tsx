@@ -1,8 +1,6 @@
+import React, { createContext, useContext } from "react";
 import { useSearchParams } from "next/navigation";
-import type React from "react";
-import { createContext, useContext } from "react";
 import { useScrollNavigation } from "~/hooks/useScrollNavigation";
-import type { TaleLayout } from "~/lib/data";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 
 interface TaleReaderProviderProps {
@@ -15,12 +13,14 @@ interface TaleReaderContextProps {
 
 const TaleReaderContext = createContext<TaleReaderContextProps | null>(null);
 
-export function TaleReaderProvider({ children }: TaleReaderProviderProps) {
+function TaleReaderProviderBase({ children }: TaleReaderProviderProps) {
   //   const layout = useTaleReaderStore((s) => s.tale.layout);
-  //   const layout = useTaleReaderStore((s) => s.tale.layout);
+
   const searchParams = useSearchParams();
-  const layout = searchParams.get("layout") ?? "scroll"; // fallback padrão
-  if (layout === "reel") {
+  const layout = searchParams.get("layout") === "reel" ? "reel" : "scroll"; // default vertical
+  const isReel = layout === "reel";
+
+  if (isReel) {
     const goToBlock = useTaleReaderStore((s) => s.setNavigation);
 
     return (
@@ -28,15 +28,18 @@ export function TaleReaderProvider({ children }: TaleReaderProviderProps) {
         {children}
       </TaleReaderContext.Provider>
     );
-  } else {
-    const { scrollToBlock } = useScrollNavigation();
-    return (
-      <TaleReaderContext.Provider value={{ goToBlock: scrollToBlock }}>
-        {children}
-      </TaleReaderContext.Provider>
-    );
   }
+
+  const { scrollToBlock } = useScrollNavigation();
+
+  return (
+    <TaleReaderContext.Provider value={{ goToBlock: scrollToBlock }}>
+      {children}
+    </TaleReaderContext.Provider>
+  );
 }
+
+export const TaleReaderProvider = React.memo(TaleReaderProviderBase);
 
 export function useTaleReaderContext() {
   const context = useContext(TaleReaderContext);

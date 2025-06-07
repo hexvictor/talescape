@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 import type { TaleSection } from "~/lib/data";
 import TaleBlock from "../TaleBlock";
+import ReelButtons from "./ReelButtons";
 
 type ReelSectionProps = {
   section: TaleSection;
@@ -24,6 +25,8 @@ export function ReelSectionComponent({ section }: ReelSectionProps) {
       ? "horizontal"
       : "vertical"; // default vertical
 
+  const isVertical = orientation === "vertical";
+
   const { setApi, showPrev, showNext } = useCarousel();
   const getState = useTaleReaderStore.getState;
   const setCurrentBlockIndex = useTaleReaderStore(
@@ -31,21 +34,19 @@ export function ReelSectionComponent({ section }: ReelSectionProps) {
   );
   const totalBlocks = section.blocks.length;
 
-  const next = () => {
+  const next = useCallback(() => {
     const newIndex = getState().currentBlockIndex + 1;
     if (newIndex < totalBlocks) {
       setCurrentBlockIndex(newIndex);
     }
-  };
+  }, [getState, totalBlocks, setCurrentBlockIndex]);
 
-  const prev = () => {
+  const prev = useCallback(() => {
     const newIndex = getState().currentBlockIndex - 1;
     if (newIndex >= 0) {
-      // console.log("next-index", newIndex);
-      // console.log("current", getState().currentBlockIndex);
       setCurrentBlockIndex(newIndex);
     }
-  };
+  }, [getState, setCurrentBlockIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,48 +61,39 @@ export function ReelSectionComponent({ section }: ReelSectionProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [next, prev]);
 
   return (
     <section id={`section-${section.id}`}>
       <Carousel
         orientation={orientation}
         setApi={setApi}
-        className={
-          orientation === "horizontal" ? "h-screen w-screen" : "h-full w-full"
-        }
+        className={isVertical ? "h-full w-full" : "h-screen w-screen"}
         opts={{ align: "start", watchDrag: false }}
       >
-        <CarouselContent className="m-0 h-screen flex-col p-0">
+        <CarouselContent
+          className={`m-0 ${isVertical ? "h-screen flex-col p-0" : ""}`}
+        >
           {section.blocks.map((block) => (
             <CarouselItem
               key={block.id}
-              className="relative m-0 h-screen w-screen shrink-0 grow-0 basis-full p-0"
+              className={`relative ${
+                isVertical ? "m-0" : ""
+              } h-screen w-screen shrink-0 grow-0 basis-full p-0`}
             >
               <TaleBlock {...block} />
             </CarouselItem>
           ))}
         </CarouselContent>
 
-        {/* Nav Buttons */}
-        {showPrev && (
-          <Button
-            onClick={prev}
-            className="-translate-x-1/2 fixed top-4 left-1/2 z-30"
-            variant="outline"
-          >
-            ↑
-          </Button>
-        )}
-        {showNext && (
-          <Button
-            onClick={next}
-            className="-translate-x-1/2 fixed bottom-4 left-1/2 z-30"
-            variant="outline"
-          >
-            ↓
-          </Button>
-        )}
+        <ReelButtons
+          showPrev={showPrev}
+          showNext={showNext}
+          prev={prev}
+          next={next}
+          isVertical={isVertical}
+          totalBlocks={totalBlocks}
+        />
       </Carousel>
     </section>
   );

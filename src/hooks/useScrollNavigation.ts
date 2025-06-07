@@ -1,19 +1,17 @@
 import { useEffect, useRef } from "react";
 import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
-import useScrollTimeout from "./useScrollTimeout";
+import useAutoScrollDelay from "./useAutoScrollDelay";
 
 export function useScrollNavigation() {
   const isAutoScrolling = useTaleReaderStore((s) => s.isAutoScrolling);
   const isAutoScrollingRef = useRef(isAutoScrolling);
 
-  const setIsAutoScrolling = useTaleReaderStore((s) => s.setIsAutoScrolling);
-  const { clearScrollTimeOut, setScrollTimeOut } = useScrollTimeout();
+  const { triggerAutoScrollState, cancelAutoScrollTimer } =
+    useAutoScrollDelay();
   const taleEntries = useTaleReaderStore((s) => s.tale.entries);
   const setNavigation = useTaleReaderStore((s) => s.setNavigation);
 
   function scrollToBlock(entryNumber: number, pageNumber?: number) {
-    clearScrollTimeOut();
-
     const entry = taleEntries[entryNumber];
     if (!entry) return;
 
@@ -33,10 +31,7 @@ export function useScrollNavigation() {
       setNavigation(entryNumber, pageNumber);
       el.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      setIsAutoScrolling(true);
-      setScrollTimeOut(() => {
-        setIsAutoScrolling(false);
-      });
+      triggerAutoScrollState();
     }
   }
 
@@ -54,7 +49,7 @@ export function useScrollNavigation() {
     // 		isProgrammaticScroll.current = true;
     // 		el.scrollIntoView({ behavior: "auto", block: "start" });
 
-    // 		scrollTimeout.current = setTimeout(() => {
+    // 		triggerAutoScrollState.current = setTimeout(() => {
     // 			isProgrammaticScroll.current = false;
     // 		}, 600);
     // 	}
@@ -126,9 +121,9 @@ export function useScrollNavigation() {
 
     return () => {
       observer.disconnect();
-      clearScrollTimeOut();
+      cancelAutoScrollTimer();
     };
-  }, []);
+  }, [taleEntries, setNavigation, cancelAutoScrollTimer]);
 
   return {
     scrollToBlock,

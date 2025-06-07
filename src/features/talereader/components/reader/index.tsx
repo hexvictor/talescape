@@ -12,6 +12,7 @@ import ReelSection from "./ReelSection";
 import TaleReader from "./TaleReader";
 import TaleBlock from "./TaleBlock";
 import TaleFragment from "./TaleFragment";
+import EntryTypeIcon from "./EntryTypeIcon";
 
 export {
   TaleContent,
@@ -19,6 +20,7 @@ export {
   TaleBlock,
   TaleFragment,
   TaleReader,
+  EntryTypeIcon,
   ContentsNavigator,
   EntryNavigator,
   ScrollSection,

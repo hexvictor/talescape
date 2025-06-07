@@ -12,9 +12,10 @@ type TaleSectionProps = {
 function TaleSection({ section }: TaleSectionProps) {
   //   const layout = useTaleReaderStore((s) => s.tale.layout);
   const searchParams = useSearchParams();
-  const layout = searchParams.get("layout") ?? "scroll"; // fallback padrão
+  const layout = searchParams.get("layout") === "reel" ? "reel" : "scroll"; // default vertical
+  const isReel = layout === "reel";
 
-  if (layout === "reel") {
+  if (isReel) {
     return <ReelSection section={section} />;
   }
   return <ScrollSection section={section} />;

@@ -4,112 +4,208 @@ import { useTaleReaderStore } from "~/lib/stores/TaleReaderStore";
 import { Button } from "~/components/ui/Button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import clsx from "clsx";
-import { Slider } from "~/components/ui/Slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "~/components/ui/DropdownMenu";
-import useScrollTimeout from "~/hooks/useScrollTimeout";
-import { useState } from "react";
+import useAutoScrollDelay from "~/hooks/useAutoScrollDelay";
 import { ScrollArea } from "~/components/ui/ScrollArea";
+import { useCallback, useMemo } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/Tooltip";
+import { Badge } from "~/components/ui/Badge";
+import EntryTypeIcon, { getEntryTypeLabel } from "../EntryTypeIcon";
 
-export default function BlockNavigator() {
+export default function PageNavigator() {
   const uiVisible = useTaleReaderStore((s) => s.uiVisible);
   const blocks = useTaleReaderStore((s) => s.tale.sections[0]?.blocks ?? []);
+  const taleEntries = useTaleReaderStore((s) => s.tale.entries);
   const currentBlockIndex = useTaleReaderStore((s) => s.currentBlockIndex);
   const setCurrentBlockIndex = useTaleReaderStore(
     (s) => s.setCurrentBlockIndex
   );
-  const setIsAutoScrolling = useTaleReaderStore((s) => s.setIsAutoScrolling);
-  const { clearScrollTimeOut, setScrollTimeOut } = useScrollTimeout();
-  const scrollTimeout = () => {
-    clearScrollTimeOut();
-    setIsAutoScrolling(true);
-    setScrollTimeOut(() => {
-      setIsAutoScrolling(false);
+  const { triggerAutoScrollState } = useAutoScrollDelay();
+
+  const goToBlock = useCallback(
+    (index: number) => {
+      triggerAutoScrollState();
+      setCurrentBlockIndex(index);
+      const el = document.getElementById(blocks[index]?.anchorId || "");
+      if (el) {
+        requestAnimationFrame(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    },
+    [blocks, triggerAutoScrollState, setCurrentBlockIndex]
+  );
+
+  const annotatedBlocks = useMemo(() => {
+    const chapterEntries = taleEntries.filter((e) => e.type === "chapter");
+
+    return blocks.map((block, index) => {
+      const entry = taleEntries.find(
+        (entry) =>
+          `anchor-${entry.id}` === block.anchorId ||
+          entry.pages.some((p) => `anchor-${p.id}` === block.anchorId)
+      );
+
+      const chapterIndex =
+        entry?.type === "chapter" ? chapterEntries.indexOf(entry) : null;
+
+      const entryBlocks = blocks.filter((b) =>
+        entry?.pages.some((p) => `anchor-${p.id}` === b.anchorId)
+      );
+
+      const isEntryPageBlock = block.anchorId === `anchor-${entry?.id}`;
+      const entryHasPage =
+        blocks[index - 1]?.anchorId === `anchor-${entry?.id}`;
+      const isFirstInEntry = entryBlocks[0]?.id === block.id;
+
+      const shouldShowBadge =
+        isEntryPageBlock ||
+        (!isEntryPageBlock && isFirstInEntry && !entryHasPage);
+
+      return {
+        block,
+        index,
+        entry,
+        chapterIndex,
+        shouldShowBadge,
+      };
     });
-  };
+  }, [blocks, taleEntries]);
 
   const isFirst = currentBlockIndex === 0;
   const isLast = currentBlockIndex === blocks.length - 1;
 
-  const goToBlock = (index: number) => {
-    scrollTimeout();
-    setCurrentBlockIndex(index);
-    const el = document.getElementById(blocks[index]?.anchorId || "");
-    if (el) {
-      // Small nudge to make sure scroll always triggers
-      requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-  };
-
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (!isFirst) goToBlock(currentBlockIndex - 1);
-  };
+  }, [isFirst, currentBlockIndex, goToBlock]);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     if (!isLast) goToBlock(currentBlockIndex + 1);
-  };
+  }, [isLast, currentBlockIndex, goToBlock]);
 
   return (
     <div
       className={clsx(
-        "absolute right-8 bottom-6 z-50 flex items-center gap-2",
-        "transition-opacity duration-300",
+        "pointer-events-auto absolute right-8 bottom-6 z-50 flex items-center gap-2 transition-opacity duration-300",
         uiVisible ? "opacity-100" : "pointer-events-none opacity-0"
       )}
     >
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={goPrev}
-        disabled={isFirst}
-        aria-label="Previous block"
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goPrev}
+            disabled={isFirst}
+            className="h-6 w-6 cursor-pointer rounded-full shadow-lg hover:scale-105"
+            aria-label="Previous page"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Previous</TooltipContent>
+      </Tooltip>
 
       <DropdownMenu>
-        <DropdownMenuTrigger disabled={blocks.length <= 1} asChild>
-          <Button variant="outline" className="min-w-[120px] cursor-pointer">
-            Page {currentBlockIndex + 1} of {blocks.length}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="w-[220px] p-4">
-          <div className="mb-4 flex justify-between text-sm">
-            <span>Page {currentBlockIndex + 1}</span>
-            <span className="text-muted-foreground">of {blocks.length}</span>
-          </div>
-          <ScrollArea className="max-h-[350px]">
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {blocks.map((block, index) => (
-                <Button
-                  key={block.id}
-                  variant={index === currentBlockIndex ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => goToBlock(index)}
-                >
-                  {index + 1}
-                </Button>
-              ))}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger disabled={blocks.length <= 1} asChild>
+              <Button
+                variant="outline"
+                className="min-w-[120px] cursor-pointer"
+              >
+                Page {currentBlockIndex + 1} of {blocks.length}
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top">Select a page</TooltipContent>
+        </Tooltip>
+
+        <DropdownMenuContent
+          align="center"
+          className="relative overflow-hidden p-4 pr-0"
+        >
+          <ScrollArea className="max-h-[calc(350px-2rem)] overflow-auto">
+            <div className="mt-1 grid min-w-[calc(4*2rem+3*0.5rem)] grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-2 pr-2">
+              {annotatedBlocks.map(
+                ({ block, index, entry, chapterIndex, shouldShowBadge }) => {
+                  const isCurrent = index === currentBlockIndex;
+                  const isChapter = entry?.type === "chapter";
+                  const hasChapterIndex =
+                    chapterIndex !== null && chapterIndex !== undefined;
+                  const label = entry ? getEntryTypeLabel(entry.type) : "";
+                  const hasTitle = !!entry?.title;
+                  const tooltipText =
+                    isChapter && hasChapterIndex
+                      ? `Chapter ${chapterIndex + 1}`
+                      : hasTitle
+                      ? `${label}: ${entry.title}`
+                      : label;
+
+                  return (
+                    <div key={block.id} className="relative">
+                      <Button
+                        variant={isCurrent ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 w-8 cursor-pointer p-0 text-xs hover:scale-105"
+                        onClick={() => goToBlock(index)}
+                      >
+                        {index + 1}
+                      </Button>
+
+                      {entry && shouldShowBadge && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="-top-1 -right-1 absolute flex h-4 w-4 items-center justify-center bg-gray-300 p-0">
+                              {isChapter && hasChapterIndex ? (
+                                <span className="cursor-default text-[0.5rem] text-white">
+                                  {chapterIndex + 1}
+                                </span>
+                              ) : (
+                                <EntryTypeIcon
+                                  type={entry.type}
+                                  className="h-2 w-2 text-white"
+                                />
+                              )}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            {tooltipText}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  );
+                }
+              )}
             </div>
           </ScrollArea>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={goNext}
-        disabled={isLast}
-        aria-label="Next block"
-      >
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goNext}
+            className="h-6 w-6 cursor-pointer rounded-full shadow-lg hover:scale-105"
+            disabled={isLast}
+            aria-label="Next page"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Next</TooltipContent>
+      </Tooltip>
     </div>
   );
 }

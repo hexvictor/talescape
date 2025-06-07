@@ -17,19 +17,20 @@ function TaleBlock({
   //   const orientation = useTaleReaderStore((s) => s.tale.orientation);
   //   const layout = useTaleReaderStore((s) => s.tale.layout);
   const searchParams = useSearchParams();
-  const layout = searchParams.get("layout") ?? "scroll"; // fallback padrão
+  const layout = searchParams.get("layout") === "reel" ? "reel" : "scroll"; // default vertical
+  const isReel = layout === "reel";
 
-  if (layout === "reel") {
+  if (isReel) {
     return (
       <div
         id={anchorId}
-        className="flex h-full w-full items-center justify-center p-8 text-justify text-lg bg-blue-400"
+        className="flex h-full w-full items-center justify-center bg-blue-400 p-8 text-justify text-lg"
       >
         {fragments.map((fragment) => (
           <TaleFragment key={fragment.id} {...fragment} />
         ))}
         {scrollToBegin && <ScrollIndicator />}
-        <div className="absolute w-10 h-10 bg-amber-300 top-0 left-0">
+        <div className="absolute top-0 left-0 h-10 w-10 bg-amber-300">
           {type}
         </div>
       </div>
@@ -39,13 +40,13 @@ function TaleBlock({
   return (
     <div
       id={anchorId}
-      className="relative p-16 overflow-hidden odd:bg-blue-400 even:bg-green-400 min-h-[100dvh]"
+      className="relative min-h-[100dvh] overflow-hidden p-16 odd:bg-blue-400 even:bg-green-400"
     >
       {fragments.map((fragment) => (
         <TaleFragment key={fragment.id} {...fragment} />
       ))}
       {scrollToBegin && <ScrollIndicator />}
-      <div className=" w-10 h-10 bg-amber-300">{type}</div>
+      <div className=" h-10 w-10 bg-amber-300">{type}</div>
     </div>
   );
 }

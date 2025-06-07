@@ -29,7 +29,6 @@ export default function useCarousel(): UseCarouselType {
 
   useEffect(() => {
     if (!api) return;
-    // console.log(currentBlockIndex);
     api.scrollTo(currentBlockIndex);
   }, [api, currentBlockIndex]);
 
