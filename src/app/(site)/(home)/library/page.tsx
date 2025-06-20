@@ -4,7 +4,7 @@ import { BookGrid } from "~/features/library/books/components";
 import { getAllPublishedBooks } from "~/server/db/queries/library/books";
 
 async function Library() {
-  const books = await getAllPublishedBooks();
+  // const books = await getAllPublishedBooks();
   return (
     <div>
       <Button asChild>
@@ -13,7 +13,7 @@ async function Library() {
       <Button asChild>
         <Link href="/library/book/2/edit">Edit Book</Link>
       </Button>
-      <BookGrid books={books} />
+      {/* <BookGrid books={books} /> */}
     </div>
   );
 }
