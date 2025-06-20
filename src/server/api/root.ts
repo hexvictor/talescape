@@ -1,5 +1,6 @@
 import { imageRouter } from "~/server/api/routers/image";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+import { taleProgressRouter } from "./routers/taleProgress";
 
 /**
  * This is the primary router for your server.
@@ -7,7 +8,8 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-	image: imageRouter,
+  image: imageRouter,
+  taleReader: { progress: taleProgressRouter },
 });
 
 // export type definition of API

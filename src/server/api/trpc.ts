@@ -7,7 +7,9 @@
  * need to use are documented accordingly near the end.
  */
 
+import { getAuth } from "@clerk/nextjs/server";
 import { TRPCError, initTRPC } from "@trpc/server";
+import type { NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -26,14 +28,13 @@ import { db } from "~/server/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-	const session = await auth();
-
-	return {
-		db,
-		session,
-		...opts,
-	};
+export const createTRPCContext = async (req: NextRequest) => {
+  const session = getAuth(req); // ✅ works now
+  return {
+    db,
+    session,
+    headers: req.headers,
+  };
 };
 
 /**
@@ -44,17 +45,17 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * errors on the backend.
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
-	transformer: superjson,
-	errorFormatter({ shape, error }) {
-		return {
-			...shape,
-			data: {
-				...shape.data,
-				zodError:
-					error.cause instanceof ZodError ? error.cause.flatten() : null,
-			},
-		};
-	},
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
 });
 
 /**
@@ -119,16 +120,17 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure
-	// .use(timingMiddleware)
-	.use(({ ctx, next }) => {
-		if (!ctx.session?.user) {
-			throw new TRPCError({ code: "UNAUTHORIZED" });
-		}
-		return next({
-			ctx: {
-				// infers the `session` as non-nullable
-				session: { ...ctx.session, user: ctx.session.user },
-			},
-		});
-	});
+export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.session?.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  return next({
+    ctx: {
+      session: {
+        ...ctx.session,
+        userId: ctx.session.userId, // optional: if you want to be explicit
+      },
+    },
+  });
+});

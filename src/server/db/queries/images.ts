@@ -5,44 +5,44 @@ import { images } from "../schema";
 import { auth } from "@clerk/nextjs/server";
 
 export async function getMyImages() {
-	const user = await auth();
+  const user = await auth();
 
-	if (!user.userId) throw new Error("Unauthorized");
-	const images = await db.query.images.findMany({
-		where: (model, { eq }) => eq(model.userId, user.userId),
-		orderBy: (model, { desc }) => desc(model.id),
-	});
-	return images;
+  if (!user.userId) throw new Error("Unauthorized");
+  const images = await db.query.images?.findMany({
+    where: (model, { eq }) => eq(model.userId, user.userId),
+    orderBy: (model, { desc }) => desc(model.id),
+  });
+  return images;
 }
 
 export async function getImageById(id: number) {
-	const user = await auth();
+  const user = await auth();
 
-	if (!user.userId) throw new Error("Unauthorized");
+  if (!user.userId) throw new Error("Unauthorized");
 
-	const image = await db.query.images.findFirst({
-		where: (model, { eq }) => eq(model.id, id),
-	});
-	if (!image) throw new Error("Image not found");
+  const image = await db.query.images?.findFirst({
+    where: (model, { eq }) => eq(model.id, id),
+  });
+  if (!image) throw new Error("Image not found");
 
-	if (image.userId !== user.userId) throw new Error("Unauthorized");
-	return image;
+  if (image.userId !== user.userId) throw new Error("Unauthorized");
+  return image;
 }
 
 type addImageProps = {
-	name: string;
-	url: string;
-	userId: string;
+  name: string;
+  url: string;
+  userId: string;
 };
 
 export async function addImage({
-	name,
-	url,
-	userId,
+  name,
+  url,
+  userId,
 }: addImageProps): Promise<void> {
-	await db.insert(images).values({
-		name,
-		url,
-		userId,
-	});
+  await db.insert(images).values({
+    name,
+    url,
+    userId,
+  });
 }
