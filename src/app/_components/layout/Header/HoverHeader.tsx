@@ -3,7 +3,7 @@
 import { useRef, useState, type MouseEvent, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useClickOutside } from "~/hooks/useClickOutside";
-import Header from "./Header";
+import Header from ".";
 
 export default function HoverHeader() {
 	const [isHovered, setIsHovered] = useState(false);
@@ -31,7 +31,7 @@ export default function HoverHeader() {
 				ref={headerRef}
 				onMouseEnter={() => !isLocked && setIsHovered(true)}
 				onMouseLeave={() => !isLocked && setIsHovered(false)}
-				className="fixed top-0 left-0 z-1000 h-14 w-full"
+				className="fixed top-0 left-0 z-1000 h-2 w-full"
 			>
 				<AnimatePresence>
 					{isHovered && (

@@ -1,14 +1,13 @@
-import { sql } from "drizzle-orm";
-import { createTable } from "../schema-helpers";
-import { index } from "drizzle-orm/pg-core";
+import { text, timestamp } from "drizzle-orm/pg-core";
+import { createTable } from "~/server/db/schema-helpers";
 
 export const users = createTable("user", (d) => ({
-	id: d.varchar({ length: 255 }).notNull().primaryKey(), // Clerk user ID
-	username: d.varchar({ length: 255 }),
-	firstName: d.varchar({ length: 255 }),
-	lastName: d.varchar({ length: 255 }),
-	name: d.varchar({ length: 255 }),
-	email: d.varchar({ length: 255 }).notNull(),
-	emailVerified: d.timestamp({ withTimezone: true }),
-	image: d.varchar({ length: 1024 }),
+  id: d.text().notNull().primaryKey(), // Clerk user ID
+  username: d.text().notNull().unique(),
+  firstName: d.text().notNull(),
+  lastName: d.text().notNull(),
+  fullName: d.text().notNull(),
+  primaryEmailId: d.text(), // ID from Clerk email_addresses
+  emailVerifiedAt: timestamp({ withTimezone: true }),
+  imageUrl: d.text(),
 }));

@@ -1,11 +1,11 @@
-import { Footer } from "~/app/_components/layout/Footer";
-import { Header } from "~/app/_components/layout/Header";
-import { Page } from "~/app/_components/layout/Page";
 import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 
 import type { PropsWithChildren, ReactNode } from "react";
+import Header from "~/app/_components/layout/Header";
+import Footer from "~/app/_components/layout/Footer";
+import Page from "~/app/_components/layout/Page";
 
 export const metadata: Metadata = {
 	title: "Home | Talescape",
