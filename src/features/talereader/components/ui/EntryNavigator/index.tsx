@@ -27,8 +27,8 @@ export default function EntryNavigator() {
   const getNextEntry = useReaderStore((s) => s.getNextEntry);
 
   const getPreviousEntry = useReaderStore((s) => s.getPreviousEntry);
-  const isReel = useReaderStore((s) => s.navigation?.section.isReel);
-  const isVertical = useReaderStore((s) => s.navigation?.section.isVertical);
+  const isReel = useReaderStore((s) => s.navigation?.section?.isReel);
+  const isVertical = useReaderStore((s) => s.navigation?.section?.isVertical);
   const currentPage = useReaderStore((s) => s.navigation?.page);
   const currentPart = useReaderStore((s) => s.navigation?.part);
   const currentEntry = useReaderStore((s) => s.navigation?.entry);
