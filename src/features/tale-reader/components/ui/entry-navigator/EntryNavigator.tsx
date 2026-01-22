@@ -57,7 +57,7 @@ export default function EntryNavigator() {
   const visibleEntries = () => {
     let start = Math.max(
       0,
-      currentEntryGlobalIndex - Math.floor(visibleCount / 2)
+      currentEntryGlobalIndex - Math.floor(visibleCount / 2),
     );
     const end = Math.min(currentEntries.length - 1, start + visibleCount - 1);
     if (end === currentEntries.length - 1) {
@@ -78,7 +78,7 @@ export default function EntryNavigator() {
           ? "-translate-x-1/2 absolute bottom-0 left-1/2 z-100 flex flex-col pb-4"
           : "-translate-y-1/2 absolute top-1/2 right-0 z-100 flex pr-4",
         "transition-opacity duration-300",
-        uiVisible ? "opacity-100" : "pointer-events-none opacity-0"
+        uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
       )}
     >
       {/* {debugMode && (
@@ -92,7 +92,7 @@ export default function EntryNavigator() {
             "relative flex items-center justify-center",
             isReel && !isVertical
               ? `w-[${containerSize}]`
-              : `flex-col h-[${containerSize}]`
+              : `flex-col h-[${containerSize}]`,
           )}
         >
           <AnimatePresence mode="wait">
@@ -106,7 +106,7 @@ export default function EntryNavigator() {
                   "absolute z-10",
                   isReel && !isVertical
                     ? "-left-0 -translate-y-1/2 -rotate-90 top-1/2"
-                    : "-top-0 -translate-x-1/2 left-1/2"
+                    : "-top-0 -translate-x-1/2 left-1/2",
                 )}
               >
                 <Tooltip>
@@ -122,7 +122,7 @@ export default function EntryNavigator() {
                           requestAnimationFrame(() =>
                             goToAnchor(previousEntry.id, {
                               type: "entry",
-                            })
+                            }),
                           );
                         }
                       }}
@@ -144,13 +144,13 @@ export default function EntryNavigator() {
                 "scrollbar-none flex items-center justify-center gap-3 overflow-hidden px-1",
                 isReel && !isVertical
                   ? "mask-fade-horizontal w-full overflow-x-auto py-2 pr-8 pl-8"
-                  : "mask-fade-vertical h-full flex-col overflow-y-auto px-2 pt-8 pb-8"
+                  : "mask-fade-vertical h-full flex-col overflow-y-auto px-2 pt-8 pb-8",
               )}
               style={{ overflowAnchor: "none", scrollbarGutter: "stable" }}
             >
               {visibleEntries().map((entry) => {
                 const entryPages = allPages.filter((p) =>
-                  entry.pageIds.includes(p.id)
+                  entry.pageIds.includes(p.id),
                 );
                 const isActive = entry.globalIndex === currentEntryGlobalIndex;
 
@@ -188,7 +188,7 @@ export default function EntryNavigator() {
                             "h-8 w-8 cursor-pointer rounded-full border bg-background p-0 font-medium text-black text-sm transition-transform hover:bg-muted",
                             isActive
                               ? "z-10 bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background hover:text-black"
-                              : "hover:scale-105"
+                              : "hover:scale-105",
                           )}
                         >
                           {entry.isChapter ? (
@@ -234,7 +234,7 @@ export default function EntryNavigator() {
                   "absolute z-10",
                   isReel && !isVertical
                     ? "-right-0 -translate-y-1/2 -rotate-90 top-1/2"
-                    : "-bottom-0 -translate-x-1/2 left-1/2"
+                    : "-bottom-0 -translate-x-1/2 left-1/2",
                 )}
               >
                 <Tooltip>
@@ -248,7 +248,7 @@ export default function EntryNavigator() {
                         const nextEntry = getNextEntry();
                         if (nextEntry) {
                           requestAnimationFrame(() =>
-                            goToAnchor(nextEntry.id, { type: "entry" })
+                            goToAnchor(nextEntry.id, { type: "entry" }),
                           );
                         }
                       }}

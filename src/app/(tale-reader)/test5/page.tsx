@@ -7,17 +7,13 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useGSAP } from "@gsap/react";
 
 import { LoremIpsum } from "lorem-ipsum";
-
+import { Button } from "~/components/ui/button";
 import {
-  Button,
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerHeader,
-  DrawerOverlay,
-  DrawerPortal,
   DrawerTitle,
-} from "~/components/ui";
+} from "~/components/ui/drawer";
 
 const lorem = new LoremIpsum({
   sentencesPerParagraph: { max: 6, min: 3 },
@@ -839,67 +835,63 @@ export default function ScrollPageMixedFixed() {
         dismissible={false}
       >
         {/* ---------- DETAIL “PAGE” INSIDE DRAWER ---------- */}
-        <DrawerPortal>
-          <DrawerContent className="m-0 h-screen w-screen rounded-none bg-none border-0 p-0">
-            <div className=" bg-neutral-950 text-white">
-              {/* Top bar */}
-              <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between border-white/10 border-b bg-neutral-950/80 px-4 py-3 backdrop-blur">
-                <DrawerHeader className="p-0">
-                  <DrawerTitle className="font-semibold text-base">
-                    More information
-                  </DrawerTitle>
-                </DrawerHeader>
+        <DrawerContent className="m-0 h-screen w-screen rounded-none bg-none border-0 p-0">
+          <div className=" bg-neutral-950 text-white">
+            {/* Top bar */}
+            <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between border-white/10 border-b bg-neutral-950/80 px-4 py-3 backdrop-blur">
+              <DrawerHeader className="p-0">
+                <DrawerTitle className="font-semibold text-base">
+                  More information
+                </DrawerTitle>
+              </DrawerHeader>
 
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => onOpenChange(false)}
-                  className="select-none"
-                >
-                  ← Return
-                </Button>
-              </div>
-
-              {/* Scrollable detail content */}
-              <div className="h-[100dvh] overflow-y-auto pt-16">
-                <section className="flex min-h-[100dvh] items-center justify-center px-10">
-                  <div className="mx-auto w-full max-w-3xl space-y-4">
-                    <h3 className="font-bold text-3xl">Details view</h3>
-                    <p className="text-white/80 leading-relaxed">
-                      {detailText}
-                    </p>
-                    <p className="text-white/80 leading-relaxed select-text">
-                      This is a separate scroll area (inside the Drawer). Your
-                      main GSAP page is paused while this is open.
-                    </p>
-                  </div>
-                </section>
-
-                <section className="flex min-h-[100dvh] items-center justify-center bg-white/5 px-10">
-                  <div className="mx-auto w-full max-w-3xl space-y-4">
-                    <h4 className="font-semibold text-2xl">More sections</h4>
-                    <p className="text-white/80 leading-relaxed">
-                      Add as many sections as you want here. If you want the
-                      *exact* pinned horizontal/vertical GSAP behavior inside
-                      the drawer too, you’d set up a second ScrollTrigger
-                      “scroller” bound to this overflow container (different
-                      setup than window/ScrollSmoother).
-                    </p>
-                  </div>
-                </section>
-
-                <section className="flex min-h-[100dvh] items-center justify-center px-10">
-                  <div className="mx-auto w-full max-w-3xl space-y-4">
-                    <h4 className="font-semibold text-2xl">End</h4>
-                    <p className="text-white/80 leading-relaxed">
-                      Close with the Return button (top-right).
-                    </p>
-                  </div>
-                </section>
-              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+                className="select-none"
+              >
+                ← Return
+              </Button>
             </div>
-          </DrawerContent>
-        </DrawerPortal>
+
+            {/* Scrollable detail content */}
+            <div className="h-[100dvh] overflow-y-auto pt-16">
+              <section className="flex min-h-[100dvh] items-center justify-center px-10">
+                <div className="mx-auto w-full max-w-3xl space-y-4">
+                  <h3 className="font-bold text-3xl">Details view</h3>
+                  <p className="text-white/80 leading-relaxed">{detailText}</p>
+                  <p className="text-white/80 leading-relaxed select-text">
+                    This is a separate scroll area (inside the Drawer). Your
+                    main GSAP page is paused while this is open.
+                  </p>
+                </div>
+              </section>
+
+              <section className="flex min-h-[100dvh] items-center justify-center bg-white/5 px-10">
+                <div className="mx-auto w-full max-w-3xl space-y-4">
+                  <h4 className="font-semibold text-2xl">More sections</h4>
+                  <p className="text-white/80 leading-relaxed">
+                    Add as many sections as you want here. If you want the
+                    *exact* pinned horizontal/vertical GSAP behavior inside the
+                    drawer too, you’d set up a second ScrollTrigger “scroller”
+                    bound to this overflow container (different setup than
+                    window/ScrollSmoother).
+                  </p>
+                </div>
+              </section>
+
+              <section className="flex min-h-[100dvh] items-center justify-center px-10">
+                <div className="mx-auto w-full max-w-3xl space-y-4">
+                  <h4 className="font-semibold text-2xl">End</h4>
+                  <p className="text-white/80 leading-relaxed">
+                    Close with the Return button (top-right).
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </DrawerContent>
       </Drawer>
     </>
   );
@@ -918,4 +910,6 @@ function Panel({ label, snap }: { label: string; snap?: boolean }) {
       </div>
     </div>
   );
+}	</div>
+	);
 }

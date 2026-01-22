@@ -38,7 +38,7 @@ function ReelButtons({
                 "pointer-events-auto z-20 cursor-pointer rounded-full shadow-lg hover:scale-105",
                 isVertical
                   ? "-translate-x-1/2 absolute top-4 left-1/2"
-                  : "-translate-y-1/2 absolute top-1/2 left-4"
+                  : "-translate-y-1/2 absolute top-1/2 left-4",
               )}
               disabled={currentBlock?.isFirst}
               aria-label="Previous page"
@@ -66,7 +66,7 @@ function ReelButtons({
                 "pointer-events-auto z-20 cursor-pointer rounded-full shadow-lg hover:scale-105",
                 isVertical
                   ? "-translate-x-1/2 absolute bottom-4 left-1/2"
-                  : "-translate-y-1/2 absolute top-1/2 right-4"
+                  : "-translate-y-1/2 absolute top-1/2 right-4",
               )}
               disabled={currentBlock?.isLast}
               aria-label="Next page"

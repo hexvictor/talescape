@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { NavigationMenu } from "~/components/ui";
 import {
+  NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,

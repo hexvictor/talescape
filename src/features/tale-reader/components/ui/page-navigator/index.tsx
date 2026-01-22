@@ -16,11 +16,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { Badge } from "~/components/ui/badge";
 import EntryTypeIcon, {
   getEntryTypeLabel,
 } from "../entry-navigator/EntryTypeIcon";
 import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
+import { Badge } from "~/components/ui/badge";
 
 export default function PageNavigator() {
   const uiVisible = useReaderStore((s) => s.uiVisible);
@@ -41,7 +41,7 @@ export default function PageNavigator() {
         });
       }
     },
-    [blocks, triggerScrollActivity, setCurrentBlockIndex]
+    [blocks, triggerScrollActivity, setCurrentBlockIndex],
   );
 
   const annotatedBlocks = useMemo(() => {
@@ -51,14 +51,14 @@ export default function PageNavigator() {
       const entry = taleEntries.find(
         (entry) =>
           entry.id === block.anchorId ||
-          entry.pages.some((p) => p.id === block.anchorId)
+          entry.pages.some((p) => p.id === block.anchorId),
       );
 
       const chapterIndex =
         entry?.type === "chapter" ? chapterEntries.indexOf(entry) : null;
 
       const entryBlocks = blocks.filter((b) =>
-        entry?.pages.some((p) => p.id === b.anchorId)
+        entry?.pages.some((p) => p.id === b.anchorId),
       );
 
       const isEntryPageBlock = block.anchorId === entry?.id;
@@ -94,7 +94,7 @@ export default function PageNavigator() {
     <div
       className={clsx(
         "pointer-events-auto absolute right-8 bottom-6 z-50 flex items-center gap-2 transition-opacity duration-300",
-        uiVisible ? "opacity-100" : "pointer-events-none opacity-0"
+        uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
       )}
     >
       <Tooltip>
@@ -145,8 +145,8 @@ export default function PageNavigator() {
                     isChapter && hasChapterIndex
                       ? `Chapter ${chapterIndex + 1}`
                       : hasTitle
-                      ? `${label}: ${entry.title}`
-                      : label;
+                        ? `${label}: ${entry.title}`
+                        : label;
 
                   return (
                     <div key={block.id} className="relative">
@@ -182,7 +182,7 @@ export default function PageNavigator() {
                       )}
                     </div>
                   );
-                }
+                },
               )}
             </div>
           </ScrollArea>

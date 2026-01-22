@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sheet, type SheetProps } from "~/components/ui";
+import { Sheet, type SheetProps } from "~/components/ui/sheet";
 
 type ModalRouteSheetProps = SheetProps & {
   side?: "top" | "bottom" | "left" | "right";

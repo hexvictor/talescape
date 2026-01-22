@@ -21,7 +21,7 @@ export default function ReaderUiToggle() {
           variant={uiVisible ? "outline" : "ghost"}
           size="icon"
           className={clsx(
-            "pointer-events-auto absolute bottom-6 left-6 z-50 cursor-pointer rounded-full shadow-lg hover:scale-105"
+            "pointer-events-auto absolute bottom-6 left-6 z-50 cursor-pointer rounded-full shadow-lg hover:scale-105",
           )}
           onClick={() => {
             toggleUI();

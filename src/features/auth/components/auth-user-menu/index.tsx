@@ -2,7 +2,7 @@
 
 import { BookOpenIcon, CircleHelpIcon } from "~/lib/utils/icons";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { SkeletonAvatar } from "~/components/ui";
+import SkeletonAvatar from "~/components/ui/skeleton-avatar";
 
 export default function AuthUserMenu() {
   const { isLoaded, user } = useUser();

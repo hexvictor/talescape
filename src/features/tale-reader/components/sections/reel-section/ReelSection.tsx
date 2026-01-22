@@ -38,7 +38,7 @@ export function ReelSectionComponent({ section }: ReelSectionProps) {
   const blocks = useReaderStore((s) => s.tale?.structure.blocks);
   if (!blocks) return null;
   const sectionBlocks = blocks.filter((block) =>
-    section.blockIds.includes(block.id)
+    section.blockIds.includes(block.id),
   );
 
   const next = useCallback(() => {
