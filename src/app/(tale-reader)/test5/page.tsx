@@ -910,6 +910,4 @@ function Panel({ label, snap }: { label: string; snap?: boolean }) {
       </div>
     </div>
   );
-}	</div>
-	);
 }
