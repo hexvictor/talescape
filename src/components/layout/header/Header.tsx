@@ -1,8 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import AutoHideHeader from "./AutoHideHeader";
-import Logo from "~/components/ui/logo";
-import Divider from "~/components/ui/divider";
-import { ThemeSwitcher } from "~/components/ui";
+import { Divider, Logo, ThemeSwitcher } from "~/components/ui";
 import MainNav from "../main-nav";
 import { AuthStatusDisplay } from "~/features/auth/components";
 
