@@ -6,12 +6,12 @@ import type {
   AssetAccessLevel,
   AssetStatus,
   AssetVisibility,
-} from "~/types/schema/tale-builder/asset";
+} from "~/server/db/types/tale-builder/asset";
 import type {
   SectionInputMode,
   SectionLayout,
   SectionOrientation,
-} from "~/types/schema/tale-reader/section";
+} from "~/server/db/types/tale-reader/section";
 
 export const sections = createTable("section", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

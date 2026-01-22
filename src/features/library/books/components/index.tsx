@@ -1,5 +1,5 @@
-import BookFormFields from "../forms/BookFormFields";
-import BookCard from "./BookCard";
-import BookGrid from "./BookGrid";
+import BookFormFields from "../forms/book-form-fields";
+import BookCard from "./book-card";
+import BookGrid from "./book-grid";
 
 export { BookCard, BookFormFields, BookGrid };

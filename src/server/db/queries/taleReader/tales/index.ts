@@ -1,2 +1,2 @@
-export * from "./getOfficialTaleBySlug";
-export * from "./getUserTaleBySlug";
+export * from "./getOfficialTale";
+export * from "./getUserTale";

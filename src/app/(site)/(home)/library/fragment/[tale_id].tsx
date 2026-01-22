@@ -1,7 +1,7 @@
 import React from "react";
 
-function StoryBlockOverview() {
-	return <div>StoryBlockOverview</div>;
+function StoryFragmentOverview() {
+  return <div>StoryFragmentOverview</div>;
 }
 
-export default StoryBlockOverview;
+export default StoryFragmentOverview;

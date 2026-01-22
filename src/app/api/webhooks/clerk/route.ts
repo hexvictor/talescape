@@ -1,9 +1,7 @@
 import { Webhook } from "svix";
 import type { NextRequest } from "next/server";
-import { db } from "~/server/db";
 import { addUser } from "~/server/db/queries/users/addUser";
 import { addUserEmails } from "~/server/db/queries/users/addUserEmails";
-import { clerkClient } from "@clerk/nextjs/server";
 import { updateUser } from "~/server/db/queries/users/updateUser";
 import { updateUserEmails } from "~/server/db/queries/users/updateUserEmails";
 

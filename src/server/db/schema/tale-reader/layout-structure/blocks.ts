@@ -5,7 +5,7 @@ import type {
   AssetAccessLevel,
   AssetStatus,
   AssetVisibility,
-} from "~/types/schema/tale-builder/asset";
+} from "~/server/db/types/tale-builder/asset";
 
 export const blocks = createTable("block", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

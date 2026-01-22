@@ -15,6 +15,13 @@
       "when": 1750350995877,
       "tag": "0001_jittery_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751981444835,
+      "tag": "0002_short_molecule_man",
+      "breakpoints": true
     }
   ]
 }

@@ -7,8 +7,8 @@ import type {
   AssetAccessLevel,
   AssetStatus,
   AssetVisibility,
-} from "~/types/schema/tale-builder/asset";
-import type { TaleType } from "~/types/schema/tale-reader/tale";
+} from "~/server/db/types/tale-builder/asset";
+import type { TaleType } from "~/server/db/types/tale-reader/tale";
 
 export const tales = createTable("tale", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

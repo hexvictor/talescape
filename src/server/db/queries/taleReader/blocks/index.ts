@@ -1,2 +1,1 @@
-export * from "./getBlocksByIds";
-export * from "./getBlocksWithEmbed";
+export * from "./getBlocks";

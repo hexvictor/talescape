@@ -1,7 +1,7 @@
 import { relations, sql, type InferSelectModel } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
 import { tales } from "../tales";
-import type { EntryType } from "~/types/schema/tale-reader/entry";
+import type { EntryType } from "~/server/db/types/tale-reader/entry";
 import { parts } from "./parts";
 
 export const entries = createTable("entry", (d) => ({
