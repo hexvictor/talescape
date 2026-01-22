@@ -9,8 +9,8 @@ import {
   useRef,
   useState,
 } from "react";
-import ModalBackdrop from "./ModalBackdrop";
-import ModalWrapper from "./ModalWrapper";
+import ModalBackdrop from "./modal-backdrop";
+import ModalWrapper from "./modal-wrapper";
 
 type ModalProps = {
   children: React.ReactNode;
@@ -70,7 +70,7 @@ export default function Modal({
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") router.back();
     },
-    [router]
+    [router],
   );
 
   if (!mounted) return null; // evita tentar usar `document` no SSR
@@ -93,6 +93,6 @@ export default function Modal({
         <ModalWrapper>{children}</ModalWrapper>
       </ModalBackdrop>
     </ModalContext.Provider>,
-    modalRoot
+    modalRoot,
   );
 }
