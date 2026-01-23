@@ -51,7 +51,7 @@ export default function ScrollPageMixedFixed() {
 
   // drawer state + a ref so GSAP handlers can read it without rerender concerns
   const [detailOpen, setDetailOpen] = useState(false);
-  const detailOpenRef = useRef(false);
+  const taleHubOpenRef = useRef(false);
 
   const detailText = useMemo(() => lorem.generateParagraphs(6), []);
 
@@ -445,7 +445,7 @@ export default function ScrollPageMixedFixed() {
         debounce: true,
 
         onUp: (self) => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
           if (isDragging) return; // <-- IMPORTANT
           const didSnap = tryStep(true);
           if (didSnap && self?.event?.preventDefault)
@@ -453,7 +453,7 @@ export default function ScrollPageMixedFixed() {
         },
 
         onDown: (self) => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
           if (isDragging) return; // <-- IMPORTANT
           const didSnap = tryStep(false);
           if (didSnap && self?.event?.preventDefault)
@@ -461,7 +461,7 @@ export default function ScrollPageMixedFixed() {
         },
 
         onPress: (self) => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
           if (isDragging) return; // <-- IMPORTANT
           if (ScrollTrigger.isTouch && animating) self.event.preventDefault();
         },
@@ -480,7 +480,7 @@ export default function ScrollPageMixedFixed() {
       };
 
       const onKeyDown = (e: KeyboardEvent) => {
-        if (detailOpenRef.current) return;
+        if (taleHubOpenRef.current) return;
 
         const k = e.key;
 
@@ -514,7 +514,7 @@ export default function ScrollPageMixedFixed() {
       };
 
       const onGlobalPointerDownCapture = (e: PointerEvent) => {
-        if (detailOpenRef.current) return;
+        if (taleHubOpenRef.current) return;
 
         const target = e.target as HTMLElement | null;
         if (!target) return;
@@ -561,7 +561,7 @@ export default function ScrollPageMixedFixed() {
         allowClicks: true,
 
         onPress: (self) => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
 
           if (isSelectableZone(self.event.target)) return;
           if (selectionIsActive()) return;
@@ -590,7 +590,7 @@ export default function ScrollPageMixedFixed() {
         },
 
         onDrag: (self) => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
 
           if (selectionIsActive()) return;
           if (!dragging) return;
@@ -630,7 +630,7 @@ export default function ScrollPageMixedFixed() {
         },
 
         onRelease: () => {
-          if (detailOpenRef.current) return;
+          if (taleHubOpenRef.current) return;
 
           stopDragTicker();
 
@@ -682,7 +682,7 @@ export default function ScrollPageMixedFixed() {
       });
 
       const onUserPointerDown = () => {
-        if (detailOpenRef.current) return;
+        if (taleHubOpenRef.current) return;
         killArrowTween();
         killSnapTween(true);
       };
@@ -748,7 +748,7 @@ export default function ScrollPageMixedFixed() {
 
   const onOpenChange = (open: boolean) => {
     setDetailOpen(open);
-    detailOpenRef.current = open;
+    taleHubOpenRef.current = open;
 
     const s = smootherRef.current;
     if (s && typeof s.paused === "function") {

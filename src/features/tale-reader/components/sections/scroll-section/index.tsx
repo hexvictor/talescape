@@ -9,11 +9,8 @@ type ScrollSectionProps = {
 };
 
 export function ScrollSectionComponent({ section }: ScrollSectionProps) {
-  const blocks = useReaderStore((s) => s.tale?.structure.blocks);
-  if (!blocks) return null;
-  const sectionBlocks = blocks.filter((block) =>
-    section.blockIds.includes(block.id)
-  );
+  const getBlocksBySectionId = useReaderStore((s) => s.getBlocksBySectionId);
+  const sectionBlocks = getBlocksBySectionId(section.id);
   return (
     <section id={`section-${section.id}`} className="flex flex-col">
       {sectionBlocks.map((block, index) => (

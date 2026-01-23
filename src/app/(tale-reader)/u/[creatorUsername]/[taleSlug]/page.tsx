@@ -26,8 +26,8 @@ export default async function UserTalePage({ params }: PageProps) {
 
       return (
         <LoadingTale>
-          <NewTaleReader tale={tale} progress={progress} />
-          {/* <TaleReader tale={tale} progress={progress} /> */}
+          {/* <NewTaleReader tale={tale} progress={progress} /> */}
+          <TaleReader tale={tale} progress={progress} />
         </LoadingTale>
       );
     } catch (error) {

@@ -5,7 +5,7 @@ import { useReaderStore } from "../contexts/ReaderStoreContext";
 
 export function useAnchorInView(
   anchorId: number | null,
-  type: "block" | "section" = "block"
+  type: "block" | "section" = "block",
 ) {
   const ref = useRef<HTMLDivElement | null>(null);
   const isInView = useInView(ref, { amount: 0.4 });
@@ -29,11 +29,7 @@ export function useAnchorInView(
       requestAnimationFrame(() => {
         const block = getTargetBlock(anchorId, "block");
         if (!block) return;
-        console.log("current index: ", currentBlock?.globalIndex);
-        console.log("this block index: ", block.globalIndex);
         if (typeof block.anchorId !== "number") return;
-
-        console.log(block.anchorId, block.id);
         // if (type === "section") {
         //   console.log("scroll");
         //   scrollToAnchor(block.anchorId);

@@ -11,7 +11,7 @@ type TaleSectionProps = {
 
 function TaleSection({ sectionId }: TaleSectionProps) {
   const sectionsById = useReaderStore(
-    (s) => s.tale?.structure.indexMap.sectionsById
+    (s) => s.tale?.structure.indexMap.sectionsById,
   );
   if (!sectionsById) return null;
   const section = sectionsById[sectionId];

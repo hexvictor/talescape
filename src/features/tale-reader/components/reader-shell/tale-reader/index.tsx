@@ -3,13 +3,15 @@
 import type { Tale } from "~/features/tale-reader/types/taleStructure";
 import TaleProgress from "../../ui/tale-progress";
 import ReaderUiToggle from "../../ui/reader-ui-toggle";
-import TaleContent from "../tale-content";
 import EntryNavigator from "../../ui/entry-navigator/EntryNavigator";
 import { ReaderNavProvider } from "../../../contexts/ReaderNavContext";
 import type { TaleProgressSchema } from "~/server/db/schema";
 import { getInitialProgressFromLocalStorage } from "~/features/tale-reader/services/progressStorage";
 import { ReaderStoreProvider } from "../../../contexts/ReaderStoreContext";
 import { ContentsNavigator } from "../../ui/contents-navigator";
+import TaleGsapPage from "../tale-gsap-page";
+import { PageNavigator } from "../../ui";
+import TaleHub from "../tale-hub";
 
 type TaleReaderProps = {
   tale: Tale;
@@ -28,11 +30,14 @@ export default function TaleReader({ tale, progress }: TaleReaderProps) {
               <ContentsNavigator />
               <TaleProgress />
               <EntryNavigator />
-              {/* <PageNavigator /> */}
+              {/* <PageNavigator/> */}
               <ReaderUiToggle />
             </div>
           </div>
-          <TaleContent />
+
+          <TaleGsapPage />
+
+          <TaleHub />
         </div>
       </ReaderNavProvider>
     </ReaderStoreProvider>

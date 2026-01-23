@@ -41,16 +41,23 @@ export interface TaleReaderState {
   setProgress: (newProgress: TaleProgressSchema) => void;
   generateProgressUpdate: (blockId: number) => TaleProgressSchema | null;
 
+  taleHubOpen: boolean;
+  openTaleHub: () => void;
+  closeTaleHub: () => void;
+  toggleTaleHub: () => void;
+
+  getBlocksBySectionId: (sectionId: number) => BlockMeta[];
+
   getTargetBlock: (
     id: number,
-    type: NavigationTargetType
+    type: NavigationTargetType,
   ) => BlockMeta | undefined;
   getNext: <T extends NavigationTargetType>(
-    type: T
+    type: T,
   ) => NavigationTargetMap[T] | undefined;
 
   getPrevious: <T extends NavigationTargetType>(
-    type: T
+    type: T,
   ) => NavigationTargetMap[T] | undefined;
 
   goToNext: <T extends NavigationTargetType>(type: T) => void;
@@ -102,22 +109,26 @@ export interface TaleReaderState {
 
 export function createTaleReaderStore(
   initialTale: Tale,
-  initialProgress: TaleProgressSchema
+  initialProgress: TaleProgressSchema,
 ) {
   const indexMap = initialTale.structure.indexMap;
 
   const firstBlockId =
     initialProgress?.lastBlockId ?? initialTale.structure.firstBlock;
   const block =
-    firstBlockId != null ? indexMap.blocksById[firstBlockId] ?? null : null;
+    firstBlockId != null ? (indexMap.blocksById[firstBlockId] ?? null) : null;
 
   const entry = block?.entryId
-    ? indexMap.entriesById[block.entryId] ?? null
+    ? (indexMap.entriesById[block.entryId] ?? null)
     : null;
-  const page = block?.pageId ? indexMap.pagesById[block.pageId] ?? null : null;
-  const part = block?.partId ? indexMap.partsById[block.partId] ?? null : null;
+  const page = block?.pageId
+    ? (indexMap.pagesById[block.pageId] ?? null)
+    : null;
+  const part = block?.partId
+    ? (indexMap.partsById[block.partId] ?? null)
+    : null;
   const section = block?.sectionId
-    ? indexMap.sectionsById[block.sectionId] ?? null
+    ? (indexMap.sectionsById[block.sectionId] ?? null)
     : null;
 
   const initializer: StateCreator<TaleReaderState> = (set, get) => ({
@@ -151,6 +162,22 @@ export function createTaleReaderStore(
 
     hasScrolled: false,
     setHasScrolled: (value) => set({ hasScrolled: value }),
+
+    taleHubOpen: false,
+    openTaleHub: () => set({ taleHubOpen: true }),
+    closeTaleHub: () => set({ taleHubOpen: false }),
+    toggleTaleHub: () => set((s) => ({ taleHubOpen: !s.taleHubOpen })),
+
+    getBlocksBySectionId: (sectionId: number) => {
+      const { tale } = get();
+      const section = tale.structure.indexMap.sectionsById[sectionId];
+
+      if (!section) return [];
+
+      const { blocksById } = tale.structure.indexMap;
+
+      return section.blockIds.map((id) => blocksById[id] as BlockMeta);
+    },
 
     getTargetBlock: (id, type = "block") => {
       const indexMap = get().tale.structure.indexMap;
@@ -204,7 +231,7 @@ export function createTaleReaderStore(
       if (!block) return null;
 
       const seenBlockIds = Array.from(
-        new Set([...(prevProgress.seenBlockIds ?? []), block.id])
+        new Set([...(prevProgress.seenBlockIds ?? []), block.id]),
       );
       const total = blockIds.length;
 
@@ -223,7 +250,7 @@ export function createTaleReaderStore(
       const seenBlockProgress = (seenBlockIds.length / total).toFixed(4);
       const maxBlock =
         maxBlockIdReached != null
-          ? blocksById[maxBlockIdReached] ?? null
+          ? (blocksById[maxBlockIdReached] ?? null)
           : null;
       const maxIndex = maxBlock?.globalIndex ?? 0;
       const linearReadProgress = ((maxIndex + 1) / total).toFixed(4);
@@ -317,7 +344,7 @@ function getTargetBlock(indexMap: TaleStructure["indexMap"]) {
 
 function getCurrentTargetId(
   navigation: TaleReaderNavigation,
-  type: NavigationTargetType
+  type: NavigationTargetType,
 ) {
   return navigation?.[type]?.id;
 }
@@ -348,7 +375,7 @@ function createGetAdjacentTarget(structure: TaleStructure) {
   return function getAdjacentTarget<K extends NavigationTargetType>(
     id: number,
     type: K,
-    direction: "next" | "prev"
+    direction: "next" | "prev",
   ): NavigationTargetMap[K] | undefined {
     const ids = idArrays[type];
     const map = dataMaps[type];

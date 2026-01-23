@@ -22,7 +22,7 @@ export default function ContentsNavigator() {
   // const currentEntryIncludesPages = currentEntry.pages.length > 0;
 
   return (
-    <div>Test</div>
+    <></>
     // <div
     //   className={clsx(
     //     "pointer-events-auto absolute top-6 right-8 z-100 flex items-center gap-2",
