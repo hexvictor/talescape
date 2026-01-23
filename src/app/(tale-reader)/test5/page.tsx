@@ -57,6 +57,11 @@ export default function ScrollPageMixedFixed() {
 
   useGSAP(
     () => {
+      // IMPORTANT: mobile address bar resizing causes constant refresh/recalc -> snap glitches.
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+      });
+
       // ---------- SCROLL SMOOTHER ----------
       const smoother = ScrollSmoother.create({
         wrapper: "#smooth-wrapper",
@@ -68,6 +73,24 @@ export default function ScrollPageMixedFixed() {
       });
 
       smootherRef.current = smoother;
+
+      // Use unified scroll getters/setters.
+      const getScroll = () =>
+        smootherRef.current &&
+        typeof smootherRef.current.scrollTop === "function"
+          ? smootherRef.current.scrollTop()
+          : ScrollTrigger.scroll();
+
+      const setScroll = (v: number) => {
+        if (
+          smootherRef.current &&
+          typeof smootherRef.current.scrollTop === "function"
+        ) {
+          smootherRef.current.scrollTop(v);
+        } else {
+          ScrollTrigger.scroll(v);
+        }
+      };
 
       // ---------- PINNED TRACK SECTIONS ----------
       const pinnedMeta = new Map<HTMLElement, PinnedMeta>();
@@ -97,8 +120,6 @@ export default function ScrollPageMixedFixed() {
           }
 
           // Y axis: keep “true reverse up” behavior
-          // down: 0 -> -travel
-          // up:   -travel -> 0
           const fromVal = direction === "down" ? 0 : -travel;
           const toVal = direction === "down" ? -travel : 0;
           return { fromVal, toVal };
@@ -146,7 +167,8 @@ export default function ScrollPageMixedFixed() {
 
       // Drag tuning
       const DRAG_THRESHOLD = 6; // px before it becomes a drag
-      const DRAG_SENSITIVITY = 1.25; // higher = faster drag scroll
+      const DRAG_SENSITIVITY_TOUCH = 1.0;
+      const DRAG_SENSITIVITY_MOUSE = 1.25;
       const SNAP_EDGE = 120; // px proximity to boundary needed to snap on drag release
 
       const clamp = (v: number, min: number, max: number) =>
@@ -268,6 +290,9 @@ export default function ScrollPageMixedFixed() {
       let snapTween: gsap.core.Tween | null = null;
       let arrowTween: gsap.core.Tween | null = null;
 
+      // THIS is the key flag: while finger-dragging, do NOT allow snap observer to run.
+      let isDragging = false;
+
       const killSnapTween = (setNotAnimating = false) => {
         if (snapTween) {
           snapTween.kill();
@@ -317,8 +342,8 @@ export default function ScrollPageMixedFixed() {
       };
 
       const getIndexFromScroll = () => {
-        const cur = navST.scroll();
-        const EPS = 20;
+        const cur = getScroll();
+        const EPS = ScrollTrigger.isTouch ? 60 : 20;
 
         for (let i = items.length - 1; i >= 0; i--) {
           const it = items[i];
@@ -343,7 +368,7 @@ export default function ScrollPageMixedFixed() {
         ease: gsap.EaseString,
         onDone?: () => void,
       ) => {
-        const startScroll = navST.scroll();
+        const startScroll = getScroll();
         const max = ScrollTrigger.maxScroll(window);
         const clampedTarget = clamp(targetScroll, 0, max);
 
@@ -358,7 +383,7 @@ export default function ScrollPageMixedFixed() {
           duration,
           ease,
           overwrite: "auto",
-          onUpdate: () => navST.scroll(proxy.v),
+          onUpdate: () => setScroll(proxy.v),
           onComplete: onDone,
         });
       };
@@ -388,7 +413,7 @@ export default function ScrollPageMixedFixed() {
         if (animating) return false;
 
         const idx = getIndexFromScroll();
-        const cur = navST.scroll();
+        const cur = getScroll();
         const curItem = items[idx];
         if (!curItem) return false;
 
@@ -400,7 +425,7 @@ export default function ScrollPageMixedFixed() {
         if (!target.snap) return false;
 
         // Gating: don’t leave current item until reaching its boundary
-        const EPS = 20;
+        const EPS = ScrollTrigger.isTouch ? 60 : 20;
         if (forward) {
           if (cur < curItem.end - EPS) return false;
         } else {
@@ -417,9 +442,11 @@ export default function ScrollPageMixedFixed() {
         wheelSpeed: -1,
         tolerance: 10,
         preventDefault: false,
+        debounce: true,
 
         onUp: (self) => {
           if (detailOpenRef.current) return;
+          if (isDragging) return; // <-- IMPORTANT
           const didSnap = tryStep(true);
           if (didSnap && self?.event?.preventDefault)
             self.event.preventDefault();
@@ -427,6 +454,7 @@ export default function ScrollPageMixedFixed() {
 
         onDown: (self) => {
           if (detailOpenRef.current) return;
+          if (isDragging) return; // <-- IMPORTANT
           const didSnap = tryStep(false);
           if (didSnap && self?.event?.preventDefault)
             self.event.preventDefault();
@@ -434,6 +462,7 @@ export default function ScrollPageMixedFixed() {
 
         onPress: (self) => {
           if (detailOpenRef.current) return;
+          if (isDragging) return; // <-- IMPORTANT
           if (ScrollTrigger.isTouch && animating) self.event.preventDefault();
         },
       });
@@ -442,7 +471,7 @@ export default function ScrollPageMixedFixed() {
       const nudgeSmooth = (forward: boolean) => {
         killSnapTween(true);
 
-        const cur = navST.scroll();
+        const cur = getScroll();
         const target = cur + (forward ? ARROW_DELTA : -ARROW_DELTA);
 
         arrowTween = tweenScrollTo(target, ARROW_DURATION, ARROW_EASE, () => {
@@ -510,10 +539,25 @@ export default function ScrollPageMixedFixed() {
       let dragStartY = 0;
       let lastDragForward: boolean | null = null;
 
+      // throttle scroll writes (mobile smoothness)
+      let pendingScroll: number | null = null;
+      const applyPendingScroll = () => {
+        if (pendingScroll == null) return;
+        setScroll(pendingScroll);
+        pendingScroll = null;
+      };
+      const startDragTicker = () => gsap.ticker.add(applyPendingScroll);
+      const stopDragTicker = () => {
+        gsap.ticker.remove(applyPendingScroll);
+        pendingScroll = null;
+      };
+
+      const isTouchDevice = !!ScrollTrigger.isTouch;
+
       const dragObserver = ScrollTrigger.observe({
-        type: "pointer",
+        type: "pointer,touch",
         tolerance: 0,
-        preventDefault: false,
+        preventDefault: isTouchDevice,
         allowClicks: true,
 
         onPress: (self) => {
@@ -523,17 +567,26 @@ export default function ScrollPageMixedFixed() {
           if (selectionIsActive()) return;
           if (isInteractiveTarget(self.event.target)) return;
 
+          // While finger is down, disable snap observer so it cannot fight the drag.
+          isDragging = true;
+          myObserver.disable();
+
+          if (isTouchDevice && self.event?.preventDefault)
+            self.event.preventDefault();
+
           killArrowTween();
           killSnapTween(true);
 
           dragging = true;
           dragStarted = false;
 
-          dragStartScroll = navST.scroll();
+          dragStartScroll = getScroll();
           dragStartX = self.x;
           dragStartY = self.y;
 
           lastDragForward = null;
+
+          startDragTicker();
         },
 
         onDrag: (self) => {
@@ -550,9 +603,11 @@ export default function ScrollPageMixedFixed() {
             if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
             dragStarted = true;
 
-            if (self.event?.preventDefault) self.event.preventDefault();
+            if (isTouchDevice && self.event?.preventDefault)
+              self.event.preventDefault();
           } else {
-            if (self.event?.preventDefault) self.event.preventDefault();
+            if (isTouchDevice && self.event?.preventDefault)
+              self.event.preventDefault();
           }
 
           const useX = Math.abs(dx) > Math.abs(dy);
@@ -560,23 +615,33 @@ export default function ScrollPageMixedFixed() {
 
           lastDragForward = dominantDelta < 0;
 
+          const sensitivity = isTouchDevice
+            ? DRAG_SENSITIVITY_TOUCH
+            : DRAG_SENSITIVITY_MOUSE;
+
           const max = ScrollTrigger.maxScroll(window);
           const next = clamp(
-            dragStartScroll + -dominantDelta * DRAG_SENSITIVITY,
+            dragStartScroll + -dominantDelta * sensitivity,
             0,
             max,
           );
 
-          navST.scroll(next);
+          pendingScroll = next;
         },
 
         onRelease: () => {
           if (detailOpenRef.current) return;
 
+          stopDragTicker();
+
           dragging = false;
 
           const didDrag = dragStarted;
           dragStarted = false;
+
+          // Re-enable snap observer after finger lift.
+          isDragging = false;
+          myObserver.enable();
 
           if (!didDrag) return;
 
@@ -584,7 +649,7 @@ export default function ScrollPageMixedFixed() {
           lastDragForward = null;
 
           const idx = getIndexFromScroll();
-          const cur = navST.scroll();
+          const cur = getScroll();
           const curItem = items[idx];
           if (!curItem) return;
 
@@ -666,6 +731,8 @@ export default function ScrollPageMixedFixed() {
         killArrowTween();
         killSnapTween(true);
 
+        stopDragTicker();
+
         dragObserver.kill();
         myObserver.kill();
         navST.kill();
@@ -683,10 +750,17 @@ export default function ScrollPageMixedFixed() {
     setDetailOpen(open);
     detailOpenRef.current = open;
 
-    // pause/resume ScrollSmoother so background doesn’t keep moving
     const s = smootherRef.current;
     if (s && typeof s.paused === "function") {
       s.paused(open);
+    }
+
+    if (open) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
     }
   };
 
@@ -696,8 +770,13 @@ export default function ScrollPageMixedFixed() {
         id="smooth-wrapper"
         ref={wrapperRef}
         className="min-h-screen select-none"
+        style={{ touchAction: "none", overscrollBehavior: "none" }}
       >
-        <div id="smooth-content" className="select-none">
+        <div
+          id="smooth-content"
+          className="select-none"
+          style={{ touchAction: "none" }}
+        >
           {/* INTRO */}
           <section
             className="flex h-screen items-center justify-center bg-indigo-700 text-white"
@@ -725,7 +804,6 @@ export default function ScrollPageMixedFixed() {
                 </div>
               </div>
 
-              {/* <<< ADD BUTTON INSIDE THIS LOREM DIV */}
               <div
                 className="flex h-screen w-screen items-center justify-center bg-purple-800 text-white"
                 data-snap="false"
@@ -828,6 +906,7 @@ export default function ScrollPageMixedFixed() {
           </section>
         </div>
       </div>
+
       <Drawer
         open={detailOpen}
         onOpenChange={onOpenChange}
@@ -835,40 +914,42 @@ export default function ScrollPageMixedFixed() {
         dismissible={false}
       >
         {/* ---------- DETAIL “PAGE” INSIDE DRAWER ---------- */}
-        <DrawerContent className="m-0 h-screen w-screen rounded-none bg-none border-0 p-0">
-          <div className=" bg-neutral-950 text-white">
-            {/* Top bar */}
-            <div className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between border-white/10 border-b bg-neutral-950/80 px-4 py-3 backdrop-blur">
-              <DrawerHeader className="p-0">
-                <DrawerTitle className="font-semibold text-base">
-                  More information
-                </DrawerTitle>
-              </DrawerHeader>
+        <DrawerContent className="m-0 h-[100svh] w-screen rounded-none border-0 bg-neutral-950 p-0">
+          <div className="relative h-[100svh] w-screen bg-neutral-950 text-white">
+            {/* Top bar (fixed + safe area) */}
+            <div className="fixed top-0 right-0 left-0 z-50 border-white/10 border-b bg-neutral-950/90 px-4 backdrop-blur">
+              <div className="flex items-center justify-between py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+                <DrawerHeader className="p-0">
+                  <DrawerTitle className="font-semibold text-base">
+                    More information
+                  </DrawerTitle>
+                </DrawerHeader>
 
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                className="select-none"
-              >
-                ← Return
-              </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onOpenChange(false)}
+                  className="select-none"
+                >
+                  ← Return
+                </Button>
+              </div>
             </div>
 
-            {/* Scrollable detail content */}
-            <div className="h-[100dvh] overflow-y-auto pt-16">
-              <section className="flex min-h-[100dvh] items-center justify-center px-10">
+            {/* Scrollable detail content (stable vh + safe-area bottom) */}
+            <div className="h-[100svh] overflow-y-auto pb-[env(safe-area-inset-bottom)] pt-[calc(env(safe-area-inset-top)+64px)]">
+              <section className="flex min-h-[100svh] items-center justify-center px-6">
                 <div className="mx-auto w-full max-w-3xl space-y-4">
                   <h3 className="font-bold text-3xl">Details view</h3>
                   <p className="text-white/80 leading-relaxed">{detailText}</p>
-                  <p className="text-white/80 leading-relaxed select-text">
+                  <p className="select-text text-white/80 leading-relaxed">
                     This is a separate scroll area (inside the Drawer). Your
                     main GSAP page is paused while this is open.
                   </p>
                 </div>
               </section>
 
-              <section className="flex min-h-[100dvh] items-center justify-center bg-white/5 px-10">
+              <section className="flex min-h-[100svh] items-center justify-center bg-white/5 px-6">
                 <div className="mx-auto w-full max-w-3xl space-y-4">
                   <h4 className="font-semibold text-2xl">More sections</h4>
                   <p className="text-white/80 leading-relaxed">
@@ -881,7 +962,7 @@ export default function ScrollPageMixedFixed() {
                 </div>
               </section>
 
-              <section className="flex min-h-[100dvh] items-center justify-center px-10">
+              <section className="flex min-h-[100svh] items-center justify-center px-6">
                 <div className="mx-auto w-full max-w-3xl space-y-4">
                   <h4 className="font-semibold text-2xl">End</h4>
                   <p className="text-white/80 leading-relaxed">
