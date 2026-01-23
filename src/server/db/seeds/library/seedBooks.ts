@@ -13,8 +13,7 @@ export async function seedBooks() {
       authorId: 1,
       description:
         "The Way of Kings is an epic fantasy novel written by American author Brandon Sanderson and the first book in The Stormlight Archive series.",
-      coverImageUrl:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905828i/7235533.jpg",
+      coverImageId: 1,
       type: "official",
       status: "published",
     },

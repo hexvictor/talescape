@@ -5,11 +5,11 @@ import type {
   AssetAccessLevel,
   AssetStatus,
   AssetVisibility,
-} from "~/types/schema/tale-builder/asset";
+} from "~/server/db/types/tale-builder/asset";
 import type {
   FragmentData,
   FragmentType,
-} from "~/types/schema/tale-reader/fragment";
+} from "~/server/db/types/tale-reader/fragment";
 
 export const fragments = createTable("fragment", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

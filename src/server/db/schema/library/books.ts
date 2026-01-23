@@ -2,7 +2,8 @@ import { createTable } from "~/server/db/schema-helpers";
 import { relations, sql } from "drizzle-orm";
 import { users } from "../users";
 import { authors, type Author } from "./authors";
-import type { BookStatus, BookType } from "~/types/library/book";
+import type { BookStatus, BookType } from "~/features/library/types/book";
+import { images } from "../images";
 
 export type Book = typeof books.$inferSelect;
 export type BookWithAuthor = Book & {
@@ -16,7 +17,9 @@ export const books = createTable("book", (d) => ({
   title: d.text().notNull(),
   authorId: d.integer().references(() => authors.id),
   description: d.text(),
-  coverImageUrl: d.text(),
+  coverImageId: d
+    .integer()
+    .references(() => images.id, { onDelete: "set null" }),
 
   type: d.text().notNull().default("user").$type<BookType>(),
 
@@ -39,5 +42,9 @@ export const booksRelations = relations(books, ({ one }) => ({
   user: one(users, {
     fields: [books.userId],
     references: [users.id],
+  }),
+  coverImage: one(images, {
+    fields: [books.coverImageId],
+    references: [images.id],
   }),
 }));

@@ -3,7 +3,7 @@ import { createTable } from "~/server/db/schema-helpers";
 import { tales } from "../tales";
 import { entries } from "./entries";
 import { parts } from "./parts";
-import type { PageType } from "~/types/schema/tale-reader/page";
+import type { PageType } from "~/server/db/types/tale-reader/page";
 
 export const pages = createTable("page", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

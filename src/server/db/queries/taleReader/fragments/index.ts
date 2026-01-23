@@ -1,2 +1,1 @@
-export * from "./getFragmentsByIds";
-export * from "./getFragmentsWithEmbed";
+export * from "./getFragments";

@@ -1,2 +1,1 @@
-export * from "./getSectionsByIds";
-export * from "./getSectionsWithEmbed";
+export * from "./getSections";

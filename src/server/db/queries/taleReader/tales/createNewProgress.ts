@@ -1,6 +1,6 @@
 import { db } from "~/server/db";
 import { taleProgresses, type TaleProgressSchema } from "~/server/db/schema";
-import type { FormattedTale } from "~/types/tale-reader/taleStructure";
+import type { FormattedTale } from "~/features/tale-reader/types/taleStructure";
 
 export async function createNewProgress(
   formattedTale: FormattedTale,

@@ -2,7 +2,7 @@ import { relations, sql, type InferSelectModel } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
 import { users } from "../../users";
 import { blocks } from "./blocks";
-import type { AssetPermissionType } from "~/types/schema/tale-builder/asset";
+import type { AssetPermissionType } from "~/server/db/types/tale-builder/asset";
 
 export const blockPermissions = createTable("block_permission", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

@@ -4,11 +4,14 @@
 
 @import "tw-animate-css";
 
+/* @import "locomotive-scroll/dist/locomotive-scroll.css"; */
+
 @custom-variant dark (&:is(.dark *));
 @source "../../node_modules/@uploadthing/react/dist";
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
