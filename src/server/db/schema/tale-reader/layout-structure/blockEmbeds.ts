@@ -19,6 +19,7 @@ export const blockEmbeds = createTable("block_embed", (d) => ({
     .integer()
     .notNull()
     .references(() => sections.id),
+  isSnap: d.boolean().notNull().default(false),
   pageId: d.integer().references(() => pages.id),
   index: d.integer().notNull(),
   createdAt: d

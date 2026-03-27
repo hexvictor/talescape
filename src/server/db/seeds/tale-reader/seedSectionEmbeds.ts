@@ -3,7 +3,7 @@ import { sectionEmbeds, type SectionEmbedSchema } from "../../schema";
 
 // Cada tale possui 4 seções (index 0 a 3), com taleId de 1 a 9
 export async function seedSectionEmbeds() {
-  const embeds: Pick<SectionEmbedSchema, "sectionId" | "taleId" | "index">[] =
+  const embeds: Pick<SectionEmbedSchema, "sectionId" | "taleId" | "isSnap" |"index">[] =
     [];
 
   for (let taleId = 1; taleId <= 9; taleId++) {
@@ -13,6 +13,7 @@ export async function seedSectionEmbeds() {
       embeds.push({
         sectionId,
         taleId,
+        isSnap: false,
         index,
       });
     }

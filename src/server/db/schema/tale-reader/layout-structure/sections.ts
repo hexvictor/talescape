@@ -10,14 +10,15 @@ import type {
 import type {
   SectionInputMode,
   SectionLayout,
+  SectionDirection,
   SectionOrientation,
 } from "~/server/db/types/tale-reader/section";
 
 export const sections = createTable("section", (d) => ({
   id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
   creatorId: d.text().references(() => users.id),
-  layout: d.text().notNull().$type<SectionLayout>(),
-  orientation: d.text().notNull().$type<SectionOrientation>(),
+  orientation: d.text().notNull().$type<SectionOrientation>().default("vertical"),
+  direction: d.text().notNull().$type<SectionDirection>().default("down"),
   inputMode: d.text().array().notNull().$type<SectionInputMode[]>(),
   isOfficial: d.boolean().notNull().default(false),
   editable: d.boolean().notNull().default(true),

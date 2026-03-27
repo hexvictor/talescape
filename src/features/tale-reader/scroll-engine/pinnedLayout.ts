@@ -32,7 +32,7 @@ export function initPinnedLayout(): PinnedLayoutApi {
     const track = section.querySelector<HTMLElement>(".scroll-track");
     if (!track) continue;
 
-    const axis = (section.dataset.axis ?? "x") as Axis;
+    const axis = section.dataset.orientation === "vertical" ? "y" : "x" as Axis;
     const direction =
       section.dataset.direction ??
       (axis === "x" ? ("right" as DirX) : ("down" as DirY));
@@ -44,11 +44,13 @@ export function initPinnedLayout(): PinnedLayoutApi {
 
     const getFromTo = () => {
       const travel = getTravel();
+
       if (axis === "x") {
         const fromVal = direction === "right" ? 0 : -travel;
         const toVal = direction === "right" ? -travel : 0;
         return { fromVal, toVal };
       }
+
       const fromVal = direction === "down" ? 0 : -travel;
       const toVal = direction === "down" ? -travel : 0;
       return { fromVal, toVal };
@@ -79,7 +81,7 @@ export function initPinnedLayout(): PinnedLayoutApi {
       section,
       track,
       axis,
-      direction: direction as any,
+      direction: direction as DirX | DirY,
       getTravel,
       getFromTo,
     });
@@ -90,5 +92,9 @@ export function initPinnedLayout(): PinnedLayoutApi {
     pinnedSTBySection.clear();
   };
 
-  return { pinnedMeta, pinnedSTBySection, cleanup };
+  return {
+    pinnedMeta,
+    pinnedSTBySection,
+    cleanup,
+  };
 }

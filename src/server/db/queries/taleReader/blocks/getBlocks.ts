@@ -17,6 +17,7 @@ export async function getBlocksQuery(taleId: number): Promise<EmbeddedBlock[]> {
         sectionId: embed.sectionId,
         pageId: embed.pageId,
         index: embed.index,
+        isSnap: embed.isSnap
       });
     }
   }

@@ -95,13 +95,6 @@ export function formatBlocksById(
       const globalIndex = i;
       const isFirst = i === 0;
       const isLast = i === blocks.length - 1;
-      const isReelBlock = section.layout === "reel";
-
-      // const anchorId = isReelBlock
-      //   ? block.sectionId
-      //   : pageId === null
-      //   ? null
-      //   : block.id;
       const anchorId = pageId === null ? null : block.id;
 
       const isFirstInEntry = entry.firstBlockId === block.id;
@@ -121,7 +114,6 @@ export function formatBlocksById(
         globalIndex,
         fragmentIds,
         isPageBlock,
-        isReelBlock,
         anchorId,
         isFirst,
         isLast,

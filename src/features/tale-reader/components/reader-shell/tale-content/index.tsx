@@ -1,13 +1,16 @@
 "use client";
-import React, { useState } from "react";
-import TaleSection from "../../sections/TaleSection";
-import { useScrollToLastBlock } from "~/features/tale-reader/hooks/useScrollToLastBlock";
-import { useReaderStore } from "../../../contexts/ReaderStoreContext";
 
-const TaleContentComponent = () => {
-  const sectionIds = useReaderStore((s) => s.tale?.structure.sectionIds);
-  if (!sectionIds) return null;
+import React from "react";
+import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
+import { useScrollToLastBlock } from "~/features/tale-reader/hooks/useScrollToLastBlock";
+import TaleSection from "../tale-section";
+
+function TaleContentComponent() {
+  const sectionIds = useReaderStore((s) => s.tale.structure.sectionIds);
+
   useScrollToLastBlock();
+
+  if (!sectionIds.length) return null;
 
   return (
     <>
@@ -16,7 +19,7 @@ const TaleContentComponent = () => {
       ))}
     </>
   );
-};
+}
 
 const TaleContent = React.memo(TaleContentComponent);
 

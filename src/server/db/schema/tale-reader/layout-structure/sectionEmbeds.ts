@@ -1,7 +1,6 @@
 import { relations, sql, type InferSelectModel } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
 import { tales } from "../tales";
-import { blocks } from "./blocks";
 import { sections } from "./sections";
 
 export const sectionEmbeds = createTable("section_embed", (d) => ({
@@ -14,6 +13,7 @@ export const sectionEmbeds = createTable("section_embed", (d) => ({
     .integer()
     .notNull()
     .references(() => tales.id),
+  isSnap: d.boolean().notNull().default(false),
   index: d.integer().notNull(),
   createdAt: d
     .timestamp({ withTimezone: true })

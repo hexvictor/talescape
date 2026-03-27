@@ -3,28 +3,41 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
+import type { RefObject } from "react";
 
 type InitArgs = {
   wrapper: string;
   content: string;
 };
 
-export function createScrollDriver(smootherRef: React.RefObject<any>) {
+export function createScrollDriver(
+  // biome-ignore lint/suspicious/noExplicitAny
+  smootherRef: RefObject<any>,
+) {
   const getScroll = () => {
-    const s = smootherRef.current;
-    if (s && typeof s.scrollTop === "function") return s.scrollTop();
+    const smoother = smootherRef.current;
+    if (smoother && typeof smoother.scrollTop === "function") {
+      return smoother.scrollTop();
+    }
     return ScrollTrigger.scroll();
   };
 
-  const setScroll = (v: number) => {
-    const s = smootherRef.current;
-    if (s && typeof s.scrollTop === "function") s.scrollTop(v);
-    else ScrollTrigger.scroll(v);
+  const setScroll = (value: number) => {
+    const smoother = smootherRef.current;
+    if (smoother && typeof smoother.scrollTop === "function") {
+      smoother.scrollTop(value);
+      return;
+    }
+    ScrollTrigger.scroll(value);
   };
 
   const scrollTo = (
     targetScroll: number,
-    opts: { duration: number; ease: gsap.EaseString; onDone?: () => void },
+    opts: {
+      duration: number;
+      ease: gsap.EaseString;
+      onDone?: () => void;
+    },
   ) => {
     const startScroll = getScroll();
     const max = ScrollTrigger.maxScroll(window);
@@ -35,19 +48,20 @@ export function createScrollDriver(smootherRef: React.RefObject<any>) {
       return null;
     }
 
-    const proxy = { v: startScroll };
+    const proxy = { value: startScroll };
+
     return gsap.to(proxy, {
-      v: clampedTarget,
+      value: clampedTarget,
       duration: opts.duration,
       ease: opts.ease,
       overwrite: "auto",
-      onUpdate: () => setScroll(proxy.v),
+      onUpdate: () => setScroll(proxy.value),
       onComplete: opts.onDone,
     });
   };
 
   const init = ({ wrapper, content }: InitArgs) => {
-    const s = ScrollSmoother.create({
+    const smoother = ScrollSmoother.create({
       wrapper,
       content,
       smooth: 1.5,
@@ -55,19 +69,31 @@ export function createScrollDriver(smootherRef: React.RefObject<any>) {
       effects: true,
       normalizeScroll: true,
     });
-    smootherRef.current = s;
+
+    smootherRef.current = smoother;
   };
 
   const setPaused = (paused: boolean) => {
-    const s = smootherRef.current;
-    if (s && typeof s.paused === "function") s.paused(paused);
+    const smoother = smootherRef.current;
+    if (smoother && typeof smoother.paused === "function") {
+      smoother.paused(paused);
+    }
   };
 
   const cleanup = () => {
-    const s = smootherRef.current;
-    if (s && typeof s.kill === "function") s.kill();
+    const smoother = smootherRef.current;
+    if (smoother && typeof smoother.kill === "function") {
+      smoother.kill();
+    }
     smootherRef.current = null;
   };
 
-  return { init, cleanup, getScroll, setScroll, scrollTo, setPaused };
+  return {
+    init,
+    cleanup,
+    getScroll,
+    setScroll,
+    scrollTo,
+    setPaused,
+  };
 }

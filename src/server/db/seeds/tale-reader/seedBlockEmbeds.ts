@@ -37,6 +37,7 @@ export async function seedBlockEmbeds() {
         blockId: globalBlockIndex + 1,
         taleId,
         sectionId,
+        isSnap: false,
         pageId: getPageIdByBlockIndex(i, pageIds),
         index: indexInSection, // ← correctly reset per section
       });

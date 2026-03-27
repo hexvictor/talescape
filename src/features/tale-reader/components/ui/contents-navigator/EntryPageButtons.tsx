@@ -11,7 +11,7 @@ const EntryPagesGrid = ({
   showAllBlocks,
   triggerScrollActivity,
 }: EntryPagesGridProps) => {
-  // const { navigateToAnchor } = useReaderNavContext();
+  // const { navigateToAnchor } = ();
 
   // const currentBlockIndex = useReaderStore((s) => s.navigation.block?.index);
   // const currentEntry = useReaderStore((s) => s.navigation.entry);

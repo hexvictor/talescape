@@ -1,44 +1,52 @@
+"use client";
+
+import { createContext, useContext, useRef } from "react";
 import { useStore, type StoreApi } from "zustand";
-import { createContext, useContext, useEffect, useRef } from "react";
 import type { Tale } from "~/features/tale-reader/types/taleStructure";
+import type { TaleProgressSchema } from "~/server/db/schema";
 import {
   createTaleReaderStore,
   type TaleReaderState,
-} from "~/features/tale-reader/store/TaleReaderStore";
-import type { TaleProgressSchema } from "~/server/db/schema";
+} from "~/features/tale-reader/store/createTaleReaderStore";
 
-const ReaderStoreContext = createContext<ReturnType<
-  typeof createTaleReaderStore
-> | null>(null);
+const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(null);
 
-export const ReaderStoreProvider = ({
-  children,
-  initialTale,
-  initialProgress,
-}: {
+type ReaderStoreProviderProps = {
   children: React.ReactNode;
   initialTale: Tale;
   initialProgress: TaleProgressSchema;
-}) => {
-  const store = useRef(
-    createTaleReaderStore(initialTale, initialProgress)
-  ).current;
+};
+
+export function ReaderStoreProvider({
+  children,
+  initialTale,
+  initialProgress,
+}: ReaderStoreProviderProps) {
+  const storeRef = useRef<StoreApi<TaleReaderState> | null>(null);
+
+  if (!storeRef.current) {
+    storeRef.current = createTaleReaderStore(initialTale, initialProgress);
+  }
 
   return (
-    <ReaderStoreContext.Provider value={store}>
+    <ReaderStoreContext.Provider value={storeRef.current}>
       {children}
     </ReaderStoreContext.Provider>
   );
-};
+}
 
 export function useReaderStoreInstance(): StoreApi<TaleReaderState> {
   const store = useContext(ReaderStoreContext);
-  if (!store) throw new Error("Must be used within ReaderStoreProvider");
+  if (!store) {
+    throw new Error("useReaderStoreInstance must be used within ReaderStoreProvider");
+  }
   return store;
 }
 
-export const useReaderStore = <T,>(selector: (state: TaleReaderState) => T) => {
+export function useReaderStore<T>(selector: (state: TaleReaderState) => T): T {
   const store = useContext(ReaderStoreContext);
-  if (!store) throw new Error("ReaderStore not found");
+  if (!store) {
+    throw new Error("useReaderStore must be used within ReaderStoreProvider");
+  }
   return useStore(store, selector);
-};
+}

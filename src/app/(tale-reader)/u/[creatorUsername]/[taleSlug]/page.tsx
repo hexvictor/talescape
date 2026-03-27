@@ -7,7 +7,6 @@ import {
   TaleReader,
   TaleUnauthorized,
 } from "~/features/tale-reader/components";
-import NewTaleReader from "~/features/tale-reader/components/reader-shell/new-tale-reader";
 
 type PageProps = {
   params: { creatorUsername: string; taleSlug: string };
@@ -26,7 +25,6 @@ export default async function UserTalePage({ params }: PageProps) {
 
       return (
         <LoadingTale>
-          {/* <NewTaleReader tale={tale} progress={progress} /> */}
           <TaleReader tale={tale} progress={progress} />
         </LoadingTale>
       );

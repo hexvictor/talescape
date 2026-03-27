@@ -10,13 +10,9 @@ import type {
 
 type TaleFragmentProps = {
   fragment: FragmentMeta;
-  isVertical: boolean;
-  isReel: boolean;
 };
 export function TaleFragment({
   fragment,
-  isVertical,
-  isReel,
 }: TaleFragmentProps) {
   if (fragment.type === "text") {
     const data = fragment.data as TextFragmentData;
@@ -62,7 +58,7 @@ export function TaleFragment({
         key={fragment.id}
         src={data.url}
         alt={data.alt || "Tale fragment"}
-        className="rounded-md"
+        className="rounded-md max-h-screen max-w-screen"
       />
     );
   }

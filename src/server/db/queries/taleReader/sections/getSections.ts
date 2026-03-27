@@ -17,6 +17,7 @@ export async function getSectionsQuery(
     if (embed.sectionId !== null) {
       embedMap.set(String(embed.sectionId), {
         index: embed.index,
+        isSnap: embed.isSnap,
       });
     }
   }

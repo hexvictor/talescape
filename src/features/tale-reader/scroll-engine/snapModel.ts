@@ -11,10 +11,17 @@ export type SnapItem = {
   snap: boolean;
 };
 
+export type SnapRange = {
+  start: number;
+  end: number;
+};
+
 export type SnapModelApi = {
-  itemsRef: React.RefObject<SnapItem[]>;
+  // biome-ignore lint/suspicious/noExplicitAny
+  itemsRef: React.RefObject<any>;
   rebuild: () => void;
   getIndexFromScroll: (scroll: number) => number;
+  getRangeForElement: (el: HTMLElement) => SnapRange;
   cleanup: () => void;
 };
 
@@ -29,8 +36,8 @@ export function createSnapModel({
 }: Args): SnapModelApi {
   const itemsRef = { current: [] as SnapItem[] };
 
-  const clamp = (v: number, min: number, max: number) =>
-    Math.max(min, Math.min(max, v));
+  const clamp = (value: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, value));
 
   const offsetWithin = (
     el: HTMLElement,
@@ -39,10 +46,12 @@ export function createSnapModel({
   ) => {
     let cur: HTMLElement | null = el;
     let acc = 0;
+
     while (cur && cur !== ancestor) {
       acc += axis === "x" ? cur.offsetLeft : cur.offsetTop;
       cur = cur.offsetParent as HTMLElement | null;
     }
+
     return cur === ancestor ? acc : 0;
   };
 
@@ -52,6 +61,7 @@ export function createSnapModel({
       start: "top top",
       end: "+=1",
     });
+
     const pos = temp.start as number;
     temp.kill();
     return pos;
@@ -87,8 +97,8 @@ export function createSnapModel({
     const denom = toVal - fromVal;
     if (!denom) return start;
 
-    const p = clamp((target - fromVal) / denom, 0, 1);
-    return start + p * (end - start);
+    const progress = clamp((target - fromVal) / denom, 0, 1);
+    return start + progress * (end - start);
   };
 
   const getPinnedRange = (el: HTMLElement, pinnedSection: HTMLElement) => {
@@ -110,26 +120,37 @@ export function createSnapModel({
     const endScroll = mapPinnedOffsetToScroll(pinnedSection, el, offsetEnd);
 
     if (startScroll == null || endScroll == null) return null;
-    return { start: startScroll, end: Math.max(startScroll, endScroll) };
+
+    return {
+      start: startScroll,
+      end: Math.max(startScroll, endScroll),
+    };
   };
 
-  const getRangeForEl = (el: HTMLElement) => {
+  const getRangeForElement = (el: HTMLElement): SnapRange => {
     const pinnedSection = el.closest(".pinned-section") as HTMLElement | null;
+
     if (pinnedSection) {
       const range = getPinnedRange(el, pinnedSection);
       if (range) return range;
     }
-    return { start: getNormalFlowStart(el), end: getNormalFlowEnd(el) };
+
+    return {
+      start: getNormalFlowStart(el),
+      end: getNormalFlowEnd(el),
+    };
   };
 
   const rebuild = () => {
-    const ITEM_SELECTOR = "[data-snap='true'], [data-snap='false']";
-    const els = gsap.utils.toArray<HTMLElement>(ITEM_SELECTOR);
+    
+    const itemSelector = "[data-snap='true'], [data-snap='false']";
+    const els = gsap.utils.toArray<HTMLElement>(itemSelector);
     const max = ScrollTrigger.maxScroll(window);
 
     const mapped = els.map((el) => {
-      const { start, end } = getRangeForEl(el);
+      const { start, end } = getRangeForElement(el);
       const snap = el.dataset.snap === "true";
+
       return {
         el,
         start: clamp(start, 0, max),
@@ -138,39 +159,65 @@ export function createSnapModel({
       } satisfies SnapItem;
     });
 
+    console.log("mapped",
+      mapped.map((item)=> ({
+        blockId: item.el.dataset.blockId,
+        start: item.start,
+        end: item.end,
+        snap: item.snap
+      }))
+    )
+
     mapped.sort((a, b) => a.start - b.start);
+    
 
     const unique: SnapItem[] = [];
-    for (const it of mapped) {
+
+    for (const item of mapped) {
       const last = unique[unique.length - 1];
-      if (!last || Math.abs(it.start - last.start) > 1) unique.push(it);
-      else {
-        last.end = Math.max(last.end, it.end);
-        last.snap = last.snap || it.snap;
+
+      if (!last || Math.abs(item.start - last.start) > 1) {
+        unique.push(item);
+      } else {
+        last.end = Math.max(last.end, item.end);
+        last.snap = last.snap || item.snap;
       }
     }
+
+    console.log("unique",
+      unique.map((item)=> ({
+        blockId: item.el.dataset.blockId,
+        start: item.start,
+        end: item.end,
+        snap: item.snap
+      }))
+    )
 
     itemsRef.current = unique;
   };
 
   const getIndexFromScroll = (scroll: number) => {
     const items = itemsRef.current;
-    const EPS = ScrollTrigger.isTouch ? 60 : 20;
+    const epsilon = ScrollTrigger.isTouch ? 60 : 20;
 
     for (let i = items.length - 1; i >= 0; i--) {
-      const it = items[i];
-      if (scroll >= it.start - EPS && scroll <= it.end + EPS) return i;
+      const item = items[i];
+      if (scroll >= item.start - epsilon && scroll <= item.end + epsilon) {
+        return i;
+      }
     }
 
     let best = 0;
     let bestDist = Number.POSITIVE_INFINITY;
+
     for (let i = 0; i < items.length; i++) {
-      const d = Math.abs(items[i].start - scroll);
-      if (d < bestDist) {
-        bestDist = d;
+      const dist = Math.abs(items[i].start - scroll);
+      if (dist < bestDist) {
+        bestDist = dist;
         best = i;
       }
     }
+
     return best;
   };
 
@@ -178,5 +225,11 @@ export function createSnapModel({
     itemsRef.current = [];
   };
 
-  return { itemsRef: itemsRef as any, rebuild, getIndexFromScroll, cleanup };
+  return {
+    itemsRef: itemsRef as React.RefObject<SnapItem[]>,
+    rebuild,
+    getIndexFromScroll,
+    getRangeForElement,
+    cleanup,
+  };
 }

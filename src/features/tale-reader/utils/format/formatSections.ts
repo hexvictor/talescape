@@ -32,13 +32,9 @@ export function formatSectionsById(
       const isFirstSection = i === 0;
       const isLastSection = i === sections.length - 1;
 
-      const isReel = section.layout === "reel";
-      const isVertical = section.orientation === "vertical";
 
       return {
         ...section,
-        isReel,
-        isVertical,
         blockIds,
         firstBlockId,
         lastBlockId,

@@ -25,6 +25,8 @@ function TaleBlockDebugPanelComponent({ block }: Props) {
       <div className="mb-4 bg-green-300 p-2">
         <p>Section id: {block.sectionId}</p>
         <p>Section index: {block.section.index}</p>
+        <p>Section Direction: {block.section.direction}</p>
+        <p>Section Orientation: {block.section.orientation}</p>
       </div>
 
       <div className="mb-4 bg-red-400 p-2">
@@ -45,6 +47,9 @@ function TaleBlockDebugPanelComponent({ block }: Props) {
 
       <div className="mb-4 bg-orange-600 p-2">
         <p>Anchor id: {block.anchorId}</p>
+      </div>
+      <div className="mb-4 bg-white-700 text-black p-2">
+        <p>Tale id: {block.part.taleId}</p>
       </div>
     </div>
   );

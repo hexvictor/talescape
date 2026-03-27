@@ -1,7 +1,7 @@
 "use client";
 
 export default function ContentsNavigator() {
-  // const { navigateToAnchor } = useReaderNavContext();
+  // const { navigateToAnchor } = ();
   // const currentEntryIndex = useReaderStore((s) => s.currentEntryIndex);
   // const getCurrentEntry = useReaderStore((s) => s.getCurrentEntry);
   // const getCurrentEntryId = useReaderStore((s) => s.getCurrentEntryId);

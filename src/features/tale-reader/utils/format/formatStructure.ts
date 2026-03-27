@@ -200,16 +200,6 @@ function formatAnchors(
     const section = sectionsById[sectionId];
     if (!section) return [];
 
-    if (section.layout === "reel") {
-      return [
-        {
-          anchorId: section.id,
-          elementId: section.id,
-          type: "section",
-        },
-      ] as AnchorBinding[];
-    }
-
     return section.blockIds
       .map((blockId) => blocksById[blockId])
       .filter((block): block is BlockMeta => !!block && block.anchorId !== null)

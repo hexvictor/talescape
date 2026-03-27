@@ -1,16 +1,18 @@
 "use client";
 
 import { useRef } from "react";
-import { useGsapTaleScroll } from "~/features/tale-reader/hooks/useGsapTaleScroll";
-import { useReaderNavContext } from "~/features/tale-reader/contexts/ReaderNavContext";
-import TaleGsapContent from "../tale-gsap-content";
+import { useTaleScrollEngine } from "~/features/tale-reader/hooks/useTaleScrollEngine";
+import TaleContent from "../tale-content";
+import { usePersistReaderProgress } from "~/features/tale-reader/hooks/usePersistReaderProgress";
 
-export default function TaleGsapPage() {
+export default function TalePage() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  useGsapTaleScroll({
+  useTaleScrollEngine({
     wrapperRef,
   });
+
+  // usePersistReaderProgress();
 
   return (
     <div
@@ -24,7 +26,7 @@ export default function TaleGsapPage() {
         className="select-none"
         style={{ touchAction: "none" }}
       >
-        <TaleGsapContent />
+        <TaleContent />
       </div>
     </div>
   );

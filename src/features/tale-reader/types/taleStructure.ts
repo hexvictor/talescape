@@ -25,7 +25,6 @@ export type BlockMeta = EmbeddedBlock & {
   partIndex: number;
   fragmentIds: number[];
   anchorId: number | null;
-  isReelBlock: boolean;
   isPageBlock: boolean;
   isFirst: boolean;
   isLast: boolean;
@@ -86,8 +85,6 @@ export type SectionMeta = EmbeddedSection & {
   lastBlockId: number | null;
   blockCount: number;
   pageCount: number;
-  isReel: boolean;
-  isVertical: boolean;
   isFirstSection: boolean;
   isLastSection: boolean;
 };
@@ -109,12 +106,15 @@ export type FragmentEmbedExtra = {
 
 export type BlockEmbedExtra = {
   sectionId: number;
+  isSnap: boolean;
   pageId: number | null;
   index: number;
 };
 
 export type SectionEmbedExtra = {
   index: number;
+  isSnap: boolean;
+
 };
 
 export type EntryWithRange = EntrySchema & EntryRangeExtra;

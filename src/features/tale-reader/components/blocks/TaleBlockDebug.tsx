@@ -12,7 +12,7 @@ function TaleBlockDebugComponent({ block }: Props) {
   return (
     <>
       <TaleBlockDebugBadges block={block} />
-      {/* <TaleBlockDebugPanel block={block} /> */}
+      <TaleBlockDebugPanel block={block} />
     </>
   );
 }
