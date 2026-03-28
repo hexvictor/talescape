@@ -1,3 +1,4 @@
+export const revalidate = 60;
 import { getOfficialTale } from "~/server/db/queries/taleReader/tales";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import {

@@ -12,6 +12,16 @@ type TaleBlockProps = {
   block: BlockMeta;
 };
 
+// DEBUG COLORS
+const bgColors = [
+  "bg-red-900/30",
+  "bg-green-900/30",
+  "bg-blue-900/30",
+  "bg-yellow-900/30",
+  "bg-purple-900/30",
+  "bg-pink-900/30",
+];
+
 export function TaleBlockComponent({
   block,
 }: TaleBlockProps) {
@@ -19,6 +29,9 @@ export function TaleBlockComponent({
   const fragmentsById = useReaderStore(
     (s) => s.tale.structure.indexMap.fragmentsById,
   );
+
+  // DEBUG COLORS
+  const bg = bgColors[block.globalIndex % bgColors.length];
 
 
   const blockFragments = block.fragmentIds
@@ -45,9 +58,8 @@ export function TaleBlockComponent({
       data-block-part-id={block.partId ?? undefined}
       data-block-global-index={block.globalIndex}
       className={clsx(
-        // "overflow-visible",
-        "relative",
-        "flex min-h-screen min-w-screen items-center justify-center"
+        " relative flex min-h-screen min-w-screen items-center justify-center",
+        bg
       )}
     >
         <TaleBlockDebug block={block} />

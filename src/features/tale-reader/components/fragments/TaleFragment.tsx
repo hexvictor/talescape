@@ -1,7 +1,5 @@
 "use client";
 
-import ScrollAnimatedFragment from "./animated/scroll-animated-fragment";
-import LoopAnimatedFragment from "./animated/loop-animated-fragment";
 import type { FragmentMeta } from "~/features/tale-reader/types/taleStructure";
 import type {
   ImageFragmentData,
@@ -11,55 +9,47 @@ import type {
 type TaleFragmentProps = {
   fragment: FragmentMeta;
 };
-export function TaleFragment({
-  fragment,
-}: TaleFragmentProps) {
+
+export function TaleFragment({ fragment }: TaleFragmentProps) {
+  // 📝 TEXT
   if (fragment.type === "text") {
     const data = fragment.data as TextFragmentData;
+
     return (
-      <div>
-        {/* Animated Fragment before content */}
-        {/* <ScrollAnimatedFragment
-          color="#457B9D"
-          animationProps={{
-            initial: { opacity: 0, x: -50 },
-            animate: { opacity: 1, x: 0 },
-            exit: { opacity: 0, x: -50 },
-            transition: { duration: 0.6 },
-          }}
-          fragment={fragment}
-        /> */}
-
-        {/* Actual text content */}
-        <p className="text-base leading-relaxed">{data.content}</p>
-
-        {/* Optional continuous animation block */}
-        {/* <LoopAnimatedFragment
-          color="#2A9D8F"
-          animationProps={{
-            animate: { rotate: [0, 360] },
-            transition: {
-              duration: 4,
-              repeat: Infinity,
-              ease: "linear",
-            },
-          }}
-          {...props}
-        /> */}
+      <div className="w-full max-w-2xl px-6 sm:px-10">
+        <p className="text-center text-base leading-7 sm:text-lg md:text-xl">
+          {data.content}
+        </p>
       </div>
     );
   }
 
+  // 🖼️ IMAGE (🔥 mobile immersive)
   if (fragment.type === "image") {
     const data = fragment.data as ImageFragmentData;
 
     return (
-      <img
-        key={fragment.id}
-        src={data.url}
-        alt={data.alt || "Tale fragment"}
-        className="rounded-md max-h-screen max-w-screen"
-      />
+      <div className="relative flex w-full items-center justify-center">
+        <img
+          src={data.url}
+          alt={data.alt || "Tale fragment"}
+          className="
+            w-full 
+            h-auto
+            object-contain
+
+            /* MOBILE — almost full screen */
+            max-h-[90vh]
+
+            /* remove padding feeling */
+            px-0
+
+            /* DESKTOP — more controlled */
+            sm:max-h-[75vh] sm:max-w-4xl sm:px-6
+            md:max-h-[70vh]
+          "
+        />
+      </div>
     );
   }
 

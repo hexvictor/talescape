@@ -11,6 +11,7 @@ import { ContentsNavigator } from "../../ui/contents-navigator";
 import TalePage from "../tale-page";
 import { PageNavigator } from "../../ui";
 import TaleHub from "../tale-hub";
+import TaleDebug from "../../ui/tale-debug";
 
 type TaleReaderProps = {
   tale: Tale;
@@ -30,6 +31,7 @@ export default function TaleReader({ tale, progress }: TaleReaderProps) {
               <EntryNavigator />
               <PageNavigator/>
               <ReaderUiToggle />
+              <TaleDebug />
             </div>
           </div>
 

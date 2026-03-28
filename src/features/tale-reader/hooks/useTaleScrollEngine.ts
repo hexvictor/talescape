@@ -32,9 +32,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
   const taleHubOpen = useReaderStore((s) => s.taleHubOpen);
   const setScrollApi = useReaderStore((s) => s.setScrollApi);
   const clearScrollApi = useReaderStore((s) => s.clearScrollApi);
-  const blocksById = useReaderStore(
-    (s) => s.tale.structure.indexMap.blocksById,
-  );
+  const blocksById = useReaderStore((s) => s.tale.structure.indexMap.blocksById);
   const onActiveBlockChanged = useReaderStore((s) => s.onActiveBlockChanged);
 
   // biome-ignore lint/suspicious/noExplicitAny
@@ -45,6 +43,9 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
     rebuild: () => void;
     cleanup: () => void;
   } | null>(null);
+
+  const isProgrammaticScrollRef = useRef(false);
+  const pendingTargetBlockIdRef = useRef<number | null>(null);
 
   const driver = useMemo(() => createScrollDriver(smootherRef), []);
   const pinnedLayoutRef = useRef<PinnedLayoutApi | null>(null);
@@ -79,6 +80,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
         model: snapModelRef.current,
         getScroll: driver.getScroll,
         onActiveBlockChanged,
+        shouldTrack: () => !isProgrammaticScrollRef.current,
       });
 
       const rebuild = () => {
@@ -136,10 +138,24 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
           const range = snapModelRef.current?.getRangeForElement(el);
           if (!range) return;
 
+          isProgrammaticScrollRef.current = true;
+          pendingTargetBlockIdRef.current = blockId;
+
           driver.scrollTo(range.start, {
             duration: opts?.duration ?? 0.35,
             ease: "power1.inOut",
-            onDone: () => {},
+            onDone: () => {
+              const targetBlockId = pendingTargetBlockIdRef.current;
+
+              isProgrammaticScrollRef.current = false;
+              pendingTargetBlockIdRef.current = null;
+
+              if (targetBlockId != null) {
+                onActiveBlockChanged(targetBlockId);
+              } else {
+                activeTrackerRef.current?.updateNow();
+              }
+            },
           });
         },
         setPaused: (paused: boolean) => {

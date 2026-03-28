@@ -1,3 +1,4 @@
+export const revalidate = 60;
 import { notFound, useParams } from "next/navigation";
 import { getUserTale } from "~/server/db/queries/taleReader/tales";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
