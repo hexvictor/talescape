@@ -67,7 +67,10 @@ export function createScrollDriver(
       smooth: 1.5,
       smoothTouch: 0.15,
       effects: true,
-      normalizeScroll: true,
+      normalizeScroll: {
+        allowNestedScroll: true,
+        allowClicks: true
+      },
     });
 
     smootherRef.current = smoother;
