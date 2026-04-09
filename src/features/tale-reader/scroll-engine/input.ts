@@ -27,13 +27,16 @@ type Args = {
 export function attachInputs({ driver, model }: Args): InputsApi {
   const snapDuration = 0.35;
   const snapEase: gsap.EaseString = "power1.inOut";
+  const releaseThreshold = 24;
 
   let enabled = true;
   let animating = false;
+  let isTouchPressing = false;
+  let touchStartY: number | null = null;
+  let touchLastY: number | null = null;
 
   let snapTween: gsap.core.Tween | null = null;
-  // biome-ignore lint/suspicious/noExplicitAny
-  let snapObserver: any = null;
+  let snapObserver: ReturnType<typeof ScrollTrigger.observe> | null = null;
 
   const killTweens = (setNotAnimating = false) => {
     if (snapTween) {
@@ -100,7 +103,9 @@ export function attachInputs({ driver, model }: Args): InputsApi {
 
   const selectionIsActive = () => {
     const selection = window.getSelection?.();
-    return !!selection && !selection.isCollapsed && selection.toString().length > 0;
+    return (
+      !!selection && !selection.isCollapsed && selection.toString().length > 0
+    );
   };
 
   const isSelectableZone = (target: EventTarget | null) => {
@@ -130,6 +135,21 @@ export function attachInputs({ driver, model }: Args): InputsApi {
     killTweens(true);
   };
 
+  const handleTouchReleaseSnap = () => {
+    if (touchStartY == null || touchLastY == null) return;
+
+    const deltaY = touchStartY - touchLastY;
+    const absDeltaY = Math.abs(deltaY);
+
+    touchStartY = null;
+    touchLastY = null;
+
+    if (absDeltaY < releaseThreshold) return;
+
+    const forward = deltaY > 0;
+    tryStep(forward);
+  };
+
   const initObservers = () => {
     snapObserver = ScrollTrigger.observe({
       type: "wheel,touch",
@@ -137,8 +157,11 @@ export function attachInputs({ driver, model }: Args): InputsApi {
       tolerance: 10,
       preventDefault: false,
       debounce: true,
+      allowClicks: true,
       onUp: (self) => {
         if (!enabled) return;
+        if (ScrollTrigger.isTouch && isTouchPressing) return;
+
         const didSnap = tryStep(true);
         if (didSnap && self?.event?.preventDefault) {
           self.event.preventDefault();
@@ -146,6 +169,8 @@ export function attachInputs({ driver, model }: Args): InputsApi {
       },
       onDown: (self) => {
         if (!enabled) return;
+        if (ScrollTrigger.isTouch && isTouchPressing) return;
+
         const didSnap = tryStep(false);
         if (didSnap && self?.event?.preventDefault) {
           self.event.preventDefault();
@@ -153,8 +178,43 @@ export function attachInputs({ driver, model }: Args): InputsApi {
       },
       onPress: (self) => {
         if (!enabled) return;
+
+        if (ScrollTrigger.isTouch) {
+          isTouchPressing = true;
+          killTweens(true);
+
+          const touch =
+            "touches" in self.event ? self.event.touches?.[0] : undefined;
+          const clientY = touch?.clientY;
+          touchStartY = clientY ?? null;
+          touchLastY = clientY ?? null;
+        }
+
         if (ScrollTrigger.isTouch && animating) {
           self.event.preventDefault();
+        }
+      },
+      onDrag: (self) => {
+        if (!enabled) return;
+        if (!ScrollTrigger.isTouch) return;
+
+        const touch =
+          "touches" in self.event ? self.event.touches?.[0] : undefined;
+        const clientY = touch?.clientY;
+        if (clientY != null) {
+          touchLastY = clientY;
+        }
+      },
+      onRelease: () => {
+        const shouldSnap = enabled && ScrollTrigger.isTouch && isTouchPressing;
+
+        isTouchPressing = false;
+
+        if (shouldSnap) {
+          handleTouchReleaseSnap();
+        } else {
+          touchStartY = null;
+          touchLastY = null;
         }
       },
     });
@@ -175,22 +235,31 @@ export function attachInputs({ driver, model }: Args): InputsApi {
   const disable = () => {
     enabled = false;
     killTweens(true);
-    snapObserver?.disable?.();
+    snapObserver?.disable();
   };
 
   const enable = () => {
     enabled = true;
-    snapObserver?.enable?.();
+    snapObserver?.enable();
   };
 
   const cleanup = () => {
     killTweens(true);
 
-    window.removeEventListener("pointerdown", onUserPointerDown as EventListener);
-    window.removeEventListener("mousedown", onUserPointerDown as EventListener);
-    window.removeEventListener("touchstart", onUserPointerDown as EventListener);
+    window.removeEventListener(
+      "pointerdown",
+      onUserPointerDown as EventListener,
+    );
+    window.removeEventListener(
+      "mousedown",
+      onUserPointerDown as EventListener,
+    );
+    window.removeEventListener(
+      "touchstart",
+      onUserPointerDown as EventListener,
+    );
 
-    snapObserver?.kill?.();
+    snapObserver?.kill();
     snapObserver = null;
   };
 
