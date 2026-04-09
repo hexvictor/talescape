@@ -72,6 +72,11 @@ function TaleBlockDebugBadgesComponent({ block }: Props) {
         ? "border-amber-300 bg-amber-500/90 text-black"
         : "border-zinc-300 bg-zinc-700/90 text-white",
     },
+    {
+          key: "orientation",
+          label: block.section.orientation === "horizontal" ? "Horizontal" : "Vertical",
+          className: "border-emerald-300 bg-emerald-500/95 text-emerald-900",
+        },
     block.isFirst
       ? {
           key: "first",
@@ -93,6 +98,7 @@ function TaleBlockDebugBadgesComponent({ block }: Props) {
           className: "border-emerald-300 bg-emerald-100/95 text-emerald-900",
         }
       : null,
+    
     block.isLastInSection
       ? {
           key: "last-section",
