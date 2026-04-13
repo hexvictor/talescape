@@ -1,5 +1,5 @@
 export function sortByIndex<T extends { index: number }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.index - b.index);
+	return [...items].sort((a, b) => a.index - b.index);
 }
 
 /**
@@ -45,16 +45,16 @@ export function sortByIndex<T extends { index: number }>(items: T[]): T[] {
  * // ]
  */
 export function sortByParentAndIndex<T, P>(
-  items: T[],
-  parents: P[],
-  getParentId: (item: T) => number,
-  getItemIndex: (item: T) => number,
-  getParentIdFromParent: (parent: P) => number
+	items: T[],
+	parents: P[],
+	getParentId: (item: T) => number,
+	getItemIndex: (item: T) => number,
+	getParentIdFromParent: (parent: P) => number,
 ): T[] {
-  return parents.flatMap((parent) => {
-    const parentId = getParentIdFromParent(parent);
-    return items
-      .filter((item) => getParentId(item) === parentId)
-      .sort((a, b) => getItemIndex(a) - getItemIndex(b));
-  });
+	return parents.flatMap((parent) => {
+		const parentId = getParentIdFromParent(parent);
+		return items
+			.filter((item) => getParentId(item) === parentId)
+			.sort((a, b) => getItemIndex(a) - getItemIndex(b));
+	});
 }

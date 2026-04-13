@@ -1,18 +1,18 @@
 "use client";
 
 import { useRef } from "react";
+import { usePersistReaderProgress } from "~/features/tale-reader/hooks/usePersistReaderProgress";
 import { useTaleScrollEngine } from "~/features/tale-reader/hooks/useTaleScrollEngine";
 import TaleContent from "../tale-content";
-import { usePersistReaderProgress } from "~/features/tale-reader/hooks/usePersistReaderProgress";
 
-export default function TalePage() {
+export default function TaleViewport() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   useTaleScrollEngine({
     wrapperRef,
   });
 
-  // usePersistReaderProgress();
+  usePersistReaderProgress();
 
   return (
     <div

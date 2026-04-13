@@ -4,86 +4,86 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { SnapModelApi } from "./snapModel";
 
 type ActiveBlockTrackerApi = {
-  rebuild: () => void;
-  cleanup: () => void;
-  updateNow: () => void;
+	rebuild: () => void;
+	cleanup: () => void;
+	updateNow: () => void;
 };
 
 type ActiveBlockTrackerArgs = {
-  model: SnapModelApi;
-  getScroll: () => number;
-  onActiveBlockChanged: (blockId: number) => void;
-  shouldTrack: () => boolean;
+	model: SnapModelApi;
+	getScroll: () => number;
+	onActiveBlockChanged: (blockId: number) => void;
+	shouldTrack: () => boolean;
 };
 
 export function initActiveBlockTracker({
-  model,
-  getScroll,
-  onActiveBlockChanged,
-  shouldTrack,
+	model,
+	getScroll,
+	onActiveBlockChanged,
+	shouldTrack,
 }: ActiveBlockTrackerArgs): ActiveBlockTrackerApi {
-  let tracker: ScrollTrigger | null = null;
-  let lastBlockId: number | null = null;
-  let rafId: number | null = null;
+	let tracker: ScrollTrigger | null = null;
+	let lastBlockId: number | null = null;
+	let rafId: number | null = null;
 
-  const cancelScheduled = () => {
-    if (rafId != null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-  };
+	const cancelScheduled = () => {
+		if (rafId != null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
+	};
 
-  const updateActiveBlock = () => {
-    rafId = null;
+	const updateActiveBlock = () => {
+		rafId = null;
 
-    if (!shouldTrack()) return;
+		if (!shouldTrack()) return;
 
-    const items = model.itemsRef.current;
-    if (!items.length) return;
+		const items = model.itemsRef.current;
+		if (!items.length) return;
 
-    const scroll = getScroll();
-    const index = model.getIndexFromScroll(scroll);
-    const item = items[index];
-    if (!item) return;
+		const scroll = getScroll();
+		const index = model.getIndexFromScroll(scroll);
+		const item = items[index];
+		if (!item) return;
 
-    const blockId = Number(item.el.dataset.blockId ?? item.el.id);
-    if (!Number.isFinite(blockId)) return;
-    if (blockId === lastBlockId) return;
+		const blockId = Number(item.el.dataset.blockId ?? item.el.id);
+		if (!Number.isFinite(blockId)) return;
+		if (blockId === lastBlockId) return;
 
-    lastBlockId = blockId;
-    onActiveBlockChanged(blockId);
-  };
+		lastBlockId = blockId;
+		onActiveBlockChanged(blockId);
+	};
 
-  const scheduleUpdate = () => {
-    if (rafId != null) return;
-    rafId = requestAnimationFrame(updateActiveBlock);
-  };
+	const scheduleUpdate = () => {
+		if (rafId != null) return;
+		rafId = requestAnimationFrame(updateActiveBlock);
+	};
 
-  const rebuild = () => {
-    tracker?.kill();
-    cancelScheduled();
+	const rebuild = () => {
+		tracker?.kill();
+		cancelScheduled();
 
-    tracker = ScrollTrigger.create({
-      trigger: document.documentElement,
-      start: 0,
-      end: () => ScrollTrigger.maxScroll(window),
-      onUpdate: scheduleUpdate,
-    });
+		tracker = ScrollTrigger.create({
+			trigger: document.documentElement,
+			start: 0,
+			end: () => ScrollTrigger.maxScroll(window),
+			onUpdate: scheduleUpdate,
+		});
 
-    updateActiveBlock();
-  };
+		updateActiveBlock();
+	};
 
-  const updateNow = () => {
-    cancelScheduled();
-    updateActiveBlock();
-  };
+	const updateNow = () => {
+		cancelScheduled();
+		updateActiveBlock();
+	};
 
-  const cleanup = () => {
-    tracker?.kill();
-    tracker = null;
-    lastBlockId = null;
-    cancelScheduled();
-  };
+	const cleanup = () => {
+		tracker?.kill();
+		tracker = null;
+		lastBlockId = null;
+		cancelScheduled();
+	};
 
-  return { rebuild, cleanup, updateNow };
+	return { rebuild, cleanup, updateNow };
 }

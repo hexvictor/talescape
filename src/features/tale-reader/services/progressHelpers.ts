@@ -2,34 +2,34 @@ import type { StoreApi } from "zustand";
 import type { TaleReaderState } from "../store/TaleReaderStore";
 
 export const debounceProgressUpdate = (
-  store: StoreApi<TaleReaderState>,
-  blockId: number,
-  updateFn: (blockId: number) => void
+	store: StoreApi<TaleReaderState>,
+	blockId: number,
+	updateFn: (blockId: number) => void,
 ) => {
-  const {
-    progressDebounceTimer,
-    setProgressDebounceTimer,
-    setLastQueuedBlockId,
-  } = store.getState();
+	const {
+		progressDebounceTimer,
+		setProgressDebounceTimer,
+		setLastQueuedBlockId,
+	} = store.getState();
 
-  setLastQueuedBlockId(blockId);
+	setLastQueuedBlockId(blockId);
 
-  if (progressDebounceTimer) {
-    return;
-  }
+	if (progressDebounceTimer) {
+		return;
+	}
 
-  const timer = setTimeout(() => {
-    const { lastQueuedBlockId } = store.getState();
+	const timer = setTimeout(() => {
+		const { lastQueuedBlockId } = store.getState();
 
-    if (lastQueuedBlockId != null) {
-      updateFn(lastQueuedBlockId);
-    }
+		if (lastQueuedBlockId != null) {
+			updateFn(lastQueuedBlockId);
+		}
 
-    store.setState({
-      progressDebounceTimer: null,
-      lastQueuedBlockId: null,
-    });
-  }, 2000);
+		store.setState({
+			progressDebounceTimer: null,
+			lastQueuedBlockId: null,
+		});
+	}, 2000);
 
-  setProgressDebounceTimer(timer);
+	setProgressDebounceTimer(timer);
 };

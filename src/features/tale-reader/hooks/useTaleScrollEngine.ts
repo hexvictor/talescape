@@ -1,196 +1,232 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useMemo, useRef } from "react";
 
 import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
+import { initActiveBlockTracker } from "~/features/tale-reader/scroll-engine/activeBlockTracker";
+import {
+	type InputsApi,
+	attachInputs,
+} from "~/features/tale-reader/scroll-engine/input";
+import {
+	type PinnedLayoutApi,
+	initPinnedLayout,
+} from "~/features/tale-reader/scroll-engine/pinnedLayout";
 import { createScrollDriver } from "~/features/tale-reader/scroll-engine/scrollDriver";
 import {
-  initPinnedLayout,
-  type PinnedLayoutApi,
-} from "~/features/tale-reader/scroll-engine/pinnedLayout";
-import {
-  createSnapModel,
-  type SnapModelApi,
+	type SnapModelApi,
+	createSnapModel,
 } from "~/features/tale-reader/scroll-engine/snapModel";
-import {
-  attachInputs,
-  type InputsApi,
-} from "~/features/tale-reader/scroll-engine/input";
-import { initActiveBlockTracker } from "~/features/tale-reader/scroll-engine/activeBlockTracker";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollSmoother);
 
 type UseTaleScrollEngineArgs = {
-  wrapperRef: React.RefObject<HTMLElement | null>;
+	wrapperRef: React.RefObject<HTMLElement | null>;
 };
 
 export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
-  const taleHubOpen = useReaderStore((s) => s.taleHubOpen);
-  const setScrollApi = useReaderStore((s) => s.setScrollApi);
-  const clearScrollApi = useReaderStore((s) => s.clearScrollApi);
-  const blocksById = useReaderStore((s) => s.tale.structure.indexMap.blocksById);
-  const onActiveBlockChanged = useReaderStore((s) => s.onActiveBlockChanged);
+	const taleHubOpen = useReaderStore((s) => s.taleHubOpen);
+	const setScrollApi = useReaderStore((s) => s.setScrollApi);
+	const clearScrollApi = useReaderStore((s) => s.clearScrollApi);
+	const setIsLayoutReady = useReaderStore((s) => s.setIsLayoutReady);
+	const blocksById = useReaderStore(
+		(s) => s.tale.structure.indexMap.blocksById,
+	);
+	const onActiveBlockChanged = useReaderStore((s) => s.onActiveBlockChanged);
 
-  // biome-ignore lint/suspicious/noExplicitAny
-  const smootherRef = useRef<any>(null);
+	const smootherRef = useRef<any>(null);
 
-  const engineApiRef = useRef<{
-    setHubOpen: (open: boolean) => void;
-    rebuild: () => void;
-    cleanup: () => void;
-  } | null>(null);
+	const engineApiRef = useRef<{
+		setHubOpen: (open: boolean) => void;
+		rebuild: () => void;
+		cleanup: () => void;
+	} | null>(null);
 
-  const isProgrammaticScrollRef = useRef(false);
-  const pendingTargetBlockIdRef = useRef<number | null>(null);
+	const isProgrammaticScrollRef = useRef(false);
+	const pendingTargetBlockIdRef = useRef<number | null>(null);
+	const layoutReadyTimerRef = useRef<number | null>(null);
+	const hasCompletedInitialLayoutRef = useRef(false);
 
-  const driver = useMemo(() => createScrollDriver(smootherRef), []);
-  const pinnedLayoutRef = useRef<PinnedLayoutApi | null>(null);
-  const snapModelRef = useRef<SnapModelApi | null>(null);
-  const inputsApiRef = useRef<InputsApi | null>(null);
-  const activeTrackerRef = useRef<ReturnType<
-    typeof initActiveBlockTracker
-  > | null>(null);
+	const driver = useMemo(() => createScrollDriver(smootherRef), []);
+	const pinnedLayoutRef = useRef<PinnedLayoutApi | null>(null);
+	const snapModelRef = useRef<SnapModelApi | null>(null);
+	const inputsApiRef = useRef<InputsApi | null>(null);
+	const activeTrackerRef = useRef<ReturnType<
+		typeof initActiveBlockTracker
+	> | null>(null);
 
-  useGSAP(
-    () => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
+	useGSAP(
+		() => {
+			ScrollTrigger.config({ ignoreMobileResize: true });
 
-      driver.init({
-        wrapper: "#smooth-wrapper",
-        content: "#smooth-content",
-      });
+			const clearLayoutReadyTimer = () => {
+				if (layoutReadyTimerRef.current != null) {
+					window.clearTimeout(layoutReadyTimerRef.current);
+					layoutReadyTimerRef.current = null;
+				}
+			};
 
-      pinnedLayoutRef.current = initPinnedLayout();
+			const markLayoutReadySoon = () => {
+				clearLayoutReadyTimer();
 
-      snapModelRef.current = createSnapModel({
-        pinnedMeta: pinnedLayoutRef.current.pinnedMeta,
-        pinnedSTBySection: pinnedLayoutRef.current.pinnedSTBySection,
-      });
+				layoutReadyTimerRef.current = window.setTimeout(() => {
+					requestAnimationFrame(() => {
+						requestAnimationFrame(() => {
+							setIsLayoutReady(true);
+							hasCompletedInitialLayoutRef.current = true;
+							layoutReadyTimerRef.current = null;
+						});
+					});
+				}, 120);
+			};
 
-      inputsApiRef.current = attachInputs({
-        driver,
-        model: snapModelRef.current,
-      });
+			const rebuild = () => {
+				inputsApiRef.current?.killTweens(true);
+				snapModelRef.current?.rebuild();
+				activeTrackerRef.current?.rebuild();
 
-      activeTrackerRef.current = initActiveBlockTracker({
-        model: snapModelRef.current,
-        getScroll: driver.getScroll,
-        onActiveBlockChanged,
-        shouldTrack: () => !isProgrammaticScrollRef.current,
-      });
+				if (!hasCompletedInitialLayoutRef.current) {
+					markLayoutReadySoon();
+				}
+			};
 
-      const rebuild = () => {
-        inputsApiRef.current?.killTweens(true);
-        snapModelRef.current?.rebuild();
-        activeTrackerRef.current?.rebuild();
-      };
+			setIsLayoutReady(false);
+			hasCompletedInitialLayoutRef.current = false;
 
-      const setHubOpen = (open: boolean) => {
-        driver.setPaused(open);
+			driver.init({
+				wrapper: "#smooth-wrapper",
+				content: "#smooth-content",
+			});
 
-        if (open) {
-          document.documentElement.style.overflow = "hidden";
-          document.body.style.overflow = "hidden";
-          inputsApiRef.current?.disable();
-        } else {
-          document.documentElement.style.overflow = "";
-          document.body.style.overflow = "";
-          inputsApiRef.current?.enable();
-        }
-      };
+			pinnedLayoutRef.current = initPinnedLayout();
 
-      engineApiRef.current = {
-        setHubOpen,
-        rebuild,
-        cleanup: () => {
-          clearScrollApi();
+			snapModelRef.current = createSnapModel({
+				pinnedMeta: pinnedLayoutRef.current.pinnedMeta,
+				pinnedSTBySection: pinnedLayoutRef.current.pinnedSTBySection,
+			});
 
-          activeTrackerRef.current?.cleanup();
-          activeTrackerRef.current = null;
+			inputsApiRef.current = attachInputs({
+				driver,
+				model: snapModelRef.current,
+			});
 
-          inputsApiRef.current?.cleanup();
-          inputsApiRef.current = null;
+			activeTrackerRef.current = initActiveBlockTracker({
+				model: snapModelRef.current,
+				getScroll: driver.getScroll,
+				onActiveBlockChanged,
+				shouldTrack: () => !isProgrammaticScrollRef.current,
+			});
 
-          snapModelRef.current?.cleanup();
-          snapModelRef.current = null;
+			const setHubOpen = (open: boolean) => {
+				driver.setPaused(open);
 
-          pinnedLayoutRef.current?.cleanup();
-          pinnedLayoutRef.current = null;
+				if (open) {
+					document.documentElement.style.overflow = "hidden";
+					document.body.style.overflow = "hidden";
+					inputsApiRef.current?.disable();
+				} else {
+					document.documentElement.style.overflow = "";
+					document.body.style.overflow = "";
+					inputsApiRef.current?.enable();
+				}
+			};
 
-          driver.cleanup();
-        },
-      };
+			engineApiRef.current = {
+				setHubOpen,
+				rebuild,
+				cleanup: () => {
+					clearScrollApi();
+					clearLayoutReadyTimer();
+					setIsLayoutReady(false);
+					hasCompletedInitialLayoutRef.current = false;
 
-      setScrollApi({
-        scrollToBlockId: (blockId: number, opts?: { duration?: number }) => {
-          const block = blocksById[blockId];
-          if (!block) return;
+					activeTrackerRef.current?.cleanup();
+					activeTrackerRef.current = null;
 
-          const el = document.querySelector<HTMLElement>(
-            `[data-anchor-id="${block.anchorId}"]`,
-          );
-          if (!el) return;
+					inputsApiRef.current?.cleanup();
+					inputsApiRef.current = null;
 
-          const range = snapModelRef.current?.getRangeForElement(el);
-          if (!range) return;
+					snapModelRef.current?.cleanup();
+					snapModelRef.current = null;
 
-          isProgrammaticScrollRef.current = true;
-          pendingTargetBlockIdRef.current = blockId;
+					pinnedLayoutRef.current?.cleanup();
+					pinnedLayoutRef.current = null;
 
-          driver.scrollTo(range.start, {
-            duration: opts?.duration ?? 0.35,
-            ease: "power1.inOut",
-            onDone: () => {
-              const targetBlockId = pendingTargetBlockIdRef.current;
+					driver.cleanup();
+				},
+			};
 
-              isProgrammaticScrollRef.current = false;
-              pendingTargetBlockIdRef.current = null;
+			setScrollApi({
+				scrollToBlockId: (blockId: number, opts?: { duration?: number }) => {
+					const block = blocksById[blockId];
+					if (!block) return;
 
-              if (targetBlockId != null) {
-                onActiveBlockChanged(targetBlockId);
-              } else {
-                activeTrackerRef.current?.updateNow();
-              }
-            },
-          });
-        },
-        setPaused: (paused: boolean) => {
-          driver.setPaused(paused);
-        },
-        rebuild: () => {
-          rebuild();
-        },
-      });
+					const el = document.querySelector<HTMLElement>(
+						`[data-anchor-id="${block.anchorId}"]`,
+					);
+					if (!el) return;
 
-      engineApiRef.current.setHubOpen(!!taleHubOpen);
+					const range = snapModelRef.current?.getRangeForElement(el);
+					if (!range) return;
 
-      ScrollTrigger.refresh();
-      snapModelRef.current.rebuild();
-      activeTrackerRef.current.rebuild();
+					isProgrammaticScrollRef.current = true;
+					pendingTargetBlockIdRef.current = blockId;
 
-      ScrollTrigger.addEventListener("refresh", rebuild);
+					driver.scrollTo(range.start, {
+						duration: opts?.duration ?? 0.35,
+						ease: "power1.inOut",
+						onDone: () => {
+							const targetBlockId = pendingTargetBlockIdRef.current;
 
-      return () => {
-        ScrollTrigger.removeEventListener("refresh", rebuild);
+							isProgrammaticScrollRef.current = false;
+							pendingTargetBlockIdRef.current = null;
 
-        engineApiRef.current?.cleanup();
-        engineApiRef.current = null;
+							if (targetBlockId != null) {
+								onActiveBlockChanged(targetBlockId);
+							} else {
+								activeTrackerRef.current?.updateNow();
+							}
+						},
+					});
+				},
+				setPaused: (paused: boolean) => {
+					driver.setPaused(paused);
+				},
+				rebuild: () => {
+					rebuild();
+				},
+			});
 
-        for (const trigger of ScrollTrigger.getAll()) {
-          trigger.kill();
-        }
-      };
-    },
-    { scope: wrapperRef },
-  );
+			engineApiRef.current.setHubOpen(!!taleHubOpen);
 
-  useEffect(() => {
-    engineApiRef.current?.setHubOpen(!!taleHubOpen);
-  }, [taleHubOpen]);
+			ScrollTrigger.refresh();
+			snapModelRef.current.rebuild();
+			activeTrackerRef.current.rebuild();
+			markLayoutReadySoon();
 
-  return {};
+			ScrollTrigger.addEventListener("refresh", rebuild);
+
+			return () => {
+				ScrollTrigger.removeEventListener("refresh", rebuild);
+
+				engineApiRef.current?.cleanup();
+				engineApiRef.current = null;
+
+				for (const trigger of ScrollTrigger.getAll()) {
+					trigger.kill();
+				}
+			};
+		},
+		{ scope: wrapperRef },
+	);
+
+	useEffect(() => {
+		engineApiRef.current?.setHubOpen(!!taleHubOpen);
+	}, [taleHubOpen]);
+
+	return {};
 }

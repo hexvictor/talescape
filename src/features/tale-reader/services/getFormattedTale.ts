@@ -8,23 +8,23 @@ import { getEntries } from "~/server/db/queries/taleReader/entries";
 import { getParts } from "~/server/db/queries/taleReader/parts";
 
 export async function getFormattedTale(tale: TaleSchema) {
-  const [pages, entries, parts, blocks, sections, fragments] =
-    await Promise.all([
-      getPages(tale.id),
-      getEntries(tale.id),
-      getParts(tale.id),
-      getBlocks(tale.id),
-      getSections(tale.id),
-      getFragments(tale.id),
-    ]);
+	const [pages, entries, parts, blocks, sections, fragments] =
+		await Promise.all([
+			getPages(tale.id),
+			getEntries(tale.id),
+			getParts(tale.id),
+			getBlocks(tale.id),
+			getSections(tale.id),
+			getFragments(tale.id),
+		]);
 
-  return formatTaleStructure({
-    tale,
-    pages,
-    entries,
-    parts,
-    blocks,
-    sections,
-    fragments,
-  });
+	return formatTaleStructure({
+		tale,
+		pages,
+		entries,
+		parts,
+		blocks,
+		sections,
+		fragments,
+	});
 }

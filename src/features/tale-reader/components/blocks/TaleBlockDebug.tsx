@@ -5,16 +5,16 @@ import TaleBlockDebugBadges from "./TaleBlockDebugBadges";
 import type { BlockMeta } from "~/features/tale-reader/types/taleStructure";
 
 type Props = {
-  block: BlockMeta;
+	block: BlockMeta;
 };
 
 function TaleBlockDebugComponent({ block }: Props) {
-  return (
-    <>
-      <TaleBlockDebugBadges block={block} />
-      <TaleBlockDebugPanel block={block} />
-    </>
-  );
+	return (
+		<>
+			<TaleBlockDebugBadges block={block} />
+			<TaleBlockDebugPanel block={block} />
+		</>
+	);
 }
 
 const TaleBlockDebug = React.memo(TaleBlockDebugComponent);

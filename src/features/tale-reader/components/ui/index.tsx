@@ -6,10 +6,10 @@ import TaleProgress from "./tale-progress";
 import TaleScrollIndicator from "./tale-scroll-indicator";
 
 export {
-  ContentsNavigator,
-  EntryNavigator,
-  PageNavigator,
-  ReaderUiToggle,
-  TaleProgress,
-  TaleScrollIndicator,
+	ContentsNavigator,
+	EntryNavigator,
+	PageNavigator,
+	ReaderUiToggle,
+	TaleProgress,
+	TaleScrollIndicator,
 };

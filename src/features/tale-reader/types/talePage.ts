@@ -1,1 +1,7 @@
-export type TaleParams = { creatorUsername: string; slug: string };
+export type UserTalePageProps = {
+	params: { creatorUsername: string; taleSlug: string };
+};
+
+export type OfficialTalePageProps = {
+	params: { taleSlug: string };
+};

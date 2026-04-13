@@ -2,37 +2,43 @@ import type { TaleProgressSchema } from "~/server/db/schema";
 import type { Tale } from "~/features/tale-reader/types/taleStructure";
 
 export function getInitialProgressFromLocalStorage(
-  tale: Tale
+	tale: Tale,
 ): TaleProgressSchema {
-  const key = `tale_progress_${tale.id}`;
-  const raw = localStorage.getItem(key);
+	const defaultProgress = createDefaultProgress(tale);
 
-  try {
-    const parsed = raw ? JSON.parse(raw) : null;
-    if (parsed) return parsed;
-  } catch {
-    // ignore invalid JSON
-  }
+	if (typeof window === "undefined") {
+		return defaultProgress;
+	}
 
-  const {
-    id: taleId,
-    structure: { blockIds },
-  } = tale;
+	const lsProgressKey = `tale_progress_${tale.id}`;
+	const lsProgress = window.localStorage.getItem(lsProgressKey);
 
-  const firstBlockId = blockIds[0] ?? null;
+	try {
+		const lsParsedProgress = lsProgress ? JSON.parse(lsProgress) : null;
+		if (lsParsedProgress) return lsParsedProgress;
+	} catch {}
 
-  const generatedProgress: TaleProgressSchema = {
-    id: -1,
-    userId: "localStorage",
-    taleId,
-    updatedAt: new Date(),
-    seenBlockIds: firstBlockId ? [firstBlockId] : [],
-    lastBlockId: firstBlockId,
-    maxBlockIdReached: firstBlockId,
-    seenBlockProgress: (1 / blockIds.length).toFixed(4),
-    linearReadProgress: (1 / blockIds.length).toFixed(4),
-  };
+	window.localStorage.setItem(lsProgressKey, JSON.stringify(defaultProgress));
+	return defaultProgress;
+}
 
-  localStorage.setItem(key, JSON.stringify(generatedProgress));
-  return generatedProgress;
+function createDefaultProgress(tale: Tale): TaleProgressSchema {
+	const {
+		id: taleId,
+		structure: { blockIds },
+	} = tale;
+
+	const firstBlockId = blockIds[0] ?? null;
+
+	return {
+		id: -1,
+		userId: "localStorage",
+		taleId,
+		updatedAt: new Date(),
+		seenBlockIds: firstBlockId ? [firstBlockId] : [],
+		lastBlockId: firstBlockId,
+		maxBlockIdReached: firstBlockId,
+		seenBlockProgress: (1 / blockIds.length).toFixed(4),
+		linearReadProgress: (1 / blockIds.length).toFixed(4),
+	};
 }

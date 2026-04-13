@@ -2,58 +2,68 @@
 
 import type { FragmentMeta } from "~/features/tale-reader/types/taleStructure";
 import type {
-  ImageFragmentData,
-  TextFragmentData,
+	ImageFragmentData,
+	TextFragmentData,
 } from "~/server/db/types/tale-reader/fragment";
+import type { SectionOrientation } from "~/server/db/types/tale-reader/section";
 
 type TaleFragmentProps = {
-  fragment: FragmentMeta;
+	fragment: FragmentMeta;
+	orientation: SectionOrientation;
 };
 
-export function TaleFragment({ fragment }: TaleFragmentProps) {
-  // 📝 TEXT
-  if (fragment.type === "text") {
-    const data = fragment.data as TextFragmentData;
+export function TaleFragment({ fragment, orientation }: TaleFragmentProps) {
+	const isHorizontal = orientation === "horizontal";
 
-    return (
-      <div className="w-full max-w-2xl px-6 sm:px-10">
-        <p className="text-center text-base leading-7 sm:text-lg md:text-xl">
-          {data.content}
-        </p>
-      </div>
-    );
-  }
+	if (fragment.type === "text") {
+		const data = fragment.data as TextFragmentData;
 
-  // 🖼️ IMAGE (🔥 mobile immersive)
-  if (fragment.type === "image") {
-    const data = fragment.data as ImageFragmentData;
+		return (
+			<div
+				className={
+					isHorizontal
+						? "max-w-[min(88vw,42rem)] shrink-0 px-2 sm:px-4"
+						: "w-full max-w-2xl px-6 sm:px-10"
+				}
+			>
+				<p
+					className={
+						isHorizontal
+							? "text-center text-sm leading-6 sm:text-base md:text-lg"
+							: "text-center text-base leading-7 sm:text-lg md:text-xl"
+					}
+				>
+					{data.content}
+				</p>
+			</div>
+		);
+	}
 
-    return (
-      <div className="relative flex w-full items-center justify-center">
-        <img
-          src={data.url}
-          alt={data.alt || "Tale fragment"}
-          className="
-            w-full 
-            h-auto
-            object-contain
+	if (fragment.type === "image") {
+		const data = fragment.data as ImageFragmentData;
 
-            /* MOBILE — almost full screen */
-            max-h-[90vh]
+		return (
+			<div
+				className={
+					isHorizontal
+						? "flex shrink-0 items-center justify-center overflow-hidden"
+						: "relative flex w-full items-center justify-center"
+				}
+			>
+				<img
+					src={data.url}
+					alt={data.alt || "Tale fragment"}
+					className={
+						isHorizontal
+							? "h-auto max-h-[58vh] w-auto max-w-[88vw] object-contain sm:max-h-[62vh] sm:max-w-[78vw] lg:max-h-[65vh]"
+							: "h-auto max-h-[90vh] w-full object-contain px-0 sm:max-h-[75vh] sm:max-w-4xl sm:px-6 md:max-h-[70vh]"
+					}
+				/>
+			</div>
+		);
+	}
 
-            /* remove padding feeling */
-            px-0
-
-            /* DESKTOP — more controlled */
-            sm:max-h-[75vh] sm:max-w-4xl sm:px-6
-            md:max-h-[70vh]
-          "
-        />
-      </div>
-    );
-  }
-
-  return null;
+	return null;
 }
 
 export default TaleFragment;
