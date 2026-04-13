@@ -49,7 +49,9 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 	const isProgrammaticScrollRef = useRef(false);
 	const pendingTargetBlockIdRef = useRef<number | null>(null);
 	const layoutReadyTimerRef = useRef<number | null>(null);
+	const rebuildTimerRef = useRef<number | null>(null);
 	const hasCompletedInitialLayoutRef = useRef(false);
+	const isStructuralRebuildRef = useRef(false);
 
 	const driver = useMemo(() => createScrollDriver(smootherRef), []);
 	const pinnedLayoutRef = useRef<PinnedLayoutApi | null>(null);
@@ -61,12 +63,22 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 	useGSAP(
 		() => {
-			ScrollTrigger.config({ ignoreMobileResize: true });
+			ScrollTrigger.config({
+				ignoreMobileResize: true,
+				autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
+			});
 
 			const clearLayoutReadyTimer = () => {
 				if (layoutReadyTimerRef.current != null) {
 					window.clearTimeout(layoutReadyTimerRef.current);
 					layoutReadyTimerRef.current = null;
+				}
+			};
+
+			const clearRebuildTimer = () => {
+				if (rebuildTimerRef.current != null) {
+					window.clearTimeout(rebuildTimerRef.current);
+					rebuildTimerRef.current = null;
 				}
 			};
 
@@ -84,14 +96,54 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				}, 120);
 			};
 
-			const rebuild = () => {
-				inputsApiRef.current?.killTweens(true);
-				snapModelRef.current?.rebuild();
-				activeTrackerRef.current?.rebuild();
+			const finishStructuralRebuild = () => {
+				isStructuralRebuildRef.current = false;
+				driver.setPaused(false);
+
+				if (!taleHubOpen) {
+					inputsApiRef.current?.enable();
+				}
 
 				if (!hasCompletedInitialLayoutRef.current) {
 					markLayoutReadySoon();
 				}
+			};
+
+			const runStructuralRebuild = () => {
+				clearRebuildTimer();
+
+				isStructuralRebuildRef.current = true;
+				driver.setPaused(true);
+				inputsApiRef.current?.disable();
+				inputsApiRef.current?.killTweens(true);
+
+				pinnedLayoutRef.current?.rebuild();
+
+				requestAnimationFrame(() => {
+					ScrollTrigger.refresh();
+
+					requestAnimationFrame(() => {
+						snapModelRef.current?.rebuild();
+						activeTrackerRef.current?.rebuild();
+						ScrollTrigger.refresh();
+
+						requestAnimationFrame(() => {
+							finishStructuralRebuild();
+						});
+					});
+				});
+			};
+
+			const scheduleStructuralRebuild = (delay = 500) => {
+				clearRebuildTimer();
+
+				rebuildTimerRef.current = window.setTimeout(() => {
+					runStructuralRebuild();
+				}, delay);
+			};
+
+			const rebuild = () => {
+				scheduleStructuralRebuild(0);
 			};
 
 			setIsLayoutReady(false);
@@ -118,7 +170,8 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				model: snapModelRef.current,
 				getScroll: driver.getScroll,
 				onActiveBlockChanged,
-				shouldTrack: () => !isProgrammaticScrollRef.current,
+				shouldTrack: () =>
+					!isProgrammaticScrollRef.current && !isStructuralRebuildRef.current,
 			});
 
 			const setHubOpen = (open: boolean) => {
@@ -131,8 +184,31 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				} else {
 					document.documentElement.style.overflow = "";
 					document.body.style.overflow = "";
-					inputsApiRef.current?.enable();
+
+					if (!isStructuralRebuildRef.current) {
+						inputsApiRef.current?.enable();
+					}
 				}
+			};
+
+			const resizeObserver =
+				typeof ResizeObserver !== "undefined"
+					? new ResizeObserver(() => {
+							scheduleStructuralRebuild();
+						})
+					: null;
+
+			const observedEls =
+				wrapperRef.current?.querySelectorAll<HTMLElement>(
+					".pinned-section, .scroll-track",
+				) ?? [];
+
+			for (const el of observedEls) {
+				resizeObserver?.observe(el);
+			}
+
+			const onWindowResize = () => {
+				scheduleStructuralRebuild();
 			};
 
 			engineApiRef.current = {
@@ -141,8 +217,11 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				cleanup: () => {
 					clearScrollApi();
 					clearLayoutReadyTimer();
+					clearRebuildTimer();
+					resizeObserver?.disconnect();
 					setIsLayoutReady(false);
 					hasCompletedInitialLayoutRef.current = false;
+					isStructuralRebuildRef.current = false;
 
 					activeTrackerRef.current?.cleanup();
 					activeTrackerRef.current = null;
@@ -203,15 +282,12 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 			engineApiRef.current.setHubOpen(!!taleHubOpen);
 
-			ScrollTrigger.refresh();
-			snapModelRef.current.rebuild();
-			activeTrackerRef.current.rebuild();
-			markLayoutReadySoon();
+			runStructuralRebuild();
 
-			ScrollTrigger.addEventListener("refresh", rebuild);
+			window.addEventListener("resize", onWindowResize);
 
 			return () => {
-				ScrollTrigger.removeEventListener("refresh", rebuild);
+				window.removeEventListener("resize", onWindowResize);
 
 				engineApiRef.current?.cleanup();
 				engineApiRef.current = null;

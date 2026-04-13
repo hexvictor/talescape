@@ -19,21 +19,41 @@ export type PinnedMeta = {
 export type PinnedLayoutApi = {
 	pinnedMeta: Map<HTMLElement, PinnedMeta>;
 	pinnedSTBySection: Map<HTMLElement, ScrollTrigger>;
+	rebuild: () => void;
 	cleanup: () => void;
 };
 
 export function initPinnedLayout(): PinnedLayoutApi {
 	const pinnedMeta = new Map<HTMLElement, PinnedMeta>();
 	const pinnedSTBySection = new Map<HTMLElement, ScrollTrigger>();
+	const tweensBySection = new Map<HTMLElement, gsap.core.Tween>();
 
-	const pinnedSections = gsap.utils.toArray<HTMLElement>(".pinned-section");
+	const cleanupSection = (section: HTMLElement) => {
+		const tween = tweensBySection.get(section);
+		if (tween) {
+			tween.scrollTrigger?.kill();
+			tween.kill();
+			tweensBySection.delete(section);
+		}
 
-	for (const section of pinnedSections) {
+		const meta = pinnedMeta.get(section);
+		if (meta) {
+			gsap.set(meta.track, { clearProps: "x,y,transform" });
+		}
+
+		pinnedMeta.delete(section);
+		pinnedSTBySection.delete(section);
+	};
+
+	const buildSection = (section: HTMLElement) => {
 		const track = section.querySelector<HTMLElement>(".scroll-track");
-		if (!track) continue;
+		if (!track) return;
+
+		gsap.set(track, { clearProps: "x,y,transform" });
 
 		const axis =
 			section.dataset.orientation === "vertical" ? "y" : ("x" as Axis);
+
 		const direction =
 			section.dataset.direction ??
 			(axis === "x" ? ("right" as DirX) : ("down" as DirY));
@@ -76,7 +96,11 @@ export function initPinnedLayout(): PinnedLayoutApi {
 		);
 
 		const st = tween.scrollTrigger ?? null;
-		if (st) pinnedSTBySection.set(section, st);
+		if (st) {
+			pinnedSTBySection.set(section, st);
+		}
+
+		tweensBySection.set(section, tween);
 
 		pinnedMeta.set(section, {
 			section,
@@ -86,16 +110,36 @@ export function initPinnedLayout(): PinnedLayoutApi {
 			getTravel,
 			getFromTo,
 		});
-	}
+	};
+
+	const rebuild = () => {
+		const currentSections = gsap.utils.toArray<HTMLElement>(".pinned-section");
+
+		for (const section of Array.from(tweensBySection.keys())) {
+			cleanupSection(section);
+		}
+
+		for (const section of currentSections) {
+			buildSection(section);
+		}
+	};
 
 	const cleanup = () => {
+		for (const section of Array.from(tweensBySection.keys())) {
+			cleanupSection(section);
+		}
+
 		pinnedMeta.clear();
 		pinnedSTBySection.clear();
+		tweensBySection.clear();
 	};
+
+	rebuild();
 
 	return {
 		pinnedMeta,
 		pinnedSTBySection,
+		rebuild,
 		cleanup,
 	};
 }
