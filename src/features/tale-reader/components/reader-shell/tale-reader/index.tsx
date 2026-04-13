@@ -4,6 +4,7 @@ import { ReaderStoreProvider } from "~/features/tale-reader/contexts/ReaderStore
 import type { Tale } from "~/features/tale-reader/types/taleStructure";
 import type { TaleProgressSchema } from "~/server/db/schema";
 import LoadingTale from "../../feedback-states/loading-tale";
+import TaleRebuildOverlay from "../../feedback-states/tale-rebuild-overlay";
 import { ContentsNavigator } from "../../ui/contents-navigator";
 import EntryNavigator from "../../ui/entry-navigator/EntryNavigator";
 import ReaderUiToggle from "../../ui/reader-ui-toggle";
@@ -32,6 +33,7 @@ export default function TaleReader({ tale, progress }: TaleReaderProps) {
 
           <TaleViewport />
           <TaleHub />
+          <TaleRebuildOverlay />
         </div>
       </LoadingTale>
     </ReaderStoreProvider>

@@ -9,8 +9,10 @@ export type ProgressSlice = {
 	updateProgressByBlockId: (blockId: number) => TaleProgressSchema | null;
 	progressSaving: boolean;
 	progressSavedAt: Date | null;
+	progressTrackingPaused: boolean;
 	setProgressSaving: (value: boolean) => void;
 	setProgressSavedAt: (date: Date) => void;
+	setProgressTrackingPaused: (value: boolean) => void;
 	progressDebounceTimer?: NodeJS.Timeout | null;
 	lastQueuedBlockId?: number | null;
 	setProgressDebounceTimer: (timer: NodeJS.Timeout | null) => void;
@@ -72,6 +74,9 @@ export const createProgressSlice =
 		},
 
 		updateProgressByBlockId: (blockId) => {
+			const { progressTrackingPaused } = get();
+			if (progressTrackingPaused) return null;
+
 			const updated = get().generateProgressUpdate(blockId);
 			if (!updated) return null;
 
@@ -85,8 +90,11 @@ export const createProgressSlice =
 
 		progressSaving: false,
 		progressSavedAt: null,
+		progressTrackingPaused: false,
 		setProgressSaving: (value) => set({ progressSaving: value }),
 		setProgressSavedAt: (date) => set({ progressSavedAt: date }),
+		setProgressTrackingPaused: (value) =>
+			set({ progressTrackingPaused: value }),
 
 		progressDebounceTimer: null,
 		lastQueuedBlockId: null,

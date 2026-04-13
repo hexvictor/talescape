@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "../contexts/ReaderStoreContext";
 
@@ -9,6 +9,9 @@ export function usePersistReaderProgress() {
 	const { isSignedIn } = useAuth();
 
 	const progress = useReaderStore((s) => s.progress);
+	const progressTrackingPaused = useReaderStore(
+		(s) => s.progressTrackingPaused,
+	);
 	const setProgressSaving = useReaderStore((s) => s.setProgressSaving);
 
 	const { mutateAsync } = api.taleReader.progress.update.useMutation();
@@ -18,6 +21,11 @@ export function usePersistReaderProgress() {
 
 	useEffect(() => {
 		if (!progress?.updatedAt) return;
+
+		if (progressTrackingPaused) {
+			console.log("[PersistReaderProgress] skipped because tracking is paused");
+			return;
+		}
 
 		const updatedAtKey =
 			progress.updatedAt instanceof Date
@@ -32,6 +40,12 @@ export function usePersistReaderProgress() {
 			setProgressSaving(true);
 
 			try {
+				console.log("[PersistReaderProgress] saving", {
+					blockId: progress.lastBlockId,
+					taleId: progress.taleId,
+					isSignedIn,
+				});
+
 				if (!isSignedIn) {
 					const key = `tale_progress_${progress.taleId}`;
 					localStorage.setItem(key, JSON.stringify(progress));
@@ -40,7 +54,8 @@ export function usePersistReaderProgress() {
 				}
 
 				lastSavedUpdatedAtRef.current = updatedAtKey;
-			} catch {
+			} catch (error) {
+				console.log("[PersistReaderProgress] save failed", error);
 			} finally {
 				setProgressSaving(false);
 			}
@@ -50,5 +65,11 @@ export function usePersistReaderProgress() {
 			if (timerRef.current) clearTimeout(timerRef.current);
 			timerRef.current = null;
 		};
-	}, [progress, isSignedIn, mutateAsync, setProgressSaving]);
+	}, [
+		progress,
+		progressTrackingPaused,
+		isSignedIn,
+		mutateAsync,
+		setProgressSaving,
+	]);
 }

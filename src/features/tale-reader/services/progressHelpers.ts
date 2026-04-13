@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand";
-import type { TaleReaderState } from "../store/TaleReaderStore";
+import type { TaleReaderState } from "../store/createTaleReaderStore";
 
 export const debounceProgressUpdate = (
 	store: StoreApi<TaleReaderState>,
