@@ -1,13 +1,13 @@
 export const revalidate = 60;
 
-import { getUserTale } from "~/server/db/queries/taleReader/tales";
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import {
 	TaleNotFound,
 	TaleReader,
 	TaleUnauthorized,
 } from "~/features/tale-reader/components";
-import type { UserTalePageProps } from "~/features/tale-reader/types/talePage";
+import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
+import { getUserTale } from "~/server/db/data/tale-reader/queries/tales";
+import type { UserTalePageProps } from "./types";
 
 export default async function UserTalePage({ params }: UserTalePageProps) {
 	const { creatorUsername, taleSlug } = await params;

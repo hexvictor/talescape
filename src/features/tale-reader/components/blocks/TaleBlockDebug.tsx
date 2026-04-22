@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
-import TaleBlockDebugPanel from "./TaleBlockDebugPanel";
+import type { Block } from "~/server/db/data/tale-reader/types/tales";
 import TaleBlockDebugBadges from "./TaleBlockDebugBadges";
-import type { BlockMeta } from "~/features/tale-reader/types/taleStructure";
+import TaleBlockDebugPanel from "./TaleBlockDebugPanel";
 
 type Props = {
-	block: BlockMeta;
+	block: Block;
 };
 
 function TaleBlockDebugComponent({ block }: Props) {

@@ -1,9 +1,9 @@
 export const revalidate = 60;
 
-import { getOfficialTale } from "~/server/db/queries/taleReader/tales";
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import { TaleNotFound, TaleReader } from "~/features/tale-reader/components";
-import type { OfficialTalePageProps } from "~/features/tale-reader/types/talePage";
+import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
+import { getOfficialTale } from "~/server/db/data/tale-reader/queries/tales";
+import type { OfficialTalePageProps } from "./types";
 
 export default async function OfficialTalePage({
 	params,

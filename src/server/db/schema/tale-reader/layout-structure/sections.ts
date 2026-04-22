@@ -1,18 +1,16 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
-import { tales } from "../tales";
-import { users } from "../../users";
 import type {
 	AssetAccessLevel,
 	AssetStatus,
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
 import type {
-	SectionInputMode,
-	SectionLayout,
 	SectionDirection,
+	SectionInputMode,
 	SectionOrientation,
 } from "~/server/db/types/tale-reader/section";
+import { users } from "../../users";
 
 export const sections = createTable("section", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

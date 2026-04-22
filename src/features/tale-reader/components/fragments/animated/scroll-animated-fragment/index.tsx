@@ -1,13 +1,13 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { observeElement, unobserveElement } from "~/lib/intersectionObserver";
-import type { FragmentMeta } from "~/features/tale-reader/types/taleStructure";
+import type { Fragment } from "~/server/db/data/tale-reader/types/tales";
 
 type ScrollAnimatedFragmentProps = {
 	color: string;
 	animationProps?: React.ComponentProps<typeof motion.div>;
-	fragment: FragmentMeta;
+	fragment: Fragment;
 };
 
 export default function ScrollAnimatedFragment({

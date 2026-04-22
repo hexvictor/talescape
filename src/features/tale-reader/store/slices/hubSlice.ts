@@ -2,16 +2,38 @@ import type { StateCreator } from "zustand/vanilla";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type HubSlice = {
-	taleHubOpen: boolean;
-	openTaleHub: () => void;
-	closeTaleHub: () => void;
-	toggleTaleHub: () => void;
+	taleHub: {
+		isOpen: boolean;
+		open: () => void;
+		close: () => void;
+		toggle: () => void;
+	};
 };
 
 export const createHubSlice =
 	(): StateCreator<TaleReaderState, [], [], HubSlice> => (set) => ({
-		taleHubOpen: false,
-		openTaleHub: () => set({ taleHubOpen: true }),
-		closeTaleHub: () => set({ taleHubOpen: false }),
-		toggleTaleHub: () => set((state) => ({ taleHubOpen: !state.taleHubOpen })),
+		taleHub: {
+			isOpen: false,
+			open: () =>
+				set((state) => ({
+					taleHub: {
+						...state.taleHub,
+						isOpen: true,
+					},
+				})),
+			close: () =>
+				set((state) => ({
+					taleHub: {
+						...state.taleHub,
+						isOpen: false,
+					},
+				})),
+			toggle: () =>
+				set((state) => ({
+					taleHub: {
+						...state.taleHub,
+						isOpen: !state.taleHub.isOpen,
+					},
+				})),
+		},
 	});

@@ -5,55 +5,48 @@ import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreConte
 import MotionReadyProbe from "./MotionReadyProbe";
 
 export default function LoadingTale({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  const isLayoutReady = useReaderStore((s) => s.isLayoutReady);
-  const [isMotionReady, setIsMotionReady] = useState(false);
-  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false);
+	const isLayoutReady = useReaderStore((s) => s.isLayoutReady);
+	const isInitialLoadComplete = useReaderStore((s) => s.isInitialLoadComplete);
+	const [isMotionReady, setIsMotionReady] = useState(false);
 
-  const isReady = isMotionReady && isLayoutReady;
+	const isReady = isMotionReady && isInitialLoadComplete;
 
-  useEffect(() => {
-    console.log("[LoadingTale] state", {
-      isMotionReady,
-      isLayoutReady,
-      isReady,
-      hasCompletedInitialLoad,
-    });
+	useEffect(() => {
+		console.log("[LoadingTale] state", {
+			isMotionReady,
+			isLayoutReady,
+			isInitialLoadComplete,
+			isReady,
+		});
+	}, [isMotionReady, isLayoutReady, isInitialLoadComplete, isReady]);
 
-    if (!hasCompletedInitialLoad && isReady) {
-      console.log("[LoadingTale] first load completed");
-      setHasCompletedInitialLoad(true);
-    }
-  }, [hasCompletedInitialLoad, isLayoutReady, isMotionReady, isReady]);
+	return (
+		<>
+			{!isReady && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black text-white">
+					<p className="animate-pulse font-semibold text-xl">Loading...</p>
+				</div>
+			)}
 
-  const showInitialLoading = !hasCompletedInitialLoad && !isReady;
+			{!isMotionReady && (
+				<MotionReadyProbe
+					onReady={() => {
+						console.log("[LoadingTale] motion ready");
+						setIsMotionReady(true);
+					}}
+				/>
+			)}
 
-  return (
-    <>
-      {showInitialLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black text-white">
-          <p className="animate-pulse font-semibold text-xl">Loading...</p>
-        </div>
-      )}
-
-      {!isMotionReady && (
-        <MotionReadyProbe
-          onReady={() => {
-            console.log("[LoadingTale] motion ready");
-            setIsMotionReady(true);
-          }}
-        />
-      )}
-
-      <div
-        className={showInitialLoading ? "pointer-events-none invisible" : ""}
-        aria-hidden={showInitialLoading}
-      >
-        {children}
-      </div>
-    </>
-  );
+			<div
+				className={isReady ? "" : "pointer-events-none invisible"}
+				aria-hidden={!isReady}
+			>
+				{children}
+			</div>
+		</>
+	);
 }

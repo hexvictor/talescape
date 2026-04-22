@@ -37,10 +37,14 @@ type ViewSnapshot = {
 
 export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 	const store = useReaderStoreInstance();
+
 	const taleHubOpen = useReaderStore((s) => s.taleHubOpen);
-	const setScrollApi = useReaderStore((s) => s.setScrollApi);
-	const clearScrollApi = useReaderStore((s) => s.clearScrollApi);
+	const setScrollApi = useReaderStore((s) => s.scroll.setApi);
+	const clearApi = useReaderStore((s) => s.scroll.clearApi);
 	const setIsLayoutReady = useReaderStore((s) => s.setIsLayoutReady);
+	const setIsInitialLoadComplete = useReaderStore(
+		(s) => s.setIsInitialLoadComplete,
+	);
 	const setIsViewportRebuilding = useReaderStore(
 		(s) => s.setIsViewportRebuilding,
 	);
@@ -50,10 +54,9 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 	const blocksById = useReaderStore(
 		(s) => s.tale.structure.indexMap.blocksById,
 	);
-	const setActiveBlockId = useReaderStore((s) => s.setActiveBlockId);
-	const setNavigationByBlock = useReaderStore((s) => s.setNavigationByBlock);
-	const onActiveBlockChanged = useReaderStore((s) => s.onActiveBlockChanged);
+	const setNavigation = useReaderStore((s) => s.setNavigation);
 
+	// biome-ignore lint/suspicious/noExplicitAny:
 	const smootherRef = useRef<any>(null);
 
 	const engineApiRef = useRef<{
@@ -64,9 +67,10 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 	const isProgrammaticScrollRef = useRef(false);
 	const pendingTargetBlockIdRef = useRef<number | null>(null);
-	const layoutReadyTimerRef = useRef<number | null>(null);
 	const rebuildTimerRef = useRef<number | null>(null);
-	const hasCompletedInitialLayoutRef = useRef(false);
+	const activeChangeTimerRef = useRef<number | null>(null);
+	const lastQueuedActiveBlockIdRef = useRef<number | null>(null);
+	const isInitialLoadCompleteRef = useRef(false);
 	const isStructuralRebuildRef = useRef(false);
 	const hasPendingStructuralRebuildRef = useRef(false);
 	const initialAssetsReadyRef = useRef(false);
@@ -91,13 +95,6 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 			let disposed = false;
 
-			const clearLayoutReadyTimer = () => {
-				if (layoutReadyTimerRef.current != null) {
-					window.clearTimeout(layoutReadyTimerRef.current);
-					layoutReadyTimerRef.current = null;
-				}
-			};
-
 			const clearRebuildTimer = () => {
 				if (rebuildTimerRef.current != null) {
 					window.clearTimeout(rebuildTimerRef.current);
@@ -105,22 +102,56 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				}
 			};
 
-			const markLayoutReadySoon = () => {
-				console.log("[TaleScrollEngine] mark layout ready soon");
+			const clearPendingActiveBlockUpdate = () => {
+				if (activeChangeTimerRef.current != null) {
+					window.clearTimeout(activeChangeTimerRef.current);
+					activeChangeTimerRef.current = null;
+				}
 
-				clearLayoutReadyTimer();
+				lastQueuedActiveBlockIdRef.current = null;
+			};
 
-				layoutReadyTimerRef.current = window.setTimeout(() => {
-					requestAnimationFrame(() => {
-						requestAnimationFrame(() => {
-							if (disposed) return;
+			const flushActiveBlockUpdate = () => {
+				activeChangeTimerRef.current = null;
 
-							console.log("[TaleScrollEngine] layout ready");
-							setIsLayoutReady(true);
-							hasCompletedInitialLayoutRef.current = true;
-							layoutReadyTimerRef.current = null;
-						});
-					});
+				const blockId = lastQueuedActiveBlockIdRef.current;
+				lastQueuedActiveBlockIdRef.current = null;
+
+				if (blockId == null) return;
+
+				const state = store.getState();
+
+				if (state.progressTrackingPaused || !state.isInitialLoadComplete) {
+					return;
+				}
+
+				const block = state.tale.structure.indexMap.blocksById[blockId];
+				if (!block) return;
+
+				if (state.navigation?.block.id === blockId) {
+					return;
+				}
+
+				state.setNavigation(block.id);
+
+				if (!state.progressTrackingPaused) {
+					state.updateProgressByBlockId(blockId);
+				}
+			};
+
+			const scheduleActiveBlockUpdate = (blockId: number) => {
+				const state = store.getState();
+
+				if (state.progressTrackingPaused || !state.isInitialLoadComplete) {
+					return;
+				}
+
+				lastQueuedActiveBlockIdRef.current = blockId;
+
+				if (activeChangeTimerRef.current != null) return;
+
+				activeChangeTimerRef.current = window.setTimeout(() => {
+					flushActiveBlockUpdate();
 				}, 120);
 			};
 
@@ -170,49 +201,46 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				if (disposed) return;
 
 				initialAssetsReadyRef.current = true;
-
 				console.log("[TaleScrollEngine] initial images loaded");
 			};
 
-			const getCurrentViewSnapshot = (): ViewSnapshot | null => {
-				const activeBlockId = store.getState().activeBlockId;
-				if (activeBlockId == null) return null;
+			const restoreToBlockStart = (
+				blockId: number | null,
+				reason: string,
+				onDone?: () => void,
+			) => {
+				if (blockId == null) {
+					onDone?.();
+					return;
+				}
 
-				const block = blocksById[activeBlockId];
-				if (!block) return null;
-
-				console.log("[TaleScrollEngine] snapshot captured", {
-					blockId: activeBlockId,
-				});
-
-				return {
-					blockId: activeBlockId,
-				};
-			};
-
-			const restoreViewSnapshot = () => {
-				const snapshot = rebuildSnapshotRef.current;
-				rebuildSnapshotRef.current = null;
-				if (!snapshot) return;
-
-				const block = blocksById[snapshot.blockId];
-				if (!block) return;
+				const block = blocksById[blockId];
+				if (!block) {
+					onDone?.();
+					return;
+				}
 
 				const el = document.querySelector<HTMLElement>(
-					`[data-anchor-id="${block.anchorId}"]`,
+					`[data-block-id="${block.id}"]`,
 				);
-				if (!el) return;
+				if (!el) {
+					onDone?.();
+					return;
+				}
 
 				const range = snapModelRef.current?.getRangeForElement(el);
-				if (!range) return;
+				if (!range) {
+					onDone?.();
+					return;
+				}
 
-				console.log("[TaleScrollEngine] restoring snapshot", {
-					blockId: snapshot.blockId,
+				console.log("[TaleScrollEngine] restoring to block start", {
+					reason,
+					blockId,
 				});
 
 				isProgrammaticScrollRef.current = true;
-				setActiveBlockId(block.id);
-				setNavigationByBlock(block);
+				setNavigation(block.id);
 
 				driver.scrollTo(range.start, {
 					duration: 0,
@@ -220,50 +248,122 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 					onDone: () => {
 						isProgrammaticScrollRef.current = false;
 						activeTrackerRef.current?.updateNow();
-						console.log("[TaleScrollEngine] snapshot restored");
+						console.log("[TaleScrollEngine] restore complete", {
+							reason,
+							blockId,
+						});
+						onDone?.();
 					},
 				});
 			};
 
-			const finishStructuralRebuild = (reason: string) => {
+			const getCurrentViewSnapshot = (): ViewSnapshot | null => {
+				const activeBlock = store.getState().navigation?.block;
+				if (activeBlock === undefined) return null;
+
+				console.log("[TaleScrollEngine] snapshot captured", {
+					blockId: activeBlock.id,
+				});
+
+				return {
+					blockId: activeBlock.id,
+				};
+			};
+
+			const finalizeInitialLoad = () => {
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						if (disposed) return;
+
+						console.log("[TaleScrollEngine] initial load complete");
+
+						isStructuralRebuildRef.current = false;
+						isInitialLoadCompleteRef.current = true;
+
+						setIsLayoutReady(true);
+						setIsInitialLoadComplete(true);
+						setIsViewportRebuilding(false);
+						setProgressTrackingPaused(false);
+
+						driver.setPaused(false);
+
+						if (!taleHubOpen) {
+							inputsApiRef.current?.enable();
+						}
+
+						activeTrackerRef.current?.updateNow();
+					});
+				});
+			};
+
+			const finalizeNormalRebuild = (reason: string) => {
+				const snapshot = rebuildSnapshotRef.current;
+				rebuildSnapshotRef.current = null;
+
+				const restoreDone = () => {
+					isStructuralRebuildRef.current = false;
+					setIsViewportRebuilding(false);
+					setProgressTrackingPaused(false);
+					driver.setPaused(false);
+
+					if (!taleHubOpen) {
+						inputsApiRef.current?.enable();
+					}
+
+					activeTrackerRef.current?.updateNow();
+
+					console.log("[TaleScrollEngine] rebuild finished", { reason });
+				};
+
+				if (!snapshot) {
+					restoreDone();
+					return;
+				}
+
+				restoreToBlockStart(snapshot.blockId, reason, restoreDone);
+			};
+
+			const finishStructuralRebuild = (
+				reason: string,
+				mode: "initial" | "normal",
+			) => {
 				if (hasPendingStructuralRebuildRef.current) {
 					console.log(
 						"[TaleScrollEngine] running pending rebuild after current",
 						{
 							reason,
+							mode,
 						},
 					);
 
 					hasPendingStructuralRebuildRef.current = false;
-					runStructuralRebuild("pending");
+					runStructuralRebuild(
+						"pending",
+						isInitialLoadCompleteRef.current ? "normal" : "initial",
+					);
 					return;
 				}
 
-				restoreViewSnapshot();
+				if (mode === "initial") {
+					const savedBlockId = store.getState().progress.lastBlockId ?? null;
 
-				isStructuralRebuildRef.current = false;
-				setIsViewportRebuilding(false);
-				setProgressTrackingPaused(false);
-				driver.setPaused(false);
+					restoreToBlockStart(savedBlockId, "initial-restore", () => {
+						finalizeInitialLoad();
+					});
 
-				if (!taleHubOpen) {
-					inputsApiRef.current?.enable();
+					return;
 				}
 
-				activeTrackerRef.current?.updateNow();
-
-				console.log("[TaleScrollEngine] rebuild finished", { reason });
-
-				if (!hasCompletedInitialLayoutRef.current) {
-					markLayoutReadySoon();
-				}
+				finalizeNormalRebuild(reason);
 			};
 
-			const runStructuralRebuild = (reason: string) => {
+			const runStructuralRebuild = (
+				reason: string,
+				mode: "initial" | "normal",
+			) => {
 				clearRebuildTimer();
 
-				const isInitialPhase = !hasCompletedInitialLayoutRef.current;
-				const shouldShowOverlay = !isInitialPhase;
+				const shouldShowOverlay = mode === "normal";
 
 				if (shouldShowOverlay) {
 					rebuildSnapshotRef.current = getCurrentViewSnapshot();
@@ -280,7 +380,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 				console.log("[TaleScrollEngine] rebuild started", {
 					reason,
-					initialPhase: isInitialPhase,
+					mode,
 					showOverlay: shouldShowOverlay,
 				});
 
@@ -289,6 +389,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				driver.setPaused(true);
 				inputsApiRef.current?.disable();
 				inputsApiRef.current?.killTweens(true);
+				clearPendingActiveBlockUpdate();
 
 				pinnedLayoutRef.current?.rebuild();
 
@@ -301,7 +402,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 						ScrollTrigger.refresh();
 
 						requestAnimationFrame(() => {
-							finishStructuralRebuild(reason);
+							finishStructuralRebuild(reason, mode);
 						});
 					});
 				});
@@ -322,7 +423,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				}
 
 				if (
-					!hasCompletedInitialLayoutRef.current &&
+					!isInitialLoadCompleteRef.current &&
 					!initialAssetsReadyRef.current
 				) {
 					console.log(
@@ -331,16 +432,23 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 							reason,
 						},
 					);
-
 					return;
 				}
 
-				console.log("[TaleScrollEngine] rebuild scheduled", { delay, reason });
+				const mode: "initial" | "normal" = isInitialLoadCompleteRef.current
+					? "normal"
+					: "initial";
+
+				console.log("[TaleScrollEngine] rebuild scheduled", {
+					delay,
+					reason,
+					mode,
+				});
 
 				clearRebuildTimer();
 
 				rebuildTimerRef.current = window.setTimeout(() => {
-					runStructuralRebuild(reason);
+					runStructuralRebuild(reason, mode);
 				}, delay);
 			};
 
@@ -349,9 +457,11 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 			};
 
 			setIsLayoutReady(false);
+			setIsInitialLoadComplete(false);
 			setIsViewportRebuilding(false);
 			setProgressTrackingPaused(true);
-			hasCompletedInitialLayoutRef.current = false;
+
+			isInitialLoadCompleteRef.current = false;
 			hasPendingStructuralRebuildRef.current = false;
 			initialAssetsReadyRef.current = false;
 
@@ -375,7 +485,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 			activeTrackerRef.current = initActiveBlockTracker({
 				model: snapModelRef.current,
 				getScroll: driver.getScroll,
-				onActiveBlockChanged,
+				scheduleActiveBlockUpdate,
 				shouldTrack: () =>
 					!isProgrammaticScrollRef.current && !isStructuralRebuildRef.current,
 			});
@@ -424,14 +534,17 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				cleanup: () => {
 					console.log("[TaleScrollEngine] cleanup");
 
-					clearScrollApi();
-					clearLayoutReadyTimer();
+					clearApi();
 					clearRebuildTimer();
+					clearPendingActiveBlockUpdate();
 					resizeObserver?.disconnect();
+
 					setIsLayoutReady(false);
+					setIsInitialLoadComplete(false);
 					setIsViewportRebuilding(false);
 					setProgressTrackingPaused(false);
-					hasCompletedInitialLayoutRef.current = false;
+
+					isInitialLoadCompleteRef.current = false;
 					hasPendingStructuralRebuildRef.current = false;
 					initialAssetsReadyRef.current = false;
 					isStructuralRebuildRef.current = false;
@@ -454,12 +567,16 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 			};
 
 			setScrollApi({
-				scrollToBlockId: (blockId: number, opts?: { duration?: number }) => {
+				scrollToBlockId: (
+					blockId: number,
+					opts?: { duration?: number; navigate?: boolean },
+				) => {
+					const { duration = 0.35, navigate = true } = opts ?? {};
 					const block = blocksById[blockId];
 					if (!block) return;
 
 					const el = document.querySelector<HTMLElement>(
-						`[data-anchor-id="${block.anchorId}"]`,
+						`[data-block-id="${block.id}"]`,
 					);
 					if (!el) return;
 
@@ -468,14 +585,17 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 
 					console.log("[TaleScrollEngine] scrollToBlockId", {
 						blockId,
-						duration: opts?.duration ?? 0.35,
+						duration,
+						navigate,
 					});
 
+					clearPendingActiveBlockUpdate();
+
 					isProgrammaticScrollRef.current = true;
-					pendingTargetBlockIdRef.current = blockId;
+					pendingTargetBlockIdRef.current = navigate ? blockId : null;
 
 					driver.scrollTo(range.start, {
-						duration: opts?.duration ?? 0.35,
+						duration,
 						ease: "power1.inOut",
 						onDone: () => {
 							const targetBlockId = pendingTargetBlockIdRef.current;
@@ -483,8 +603,8 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 							isProgrammaticScrollRef.current = false;
 							pendingTargetBlockIdRef.current = null;
 
-							if (targetBlockId != null) {
-								onActiveBlockChanged(targetBlockId);
+							if (navigate && targetBlockId != null) {
+								scheduleActiveBlockUpdate(targetBlockId);
 							} else {
 								activeTrackerRef.current?.updateNow();
 							}
@@ -498,6 +618,9 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 					console.log("[TaleScrollEngine] external rebuild requested");
 					rebuild();
 				},
+				clearPendingActiveBlockUpdate: () => {
+					clearPendingActiveBlockUpdate();
+				},
 			});
 
 			engineApiRef.current.setHubOpen(!!taleHubOpen);
@@ -506,7 +629,7 @@ export function useTaleScrollEngine({ wrapperRef }: UseTaleScrollEngineArgs) {
 				if (disposed) return;
 
 				console.log("[TaleScrollEngine] initial structural rebuild");
-				runStructuralRebuild("initial-load");
+				runStructuralRebuild("initial-load", "initial");
 			});
 
 			window.addEventListener("resize", onWindowResize);

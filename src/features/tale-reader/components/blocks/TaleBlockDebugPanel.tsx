@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
-import type { BlockMeta } from "~/features/tale-reader/types/taleStructure";
+import type { Block } from "~/server/db/data/tale-reader/types/blocks";
 import { useReaderStore } from "../../contexts/ReaderStoreContext";
 
 type Props = {
-	block: BlockMeta;
+	block: Block;
 };
 
 function Field({
@@ -69,7 +69,7 @@ function TaleBlockDebugPanelComponent({ block }: Props) {
 								Block Inspector
 							</p>
 							<p className="truncate text-sm font-semibold text-white sm:text-base">
-								{block.anchorId || `Block ${block.globalIndex + 1}`}
+								{block.id || `Block ${block.globalIndex + 1}`}
 							</p>
 						</div>
 
@@ -88,7 +88,6 @@ function TaleBlockDebugPanelComponent({ block }: Props) {
 							<Field label="Entry Index" value={block.entryIndex} />
 							<Field label="Part Index" value={block.partIndex} />
 							<Field label="Global Index" value={block.globalIndex} />
-							<Field label="Anchor" value={block.anchorId} />
 							<Field label="Snap" value={block.isSnap ? "Yes" : "No"} />
 							<Field
 								label="Page Block"

@@ -2,24 +2,41 @@ import type { StateCreator } from "zustand/vanilla";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type UiSlice = {
-	debugMode: boolean;
-	uiVisible: boolean;
-	isViewportRebuilding: boolean;
-	hideUI: () => void;
-	showUI: () => void;
-	toggleUI: () => void;
-	toggleDebugMode: () => void;
-	setIsViewportRebuilding: (value: boolean) => void;
+	ui: {
+		isDebugEnabled: boolean;
+		isVisible: boolean;
+
+		hide: () => void;
+		show: () => void;
+		toggleVisibility: () => void;
+		toggleDebug: () => void;
+	};
 };
 
 export const createUiSlice =
 	(): StateCreator<TaleReaderState, [], [], UiSlice> => (set) => ({
-		debugMode: true,
-		uiVisible: true,
-		isViewportRebuilding: false,
-		hideUI: () => set({ uiVisible: false }),
-		showUI: () => set({ uiVisible: true }),
-		toggleUI: () => set((state) => ({ uiVisible: !state.uiVisible })),
-		toggleDebugMode: () => set((state) => ({ debugMode: !state.debugMode })),
-		setIsViewportRebuilding: (value) => set({ isViewportRebuilding: value }),
+		ui: {
+			isDebugEnabled: true,
+			isVisible: true,
+
+			hide: () =>
+				set((state) => ({
+					ui: { ...state.ui, isVisible: false },
+				})),
+
+			show: () =>
+				set((state) => ({
+					ui: { ...state.ui, isVisible: true },
+				})),
+
+			toggleVisibility: () =>
+				set((state) => ({
+					ui: { ...state.ui, isVisible: !state.ui.isVisible },
+				})),
+
+			toggleDebug: () =>
+				set((state) => ({
+					ui: { ...state.ui, isDebugEnabled: !state.ui.isDebugEnabled },
+				})),
+		},
 	});

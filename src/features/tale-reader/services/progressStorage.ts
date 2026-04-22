@@ -1,5 +1,5 @@
+import type { Tale } from "~/server/db/data/tale-reader/types/tales";
 import type { TaleProgressSchema } from "~/server/db/schema";
-import type { Tale } from "~/features/tale-reader/types/taleStructure";
 
 export function getInitialProgressFromLocalStorage(
 	tale: Tale,

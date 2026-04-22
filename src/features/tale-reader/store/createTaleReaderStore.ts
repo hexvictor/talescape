@@ -1,31 +1,28 @@
 import { devtools } from "zustand/middleware";
-import { createStore, type StateCreator } from "zustand/vanilla";
+import { type StateCreator, createStore } from "zustand/vanilla";
+import type { Tale } from "~/server/db/data/tale-reader/types/tales";
 import type { TaleProgressSchema } from "~/server/db/schema";
-import type { Tale } from "~/features/tale-reader/types/taleStructure";
-import { createTaleSlice, type TaleSlice } from "./slices/taleSlice";
-import { createUiSlice, type UiSlice } from "./slices/uiSlice";
-import { createHubSlice, type HubSlice } from "./slices/hubSlice";
+import { type HubSlice, createHubSlice } from "./slices/hubSlice";
 import {
-	createNavigationSlice,
 	type NavigationSlice,
+	createNavigationSlice,
 } from "./slices/navigationSlice";
 import {
-	createProgressSlice,
 	type ProgressSlice,
+	createProgressSlice,
 } from "./slices/progressSlice";
-import { createScrollSlice, type ScrollSlice } from "./slices/scrollSlice";
-import {
-	createCommandsSlice,
-	type CommandsSlice,
-} from "./slices/commandsSlice";
+import { type ReaderSlice, createReaderSlice } from "./slices/readerSlice";
+import { type ScrollSlice, createScrollSlice } from "./slices/scrollSlice";
+import { type TaleSlice, createTaleSlice } from "./slices/taleSlice";
+import { type UiSlice, createUiSlice } from "./slices/uiSlice";
 
 export type TaleReaderState = TaleSlice &
 	UiSlice &
 	HubSlice &
+	ReaderSlice &
 	NavigationSlice &
 	ProgressSlice &
-	ScrollSlice &
-	CommandsSlice;
+	ScrollSlice;
 
 export function createTaleReaderStore(
 	initialTale: Tale,
@@ -35,10 +32,10 @@ export function createTaleReaderStore(
 		...createTaleSlice(initialTale)(set, get, api),
 		...createUiSlice()(set, get, api),
 		...createHubSlice()(set, get, api),
+		...createReaderSlice()(set, get, api),
 		...createNavigationSlice(initialTale, initialProgress)(set, get, api),
 		...createProgressSlice(initialProgress)(set, get, api),
 		...createScrollSlice()(set, get, api),
-		...createCommandsSlice()(set, get, api),
 	});
 
 	return createStore<TaleReaderState>()(

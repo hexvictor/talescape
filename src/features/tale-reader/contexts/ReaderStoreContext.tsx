@@ -1,14 +1,14 @@
 "use client";
 
 import { createContext, useContext, useRef } from "react";
-import { useStore, type StoreApi } from "zustand";
-import type { Tale } from "~/features/tale-reader/types/taleStructure";
-import type { TaleProgressSchema } from "~/server/db/schema";
-import {
-	createTaleReaderStore,
-	type TaleReaderState,
-} from "~/features/tale-reader/store/createTaleReaderStore";
+import { type StoreApi, useStore } from "zustand";
 import { getInitialProgressFromLocalStorage } from "~/features/tale-reader/services/progressStorage";
+import {
+	type TaleReaderState,
+	createTaleReaderStore,
+} from "~/features/tale-reader/store/createTaleReaderStore";
+import type { Tale } from "~/server/db/data/tale-reader/types/tales";
+import type { TaleProgressSchema } from "~/server/db/schema";
 
 const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
 	null,

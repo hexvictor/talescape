@@ -12,14 +12,14 @@ type ActiveBlockTrackerApi = {
 type ActiveBlockTrackerArgs = {
 	model: SnapModelApi;
 	getScroll: () => number;
-	onActiveBlockChanged: (blockId: number) => void;
+	scheduleActiveBlockUpdate: (blockId: number) => void;
 	shouldTrack: () => boolean;
 };
 
 export function initActiveBlockTracker({
 	model,
 	getScroll,
-	onActiveBlockChanged,
+	scheduleActiveBlockUpdate,
 	shouldTrack,
 }: ActiveBlockTrackerArgs): ActiveBlockTrackerApi {
 	let tracker: ScrollTrigger | null = null;
@@ -51,7 +51,7 @@ export function initActiveBlockTracker({
 		if (blockId === lastBlockId) return;
 
 		lastBlockId = blockId;
-		onActiveBlockChanged(blockId);
+		scheduleActiveBlockUpdate(blockId);
 	};
 
 	const scheduleUpdate = () => {

@@ -1,6 +1,5 @@
 "use client";
 
-import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { SnapModelApi } from "./snapModel";
 

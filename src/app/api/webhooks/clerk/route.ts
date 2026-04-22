@@ -1,9 +1,9 @@
-import { Webhook } from "svix";
 import type { NextRequest } from "next/server";
-import { addUser } from "~/server/db/queries/users/addUser";
-import { addUserEmails } from "~/server/db/queries/users/addUserEmails";
-import { updateUser } from "~/server/db/queries/users/updateUser";
-import { updateUserEmails } from "~/server/db/queries/users/updateUserEmails";
+import { Webhook } from "svix";
+import { addUser } from "~/server/db/data/users/queries/addUser";
+import { addUserEmails } from "~/server/db/data/users/queries/addUserEmails";
+import { updateUser } from "~/server/db/data/users/queries/updateUser";
+import { updateUserEmails } from "~/server/db/data/users/queries/updateUserEmails";
 
 export async function POST(req: NextRequest) {
 	const payload = await req.text();

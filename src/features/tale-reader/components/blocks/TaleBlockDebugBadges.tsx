@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
-import type { BlockMeta } from "~/features/tale-reader/types/taleStructure";
+import type { Block } from "~/server/db/data/tale-reader/types/tales";
 import { useReaderStore } from "../../contexts/ReaderStoreContext";
 
 type Props = {
-	block: BlockMeta;
+	block: Block;
 };
 
 function Badge({

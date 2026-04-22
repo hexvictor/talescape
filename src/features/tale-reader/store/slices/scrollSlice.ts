@@ -2,20 +2,40 @@ import type { StateCreator } from "zustand/vanilla";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ReaderScrollApi = {
-	scrollToBlockId: (blockId: number, opts?: { duration?: number }) => void;
+	scrollToBlockId: (
+		blockId: number,
+		opts?: { duration?: number; navigate?: boolean },
+	) => void;
 	setPaused: (paused: boolean) => void;
 	rebuild: () => void;
+	clearPendingActiveBlockUpdate: () => void;
 };
 
 export type ScrollSlice = {
-	scrollApi: ReaderScrollApi | null;
-	setScrollApi: (api: ReaderScrollApi | null) => void;
-	clearScrollApi: () => void;
+	scroll: {
+		api: ReaderScrollApi | null;
+		setApi: (api: ReaderScrollApi | null) => void;
+		clearApi: () => void;
+	};
 };
 
 export const createScrollSlice =
 	(): StateCreator<TaleReaderState, [], [], ScrollSlice> => (set) => ({
-		scrollApi: null,
-		setScrollApi: (api) => set({ scrollApi: api }),
-		clearScrollApi: () => set({ scrollApi: null }),
+		scroll: {
+			api: null,
+			setApi: (api) =>
+				set((state) => ({
+					scroll: {
+						...state.scroll,
+						api,
+					},
+				})),
+			clearApi: () =>
+				set((state) => ({
+					scroll: {
+						...state.scroll,
+						api: null,
+					},
+				})),
+		},
 	});

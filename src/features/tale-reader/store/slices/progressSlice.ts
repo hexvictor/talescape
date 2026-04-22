@@ -3,20 +3,16 @@ import type { TaleProgressSchema } from "~/server/db/schema";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ProgressSlice = {
-	progress: TaleProgressSchema;
-	setProgress: (newProgress: TaleProgressSchema) => void;
-	generateProgressUpdate: (blockId: number) => TaleProgressSchema | null;
-	updateProgressByBlockId: (blockId: number) => TaleProgressSchema | null;
-	progressSaving: boolean;
-	progressSavedAt: Date | null;
-	progressTrackingPaused: boolean;
-	setProgressSaving: (value: boolean) => void;
-	setProgressSavedAt: (date: Date) => void;
-	setProgressTrackingPaused: (value: boolean) => void;
-	progressDebounceTimer?: NodeJS.Timeout | null;
-	lastQueuedBlockId?: number | null;
-	setProgressDebounceTimer: (timer: NodeJS.Timeout | null) => void;
-	setLastQueuedBlockId: (blockId: number | null) => void;
+	progress: {
+		data: TaleProgressSchema;
+		isSaving: boolean;
+		isTrackingPaused: boolean;
+		setProgress: (newProgress: TaleProgressSchema) => void;
+		generateProgressUpdate: (blockId: number) => TaleProgressSchema | null;
+		updateProgressByBlockId: (blockId: number) => TaleProgressSchema | null;
+		setIsSaving: (value: boolean) => void;
+		setIsTrackingPaused: (value: boolean) => void;
+	};
 };
 
 export const createProgressSlice =
@@ -24,80 +20,97 @@ export const createProgressSlice =
 		initialProgress: TaleProgressSchema,
 	): StateCreator<TaleReaderState, [], [], ProgressSlice> =>
 	(set, get) => ({
-		progress: initialProgress,
-		setProgress: (newProgress) => set({ progress: newProgress }),
+		progress: {
+			data: initialProgress,
+			isSaving: false,
+			isTrackingPaused: false,
 
-		generateProgressUpdate: (blockId) => {
-			const { tale, progress: prevProgress } = get();
+			setProgress: (newProgress) =>
+				set((state) => ({
+					progress: {
+						...state.progress,
+						data: newProgress,
+					},
+				})),
 
-			const blocksById = tale.structure.indexMap.blocksById;
-			const blockIds = tale.structure.blockIds;
-			const block = blocksById[blockId];
-			if (!block) return null;
+			generateProgressUpdate: (blockId) => {
+				const { tale, progress } = get();
+				const prevProgress = progress.data;
 
-			const seenBlockIds = Array.from(
-				new Set([...(prevProgress.seenBlockIds ?? []), block.id]),
-			);
+				const blocksById = tale.data.structure.indexMap.blocksById;
+				const blockIds = tale.data.structure.blockIds;
+				const block = blocksById[blockId];
+				if (!block) return null;
 
-			const total = blockIds.length;
-			const currentIndex = block.globalIndex ?? 0;
+				const seenBlockIds = Array.from(
+					new Set([...(prevProgress.seenBlockIds ?? []), block.id]),
+				);
 
-			const prevMaxBlock =
-				prevProgress.maxBlockIdReached != null
-					? blocksById[prevProgress.maxBlockIdReached]
-					: null;
+				const total = blockIds.length;
+				const currentIndex = block.globalIndex ?? 0;
 
-			const prevIndex = prevMaxBlock?.globalIndex ?? -1;
+				const prevMaxBlock =
+					prevProgress.maxBlockIdReached != null
+						? blocksById[prevProgress.maxBlockIdReached]
+						: null;
 
-			const maxBlockIdReached =
-				currentIndex > prevIndex ? block.id : prevProgress.maxBlockIdReached;
+				const prevIndex = prevMaxBlock?.globalIndex ?? -1;
 
-			const seenBlockProgress = (seenBlockIds.length / total).toFixed(4);
+				const maxBlockIdReached =
+					currentIndex > prevIndex ? block.id : prevProgress.maxBlockIdReached;
 
-			const maxBlock =
-				maxBlockIdReached != null
-					? (blocksById[maxBlockIdReached] ?? null)
-					: null;
+				const seenBlockProgress = (seenBlockIds.length / total).toFixed(4);
 
-			const maxIndex = maxBlock?.globalIndex ?? 0;
-			const linearReadProgress = ((maxIndex + 1) / total).toFixed(4);
+				const maxBlock =
+					maxBlockIdReached != null
+						? (blocksById[maxBlockIdReached] ?? null)
+						: null;
 
-			return {
-				...prevProgress,
-				lastBlockId: block.id,
-				maxBlockIdReached,
-				seenBlockIds,
-				seenBlockProgress,
-				linearReadProgress,
-				updatedAt: new Date(),
-			};
+				const maxIndex = maxBlock?.globalIndex ?? 0;
+				const linearReadProgress = ((maxIndex + 1) / total).toFixed(4);
+
+				return {
+					...prevProgress,
+					lastBlockId: block.id,
+					maxBlockIdReached,
+					seenBlockIds,
+					seenBlockProgress,
+					linearReadProgress,
+					updatedAt: new Date(),
+				};
+			},
+
+			updateProgressByBlockId: (blockId) => {
+				const { progress } = get();
+				if (progress.isTrackingPaused) return null;
+
+				const updated = progress.generateProgressUpdate(blockId);
+				if (!updated) return null;
+
+				set((state) => ({
+					progress: {
+						...state.progress,
+						data: updated,
+					},
+				}));
+
+				return updated;
+			},
+
+			setIsSaving: (value) =>
+				set((state) => ({
+					progress: {
+						...state.progress,
+						isSaving: value,
+					},
+				})),
+
+			setIsTrackingPaused: (value) =>
+				set((state) => ({
+					progress: {
+						...state.progress,
+						isTrackingPaused: value,
+					},
+				})),
 		},
-
-		updateProgressByBlockId: (blockId) => {
-			const { progressTrackingPaused } = get();
-			if (progressTrackingPaused) return null;
-
-			const updated = get().generateProgressUpdate(blockId);
-			if (!updated) return null;
-
-			set({
-				progress: updated,
-				progressSavedAt: new Date(),
-			});
-
-			return updated;
-		},
-
-		progressSaving: false,
-		progressSavedAt: null,
-		progressTrackingPaused: false,
-		setProgressSaving: (value) => set({ progressSaving: value }),
-		setProgressSavedAt: (date) => set({ progressSavedAt: date }),
-		setProgressTrackingPaused: (value) =>
-			set({ progressTrackingPaused: value }),
-
-		progressDebounceTimer: null,
-		lastQueuedBlockId: null,
-		setProgressDebounceTimer: (timer) => set({ progressDebounceTimer: timer }),
-		setLastQueuedBlockId: (blockId) => set({ lastQueuedBlockId: blockId }),
 	});

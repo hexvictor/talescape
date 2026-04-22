@@ -7,7 +7,7 @@ import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreConte
 export default function TaleProgress() {
 	const blockCount = useReaderStore((s) => s.tale?.structure.blockCount);
 	const currentBlockIndex = useReaderStore(
-		(s) => s.navigation.block?.globalIndex,
+		(s) => s.navigation?.block.globalIndex,
 	);
 
 	const progress = useMemo(() => {

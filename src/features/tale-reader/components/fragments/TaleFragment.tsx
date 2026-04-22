@@ -1,6 +1,6 @@
 "use client";
 
-import type { FragmentMeta } from "~/features/tale-reader/types/taleStructure";
+import type { Fragment } from "~/server/db/data/tale-reader/types/tales";
 import type {
 	ImageFragmentData,
 	TextFragmentData,
@@ -8,7 +8,7 @@ import type {
 import type { SectionOrientation } from "~/server/db/types/tale-reader/section";
 
 type TaleFragmentProps = {
-	fragment: FragmentMeta;
+	fragment: Fragment;
 	orientation: SectionOrientation;
 };
 
