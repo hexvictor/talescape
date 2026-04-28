@@ -15,7 +15,7 @@ export const taleProgressRouter = createTRPCRouter({
 				lastBlockId: z.number().nullable(),
 				maxBlockIdReached: z.number().nullable(),
 				seenBlockProgress: z.string(),
-				linearReadProgress: z.string(),
+				maxReadProgress: z.string(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

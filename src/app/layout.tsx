@@ -1,12 +1,13 @@
-import "~/styles/globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import { TRPCReactProvider } from "~/trpc/react";
 import { dark } from "@clerk/themes";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import type { Metadata } from "next";
+import { Geist } from "next/font/google";
+import Script from "next/script";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
+import "~/styles/globals.css";
+import { TRPCReactProvider } from "~/trpc/react";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -29,7 +30,14 @@ export default function RootLayout({
 			<html lang="en" className={`${geist.variable}`}>
 				<head>
 					{isDev && (
-						<script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+						<>
+							<Script
+								src="//unpkg.com/react-grab/dist/index.global.js"
+								crossOrigin="anonymous"
+								strategy="beforeInteractive"
+							/>
+							<Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+						</>
 					)}
 				</head>
 				<body className="relative flex flex-col">

@@ -1,6 +1,5 @@
 import { SignUp as ClerkSignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import React from "react";
 
 export const metadata: Metadata = {
 	title: "Sign up | Talescape",
@@ -8,7 +7,14 @@ export const metadata: Metadata = {
 };
 
 function SignUp() {
-	return <ClerkSignUp />;
+	return (
+		<ClerkSignUp
+			path="/sign-up"
+			routing="path"
+			fallbackRedirectUrl="/"
+			signInFallbackRedirectUrl="/"
+		/>
+	);
 }
 
 export default SignUp;

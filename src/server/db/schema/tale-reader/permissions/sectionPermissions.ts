@@ -1,23 +1,19 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
-import { fragments } from "./fragments";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { sections, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
-import { users } from "../../users";
 import type { AssetPermissionType } from "~/server/db/types/tale-builder/asset";
 
-export const fragmentPermissions = createTable("fragment_permission", (d) => ({
+export const sectionPermissions = createTable("section_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-
-	fragmentId: d
+	sectionId: d
 		.integer()
 		.notNull()
-		.references(() => fragments.id),
+		.references(() => sections.id),
 	userId: d
 		.text()
 		.notNull()
 		.references(() => users.id),
-
 	permissionTypes: d.text().array().notNull().$type<AssetPermissionType[]>(),
-
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)
@@ -25,20 +21,20 @@ export const fragmentPermissions = createTable("fragment_permission", (d) => ({
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
-export const fragmentPermissionsRelations = relations(
-	fragmentPermissions,
+export const sectionPermissionsRelations = relations(
+	sectionPermissions,
 	({ one }) => ({
 		user: one(users, {
-			fields: [fragmentPermissions.userId],
+			fields: [sectionPermissions.userId],
 			references: [users.id],
 		}),
-		fragment: one(fragments, {
-			fields: [fragmentPermissions.fragmentId],
-			references: [fragments.id],
+		section: one(sections, {
+			fields: [sectionPermissions.sectionId],
+			references: [sections.id],
 		}),
 	}),
 );
 
-export type FragmentPermissionSchema = InferSelectModel<
-	typeof fragmentPermissions
+export type SectionPermissionSchema = InferSelectModel<
+	typeof sectionPermissions
 >;

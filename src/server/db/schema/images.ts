@@ -1,7 +1,7 @@
 import { relations, sql } from "drizzle-orm";
-import { createTable } from "~/server/db/schema-helpers";
 import { index } from "drizzle-orm/pg-core";
-import { users } from "./users";
+import { users } from "~/server/db/schema";
+import { createTable } from "~/server/db/schema-helpers";
 
 export const images = createTable(
 	"image",
@@ -9,10 +9,8 @@ export const images = createTable(
 		id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 		name: d.varchar({ length: 256 }).notNull(),
 		url: d.varchar({ length: 1024 }).notNull(),
-		userId: d
-			.varchar({ length: 255 })
-			.notNull()
-			.references(() => users.id),
+		userId: d.varchar({ length: 255 }).references(() => users.id),
+		isOfficial: d.boolean().notNull().default(false),
 		createdAt: d
 			.timestamp({ withTimezone: true })
 			.default(sql`CURRENT_TIMESTAMP`)

@@ -1,10 +1,15 @@
-import { SignedIn, SignIn, useAuth } from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs";
 import Modal from "~/components/ui/modal";
 
 export default function SignInModalPage() {
 	return (
 		<Modal fitContent>
-			<SignIn routing="hash" />
+			<SignIn
+				path="/sign-in"
+				routing="path"
+				fallbackRedirectUrl="/"
+				signUpFallbackRedirectUrl="/"
+			/>
 		</Modal>
 	);
 }

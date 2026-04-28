@@ -1,6 +1,6 @@
 export const revalidate = 60;
 
-import { TaleNotFound, TaleReader } from "~/features/tale-reader/components";
+import { TaleNotFound } from "~/features/tale-reader/components";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import { getOfficialTale } from "~/server/db/data/tale-reader/queries/tales";
 import type { OfficialTalePageProps } from "./types";
@@ -12,13 +12,15 @@ export default async function OfficialTalePage({
 
 	if (taleSlug) {
 		try {
-			const { tale, progress } = await getOfficialTale(taleSlug);
+			// const { tale, progress } = await getOfficialTale(taleSlug);
+			const taleData = await getOfficialTale(taleSlug);
 
-			if (!tale) {
-				return <TaleNotFound />;
-			}
+			// if (!tale) {
+			// 	return <TaleNotFound />;
+			// }
 
-			return <TaleReader tale={tale} progress={progress} />;
+			return null;
+			// return <TaleReader tale={tale} progress={progress} />;
 		} catch (error) {
 			if (error instanceof TaleAccessError && error.status === 404) {
 				return <TaleNotFound />;

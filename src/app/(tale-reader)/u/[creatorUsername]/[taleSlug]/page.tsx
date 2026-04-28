@@ -2,7 +2,6 @@ export const revalidate = 60;
 
 import {
 	TaleNotFound,
-	TaleReader,
 	TaleUnauthorized,
 } from "~/features/tale-reader/components";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
@@ -20,7 +19,8 @@ export default async function UserTalePage({ params }: UserTalePageProps) {
 				return <TaleNotFound />;
 			}
 
-			return <TaleReader tale={tale} progress={progress} />;
+			return null;
+			// return <TaleReader tale={tale} progress={progress} />;
 		} catch (error) {
 			if (error instanceof TaleAccessError) {
 				if (error.status === 404) {

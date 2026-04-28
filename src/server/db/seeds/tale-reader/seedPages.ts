@@ -1,6 +1,5 @@
+import { entries, pages } from "~/server/db/schema";
 import { db } from "../..";
-import { pages } from "../../schema";
-import { talePartMap } from "./seedEntries";
 
 type PageSeed = {
 	taleId: number;
@@ -12,31 +11,27 @@ type PageSeed = {
 };
 
 export async function seedPages() {
-	const pagesData: PageSeed[] = [];
+	const allEntries = await db
+		.select({
+			id: entries.id,
+			taleId: entries.taleId,
+			partId: entries.partId,
+		})
+		.from(entries);
 
-	let entryId = 1;
+	const pagesData: PageSeed[] = allEntries.flatMap((entry) =>
+		Array.from({ length: entry.taleId === 10 ? 2 : 3 }).map((_, pageIndex) => ({
+			taleId: entry.taleId,
+			partId: entry.partId,
+			entryId: entry.id,
+			type: "book" as const,
+			isPaginated: true,
+			index: pageIndex,
+		})),
+	);
 
-	for (const { taleId, partIds } of talePartMap) {
-		for (const partId of partIds) {
-			for (let entryIndex = 0; entryIndex < 5; entryIndex++) {
-				for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
-					const isPaginated = ![0, 3].includes(pageIndex); // 0 = first, 3 = fourth page
-					pagesData.push({
-						taleId,
-						partId,
-						entryId,
-						type: "book",
-						isPaginated,
-						index: pageIndex,
-					});
-				}
-				entryId++; // next entry
-			}
-		}
-	}
-
-	await db.insert(pages).values(pagesData); // use your actual table name
+	await db.insert(pages).values(pagesData);
 	console.log(
-		`✅ Seeded ${pagesData.length} pages for ${entryId - 1} entries.`,
+		`✅ Seeded ${pagesData.length} pages for ${allEntries.length} entries.`,
 	);
 }

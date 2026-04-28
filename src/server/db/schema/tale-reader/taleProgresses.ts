@@ -1,11 +1,9 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { tales, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
-import { users } from "../users";
-import { tales } from "./tales";
 
 export const taleProgresses = createTable("tale_progress", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-
 	userId: d
 		.text()
 		.notNull()
@@ -14,26 +12,16 @@ export const taleProgresses = createTable("tale_progress", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-
-	// 👁 Explicit progress tracking
 	seenBlockIds: d.integer().array().notNull().default([]),
-
-	// 📍 Last viewed position
 	lastBlockId: d.integer(),
-
-	// 🔢 Max block reached (used for skim progress)
 	maxBlockIdReached: d.integer(),
-
-	// 📈 Progress percentages (calculated client-side)
+	activePathIds: d.integer().array().notNull().default([]),
+	seenPathIds: d.integer().array().notNull().default([]),
 	seenBlockProgress: d
 		.numeric({ precision: 5, scale: 4 })
 		.notNull()
 		.default("0"),
-	linearReadProgress: d
-		.numeric({ precision: 5, scale: 4 })
-		.notNull()
-		.default("0"),
-
+	maxReadProgress: d.numeric({ precision: 5, scale: 4 }).notNull().default("0"),
 	updatedAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

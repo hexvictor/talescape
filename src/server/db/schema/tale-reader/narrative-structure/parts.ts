@@ -1,6 +1,6 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { blocks, entries, pages, tales } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
-import { tales } from "../tales";
 
 export const parts = createTable("part", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -17,11 +17,14 @@ export const parts = createTable("part", (d) => ({
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
-export const partsRelations = relations(parts, ({ one }) => ({
+export const partsRelations = relations(parts, ({ one, many }) => ({
 	tale: one(tales, {
 		fields: [parts.taleId],
 		references: [tales.id],
 	}),
+	entries: many(entries),
+	pages: many(pages),
+	blocks: many(blocks),
 }));
 
 export type PartSchema = InferSelectModel<typeof parts>;

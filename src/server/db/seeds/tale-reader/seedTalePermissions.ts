@@ -1,7 +1,7 @@
 // server/db/seed.ts
 
+import { talePermissions } from "~/server/db/schema";
 import { db } from "../..";
-import { talePermissions, tales } from "../../schema";
 import { userId1, userId2 } from "../ids";
 
 // You can call this in your main seed index file

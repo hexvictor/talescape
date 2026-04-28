@@ -1,9 +1,7 @@
-import { createTable } from "~/server/db/schema-helpers";
 import { relations, sql } from "drizzle-orm";
-import { users } from "../users";
-import { authors, type Author } from "./authors";
 import type { BookStatus, BookType } from "~/features/library/types/book";
-import { images } from "../images";
+import { type Author, authors, images, users } from "~/server/db/schema";
+import { createTable } from "~/server/db/schema-helpers";
 
 export type Book = typeof books.$inferSelect;
 export type BookWithAuthor = Book & {

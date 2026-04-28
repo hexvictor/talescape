@@ -14,7 +14,7 @@ export async function createNewProgress(
 		lastBlockId: firstBlockId ?? null,
 		maxBlockIdReached: firstBlockId ?? null,
 		seenBlockProgress: (1 / blockIds.length).toFixed(4),
-		linearReadProgress: (1 / blockIds.length).toFixed(4),
+		maxReadProgress: (1 / blockIds.length).toFixed(4),
 	};
 
 	const [insertedProgress] = await db

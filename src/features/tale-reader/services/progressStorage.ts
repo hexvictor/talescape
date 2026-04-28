@@ -39,6 +39,6 @@ function createDefaultProgress(tale: Tale): TaleProgressSchema {
 		lastBlockId: firstBlockId,
 		maxBlockIdReached: firstBlockId,
 		seenBlockProgress: (1 / blockIds.length).toFixed(4),
-		linearReadProgress: (1 / blockIds.length).toFixed(4),
+		maxReadProgress: (1 / blockIds.length).toFixed(4),
 	};
 }

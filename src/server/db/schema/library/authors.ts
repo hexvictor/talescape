@@ -1,6 +1,6 @@
-import { createTable } from "~/server/db/schema-helpers";
-import { images } from "../images";
 import { relations, sql } from "drizzle-orm";
+import { images } from "~/server/db/schema";
+import { createTable } from "~/server/db/schema-helpers";
 
 export type Author = typeof authors.$inferSelect;
 export type NewAuthor = typeof authors.$inferInsert;

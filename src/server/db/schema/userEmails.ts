@@ -1,4 +1,3 @@
-import { text } from "drizzle-orm/pg-core";
 import { createTable } from "~/server/db/schema-helpers";
 
 export const userEmails = createTable("userEmail", (d) => ({

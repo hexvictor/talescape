@@ -1,4 +1,4 @@
-import { text, timestamp } from "drizzle-orm/pg-core";
+import { timestamp } from "drizzle-orm/pg-core";
 import { createTable } from "~/server/db/schema-helpers";
 
 export const users = createTable("user", (d) => ({

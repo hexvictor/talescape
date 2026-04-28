@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 import { toTitleCase } from "~/lib/utils/string";
 import type { BookWithAuthor } from "~/server/db/schema";
 

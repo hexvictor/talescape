@@ -1,39 +1,212 @@
 import { db } from "~/server/db";
-import { sections, type SectionSchema } from "../../schema";
-import { userId1 } from "../ids"; // ou ajuste conforme necessário
+import {
+	type SectionSchema,
+	branches,
+	sections,
+	tales,
+} from "~/server/db/schema";
+
+type SectionSeed = Pick<
+	SectionSchema,
+	| "taleId"
+	| "branchId"
+	| "creatorId"
+	| "orientation"
+	| "direction"
+	| "inputMode"
+	| "isSnap"
+	| "index"
+	| "isOfficial"
+	| "editable"
+	| "visibility"
+	| "cloneable"
+>;
 
 export async function seedSections() {
-	const TALE_COUNT = 9;
-	const SECTIONS_PER_TALE = 4;
+	const allTales = await db
+		.select({
+			id: tales.id,
+			creatorId: tales.creatorId,
+			isOfficial: tales.isOfficial,
+			editable: tales.editable,
+			visibility: tales.visibility,
+			cloneable: tales.cloneable,
+		})
+		.from(tales);
 
-	const sectionData: Pick<
-		SectionSchema,
-		| "creatorId"
-		| "layout"
-		| "orientation"
-		| "inputMode"
-		| "isOfficial"
-		| "editable"
-		| "visibility"
-		| "embeddable"
-		| "cloneable"
-		| "status"
-	>[] = Array.from({ length: TALE_COUNT * SECTIONS_PER_TALE }).map(
-		(_, index) => ({
-			creatorId: userId1, // ou null se for desejado
-			layout: index % SECTIONS_PER_TALE === 2 ? "reel" : "scroll",
-			orientation: "vertical",
-			inputMode: ["buttons", "keyboard", "touch"],
-			isOfficial: false,
-			editable: true,
-			visibility: "public",
-			embeddable: "public",
-			cloneable: "public",
-			status: "published",
-		}),
-	);
+	const allBranches = await db
+		.select({
+			id: branches.id,
+			taleId: branches.taleId,
+			name: branches.name,
+			index: branches.index,
+		})
+		.from(branches);
 
-	await db.insert(sections).values(sectionData);
+	const branchesByTale = new Map<
+		number,
+		{ id: number; name: string; index: number }[]
+	>();
 
-	console.log(`✅ Seeded ${sectionData.length} public, published Sections.`);
+	for (const branch of allBranches) {
+		const existing = branchesByTale.get(branch.taleId) ?? [];
+		existing.push({
+			id: branch.id,
+			name: branch.name,
+			index: branch.index,
+		});
+		branchesByTale.set(branch.taleId, existing);
+	}
+
+	for (const entry of branchesByTale.values()) {
+		entry.sort((a, b) => a.index - b.index);
+	}
+
+	const seeds: SectionSeed[] = [];
+
+	for (const tale of allTales) {
+		const taleBranches = branchesByTale.get(tale.id) ?? [];
+		if (!taleBranches.length) continue;
+
+		if (tale.id === 10) {
+			const byName = new Map(taleBranches.map((b) => [b.name, b.id] as const));
+
+			const sectionPlan = [
+				{
+					branchName: "Beginning",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 0,
+				},
+				{
+					branchName: "First Path",
+					orientation: "horizontal" as const,
+					direction: "left" as const,
+					index: 0,
+				},
+				{
+					branchName: "Second Path",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 0,
+				},
+				{
+					branchName: "Second Path",
+					orientation: "horizontal" as const,
+					direction: "right" as const,
+					index: 1,
+				},
+				{
+					branchName: "Third Path",
+					orientation: "horizontal" as const,
+					direction: "right" as const,
+					index: 0,
+				},
+				{
+					branchName: "Fourth Path",
+					orientation: "horizontal" as const,
+					direction: "right" as const,
+					index: 0,
+				},
+				{
+					branchName: "Fourth Path",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 1,
+				},
+				{
+					branchName: "The Choice",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 0,
+				},
+				{
+					branchName: "The Good Choice",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 0,
+				},
+				{
+					branchName: "The Bad Choice",
+					orientation: "horizontal" as const,
+					direction: "right" as const,
+					index: 0,
+				},
+				{
+					branchName: "Ending",
+					orientation: "vertical" as const,
+					direction: "down" as const,
+					index: 0,
+				},
+			];
+
+			for (const plan of sectionPlan) {
+				const branchId = byName.get(plan.branchName);
+				if (!branchId) continue;
+
+				seeds.push({
+					taleId: tale.id,
+					branchId,
+					creatorId: tale.creatorId,
+					orientation: plan.orientation,
+					direction: plan.direction,
+					inputMode: ["buttons", "keyboard", "touch"],
+					isSnap: false,
+					index: plan.index,
+					isOfficial: tale.isOfficial,
+					editable: tale.editable,
+					visibility: tale.visibility,
+					cloneable: tale.cloneable,
+				});
+			}
+
+			continue;
+		}
+
+		const mainBranchId = taleBranches[0]?.id;
+		if (!mainBranchId) continue;
+
+		const sectionPlan = [
+			{
+				orientation: "vertical" as const,
+				direction: "down" as const,
+				index: 0,
+			},
+			{
+				orientation: "horizontal" as const,
+				direction: "right" as const,
+				index: 1,
+			},
+			{
+				orientation: "horizontal" as const,
+				direction: "right" as const,
+				index: 2,
+			},
+			{
+				orientation: "vertical" as const,
+				direction: "down" as const,
+				index: 3,
+			},
+		];
+
+		for (const plan of sectionPlan) {
+			seeds.push({
+				taleId: tale.id,
+				branchId: mainBranchId,
+				creatorId: tale.creatorId,
+				orientation: plan.orientation,
+				direction: plan.direction,
+				inputMode: ["buttons", "keyboard", "touch"],
+				isSnap: false,
+				index: plan.index,
+				isOfficial: tale.isOfficial,
+				editable: tale.editable,
+				visibility: tale.visibility,
+				cloneable: tale.cloneable,
+			});
+		}
+	}
+
+	await db.insert(sections).values(seeds);
+	console.log(`✅ Seeded ${seeds.length} sections.`);
 }

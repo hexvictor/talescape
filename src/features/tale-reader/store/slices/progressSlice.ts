@@ -67,7 +67,7 @@ export const createProgressSlice =
 						: null;
 
 				const maxIndex = maxBlock?.globalIndex ?? 0;
-				const linearReadProgress = ((maxIndex + 1) / total).toFixed(4);
+				const maxReadProgress = ((maxIndex + 1) / total).toFixed(4);
 
 				return {
 					...prevProgress,
@@ -75,7 +75,7 @@ export const createProgressSlice =
 					maxBlockIdReached,
 					seenBlockIds,
 					seenBlockProgress,
-					linearReadProgress,
+					maxReadProgress,
 					updatedAt: new Date(),
 				};
 			},

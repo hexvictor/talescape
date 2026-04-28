@@ -1,9 +1,7 @@
-import { createTable } from "~/server/db/schema-helpers";
-
 // server/db/seed.ts
 
+import { authors } from "~/server/db/schema";
 import { db } from "../..";
-import { authors } from "../../schema";
 
 // You can call this in your main seed index file
 export async function seedAuthors() {

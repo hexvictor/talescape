@@ -1,8 +1,19 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import {
+	blocks,
+	books,
+	branches,
+	entries,
+	fragments,
+	pages,
+	parts,
+	paths,
+	sections,
+	talePermissions,
+	taleProgresses,
+	users,
+} from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
-import { index } from "drizzle-orm/pg-core";
-import { users } from "../users";
-import { books } from "../library/books";
 import type {
 	AssetAccessLevel,
 	AssetStatus,
@@ -30,7 +41,7 @@ export const tales = createTable("tale", (d) => ({
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
-export const talesRelations = relations(tales, ({ one }) => ({
+export const talesRelations = relations(tales, ({ one, many }) => ({
 	creatorById: one(users, {
 		fields: [tales.creatorId],
 		references: [users.id],
@@ -39,6 +50,16 @@ export const talesRelations = relations(tales, ({ one }) => ({
 		fields: [tales.bookId],
 		references: [books.id],
 	}),
+	parts: many(parts),
+	entries: many(entries),
+	pages: many(pages),
+	branches: many(branches),
+	paths: many(paths),
+	sections: many(sections),
+	blocks: many(blocks),
+	fragments: many(fragments),
+	permissions: many(talePermissions),
+	progresses: many(taleProgresses),
 }));
 
 export type TaleSchema = InferSelectModel<typeof tales>;

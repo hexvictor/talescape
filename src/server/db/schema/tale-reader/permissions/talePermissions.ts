@@ -1,17 +1,19 @@
-import { relations, sql, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import { tales, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
-import { tales } from "./tales";
-import { users } from "../users";
 import type { TalePermissionType } from "~/server/db/types/tale-reader/tale";
 
 export const talePermissions = createTable("tale_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-
-	taleId: d.integer().references(() => tales.id),
-	userId: d.text().references(() => users.id),
-
+	taleId: d
+		.integer()
+		.notNull()
+		.references(() => tales.id),
+	userId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	permissionTypes: d.text().array().notNull().$type<TalePermissionType[]>(),
-
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

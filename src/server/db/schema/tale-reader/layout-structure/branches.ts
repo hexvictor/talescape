@@ -1,8 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
 import {
-	blocks,
-	branches,
-	sectionPermissions,
+	branchPermissions,
+	paths,
+	sections,
 	tales,
 	users,
 } from "~/server/db/schema";
@@ -11,34 +11,18 @@ import type {
 	AssetAccessLevel,
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
-import type {
-	SectionDirection,
-	SectionInputMode,
-	SectionOrientation,
-} from "~/server/db/types/tale-reader/section";
 
-export const sections = createTable("section", (d) => ({
+export const branches = createTable("branch", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 	taleId: d
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-	branchId: d
-		.integer()
-		.notNull()
-		.references(() => branches.id),
 	creatorId: d.text().references(() => users.id),
-	orientation: d
-		.text()
-		.notNull()
-		.$type<SectionOrientation>()
-		.default("vertical"),
-	direction: d.text().notNull().$type<SectionDirection>().default("down"),
-	inputMode: d.text().array().notNull().$type<SectionInputMode[]>(),
+	name: d.text().notNull(),
+	index: d.integer().notNull(),
 	isOfficial: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
-	isSnap: d.boolean().notNull().default(false),
-	index: d.integer().notNull(),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	createdAt: d
@@ -48,21 +32,23 @@ export const sections = createTable("section", (d) => ({
 	updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 }));
 
-export const sectionsRelations = relations(sections, ({ one, many }) => ({
+export const branchesRelations = relations(branches, ({ one, many }) => ({
 	tale: one(tales, {
-		fields: [sections.taleId],
+		fields: [branches.taleId],
 		references: [tales.id],
 	}),
-	branch: one(branches, {
-		fields: [sections.branchId],
-		references: [branches.id],
-	}),
 	user: one(users, {
-		fields: [sections.creatorId],
+		fields: [branches.creatorId],
 		references: [users.id],
 	}),
-	blocks: many(blocks),
-	permissions: many(sectionPermissions),
+	sections: many(sections),
+	outgoingPaths: many(paths, {
+		relationName: "branch_outgoing_paths",
+	}),
+	incomingPaths: many(paths, {
+		relationName: "branch_incoming_paths",
+	}),
+	permissions: many(branchPermissions),
 }));
 
-export type SectionSchema = InferSelectModel<typeof sections>;
+export type BranchSchema = InferSelectModel<typeof branches>;

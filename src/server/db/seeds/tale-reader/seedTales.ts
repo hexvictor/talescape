@@ -1,10 +1,7 @@
-// server/db/seed.ts
-
+import { tales } from "~/server/db/schema";
 import { db } from "../..";
-import { tales } from "../../schema";
 import { userId1, userId2 } from "../ids";
 
-// You can call this in your main seed index file
 export async function seedTales() {
 	await db.insert(tales).values([
 		{
@@ -17,9 +14,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: false,
 			visibility: "public",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId2,
@@ -30,9 +26,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: true,
 			visibility: "public",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId1,
@@ -43,9 +38,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: false,
 			visibility: "private",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId2,
@@ -56,9 +50,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: true,
 			visibility: "private",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId1,
@@ -69,9 +62,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: false,
 			visibility: "restricted",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId1,
@@ -82,9 +74,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: false,
 			visibility: "restricted",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId2,
@@ -95,9 +86,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: true,
 			visibility: "restricted",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			creatorId: userId2,
@@ -108,9 +98,8 @@ export async function seedTales() {
 			isOfficial: false,
 			editable: true,
 			visibility: "restricted",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
 		},
 		{
 			bookId: 1,
@@ -120,9 +109,19 @@ export async function seedTales() {
 			isOfficial: true,
 			editable: true,
 			visibility: "public",
-			status: "published",
 			cloneable: "private",
-			type: "hybrid",
+			type: "story",
+		},
+		{
+			bookId: 1,
+			title: "Forked Fates",
+			slug: "official-tale-branched",
+			description: "One official tale with multiple branching outcomes.",
+			isOfficial: true,
+			editable: true,
+			visibility: "public",
+			cloneable: "private",
+			type: "story",
 		},
 	]);
 

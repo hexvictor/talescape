@@ -7,11 +7,12 @@
  * need to use are documented accordingly near the end.
  */
 
-import { getAuth } from "@clerk/nextjs/server";
 import { TRPCError, initTRPC } from "@trpc/server";
-import type { NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+
+import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 
 import { db } from "~/server/db";
 
@@ -27,12 +28,14 @@ import { db } from "~/server/db";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (req: NextRequest) => {
-	const session = getAuth(req); // ✅ works now
+export const createTRPCContext = async () => {
+	const session = await auth();
+	const heads = await headers();
+
 	return {
 		db,
 		session,
-		headers: req.headers,
+		headers: heads,
 	};
 };
 

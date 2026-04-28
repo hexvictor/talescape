@@ -1,14 +1,14 @@
 import { db } from "~/server/db";
-import { parts, type PartSchema } from "../../schema";
+import { type PartSchema, parts } from "~/server/db/schema";
 
 type PartSeed = Pick<PartSchema, "taleId" | "title" | "index">;
 
 export async function seedParts() {
-	const allParts: PartSeed[] = Array.from({ length: 9 }).flatMap(
+	const allParts: PartSeed[] = Array.from({ length: 10 }).flatMap(
 		(_, taleIndex) =>
-			Array.from({ length: taleIndex === 0 ? 1 : 2 }).map(
+			Array.from({ length: 2 }).map(
 				(_, partIndex): PartSeed => ({
-					taleId: taleIndex + 1, // 1 to 9
+					taleId: taleIndex + 1,
 					title: `Part ${partIndex + 1}`,
 					index: partIndex,
 				}),
