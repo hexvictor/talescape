@@ -4,8 +4,8 @@ import type {
 	Tale,
 	TaleStructure,
 } from "~/server/db/data/tale-reader/types/tales";
-import type { TaleProgressSchema } from "~/server/db/schema";
-import type { TaleReaderState } from "../createTaleReaderStore";
+import type { ReaderProgressSchema } from "~/server/db/schema";
+import type { TaleReaderState } from "../createReaderStore";
 import type {
 	Navigation,
 	NavigationNodeMap,
@@ -56,7 +56,7 @@ export type NavigationSlice = {
 export const createNavigationSlice =
 	(
 		initialTale: Tale,
-		initialProgress: TaleProgressSchema,
+		initialProgress: ReaderProgressSchema,
 	): StateCreator<TaleReaderState, [], [], NavigationSlice> =>
 	(set, get) => {
 		const indexMap = initialTale.structure.indexMap;

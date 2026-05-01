@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useRef } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { getInitialProgressFromLocalStorage } from "~/features/tale-reader/services/progressStorage";
+import { getInitialProgressFromLocalStorage } from "~/features/tale-reader/services/readerProgressStorage";
 import {
 	type TaleReaderState,
-	createTaleReaderStore,
-} from "~/features/tale-reader/store/createTaleReaderStore";
+	createReaderStore,
+} from "~/features/tale-reader/store/createReaderStore";
 import type { Tale } from "~/server/db/data/tale-reader/types/tales";
-import type { TaleProgressSchema } from "~/server/db/schema";
+import type { ReaderProgressSchema } from "~/server/db/schema";
 
 const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
 	null,
@@ -17,7 +17,7 @@ const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
 type ReaderStoreProviderProps = {
 	children: React.ReactNode;
 	initialTale: Tale;
-	initialProgress: TaleProgressSchema | null;
+	initialProgress: ReaderProgressSchema | null;
 };
 
 export function ReaderStoreProvider({
@@ -31,7 +31,7 @@ export function ReaderStoreProvider({
 		const resolvedProgress =
 			initialProgress ?? getInitialProgressFromLocalStorage(initialTale);
 
-		storeRef.current = createTaleReaderStore(initialTale, resolvedProgress);
+		storeRef.current = createReaderStore(initialTale, resolvedProgress);
 	}
 
 	return (

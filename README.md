@@ -19,3 +19,6 @@
 - [ ] Analytics (PostHog)
 - [ ] Ratelimiting (Upstash)
 - [ ] Re-enable ESLint and TypeScript checks in build
+- [ ] Fix the sign-in/signup modal having issues
+- [ ] Test react-grab
+- [ ] Test million.js text react library solution

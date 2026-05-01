@@ -1,11 +1,11 @@
 import { db } from "~/server/db";
-import { type TaleProgressSchema, taleProgresses } from "~/server/db/schema";
+import { type ReaderProgressSchema, taleProgresses } from "~/server/db/schema";
 
 export async function createNewProgress(
 	taleId: number,
 	blockIds: number[],
 	userId: string,
-): Promise<TaleProgressSchema> {
+): Promise<ReaderProgressSchema> {
 	const firstBlockId = blockIds[0];
 	const newProgressData = {
 		userId,

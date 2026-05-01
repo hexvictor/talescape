@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { SnapModelApi } from "./snapModel";
+import type { ScrollSnapModelApi } from "./scrollSnapModel";
 
 type ActiveBlockTrackerApi = {
 	rebuild: () => void;
@@ -10,7 +10,7 @@ type ActiveBlockTrackerApi = {
 };
 
 type ActiveBlockTrackerArgs = {
-	model: SnapModelApi;
+	model: ScrollSnapModelApi;
 	getScroll: () => number;
 	scheduleActiveBlockUpdate: (blockId: number) => void;
 	shouldTrack: () => boolean;

@@ -1,7 +1,7 @@
 import type { PublicUserInfo } from "~/server/db/data/users/queries";
 import type {
 	PageSchema,
-	TaleProgressSchema,
+	ReaderProgressSchema,
 	TaleSchema,
 } from "~/server/db/schema";
 import type { Block, EmbeddedBlock } from "./blocks";
@@ -54,7 +54,7 @@ export type Tale = TaleSchema & {
 	structure: TaleStructure;
 };
 
-export type TaleData = { tale: Tale; progress: TaleProgressSchema | null };
+export type TaleData = { tale: Tale; progress: ReaderProgressSchema | null };
 
 export type RawTaleData = {
 	parts: PartWithRange[];

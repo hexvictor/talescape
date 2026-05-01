@@ -39,4 +39,4 @@ export const taleProgressesRelations = relations(taleProgresses, ({ one }) => ({
 	}),
 }));
 
-export type TaleProgressSchema = InferSelectModel<typeof taleProgresses>;
+export type ReaderProgressSchema = InferSelectModel<typeof taleProgresses>;

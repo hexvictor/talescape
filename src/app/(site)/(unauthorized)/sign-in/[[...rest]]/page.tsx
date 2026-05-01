@@ -1,5 +1,5 @@
-import { SignIn as ClerkSignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import SignInForm from "~/features/auth/components/SignInForm";
 
 export const metadata: Metadata = {
 	title: "Sign in | Talescape",
@@ -7,16 +7,7 @@ export const metadata: Metadata = {
 };
 
 function SignIn() {
-	return (
-		<>
-			<ClerkSignIn
-				path="/sign-in"
-				routing="path"
-				fallbackRedirectUrl="/"
-				signUpFallbackRedirectUrl="/"
-			/>
-		</>
-	);
+	return <SignInForm />;
 }
 
 export default SignIn;

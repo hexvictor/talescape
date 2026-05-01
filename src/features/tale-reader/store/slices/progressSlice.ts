@@ -1,15 +1,15 @@
 import type { StateCreator } from "zustand/vanilla";
-import type { TaleProgressSchema } from "~/server/db/schema";
-import type { TaleReaderState } from "../createTaleReaderStore";
+import type { ReaderProgressSchema } from "~/server/db/schema";
+import type { TaleReaderState } from "../createReaderStore";
 
 export type ProgressSlice = {
 	progress: {
-		data: TaleProgressSchema;
+		data: ReaderProgressSchema;
 		isSaving: boolean;
 		isTrackingPaused: boolean;
-		setProgress: (newProgress: TaleProgressSchema) => void;
-		generateProgressUpdate: (blockId: number) => TaleProgressSchema | null;
-		updateProgressByBlockId: (blockId: number) => TaleProgressSchema | null;
+		setProgress: (newProgress: ReaderProgressSchema) => void;
+		generateProgressUpdate: (blockId: number) => ReaderProgressSchema | null;
+		updateProgressByBlockId: (blockId: number) => ReaderProgressSchema | null;
 		setIsSaving: (value: boolean) => void;
 		setIsTrackingPaused: (value: boolean) => void;
 	};
@@ -17,7 +17,7 @@ export type ProgressSlice = {
 
 export const createProgressSlice =
 	(
-		initialProgress: TaleProgressSchema,
+		initialProgress: ReaderProgressSchema,
 	): StateCreator<TaleReaderState, [], [], ProgressSlice> =>
 	(set, get) => ({
 		progress: {

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand/vanilla";
 import type { Tale } from "~/server/db/data/tale-reader/types/tales";
-import type { TaleReaderState } from "../createTaleReaderStore";
+import type { TaleReaderState } from "../createReaderStore";
 
 export type TaleSlice = {
 	tale: {

@@ -1,10 +1,8 @@
-import "~/styles/globals.css";
-
 import type { Metadata } from "next";
 
-import type { PropsWithChildren, ReactNode } from "react";
-import Footer from "~/components/layout/footer";
+import type { PropsWithChildren } from "react";
 import { Header } from "~/components/layout";
+import Footer from "~/components/layout/Footer";
 
 export const metadata: Metadata = {
 	title: "Home | Talescape",
@@ -12,19 +10,14 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export type HomeLayoutProps = Readonly<
-	PropsWithChildren<{
-		modals: ReactNode;
-	}>
->;
+export type HomeLayoutProps = Readonly<PropsWithChildren>;
 
-export default function HomeLayout({ children, modals }: HomeLayoutProps) {
+export default function HomeLayout({ children }: HomeLayoutProps) {
 	return (
 		<>
 			<Header />
-			<main className="flex-1 p-4">{children}</main>
+			<main className="flex-1 px-3 py-4 sm:px-5">{children}</main>
 			<Footer />
-			{modals}
 			<div id="modal-root" />
 		</>
 	);

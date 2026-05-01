@@ -1,7 +1,11 @@
-import React from "react";
+import { LibraryDetailPlaceholder } from "../../_components/LibraryContent";
 
-function UserLibrary() {
-	return <div>UserLibrary (Check about User ID)</div>;
+export default function UserLibrary() {
+	return (
+		<LibraryDetailPlaceholder
+			label="User library"
+			title="Personal shelf"
+			description="A cached shell for a member's books, tales, fragments, and reading lists."
+		/>
+	);
 }
-
-export default UserLibrary;

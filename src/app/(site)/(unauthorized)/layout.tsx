@@ -1,5 +1,5 @@
 import { Header } from "~/components/layout";
-import "~/styles/globals.css";
+import { AuthPageLinkHandler } from "~/features/auth/components";
 
 export default function AuthLayout({
 	children,
@@ -8,7 +8,7 @@ export default function AuthLayout({
 		<>
 			<Header />
 			<main className="flex flex-1 items-center justify-center p-4">
-				{children}
+				<AuthPageLinkHandler>{children}</AuthPageLinkHandler>
 			</main>
 		</>
 	);

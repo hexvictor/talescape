@@ -1,7 +1,5 @@
-import React from "react";
+import { CodexContent } from "../_components/CodexContent";
 
-function Codex() {
-	return <div>Codex</div>;
+export default function Codex() {
+	return <CodexContent />;
 }
-
-export default Codex;

@@ -1,5 +1,5 @@
 import type { StateCreator } from "zustand/vanilla";
-import type { TaleReaderState } from "../createTaleReaderStore";
+import type { TaleReaderState } from "../createReaderStore";
 
 export type HubSlice = {
 	taleHub: {

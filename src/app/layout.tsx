@@ -1,11 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
+import { clerkAppearance } from "~/features/auth/utils/clerkAppearance";
 import "~/styles/globals.css";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -22,13 +22,27 @@ const geist = Geist({
 	variable: "--font-geist-sans",
 });
 
+const themeScript = `
+try {
+  var theme = localStorage.getItem("talescape-theme");
+  if (theme === "dark") document.documentElement.classList.add("dark");
+  if (theme === "light") document.documentElement.classList.remove("dark");
+} catch (_) {}
+`;
+
 export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<ClerkProvider appearance={{ baseTheme: dark }}>
-			<html lang="en" className={`${geist.variable}`}>
+		<ClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
+			<html lang="en" className={geist.variable} suppressHydrationWarning>
 				<head>
+					<script
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: Static pre-paint theme sync prevents a light-to-dark flash before React hydrates.
+						dangerouslySetInnerHTML={{
+							__html: themeScript,
+						}}
+					/>
 					{isDev && (
 						<>
 							<Script
