@@ -1,18 +1,28 @@
 import type { PartSchema } from "~/server/db/schema";
+import type { EntityBounds, StructurePosition } from "./shared";
 
-export type Part = PartWithRange & {
-	entryIds: number[];
-	firstEntryId?: number | null;
-	lastEntryId?: number | null;
-	entryCount: number;
-	pageCount: number;
-	isFirstPart: boolean;
-	isLastPart: boolean;
+export type TalePart = PartSchema & {
+	children: {
+		entryIds: number[];
+		pageIds: number[];
+		blockIds: number[];
+	};
+	links: {
+		previousPartId: number | null;
+		nextPartId: number | null;
+	};
+	bounds: EntityBounds & {
+		firstEntryId: number | null;
+		lastEntryId: number | null;
+		firstPageId: number | null;
+		lastPageId: number | null;
+	};
+	counts: {
+		entries: number;
+		pages: number;
+		blocks: number;
+	};
+	position: StructurePosition;
 };
 
-export type PartRange = {
-	firstBlockId: number | null;
-	lastBlockId: number | null;
-};
-
-export type PartWithRange = PartSchema & PartRange;
+export type Part = TalePart;

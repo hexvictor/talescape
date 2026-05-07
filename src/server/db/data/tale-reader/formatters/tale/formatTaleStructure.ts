@@ -1,176 +1,151 @@
-import { sortByIndex, sortByParentAndIndex } from "~/lib/utils/sort";
-import type {
-	RawTaleData,
-	TaleStructure,
-} from "~/server/db/data/tale-reader/types/tales";
-import type { Page } from "../../types/pages";
+import type { PublicUserInfo } from "~/server/db/data/users/queries";
+import type { TaleRecord } from "../../queries/tales/getTale";
+import type { Tale, TaleContent, TaleIndexMap } from "../../types/tales";
+import { formatBlocks } from "../blocks/formatBlocks";
+import { formatBranches } from "../branches/formatBranches";
+import { formatEntries } from "../entries/formatEntries";
+import { formatFragments } from "../fragments/formatFragments";
+import { formatPages } from "../pages/formatPages";
+import { formatParts } from "../parts/formatParts";
+import { formatPaths } from "../paths/formatPaths";
+import { formatSections } from "../sections/formatSections";
 import {
-	formatBlocksById,
-	formatBlocksByPageId,
-	formatBlocksBySectionId,
-} from "../blocks/formatBlocks";
-import {
-	formatChapterNumbersByEntryId,
-	formatEntriesById,
-	formatEntriesByPartId,
-	formatLocalChapterNumbersByPartId,
-} from "../entries/formatEntries";
-import {
-	formatFragmentsByBlockId,
-	formatFragmentsById,
-} from "../fragments/formatFragments";
-import {
-	formatPageByBlockId,
-	formatPagesByEntryId,
-	formatPagesById,
-	formatPagesByPartId,
-} from "../pages/formatPages";
-import { formatPartsById } from "../parts/formatParts";
-import { formatSectionsById } from "../sections/formatSections";
+	type FlatTaleRecord,
+	createDerivedTaleIndexes,
+	flattenTaleRecord,
+	mapById,
+	valuesFromIds,
+} from "./formatTaleContext";
 
-export function formatTaleStructure(data: RawTaleData): TaleStructure {
-	const { parts, entries, pages, sections, blocks, fragments } = data;
+export function formatTaleStructure(rawTale: TaleRecord): Tale {
+	const flat = flattenTaleRecord(rawTale);
+	const derived = createDerivedTaleIndexes(flat);
+	const indexMap = createTaleIndexMap(flat, derived);
+	const content = createTaleContent(flat, indexMap);
 
-	const partsSorted = sortByIndex(parts);
-	const sectionsSorted = sortByIndex(sections);
+	const { creatorById, branches, parts, ...tale } = rawTale;
 
-	const entriesSorted = sortByParentAndIndex(
-		entries,
-		partsSorted,
-		(entry) => entry.partId,
-		(entry) => entry.index,
-		(part) => part.id,
-	);
+	return {
+		...tale,
+		creator: formatCreator(creatorById),
+		content,
+	};
+}
 
-	const pagesSorted = sortByParentAndIndex(
-		pages,
-		entriesSorted,
-		(page) => page.entryId,
-		(page) => page.index,
-		(entry) => entry.id,
-	) as Page[];
+function createTaleIndexMap(
+	flat: FlatTaleRecord,
+	derived: ReturnType<typeof createDerivedTaleIndexes>,
+): TaleIndexMap {
+	const branches = formatBranches(flat, derived);
+	const parts = formatParts(flat, derived);
+	const entries = formatEntries(flat, derived);
+	const pages = formatPages(flat, derived);
+	const sections = formatSections(flat, derived);
+	const fragments = formatFragments(flat, derived);
 
-	const blocksSorted = sortByParentAndIndex(
-		blocks,
-		sectionsSorted,
-		(block) => block.sectionId,
-		(block) => block.index,
-		(section) => section.id,
-	);
+	const branchesById = mapById(branches);
+	const partsById = mapById(parts);
+	const entriesById = mapById(entries);
+	const pagesById = mapById(pages);
+	const sectionsById = mapById(sections);
+	const fragmentsById = mapById(fragments);
 
-	const fragmentsSorted = sortByParentAndIndex(
-		fragments,
-		blocksSorted,
-		(fragment) => fragment.blockId,
-		(fragment) => fragment.index,
-		(block) => block.id,
-	);
-
-	const chapters = entriesSorted.filter((e) => e.type === "chapter");
-
-	const blocksByPageId = formatBlocksByPageId(blocksSorted);
-	const pageByBlockId = formatPageByBlockId(pagesSorted, blocksSorted);
-	const pagesByEntryId = formatPagesByEntryId(pagesSorted, entriesSorted);
-	const entriesByPartId = formatEntriesByPartId(entriesSorted, partsSorted);
-	const pagesByPartId = formatPagesByPartId(pagesSorted, partsSorted);
-	const chapterNumbersByEntryId = formatChapterNumbersByEntryId(chapters);
-	const localChaptersByPartId = formatLocalChapterNumbersByPartId(
-		chapters,
-		partsSorted,
-	);
-	const fragmentsByBlockId = formatFragmentsByBlockId(
-		blocksSorted,
-		fragmentsSorted,
-	);
-	const blocksBySectionId = formatBlocksBySectionId(
-		blocksSorted,
-		sectionsSorted,
-	);
-
-	const pageCount = pagesSorted.length;
-	const numberedPages = pagesSorted.filter((p) => p.isPaginated);
-	const numberedPageIds = numberedPages.map((p) => p.id);
-	const pageIds = pagesSorted.map((p) => p.id);
-	const entryIds = entriesSorted.map((e) => e.id);
-	const blockIds = blocksSorted.map((b) => b.id);
-	const partIds = partsSorted.map((p) => p.id);
-	const sectionIds = sectionsSorted.map((s) => s.id);
-
-	const pagesById = formatPagesById(
-		pagesSorted,
-		numberedPageIds,
-		blocksByPageId,
-		pagesByEntryId,
-		pagesByPartId,
-	);
-	const entriesById = formatEntriesById(
-		entriesSorted,
-		pagesByEntryId,
-		entriesByPartId,
-		chapterNumbersByEntryId,
-		localChaptersByPartId,
-	);
-
-	const fragmentsById = formatFragmentsById(
-		fragmentsSorted,
-		blocksSorted,
-		fragmentsByBlockId,
-	);
-	const partsById = formatPartsById(
-		partsSorted,
-		entriesByPartId,
-		pagesByEntryId,
-	);
-	const sectionsById = formatSectionsById(
-		sectionsSorted,
-		blocksBySectionId,
-		pageByBlockId,
-	);
-
-	const blocksById = formatBlocksById(
-		blocksSorted,
-		fragmentsByBlockId,
-		sectionsById,
+	const paths = formatPaths(flat, branchesById);
+	const pathsById = mapById(paths);
+	const blocks = formatBlocks(flat, {
+		branchesById,
 		partsById,
 		entriesById,
 		pagesById,
-		partsSorted,
-		entriesSorted,
-		pagesSorted,
-	);
-
-	const blocksArray = Object.values(blocksById);
-	const pagesArray = Object.values(pagesById);
-	const entriesArray = Object.values(entriesById);
-	const partsArray = Object.values(partsById);
-	const sectionsArray = Object.values(sectionsById);
-	const fragmentsArray = Object.values(fragmentsById);
+		sectionsById,
+		derived,
+	});
+	const blocksById = mapById(blocks);
 
 	return {
-		blockCount: blockIds.length,
-		pageCount,
-		pageIds,
-		pages: pagesArray,
-		numberedPageIds,
-		numberedPages,
-		entryIds,
-		entries: entriesArray,
-		firstBlock: blockIds[0] ?? null,
-		lastBlock: blockIds[blockIds.length - 1] ?? null,
-		blockIds,
-		blocks: blocksArray,
-		partIds,
-		parts: partsArray,
-		fragments: fragmentsArray,
-		sectionIds,
-		sections: sectionsArray,
-		indexMap: {
-			entriesById,
-			partsById,
-			fragmentsById,
-			sectionsById,
-			blocksById,
-			pagesById,
+		branchesById,
+		pathsById,
+		partsById,
+		entriesById,
+		pagesById,
+		sectionsById,
+		blocksById,
+		fragmentsById,
+	};
+}
+
+function createTaleContent(
+	flat: FlatTaleRecord,
+	indexMap: TaleIndexMap,
+): TaleContent {
+	const order = {
+		branchIds: flat.branches.map((branch) => branch.id),
+		pathIds: flat.paths.map((path) => path.id),
+		partIds: flat.parts.map((part) => part.id),
+		entryIds: flat.entries.map((entry) => entry.id),
+		pageIds: flat.pages.map((page) => page.id),
+		numberedPageIds: flat.pages
+			.filter((page) => page.isPaginated)
+			.map((page) => page.id),
+		sectionIds: flat.sections.map((section) => section.id),
+		blockIds: flat.blocks.map((block) => block.id),
+		fragmentIds: flat.fragments.map((fragment) => fragment.id),
+	};
+
+	return {
+		structure: {
+			branches: valuesFromIds(order.branchIds, indexMap.branchesById),
+			paths: valuesFromIds(order.pathIds, indexMap.pathsById),
+			parts: valuesFromIds(order.partIds, indexMap.partsById),
+			entries: valuesFromIds(order.entryIds, indexMap.entriesById),
+			pages: valuesFromIds(order.pageIds, indexMap.pagesById),
+			numberedPages: valuesFromIds(order.numberedPageIds, indexMap.pagesById),
+			sections: valuesFromIds(order.sectionIds, indexMap.sectionsById),
+			blocks: valuesFromIds(order.blockIds, indexMap.blocksById),
+			fragments: valuesFromIds(order.fragmentIds, indexMap.fragmentsById),
 		},
+		order,
+		counts: {
+			branches: order.branchIds.length,
+			paths: order.pathIds.length,
+			parts: order.partIds.length,
+			entries: order.entryIds.length,
+			pages: order.pageIds.length,
+			sections: order.sectionIds.length,
+			blocks: order.blockIds.length,
+			fragments: order.fragmentIds.length,
+		},
+		bounds: {
+			firstBranchId: order.branchIds[0] ?? null,
+			lastBranchId: order.branchIds.at(-1) ?? null,
+			firstPartId: order.partIds[0] ?? null,
+			lastPartId: order.partIds.at(-1) ?? null,
+			firstEntryId: order.entryIds[0] ?? null,
+			lastEntryId: order.entryIds.at(-1) ?? null,
+			firstPageId: order.pageIds[0] ?? null,
+			lastPageId: order.pageIds.at(-1) ?? null,
+			firstSectionId: order.sectionIds[0] ?? null,
+			lastSectionId: order.sectionIds.at(-1) ?? null,
+			firstBlockId: order.blockIds[0] ?? null,
+			lastBlockId: order.blockIds.at(-1) ?? null,
+			firstFragmentId: order.fragmentIds[0] ?? null,
+			lastFragmentId: order.fragmentIds.at(-1) ?? null,
+		},
+		indexMap,
+	};
+}
+
+function formatCreator(
+	creator: TaleRecord["creatorById"],
+): PublicUserInfo | null {
+	if (!creator) return null;
+
+	return {
+		id: creator.id,
+		username: creator.username,
+		fullName: creator.fullName,
+		firstName: creator.firstName,
+		lastName: creator.lastName,
+		imageUrl: creator.imageUrl,
 	};
 }

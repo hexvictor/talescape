@@ -1,47 +1,53 @@
-import { mapByKey } from "~/lib/utils/array";
+import type { TaleSection } from "../../types/sections";
 import type {
-	EmbeddedSection,
-	Section,
-} from "~/server/db/data/tale-reader/types/tales";
-import type { PageSchema } from "~/server/db/schema";
-import type { IdListMap } from "~/types/utils";
+	DerivedTaleIndexes,
+	FlatTaleRecord,
+} from "../tale/formatTaleContext";
+import { siblingId } from "../tale/formatTaleContext";
 
-export function formatSectionsById(
-	sections: EmbeddedSection[],
-	blocksBySectionId: IdListMap,
-	pageByBlockId: Record<string, PageSchema>,
-): Record<string, Section> {
-	return mapByKey(
-		sections.map((section, i) => {
-			const blockIds = blocksBySectionId[section.id];
-			if (!blockIds) {
-				throw new Error(`No blockIds found for section ID: ${section.id}`);
-			}
-			const firstBlockId = blockIds[0] ?? null;
-			const lastBlockId = blockIds[blockIds.length - 1] ?? null;
-			const blockCount = blockIds.length;
+export function formatSections(
+	flat: FlatTaleRecord,
+	derived: DerivedTaleIndexes,
+): TaleSection[] {
+	const sectionIds = flat.sections.map((section) => section.id);
 
-			const pageCount = blockIds.reduce((acc, current, i, array) => {
-				const page = pageByBlockId[current];
-				if (page) {
-					return acc + 1;
-				}
-				return acc;
-			}, 0);
-			const isFirstSection = i === 0;
-			const isLastSection = i === sections.length - 1;
+	return flat.sections.map((section, index) => {
+		const { blocks, ...baseSection } = section;
+		const blockIds = derived.blockIdsBySectionId[section.id] ?? [];
+		const branchSectionIds =
+			derived.sectionIdsByBranchId[section.branchId] ?? [];
+		const pageIds = new Set(
+			blockIds
+				.map((blockId) => derived.blockById[blockId]?.pageId)
+				.filter((pageId): pageId is number => pageId != null),
+		);
 
-			return {
-				...section,
+		return {
+			...baseSection,
+			children: {
 				blockIds,
-				firstBlockId,
-				lastBlockId,
-				blockCount,
-				pageCount,
-				isFirstSection,
-				isLastSection,
-			};
-		}),
-		"id",
-	);
+			},
+			links: {
+				previousSectionId: siblingId(sectionIds, section.id, -1),
+				nextSectionId: siblingId(sectionIds, section.id, 1),
+				previousSectionIdInBranch: siblingId(branchSectionIds, section.id, -1),
+				nextSectionIdInBranch: siblingId(branchSectionIds, section.id, 1),
+			},
+			bounds: {
+				firstBlockId: blockIds[0] ?? null,
+				lastBlockId: blockIds.at(-1) ?? null,
+			},
+			counts: {
+				blocks: blockIds.length,
+				pages: pageIds.size,
+			},
+			position: {
+				index,
+				isFirst: index === 0,
+				isLast: index === flat.sections.length - 1,
+				isFirstInBranch: branchSectionIds[0] === section.id,
+				isLastInBranch: branchSectionIds.at(-1) === section.id,
+			},
+		};
+	});
 }

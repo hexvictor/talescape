@@ -46,7 +46,7 @@ function SectionCard({
 }
 
 function ReaderBlockDebugPanelComponent({ block }: Props) {
-	const debugMode = useReaderStore((s) => s.debugMode);
+	const debugMode = useReaderStore((s) => s.ui.isDebugEnabled);
 	const [open, setOpen] = React.useState(false);
 
 	if (!debugMode) return null;
@@ -69,12 +69,12 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 								Block Inspector
 							</p>
 							<p className="truncate font-semibold text-sm text-white sm:text-base">
-								{block.id || `Block ${block.globalIndex + 1}`}
+								{block.id || `Block ${block.position.index + 1}`}
 							</p>
 						</div>
 
 						<div className="shrink-0 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 font-semibold text-[10px] text-white/80 uppercase tracking-wide sm:text-[11px]">
-							#{block.globalIndex + 1}
+							#{block.position.index + 1}
 						</div>
 					</div>
 
@@ -84,14 +84,34 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 							tone="border-sky-300/30 bg-sky-500/15 text-sky-100"
 						>
 							<Field label="Id" value={block.id} />
-							<Field label="Index" value={block.index} />
-							<Field label="Entry Index" value={block.entryIndex} />
-							<Field label="Part Index" value={block.partIndex} />
-							<Field label="Global Index" value={block.globalIndex} />
+							<Field label="Index" value={block.position.index} />
+							<Field label="Entry Index" value={block.position.entryIndex} />
+							<Field label="Part Index" value={block.position.partIndex} />
+							<Field
+								label="Section Index"
+								value={block.position.sectionIndex}
+							/>
+							<Field label="Branch Index" value={block.position.branchIndex} />
 							<Field label="Snap" value={block.isSnap ? "Yes" : "No"} />
 							<Field
 								label="Page Block"
-								value={block.isPageBlock ? "Yes" : "No"}
+								value={block.position.isPageBlock ? "Yes" : "No"}
+							/>
+						</SectionCard>
+
+						<SectionCard
+							title="Branch"
+							tone="border-lime-300/30 bg-lime-500/15 text-lime-100"
+						>
+							<Field label="Id" value={block.branchId} />
+							<Field label="Index" value={block.branch.position.index} />
+							<Field
+								label="Root"
+								value={block.branch.position.isRootBranch ? "Yes" : "No"}
+							/>
+							<Field
+								label="Choice"
+								value={block.branch.position.isChoiceBranch ? "Yes" : "No"}
 							/>
 						</SectionCard>
 
@@ -100,7 +120,7 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 							tone="border-emerald-300/30 bg-emerald-500/15 text-emerald-100"
 						>
 							<Field label="Id" value={block.sectionId} />
-							<Field label="Index" value={block.section.index} />
+							<Field label="Index" value={block.section.position.index} />
 							<Field label="Direction" value={block.section.direction} />
 							<Field label="Orientation" value={block.section.orientation} />
 						</SectionCard>
@@ -110,7 +130,7 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 							tone="border-rose-300/30 bg-rose-500/15 text-rose-100"
 						>
 							<Field label="Id" value={block.partId} />
-							<Field label="Index" value={block.part.index} />
+							<Field label="Index" value={block.part.position.index} />
 							<Field label="Tale Id" value={block.part.taleId} />
 						</SectionCard>
 
@@ -119,8 +139,11 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 							tone="border-violet-300/30 bg-violet-500/15 text-violet-100"
 						>
 							<Field label="Id" value={block.entryId} />
-							<Field label="Index" value={block.entry.index} />
-							<Field label="Global Index" value={block.entry.globalIndex} />
+							<Field label="Index" value={block.entry.position.index} />
+							<Field
+								label="Entry Number"
+								value={block.entry.position.entryNumber}
+							/>
 						</SectionCard>
 
 						<SectionCard
@@ -128,39 +151,48 @@ function ReaderBlockDebugPanelComponent({ block }: Props) {
 							tone="border-pink-300/30 bg-pink-500/15 text-pink-100"
 						>
 							<Field label="Id" value={block.pageId} />
-							<Field label="Index" value={block.page?.index} />
-							<Field label="Global Index" value={block.page?.globalIndex} />
+							<Field label="Index" value={block.page?.position.index} />
+							<Field
+								label="Global Page"
+								value={block.page?.position.globalPageNumber}
+							/>
 						</SectionCard>
 
 						<SectionCard
 							title="Flags"
 							tone="border-amber-300/30 bg-amber-500/15 text-amber-100"
 						>
-							<Field label="First" value={block.isFirst ? "Yes" : "No"} />
-							<Field label="Last" value={block.isLast ? "Yes" : "No"} />
+							<Field
+								label="First"
+								value={block.position.isFirst ? "Yes" : "No"}
+							/>
+							<Field
+								label="Last"
+								value={block.position.isLast ? "Yes" : "No"}
+							/>
 							<Field
 								label="First in Section"
-								value={block.isFirstInSection ? "Yes" : "No"}
+								value={block.position.isFirstInSection ? "Yes" : "No"}
 							/>
 							<Field
 								label="Last in Section"
-								value={block.isLastInSection ? "Yes" : "No"}
+								value={block.position.isLastInSection ? "Yes" : "No"}
 							/>
 							<Field
 								label="First in Part"
-								value={block.isFirstInPart ? "Yes" : "No"}
+								value={block.position.isFirstInPart ? "Yes" : "No"}
 							/>
 							<Field
 								label="Last in Part"
-								value={block.isLastInPart ? "Yes" : "No"}
+								value={block.position.isLastInPart ? "Yes" : "No"}
 							/>
 							<Field
 								label="First in Entry"
-								value={block.isFirstInEntry ? "Yes" : "No"}
+								value={block.position.isFirstInEntry ? "Yes" : "No"}
 							/>
 							<Field
 								label="Last in Entry"
-								value={block.isLastInEntry ? "Yes" : "No"}
+								value={block.position.isLastInEntry ? "Yes" : "No"}
 							/>
 						</SectionCard>
 					</div>

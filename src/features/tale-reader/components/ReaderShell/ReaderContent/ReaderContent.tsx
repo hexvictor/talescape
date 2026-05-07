@@ -1,18 +1,41 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
-import ReaderSection from "../ReaderSection";
+import { selectVisibleBranches } from "~/features/tale-reader/store/selectors/branchVisibility";
+import ReaderBranch from "../ReaderBranch";
 
 function ReaderContentComponent() {
-	const sectionIds = useReaderStore((s) => s.tale.structure.sectionIds);
+	const branches = useReaderStore(useShallow(selectVisibleBranches));
+	const setIsStructureMounted = useReaderStore(
+		(s) => s.reader.setIsStructureMounted,
+	);
 
-	if (!sectionIds.length) return null;
+	const visibleStructureKey = branches
+		.map((branch) => `${branch.id}:${branch.children.blockIds.join(",")}`)
+		.join("|");
+
+	useEffect(() => {
+		setIsStructureMounted(false);
+
+		if (!visibleStructureKey) return;
+
+		const frame = window.requestAnimationFrame(() => {
+			setIsStructureMounted(true);
+		});
+
+		return () => {
+			window.cancelAnimationFrame(frame);
+		};
+	}, [setIsStructureMounted, visibleStructureKey]);
+
+	if (!branches.length) return null;
 
 	return (
 		<>
-			{sectionIds.map((sectionId) => (
-				<ReaderSection key={sectionId} sectionId={sectionId} />
+			{branches.map((branch) => (
+				<ReaderBranch key={branch.id} branchId={branch.id} />
 			))}
 		</>
 	);

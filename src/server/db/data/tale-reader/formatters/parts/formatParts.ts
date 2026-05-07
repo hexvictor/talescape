@@ -1,80 +1,51 @@
-import { mapByKey } from "~/lib/utils/array";
+import type { TalePart } from "../../types/parts";
 import type {
-	EmbeddedBlock,
-	Part,
-	PartWithRange,
-} from "~/server/db/data/tale-reader/types/tales";
-import type { IdListMap } from "~/types/utils";
+	DerivedTaleIndexes,
+	FlatTaleRecord,
+} from "../tale/formatTaleContext";
+import { siblingId } from "../tale/formatTaleContext";
 
-export function formatPartsByBlockIds(
-	parts: PartWithRange[],
-	blocks: EmbeddedBlock[],
-): Record<string, number> {
-	const blockIdToIndex = Object.fromEntries(
-		blocks.map((block, index) => [block.id, index]),
-	);
+export function formatParts(
+	flat: FlatTaleRecord,
+	derived: DerivedTaleIndexes,
+): TalePart[] {
+	const partIds = flat.parts.map((part) => part.id);
 
-	const pairs = parts.flatMap((part) => {
-		if (part.firstBlockId === null) {
-			return [];
-		}
-		if (part.lastBlockId === null) {
-			return [];
-		}
-		const start = blockIdToIndex[part.firstBlockId];
-		const end = blockIdToIndex[part.lastBlockId];
+	return flat.parts.map((part, index) => {
+		const { blocks, entries, ...basePart } = part;
+		const entryIds = derived.entryIdsByPartId[part.id] ?? [];
+		const pageIds = derived.pageIdsByPartId[part.id] ?? [];
+		const blockIds = derived.blockIdsByPartId[part.id] ?? [];
 
-		if (start === undefined || end === undefined || start > end) {
-			throw new Error(`Invalid block range for part ${part.id}`);
-		}
-
-		return blocks
-			.slice(start, end + 1)
-			.map((block) => [String(block.id), part.id]);
-	});
-
-	return Object.fromEntries(pairs);
-}
-
-export function formatPartsById(
-	parts: PartWithRange[],
-	entriesByPartId: IdListMap,
-	pagesByEntryId: IdListMap,
-): Record<string, Part> {
-	return mapByKey(
-		parts.map((part, i) => {
-			const entryIds = entriesByPartId[part.id];
-			if (!entryIds) {
-				throw new Error(`No entryIds found for part ID: ${part.id}`);
-			}
-			const firstEntryId = entryIds[0];
-			const lastEntryId = entryIds[entryIds.length - 1];
-
-			const entryCount = entryIds.length;
-
-			const pageCount = entryIds.reduce((acc, current, i, array) => {
-				const pageIds = pagesByEntryId[current];
-				if (pageIds) {
-					const currentPageCount = pageIds.length;
-					return acc + currentPageCount;
-				}
-				return acc;
-			}, 0);
-
-			const isFirstPart = i === 0;
-			const isLastPart = i === parts.length - 1;
-
-			return {
-				...part,
+		return {
+			...basePart,
+			children: {
 				entryIds,
-				firstEntryId,
-				lastEntryId,
-				entryCount,
-				pageCount,
-				isFirstPart,
-				isLastPart,
-			};
-		}),
-		"id",
-	);
+				pageIds,
+				blockIds,
+			},
+			links: {
+				previousPartId: siblingId(partIds, part.id, -1),
+				nextPartId: siblingId(partIds, part.id, 1),
+			},
+			bounds: {
+				firstEntryId: entryIds[0] ?? null,
+				lastEntryId: entryIds.at(-1) ?? null,
+				firstPageId: pageIds[0] ?? null,
+				lastPageId: pageIds.at(-1) ?? null,
+				firstBlockId: blockIds[0] ?? null,
+				lastBlockId: blockIds.at(-1) ?? null,
+			},
+			counts: {
+				entries: entryIds.length,
+				pages: pageIds.length,
+				blocks: blockIds.length,
+			},
+			position: {
+				index,
+				isFirst: index === 0,
+				isLast: index === flat.parts.length - 1,
+			},
+		};
+	});
 }

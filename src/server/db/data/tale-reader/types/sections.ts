@@ -1,18 +1,26 @@
 import type { SectionSchema } from "~/server/db/schema";
+import type { EntityBounds, StructurePosition } from "./shared";
 
-export type Section = EmbeddedSection & {
-	blockIds: number[];
-	firstBlockId: number | null;
-	lastBlockId: number | null;
-	blockCount: number;
-	pageCount: number;
-	isFirstSection: boolean;
-	isLastSection: boolean;
+export type TaleSection = SectionSchema & {
+	branchId: number;
+	children: {
+		blockIds: number[];
+	};
+	links: {
+		previousSectionId: number | null;
+		nextSectionId: number | null;
+		previousSectionIdInBranch: number | null;
+		nextSectionIdInBranch: number | null;
+	};
+	bounds: EntityBounds;
+	counts: {
+		blocks: number;
+		pages: number;
+	};
+	position: StructurePosition & {
+		isFirstInBranch: boolean;
+		isLastInBranch: boolean;
+	};
 };
 
-export type SectionEmbed = {
-	index: number;
-	isSnap: boolean;
-};
-
-export type EmbeddedSection = SectionSchema & SectionEmbed;
+export type Section = TaleSection;

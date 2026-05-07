@@ -1,137 +1,64 @@
-import { mapByKey } from "~/lib/utils/array";
+import type { TaleEntry } from "../../types/entries";
 import type {
-	EmbeddedBlock,
-	Entry,
-	EntryWithRange,
-	PartWithRange,
-} from "~/server/db/data/tale-reader/types/tales";
-import type { IdListMap } from "~/types/utils";
+	DerivedTaleIndexes,
+	FlatTaleRecord,
+} from "../tale/formatTaleContext";
+import { siblingId } from "../tale/formatTaleContext";
 
-export function formatEntriesByPartId(
-	entries: EntryWithRange[],
-	parts: PartWithRange[],
-): IdListMap {
-	return Object.fromEntries(
-		parts.map((part) => [
-			part.id,
-			entries
-				.filter((entry) => entry.partId === part.id)
-				.map((entry) => entry.id),
-		]),
-	);
-}
+export function formatEntries(
+	flat: FlatTaleRecord,
+	derived: DerivedTaleIndexes,
+): TaleEntry[] {
+	let chapterCount = 0;
+	const entryIds = flat.entries.map((entry) => entry.id);
 
-export function formatChapterNumbersByEntryId(
-	chapters: EntryWithRange[],
-): Record<string, number> {
-	return Object.fromEntries(chapters.map((chapter, i) => [chapter.id, i + 1]));
-}
+	return flat.entries.map((entry, index) => {
+		const { blocks, pages, ...baseEntry } = entry;
+		const pageIds = derived.pageIdsByEntryId[entry.id] ?? [];
+		const blockIds = derived.blockIdsByEntryId[entry.id] ?? [];
+		const partEntryIds = derived.entryIdsByPartId[entry.partId] ?? [];
+		const isChapter = entry.type === "chapter";
+		const localChapterIndex =
+			derived.chapterIdsByPartId[entry.partId]?.indexOf(entry.id) ?? -1;
 
-export function formatLocalChapterNumbersByPartId(
-	chapters: EntryWithRange[],
-	parts: PartWithRange[],
-): Record<string, number[]> {
-	return Object.fromEntries(
-		parts.map((part, i) => [
-			part.id,
-			chapters
-				.filter((chapter) => chapter.partId === part.id)
-				.map((chapter) => chapter.id),
-		]),
-	);
-}
+		if (isChapter) chapterCount += 1;
 
-export function formatEntriesById(
-	entries: EntryWithRange[],
-	pagesByEntryId: IdListMap,
-	entriesByPartId: IdListMap,
-	chapterNumbersByEntryId: Record<string, number>,
-	localChaptersByPartId: Record<string, number[]>,
-): Record<string, Entry> {
-	return mapByKey(
-		entries.map((entry, i) => {
-			const entryNumber = i + 1;
-
-			const isChapter = entry.type === "chapter";
-
-			const chapterNumber = isChapter
-				? chapterNumbersByEntryId[entry.id]
-				: undefined;
-			const localChapterNumber = isChapter
-				? localChaptersByPartId[entry.partId]?.findIndex(
-						(localChapter) => localChapter === entry.id,
-					)
-				: undefined;
-
-			const isFirstEntry = i === 0;
-			const isLastEntry = i === entries.length - 1;
-
-			const pageIds = pagesByEntryId[entry.id];
-			if (!pageIds) {
-				throw new Error(
-					`No PagesIds found for entry ID: ${entry.id} with Part ID: ${entry.partId}`,
-				);
-			}
-			const firstPageId = pageIds[0];
-			const lastPageId = pageIds[pageIds.length - 1];
-			const pageCount = pageIds?.length;
-
-			const partEntryIds = entriesByPartId[entry.partId];
-			if (!partEntryIds) {
-				throw new Error(
-					`No EntryIds found for entry ID: ${entry.id} with Part ID: ${entry.partId}`,
-				);
-			}
-			const globalIndex = i;
-			const isFirstInPart = entry.index === 0;
-			const isLastInPart = entry.index === partEntryIds.length - 1;
-			return {
-				...entry,
+		return {
+			...baseEntry,
+			children: {
 				pageIds,
-				firstPageId,
-				lastPageId,
+				blockIds,
+			},
+			links: {
+				previousEntryId: siblingId(entryIds, entry.id, -1),
+				nextEntryId: siblingId(entryIds, entry.id, 1),
+				previousEntryIdInPart: siblingId(partEntryIds, entry.id, -1),
+				nextEntryIdInPart: siblingId(partEntryIds, entry.id, 1),
+			},
+			bounds: {
+				firstPageId: pageIds[0] ?? null,
+				lastPageId: pageIds.at(-1) ?? null,
+				firstBlockId: blockIds[0] ?? null,
+				lastBlockId: blockIds.at(-1) ?? null,
+			},
+			counts: {
+				pages: pageIds.length,
+				blocks: blockIds.length,
+			},
+			position: {
+				index,
+				entryNumber: index + 1,
+				isFirst: index === 0,
+				isLast: index === flat.entries.length - 1,
+				isFirstInPart: partEntryIds[0] === entry.id,
+				isLastInPart: partEntryIds.at(-1) === entry.id,
+			},
+			chapter: {
 				isChapter,
-				chapterNumber,
-				entryNumber,
-				localChapterNumber,
-				globalIndex,
-				pageCount,
-				isFirstEntry,
-				isLastEntry,
-				isFirstInPart,
-				isLastInPart,
-			};
-		}),
-		"id",
-	);
-}
-
-export function formatEntriesByBlockIds(
-	entries: EntryWithRange[],
-	blocks: EmbeddedBlock[],
-): Record<string, number> {
-	const blockIdToIndex = Object.fromEntries(
-		blocks.map((block, index) => [block.id, index]),
-	);
-
-	const pairs = entries.flatMap((entry) => {
-		if (entry.firstBlockId === null) {
-			return [];
-		}
-		if (entry.lastBlockId === null) {
-			return [];
-		}
-		const start = blockIdToIndex[entry.firstBlockId];
-		const end = blockIdToIndex[entry.lastBlockId];
-
-		if (start === undefined || end === undefined || start > end) {
-			throw new Error(`Invalid block range for entry ${entry.id}`);
-		}
-
-		return blocks
-			.slice(start, end + 1)
-			.map((block) => [String(block.id), entry.id]);
+				number: isChapter ? chapterCount : null,
+				localNumber:
+					isChapter && localChapterIndex >= 0 ? localChapterIndex + 1 : null,
+			},
+		};
 	});
-
-	return Object.fromEntries(pairs);
 }

@@ -14,12 +14,28 @@ export function createScrollDriver(
 	// biome-ignore lint/suspicious/noExplicitAny:
 	smootherRef: RefObject<any>,
 ) {
+	const getWindowScroll = () => {
+		const scrollTrigger = ScrollTrigger as typeof ScrollTrigger & {
+			scroll: () => number;
+		};
+
+		return scrollTrigger.scroll();
+	};
+
+	const setWindowScroll = (value: number) => {
+		const scrollTrigger = ScrollTrigger as typeof ScrollTrigger & {
+			scroll: (value: number) => void;
+		};
+
+		scrollTrigger.scroll(value);
+	};
+
 	const getScroll = () => {
 		const smoother = smootherRef.current;
 		if (smoother && typeof smoother.scrollTop === "function") {
 			return smoother.scrollTop();
 		}
-		return ScrollTrigger.scroll();
+		return getWindowScroll();
 	};
 
 	const setScroll = (value: number) => {
@@ -28,7 +44,7 @@ export function createScrollDriver(
 			smoother.scrollTop(value);
 			return;
 		}
-		ScrollTrigger.scroll(value);
+		setWindowScroll(value);
 	};
 
 	const scrollTo = (

@@ -1,15 +1,19 @@
 import type { FragmentSchema } from "~/server/db/schema";
+import type { StructurePosition } from "./shared";
 
-export type Fragment = EmbeddedFragment & {
-	isFirstFragment: boolean;
-	isLastFragment: boolean;
-	sectionId: number;
-	globalIndex: number;
-};
-
-export type FragmentEmbed = {
+export type TaleFragment = FragmentSchema & {
 	blockId: number;
-	index: number;
+	sectionId: number;
+	links: {
+		previousFragmentId: number | null;
+		nextFragmentId: number | null;
+		previousFragmentIdInBlock: number | null;
+		nextFragmentIdInBlock: number | null;
+	};
+	position: StructurePosition & {
+		isFirstInBlock: boolean;
+		isLastInBlock: boolean;
+	};
 };
 
-export type EmbeddedFragment = FragmentSchema & FragmentEmbed;
+export type Fragment = TaleFragment;

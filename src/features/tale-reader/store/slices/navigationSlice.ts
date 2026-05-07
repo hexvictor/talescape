@@ -2,7 +2,7 @@ import type { StateCreator } from "zustand/vanilla";
 import type { Block } from "~/server/db/data/tale-reader/types/blocks";
 import type {
 	Tale,
-	TaleStructure,
+	TaleContent,
 } from "~/server/db/data/tale-reader/types/tales";
 import type { ReaderProgressSchema } from "~/server/db/schema";
 import type { TaleReaderState } from "../createReaderStore";
@@ -59,17 +59,18 @@ export const createNavigationSlice =
 		initialProgress: ReaderProgressSchema,
 	): StateCreator<TaleReaderState, [], [], NavigationSlice> =>
 	(set, get) => {
-		const indexMap = initialTale.structure.indexMap;
+		const content = initialTale.content;
+		const { indexMap } = content;
 
 		const activeBlockId =
-			initialProgress?.lastBlockId ?? initialTale.structure.firstBlock;
+			initialProgress?.lastBlockId ?? content.bounds.firstBlockId;
 
 		const activeBlock =
 			activeBlockId != null
 				? (indexMap.blocksById[activeBlockId] ?? null)
 				: null;
 
-		const getNode = createGetNodeBlock(indexMap);
+		const getNodeBlock = createGetNodeBlock(content);
 
 		return {
 			navigation: {
@@ -85,7 +86,7 @@ export const createNavigationSlice =
 							},
 
 				set: (id, type = "block") => {
-					const targetBlock = getNode[type](id);
+					const targetBlock = getNodeBlock(id, type);
 					if (!targetBlock) return;
 
 					set((state) => ({
@@ -102,7 +103,7 @@ export const createNavigationSlice =
 					}));
 				},
 
-				getNodeBlock: (id, type) => getNode[type](id),
+				getNodeBlock: (id, type) => getNodeBlock(id, type),
 
 				getNext: (type) => {
 					const nav = get().navigation.current;
@@ -110,7 +111,8 @@ export const createNavigationSlice =
 					const currentNodeId = nav[type]?.id;
 					if (!currentNodeId) return undefined;
 
-					return createGetAdjacentNode(get().tale.data.structure)(
+					return getAdjacentNode(
+						get().tale.data.content,
 						currentNodeId,
 						type,
 						"next",
@@ -123,7 +125,8 @@ export const createNavigationSlice =
 					const currentNodeId = nav[type]?.id;
 					if (!currentNodeId) return undefined;
 
-					return createGetAdjacentNode(get().tale.data.structure)(
+					return getAdjacentNode(
+						get().tale.data.content,
 						currentNodeId,
 						type,
 						"prev",
@@ -132,7 +135,7 @@ export const createNavigationSlice =
 
 				goToBlock: (blockId, opts) => {
 					const state = get();
-					const block = state.tale.data.structure.indexMap.blocksById[blockId];
+					const block = state.tale.data.content.indexMap.blocksById[blockId];
 					if (!block) return;
 
 					state.scroll.api?.clearPendingActiveBlockUpdate();
@@ -173,67 +176,104 @@ export const createNavigationSlice =
 		};
 	};
 
-function createGetNodeBlock(indexMap: TaleStructure["indexMap"]) {
-	return {
-		block: (id: number) => indexMap.blocksById[id],
-		page: (id: number) =>
-			indexMap.pagesById[id]?.blockId != null
-				? indexMap.blocksById[indexMap.pagesById[id].blockId]
-				: undefined,
-		entry: (id: number) =>
-			indexMap.entriesById[id]?.firstBlockId != null
-				? indexMap.blocksById[indexMap.entriesById[id].firstBlockId]
-				: undefined,
-		part: (id: number) =>
-			indexMap.partsById[id]?.firstBlockId != null
-				? indexMap.blocksById[indexMap.partsById[id].firstBlockId]
-				: undefined,
-		section: (id: number) =>
-			indexMap.sectionsById[id]?.firstBlockId != null
-				? indexMap.blocksById[indexMap.sectionsById[id].firstBlockId]
-				: undefined,
+function createGetNodeBlock(content: TaleContent) {
+	const { indexMap } = content;
+
+	return function getNodeBlock(id: number, type: NavigationNodeType) {
+		if (type === "block") return indexMap.blocksById[id];
+
+		const blockId = getFirstBlockIdForNode(content, id, type);
+
+		return blockId != null ? indexMap.blocksById[blockId] : undefined;
 	};
 }
 
-function createGetAdjacentNode(structure: TaleStructure) {
-	const { blockIds, entryIds, pageIds, partIds, sectionIds } = structure;
-	const { blocksById, entriesById, pagesById, partsById, sectionsById } =
-		structure.indexMap;
+function getAdjacentNode<K extends NavigationNodeType>(
+	content: TaleContent,
+	id: number,
+	type: K,
+	direction: "next" | "prev",
+): NavigationNodeMap[K] | undefined {
+	const adjacentId = getAdjacentNodeId(content, id, type, direction);
+	if (adjacentId == null) return undefined;
 
-	const idArrays: Record<NavigationNodeType, number[]> = {
-		block: blockIds,
-		entry: entryIds,
-		page: pageIds,
-		part: partIds,
-		section: sectionIds,
-	};
+	const map = getNodeMap(content, type);
 
-	const dataMaps: {
-		[K in NavigationNodeType]: Record<number, NavigationNodeMap[K]>;
-	} = {
-		block: blocksById,
-		entry: entriesById,
-		page: pagesById,
-		part: partsById,
-		section: sectionsById,
-	};
+	return map[adjacentId];
+}
 
-	return function getAdjacentNode<K extends NavigationNodeType>(
-		id: number,
-		type: K,
-		direction: "next" | "prev",
-	): NavigationNodeMap[K] | undefined {
-		const ids = idArrays[type];
-		const map = dataMaps[type];
-		const index = ids.indexOf(id);
-		if (index === -1) return undefined;
+function getFirstBlockIdForNode(
+	content: TaleContent,
+	id: number,
+	type: NavigationNodeType,
+) {
+	switch (type) {
+		case "page":
+			return content.indexMap.pagesById[id]?.bounds.firstBlockId ?? null;
+		case "entry":
+			return content.indexMap.entriesById[id]?.bounds.firstBlockId ?? null;
+		case "part":
+			return content.indexMap.partsById[id]?.bounds.firstBlockId ?? null;
+		case "section":
+			return content.indexMap.sectionsById[id]?.bounds.firstBlockId ?? null;
+		case "block":
+			return id;
+	}
+}
 
-		const nextIndex =
-			direction === "next"
-				? Math.min(index + 1, ids.length - 1)
-				: Math.max(index - 1, 0);
+function getAdjacentNodeId(
+	content: TaleContent,
+	id: number,
+	type: NavigationNodeType,
+	direction: "next" | "prev",
+) {
+	switch (type) {
+		case "block":
+			return direction === "next"
+				? content.indexMap.blocksById[id]?.links.nextBlockIdInBranch
+				: content.indexMap.blocksById[id]?.links.previousBlockIdInBranch;
+		case "entry":
+			return direction === "next"
+				? content.indexMap.entriesById[id]?.links.nextEntryId
+				: content.indexMap.entriesById[id]?.links.previousEntryId;
+		case "page":
+			return direction === "next"
+				? content.indexMap.pagesById[id]?.links.nextPageId
+				: content.indexMap.pagesById[id]?.links.previousPageId;
+		case "part":
+			return direction === "next"
+				? content.indexMap.partsById[id]?.links.nextPartId
+				: content.indexMap.partsById[id]?.links.previousPartId;
+		case "section":
+			return direction === "next"
+				? content.indexMap.sectionsById[id]?.links.nextSectionId
+				: content.indexMap.sectionsById[id]?.links.previousSectionId;
+	}
+}
 
-		const adjacentId = ids[nextIndex];
-		return adjacentId !== undefined ? map[adjacentId] : undefined;
-	};
+function getNodeMap<K extends NavigationNodeType>(
+	content: TaleContent,
+	type: K,
+): Record<number, NavigationNodeMap[K]> {
+	switch (type) {
+		case "block":
+			return content.indexMap.blocksById as Record<
+				number,
+				NavigationNodeMap[K]
+			>;
+		case "entry":
+			return content.indexMap.entriesById as Record<
+				number,
+				NavigationNodeMap[K]
+			>;
+		case "page":
+			return content.indexMap.pagesById as Record<number, NavigationNodeMap[K]>;
+		case "part":
+			return content.indexMap.partsById as Record<number, NavigationNodeMap[K]>;
+		case "section":
+			return content.indexMap.sectionsById as Record<
+				number,
+				NavigationNodeMap[K]
+			>;
+	}
 }

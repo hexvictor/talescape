@@ -23,12 +23,12 @@ export function getInitialProgressFromLocalStorage(
 }
 
 function createDefaultProgress(tale: Tale): ReaderProgressSchema {
-	const {
-		id: taleId,
-		structure: { blockIds },
-	} = tale;
+	const { id: taleId } = tale;
+	const { blockIds } = tale.content.order;
 
 	const firstBlockId = blockIds[0] ?? null;
+	const initialProgress =
+		blockIds.length > 0 ? (1 / blockIds.length).toFixed(4) : "0";
 
 	return {
 		id: -1,
@@ -38,7 +38,9 @@ function createDefaultProgress(tale: Tale): ReaderProgressSchema {
 		seenBlockIds: firstBlockId ? [firstBlockId] : [],
 		lastBlockId: firstBlockId,
 		maxBlockIdReached: firstBlockId,
-		seenBlockProgress: (1 / blockIds.length).toFixed(4),
-		maxReadProgress: (1 / blockIds.length).toFixed(4),
+		activePathIds: [],
+		seenPathIds: [],
+		seenBlockProgress: initialProgress,
+		maxReadProgress: initialProgress,
 	};
 }

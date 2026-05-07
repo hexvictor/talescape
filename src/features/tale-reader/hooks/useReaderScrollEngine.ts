@@ -11,6 +11,11 @@ import {
 	useReaderStoreInstance,
 } from "~/features/tale-reader/contexts/ReaderStoreContext";
 import { initActiveBlockTracker } from "~/features/tale-reader/scroll-engine/activeBlockTracker";
+import { waitForImagesIn } from "~/features/tale-reader/scroll-engine/domReadiness";
+import {
+	afterFrame,
+	afterTwoFrames,
+} from "~/features/tale-reader/scroll-engine/frameTiming";
 import {
 	type InputBindingsApi,
 	attachInputBindings,
@@ -33,6 +38,7 @@ type UseReaderScrollEngineArgs = {
 
 type ViewSnapshot = {
 	blockId: number;
+	scrollProgress: number;
 };
 
 export function useReaderScrollEngine({
@@ -41,22 +47,23 @@ export function useReaderScrollEngine({
 	const store = useReaderStoreInstance();
 
 	const readerHubOpen = useReaderStore((s) => s.taleHub.isOpen);
+	const isStructureMounted = useReaderStore((s) => s.reader.isStructureMounted);
 	const setScrollApi = useReaderStore((s) => s.scroll.setApi);
 	const clearApi = useReaderStore((s) => s.scroll.clearApi);
-	const setIsLayoutReady = useReaderStore((s) => s.setIsLayoutReady);
+	const setIsLayoutReady = useReaderStore((s) => s.reader.setIsLayoutReady);
 	const setIsInitialLoadComplete = useReaderStore(
-		(s) => s.setIsInitialLoadComplete,
+		(s) => s.reader.setIsInitialLoadComplete,
 	);
 	const setIsViewportRebuilding = useReaderStore(
-		(s) => s.setIsViewportRebuilding,
+		(s) => s.reader.setIsViewportRebuilding,
 	);
 	const setProgressTrackingPaused = useReaderStore(
-		(s) => s.setProgressTrackingPaused,
+		(s) => s.progress.setIsTrackingPaused,
 	);
 	const blocksById = useReaderStore(
-		(s) => s.tale.structure.indexMap.blocksById,
+		(s) => s.tale.data.content.indexMap.blocksById,
 	);
-	const setNavigation = useReaderStore((s) => s.setNavigation);
+	const setNavigation = useReaderStore((s) => s.navigation.set);
 
 	// biome-ignore lint/suspicious/noExplicitAny:
 	const smootherRef = useRef<any>(null);
@@ -64,6 +71,7 @@ export function useReaderScrollEngine({
 	const engineApiRef = useRef<{
 		setHubOpen: (open: boolean) => void;
 		rebuild: () => void;
+		refresh: (reason?: string) => void;
 		cleanup: () => void;
 	} | null>(null);
 
@@ -76,6 +84,7 @@ export function useReaderScrollEngine({
 	const isStructuralRebuildRef = useRef(false);
 	const hasPendingStructuralRebuildRef = useRef(false);
 	const initialAssetsReadyRef = useRef(false);
+	const isQuietRefreshRef = useRef(false);
 	const rebuildSnapshotRef = useRef<ViewSnapshot | null>(null);
 
 	const driver = useMemo(() => createScrollDriver(smootherRef), []);
@@ -97,6 +106,7 @@ export function useReaderScrollEngine({
 
 			let disposed = false;
 
+			// Timers and delayed updates
 			const clearRebuildTimer = () => {
 				if (rebuildTimerRef.current != null) {
 					window.clearTimeout(rebuildTimerRef.current);
@@ -113,6 +123,71 @@ export function useReaderScrollEngine({
 				lastQueuedActiveBlockIdRef.current = null;
 			};
 
+			const finishQuietRefresh = (reason: string, scrollBefore: number) => {
+				scrollSnapModelRef.current?.rebuild();
+				activeTrackerRef.current?.rebuild();
+				ScrollTrigger.refresh();
+				driver.setScroll(scrollBefore);
+				ScrollTrigger.update();
+
+				isStructuralRebuildRef.current = false;
+				setProgressTrackingPaused(false);
+
+				if (!readerHubOpen) {
+					inputsApiRef.current?.enable();
+				}
+
+				activeTrackerRef.current?.updateNow();
+
+				afterTwoFrames(() => {
+					isQuietRefreshRef.current = false;
+
+					if (hasPendingStructuralRebuildRef.current) {
+						hasPendingStructuralRebuildRef.current = false;
+						runStructuralRebuild("pending", "normal");
+					}
+				});
+
+				console.log("[ReaderScrollEngine] quiet refresh finished", { reason });
+			};
+
+			const runQuietRefresh = (reason: string) => {
+				if (!isInitialLoadCompleteRef.current) return;
+				if (isStructuralRebuildRef.current) {
+					hasPendingStructuralRebuildRef.current = true;
+					return;
+				}
+
+				const scrollBefore = driver.getScroll();
+
+				console.log("[ReaderScrollEngine] quiet refresh started", {
+					reason,
+					scrollBefore,
+				});
+
+				isQuietRefreshRef.current = true;
+				isStructuralRebuildRef.current = true;
+				setProgressTrackingPaused(true);
+				inputsApiRef.current?.disable();
+				inputsApiRef.current?.killTweens(true);
+				clearPendingActiveBlockUpdate();
+
+				observeStructureElements();
+				pinnedScrollLayoutRef.current?.rebuild({ preserveExisting: true });
+
+				afterFrame(() => {
+					driver.setScroll(scrollBefore);
+					ScrollTrigger.refresh();
+					driver.setScroll(scrollBefore);
+					ScrollTrigger.update();
+
+					afterFrame(() => {
+						finishQuietRefresh(reason, scrollBefore);
+					});
+				});
+			};
+
+			// Active block tracking
 			const flushActiveBlockUpdate = () => {
 				activeChangeTimerRef.current = null;
 
@@ -123,28 +198,34 @@ export function useReaderScrollEngine({
 
 				const state = store.getState();
 
-				if (state.progressTrackingPaused || !state.isInitialLoadComplete) {
+				if (
+					state.progress.isTrackingPaused ||
+					!state.reader.isInitialLoadComplete
+				) {
 					return;
 				}
 
-				const block = state.tale.structure.indexMap.blocksById[blockId];
+				const block = state.tale.data.content.indexMap.blocksById[blockId];
 				if (!block) return;
 
-				if (state.navigation?.block.id === blockId) {
+				if (state.navigation.current?.block.id === blockId) {
 					return;
 				}
 
-				state.setNavigation(block.id);
+				state.navigation.set(block.id);
 
-				if (!state.progressTrackingPaused) {
-					state.updateProgressByBlockId(blockId);
+				if (!state.progress.isTrackingPaused) {
+					state.progress.updateProgressByBlockId(blockId);
 				}
 			};
 
 			const scheduleActiveBlockUpdate = (blockId: number) => {
 				const state = store.getState();
 
-				if (state.progressTrackingPaused || !state.isInitialLoadComplete) {
+				if (
+					state.progress.isTrackingPaused ||
+					!state.reader.isInitialLoadComplete
+				) {
 					return;
 				}
 
@@ -157,57 +238,41 @@ export function useReaderScrollEngine({
 				}, 120);
 			};
 
+			// Initial DOM readiness
 			const waitForInitialImages = async () => {
-				const root = wrapperRef.current;
-				if (!root) {
-					console.log(
-						"[ReaderScrollEngine] no wrapper found for initial assets",
-					);
-					initialAssetsReadyRef.current = true;
-					return;
-				}
+				const result = await waitForImagesIn(wrapperRef.current);
 
-				const images = Array.from(
-					root.querySelectorAll<HTMLImageElement>("img"),
-				);
-
-				if (!images.length) {
+				if (result.imageCount === 0) {
 					console.log("[ReaderScrollEngine] no initial images to wait for");
 					initialAssetsReadyRef.current = true;
 					return;
 				}
 
-				console.log("[ReaderScrollEngine] waiting for initial images", {
-					imageCount: images.length,
-				});
-
-				await Promise.all(
-					images.map(
-						(img) =>
-							new Promise<void>((resolve) => {
-								if (img.complete) {
-									resolve();
-									return;
-								}
-
-								const handleDone = () => {
-									img.removeEventListener("load", handleDone);
-									img.removeEventListener("error", handleDone);
-									resolve();
-								};
-
-								img.addEventListener("load", handleDone, { once: true });
-								img.addEventListener("error", handleDone, { once: true });
-							}),
-					),
-				);
-
 				if (disposed) return;
 
 				initialAssetsReadyRef.current = true;
-				console.log("[ReaderScrollEngine] initial images loaded");
+				console.log("[ReaderScrollEngine] initial images loaded", {
+					imageCount: result.imageCount,
+				});
 			};
 
+			// DOM observers
+			let resizeObserver: ResizeObserver | null = null;
+
+			const observeStructureElements = () => {
+				resizeObserver?.disconnect();
+
+				const observedEls =
+					wrapperRef.current?.querySelectorAll<HTMLElement>(
+						".pinned-section, .scroll-track",
+					) ?? [];
+
+				for (const el of observedEls) {
+					resizeObserver?.observe(el);
+				}
+			};
+
+			// View restoration
 			const restoreToBlockStart = (
 				blockId: number | null,
 				reason: string,
@@ -261,42 +326,102 @@ export function useReaderScrollEngine({
 				});
 			};
 
+			const restoreViewSnapshot = (
+				snapshot: ViewSnapshot,
+				reason: string,
+				onDone?: () => void,
+			) => {
+				const block = blocksById[snapshot.blockId];
+				if (!block) {
+					onDone?.();
+					return;
+				}
+
+				const el = document.querySelector<HTMLElement>(
+					`[data-block-id="${block.id}"]`,
+				);
+				if (!el) {
+					onDone?.();
+					return;
+				}
+
+				const range = scrollSnapModelRef.current?.getRangeForElement(el);
+				if (!range) {
+					onDone?.();
+					return;
+				}
+
+				const targetScroll =
+					range.start + (range.end - range.start) * snapshot.scrollProgress;
+
+				console.log("[ReaderScrollEngine] restoring view snapshot", {
+					reason,
+					blockId: snapshot.blockId,
+					scrollProgress: snapshot.scrollProgress,
+					targetScroll,
+				});
+
+				isProgrammaticScrollRef.current = true;
+				setNavigation(block.id);
+				driver.setScroll(targetScroll);
+				ScrollTrigger.update();
+				isProgrammaticScrollRef.current = false;
+				activeTrackerRef.current?.updateNow();
+				onDone?.();
+			};
+
 			const getCurrentViewSnapshot = (): ViewSnapshot | null => {
-				const activeBlock = store.getState().navigation?.block;
+				const activeBlock = store.getState().navigation.current?.block;
 				if (activeBlock === undefined) return null;
+
+				const el = document.querySelector<HTMLElement>(
+					`[data-block-id="${activeBlock.id}"]`,
+				);
+				const range = el
+					? scrollSnapModelRef.current?.getRangeForElement(el)
+					: null;
+				const scroll = driver.getScroll();
+				const scrollProgress =
+					range && range.end > range.start
+						? Math.max(
+								0,
+								Math.min(1, (scroll - range.start) / (range.end - range.start)),
+							)
+						: 0;
 
 				console.log("[ReaderScrollEngine] snapshot captured", {
 					blockId: activeBlock.id,
+					scrollProgress,
 				});
 
 				return {
 					blockId: activeBlock.id,
+					scrollProgress,
 				};
 			};
 
+			// Rebuild lifecycle
 			const finalizeInitialLoad = () => {
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						if (disposed) return;
+				afterTwoFrames(() => {
+					if (disposed) return;
 
-						console.log("[ReaderScrollEngine] initial load complete");
+					console.log("[ReaderScrollEngine] initial load complete");
 
-						isStructuralRebuildRef.current = false;
-						isInitialLoadCompleteRef.current = true;
+					isStructuralRebuildRef.current = false;
+					isInitialLoadCompleteRef.current = true;
 
-						setIsLayoutReady(true);
-						setIsInitialLoadComplete(true);
-						setIsViewportRebuilding(false);
-						setProgressTrackingPaused(false);
+					setIsLayoutReady(true);
+					setIsInitialLoadComplete(true);
+					setIsViewportRebuilding(false);
+					setProgressTrackingPaused(false);
 
-						driver.setPaused(false);
+					driver.setPaused(false);
 
-						if (!readerHubOpen) {
-							inputsApiRef.current?.enable();
-						}
+					if (!readerHubOpen) {
+						inputsApiRef.current?.enable();
+					}
 
-						activeTrackerRef.current?.updateNow();
-					});
+					activeTrackerRef.current?.updateNow();
 				});
 			};
 
@@ -324,13 +449,26 @@ export function useReaderScrollEngine({
 					return;
 				}
 
-				restoreToBlockStart(snapshot.blockId, reason, restoreDone);
+				restoreViewSnapshot(snapshot, reason, restoreDone);
 			};
 
 			const finishStructuralRebuild = (
 				reason: string,
 				mode: "initial" | "normal",
 			) => {
+				if (mode === "initial") {
+					hasPendingStructuralRebuildRef.current = false;
+
+					const savedBlockId =
+						store.getState().progress.data.lastBlockId ?? null;
+
+					restoreToBlockStart(savedBlockId, "initial-restore", () => {
+						finalizeInitialLoad();
+					});
+
+					return;
+				}
+
 				if (hasPendingStructuralRebuildRef.current) {
 					console.log(
 						"[ReaderScrollEngine] running pending rebuild after current",
@@ -341,20 +479,7 @@ export function useReaderScrollEngine({
 					);
 
 					hasPendingStructuralRebuildRef.current = false;
-					runStructuralRebuild(
-						"pending",
-						isInitialLoadCompleteRef.current ? "normal" : "initial",
-					);
-					return;
-				}
-
-				if (mode === "initial") {
-					const savedBlockId = store.getState().progress.lastBlockId ?? null;
-
-					restoreToBlockStart(savedBlockId, "initial-restore", () => {
-						finalizeInitialLoad();
-					});
-
+					runStructuralRebuild("pending", "normal");
 					return;
 				}
 
@@ -395,17 +520,26 @@ export function useReaderScrollEngine({
 				inputsApiRef.current?.killTweens(true);
 				clearPendingActiveBlockUpdate();
 
-				pinnedScrollLayoutRef.current?.rebuild();
+				observeStructureElements();
+				pinnedScrollLayoutRef.current?.rebuild({ preserveExisting: true });
 
-				requestAnimationFrame(() => {
+				afterFrame(() => {
 					ScrollTrigger.refresh();
+					const snapshot = rebuildSnapshotRef.current;
+					if (snapshot) {
+						restoreViewSnapshot(snapshot, `${reason}-mid-refresh`);
+					}
 
-					requestAnimationFrame(() => {
+					afterFrame(() => {
 						scrollSnapModelRef.current?.rebuild();
 						activeTrackerRef.current?.rebuild();
 						ScrollTrigger.refresh();
+						const snapshot = rebuildSnapshotRef.current;
+						if (snapshot) {
+							restoreViewSnapshot(snapshot, `${reason}-post-refresh`);
+						}
 
-						requestAnimationFrame(() => {
+						afterFrame(() => {
 							finishStructuralRebuild(reason, mode);
 						});
 					});
@@ -413,7 +547,15 @@ export function useReaderScrollEngine({
 			};
 
 			const scheduleStructuralRebuild = (delay = 180, reason = "scheduled") => {
+				const isResizeObserverReason = reason === "resize-observer";
+
+				if (isResizeObserverReason && !isInitialLoadCompleteRef.current) {
+					return;
+				}
+
 				if (isStructuralRebuildRef.current) {
+					if (isResizeObserverReason) return;
+
 					hasPendingStructuralRebuildRef.current = true;
 
 					console.log(
@@ -456,6 +598,7 @@ export function useReaderScrollEngine({
 				}, delay);
 			};
 
+			// Engine setup
 			const rebuild = () => {
 				scheduleStructuralRebuild(0, "external");
 			};
@@ -511,30 +654,28 @@ export function useReaderScrollEngine({
 				}
 			};
 
-			const resizeObserver =
+			resizeObserver =
 				typeof ResizeObserver !== "undefined"
 					? new ResizeObserver(() => {
+							if (isQuietRefreshRef.current) return;
 							scheduleStructuralRebuild(180, "resize-observer");
 						})
 					: null;
 
-			const observedEls =
-				wrapperRef.current?.querySelectorAll<HTMLElement>(
-					".pinned-section, .scroll-track",
-				) ?? [];
-
-			for (const el of observedEls) {
-				resizeObserver?.observe(el);
-			}
+			observeStructureElements();
 
 			const onWindowResize = () => {
 				console.log("[ReaderScrollEngine] window resize");
 				scheduleStructuralRebuild(180, "window-resize");
 			};
 
+			// Public API exposed through the reader store
 			engineApiRef.current = {
 				setHubOpen,
 				rebuild,
+				refresh: (reason = "external-refresh") => {
+					runQuietRefresh(reason);
+				},
 				cleanup: () => {
 					console.log("[ReaderScrollEngine] cleanup");
 
@@ -552,6 +693,7 @@ export function useReaderScrollEngine({
 					hasPendingStructuralRebuildRef.current = false;
 					initialAssetsReadyRef.current = false;
 					isStructuralRebuildRef.current = false;
+					isQuietRefreshRef.current = false;
 					rebuildSnapshotRef.current = null;
 
 					activeTrackerRef.current?.cleanup();
@@ -656,6 +798,11 @@ export function useReaderScrollEngine({
 	useEffect(() => {
 		engineApiRef.current?.setHubOpen(!!readerHubOpen);
 	}, [readerHubOpen]);
+
+	useEffect(() => {
+		if (!isStructureMounted) return;
+		engineApiRef.current?.refresh("visible-structure-mounted");
+	}, [isStructureMounted]);
 
 	return {};
 }

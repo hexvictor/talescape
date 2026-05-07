@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Eye, EyeIcon, EyeOff, EyeOffIcon } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
 	Tooltip,
@@ -11,8 +11,8 @@ import {
 import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
 
 export default function ReaderUiToggle() {
-	const uiVisible = useReaderStore((s) => s.uiVisible);
-	const toggleUI = useReaderStore((s) => s.toggleUI);
+	const uiVisible = useReaderStore((s) => s.ui.isVisible);
+	const toggleVisibility = useReaderStore((s) => s.ui.toggleVisibility);
 
 	return (
 		<Tooltip>
@@ -24,7 +24,7 @@ export default function ReaderUiToggle() {
 						"pointer-events-auto absolute bottom-6 left-6 z-50 cursor-pointer rounded-full shadow-lg hover:scale-105",
 					)}
 					onClick={() => {
-						toggleUI();
+						toggleVisibility();
 					}}
 					aria-label={uiVisible ? "Hide interface" : "Show interface"}
 				>

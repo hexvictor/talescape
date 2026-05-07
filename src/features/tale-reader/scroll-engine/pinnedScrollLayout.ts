@@ -19,7 +19,7 @@ export type PinnedScrollMeta = {
 export type PinnedScrollLayoutApi = {
 	pinnedMeta: Map<HTMLElement, PinnedScrollMeta>;
 	pinnedSTBySection: Map<HTMLElement, ScrollTrigger>;
-	rebuild: () => void;
+	rebuild: (opts?: { preserveExisting?: boolean }) => void;
 	cleanup: () => void;
 };
 
@@ -46,6 +46,8 @@ export function initPinnedScrollLayout(): PinnedScrollLayoutApi {
 	};
 
 	const buildSection = (section: HTMLElement) => {
+		if (tweensBySection.has(section)) return;
+
 		const track = section.querySelector<HTMLElement>(".scroll-track");
 		if (!track) return;
 
@@ -79,9 +81,9 @@ export function initPinnedScrollLayout(): PinnedScrollLayoutApi {
 
 		const tween = gsap.fromTo(
 			track,
-			{ [axis]: getFromTo().fromVal } as gsap.TweenVars,
+			{ [axis]: () => getFromTo().fromVal } as gsap.TweenVars,
 			{
-				[axis]: getFromTo().toVal,
+				[axis]: () => getFromTo().toVal,
 				ease: "none",
 				scrollTrigger: {
 					trigger: section,
@@ -112,11 +114,14 @@ export function initPinnedScrollLayout(): PinnedScrollLayoutApi {
 		});
 	};
 
-	const rebuild = () => {
+	const rebuild = (opts: { preserveExisting?: boolean } = {}) => {
 		const currentSections = gsap.utils.toArray<HTMLElement>(".pinned-section");
+		const currentSectionSet = new Set(currentSections);
 
 		for (const section of Array.from(tweensBySection.keys())) {
-			cleanupSection(section);
+			if (!opts.preserveExisting || !currentSectionSet.has(section)) {
+				cleanupSection(section);
+			}
 		}
 
 		for (const section of currentSections) {

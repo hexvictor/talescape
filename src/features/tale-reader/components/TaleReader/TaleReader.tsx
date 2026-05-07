@@ -3,15 +3,16 @@
 import { ReaderStoreProvider } from "~/features/tale-reader/contexts/ReaderStoreContext";
 import type { Tale } from "~/server/db/data/tale-reader/types/tales";
 import type { ReaderProgressSchema } from "~/server/db/schema";
-import ReaderHub from "../ReaderShell/ReaderHub";
-import ReaderViewport from "../ReaderShell/ReaderViewport";
-import { ContentsNavigator } from "../ReaderUi/ContentsNavigator";
-import EntryNavigator from "../ReaderUi/EntryNavigator/EntryNavigator";
-import ReaderProgress from "../ReaderUi/ReaderProgress";
-import ReaderUiToggle from "../ReaderUi/ReaderUiToggle";
-import TaleDebug from "../ReaderUi/TaleDebug";
+import { ReaderHub, ReaderViewport } from "../ReaderShell";
+import {
+	ContentsNavigator,
+	EntryNavigator,
+	ReaderProgress,
+	ReaderUiToggle,
+	TaleDebug,
+} from "../ReaderUi";
+import { ReaderRebuildOverlay } from "../TaleFeedback";
 import LoadingTale from "../TaleFeedback/LoadingTale";
-import ReaderRebuildOverlay from "../TaleFeedback/ReaderRebuildOverlay";
 
 type TaleReaderProps = {
 	tale: Tale;

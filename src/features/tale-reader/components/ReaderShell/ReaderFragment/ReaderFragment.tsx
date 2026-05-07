@@ -1,6 +1,6 @@
 "use client";
 
-import type { Fragment } from "~/server/db/data/tale-reader/types/tales";
+import type { Fragment } from "~/server/db/data/tale-reader/types/fragments";
 import type {
 	ImageFragmentData,
 	TextFragmentData,

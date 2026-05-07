@@ -55,6 +55,11 @@ export function attachInputBindings({ driver, model }: Args): InputBindingsApi {
 		animating = true;
 
 		const target = items[index];
+		if (!target) {
+			animating = false;
+			return;
+		}
+
 		const targetScroll = forward ? target.start : target.end;
 
 		if (snapTween) {
@@ -123,6 +128,13 @@ export function attachInputBindings({ driver, model }: Args): InputBindingsApi {
 		);
 	};
 
+	const getTouchClientY = (event: Event) => {
+		if (!("touches" in event)) return null;
+
+		const touch = (event as TouchEvent).touches[0];
+		return touch?.clientY ?? null;
+	};
+
 	const onUserPointerDown = (event: Event) => {
 		if (!enabled) return;
 
@@ -182,9 +194,7 @@ export function attachInputBindings({ driver, model }: Args): InputBindingsApi {
 					isTouchPressing = true;
 					killTweens(true);
 
-					const touch =
-						"touches" in self.event ? self.event.touches?.[0] : undefined;
-					const clientY = touch?.clientY;
+					const clientY = getTouchClientY(self.event);
 					touchStartY = clientY ?? null;
 					touchLastY = clientY ?? null;
 				}
@@ -197,9 +207,7 @@ export function attachInputBindings({ driver, model }: Args): InputBindingsApi {
 				if (!enabled) return;
 				if (!ScrollTrigger.isTouch) return;
 
-				const touch =
-					"touches" in self.event ? self.event.touches?.[0] : undefined;
-				const clientY = touch?.clientY;
+				const clientY = getTouchClientY(self.event);
 				if (clientY != null) {
 					touchLastY = clientY;
 				}

@@ -1,36 +1,50 @@
 import type { BlockSchema } from "~/server/db/schema";
-import type { Entry } from "./entries";
-import type { Page } from "./pages";
-import type { Part } from "./parts";
-import type { Section } from "./sections";
+import type { TaleBranch } from "./branches";
+import type { TaleEntry } from "./entries";
+import type { TalePage } from "./pages";
+import type { TalePart } from "./parts";
+import type { TaleSection } from "./sections";
+import type { StructurePosition } from "./shared";
 
-export type Block = EmbeddedBlock & {
+export type TaleBlock = BlockSchema & {
 	partId: number;
 	entryId: number;
-	globalIndex: number;
-	entryIndex: number;
-	partIndex: number;
-	fragmentIds: number[];
-	isPageBlock: boolean;
-	isFirst: boolean;
-	isLast: boolean;
-	isFirstInEntry: boolean;
-	isLastInEntry: boolean;
-	isFirstInPart: boolean;
-	isLastInPart: boolean;
-	isFirstInSection: boolean;
-	isLastInSection: boolean;
-	page: Page | null;
-	entry: Entry;
-	part: Part;
-	section: Section;
-};
-
-export type BlockEmbed = {
 	sectionId: number;
-	isSnap: boolean;
+	branchId: number;
 	pageId: number | null;
-	index: number;
+	children: {
+		fragmentIds: number[];
+	};
+	links: {
+		previousBlockIdInBranch: number | null;
+		nextBlockIdInBranch: number | null;
+		previousBlockIdInSection: number | null;
+		nextBlockIdInSection: number | null;
+		previousBlockIdInEntry: number | null;
+		nextBlockIdInEntry: number | null;
+		previousBlockIdInPart: number | null;
+		nextBlockIdInPart: number | null;
+	};
+	position: StructurePosition & {
+		entryIndex: number;
+		partIndex: number;
+		sectionIndex: number;
+		branchIndex: number;
+		isPageBlock: boolean;
+		isFirstInBranch: boolean;
+		isLastInBranch: boolean;
+		isFirstInEntry: boolean;
+		isLastInEntry: boolean;
+		isFirstInPart: boolean;
+		isLastInPart: boolean;
+		isFirstInSection: boolean;
+		isLastInSection: boolean;
+	};
+	page: TalePage | null;
+	branch: TaleBranch;
+	entry: TaleEntry;
+	part: TalePart;
+	section: TaleSection;
 };
 
-export type EmbeddedBlock = BlockSchema & BlockEmbed;
+export type Block = TaleBlock;

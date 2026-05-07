@@ -1,42 +1,95 @@
-import { getBlocks } from "~/server/db/data/tale-reader/queries/blocks";
-import { getEntries } from "~/server/db/data/tale-reader/queries/entries";
-import { getFragments } from "~/server/db/data/tale-reader/queries/fragments";
-import { getPages } from "~/server/db/data/tale-reader/queries/pages";
-import { getParts } from "~/server/db/data/tale-reader/queries/parts";
-import { getSections } from "~/server/db/data/tale-reader/queries/sections";
-import type { TaleSchema } from "~/server/db/schema";
-import { getUserInfo } from "../../../users/queries/getUserInfo";
-import type { PublicUserInfo } from "../../../users/queries/users.types";
+import { db } from "~/server/db";
 import { formatTaleStructure } from "../../formatters/tale/formatTaleStructure";
 import type { Tale } from "../../types/tales";
 
-export async function getTale(
-	tale: TaleSchema,
-	creator?: PublicUserInfo | null,
-): Promise<Tale> {
-	const [pages, entries, parts, blocks, sections, fragments] =
-		await Promise.all([
-			getPages(tale.id),
-			getEntries(tale.id),
-			getParts(tale.id),
-			getBlocks(tale.id),
-			getSections(tale.id),
-			getFragments(tale.id),
-		]);
-	const creatorInfo = tale.creatorId ? await getUserInfo(tale.creatorId) : null;
+type FindFirstTaleArgs = Parameters<typeof db.query.tales.findFirst>[0];
 
-	const formattedStructure = formatTaleStructure({
-		pages,
-		entries,
-		parts,
-		blocks,
-		sections,
-		fragments,
+type TaleWhere = NonNullable<FindFirstTaleArgs>["where"];
+
+type GetTaleArgs = {
+	where: TaleWhere;
+};
+
+const taleStructureQuery = {
+	book: true,
+	creatorById: true,
+	parts: {
+		orderBy: (model, { asc }) => [asc(model.index)],
+		with: {
+			blocks: {
+				columns: {
+					id: true,
+				},
+				orderBy: (model, { asc }) => [asc(model.index)],
+			},
+			entries: {
+				orderBy: (model, { asc }) => [asc(model.index)],
+				with: {
+					blocks: {
+						columns: {
+							id: true,
+						},
+						orderBy: (model, { asc }) => [asc(model.index)],
+					},
+					pages: {
+						orderBy: (model, { asc }) => [asc(model.index)],
+						with: {
+							blocks: {
+								columns: {
+									id: true,
+								},
+								orderBy: (model, { asc }) => [asc(model.index)],
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	branches: {
+		orderBy: (model, { asc }) => [asc(model.index)],
+		with: {
+			incomingPaths: {
+				orderBy: (model, { asc }) => [asc(model.order)],
+			},
+			outgoingPaths: {
+				orderBy: (model, { asc }) => [asc(model.order)],
+			},
+			sections: {
+				orderBy: (model, { asc }) => [asc(model.index)],
+				with: {
+					blocks: {
+						orderBy: (model, { asc }) => [asc(model.index)],
+						with: {
+							page: true,
+							entry: true,
+							part: true,
+							fragments: {
+								orderBy: (model, { asc }) => [asc(model.index)],
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+} satisfies NonNullable<FindFirstTaleArgs>["with"];
+
+function getTaleRecord({ where }: GetTaleArgs) {
+	return db.query.tales.findFirst({
+		where,
+		with: taleStructureQuery,
 	});
+}
 
-	return {
-		...tale,
-		creator: creator ?? creatorInfo,
-		structure: formattedStructure,
-	};
+export type TaleRecord = NonNullable<Awaited<ReturnType<typeof getTaleRecord>>>;
+
+export async function getTale({
+	where,
+}: GetTaleArgs): Promise<Tale | undefined> {
+	const tale = await getTaleRecord({ where });
+
+	if (!tale) return undefined;
+
+	return formatTaleStructure(tale);
 }

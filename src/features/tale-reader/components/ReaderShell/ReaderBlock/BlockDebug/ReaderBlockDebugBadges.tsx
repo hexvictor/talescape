@@ -24,41 +24,46 @@ function Badge({
 }
 
 function ReaderBlockDebugBadgesComponent({ block }: Props) {
-	const debugMode = useReaderStore((s) => s.debugMode);
+	const debugMode = useReaderStore((s) => s.ui.isDebugEnabled);
 	if (!debugMode) return null;
 
 	const locationBadges = [
 		{
 			key: "block",
-			label: `Block ${block.globalIndex + 1}`,
+			label: `Block ${block.position.index + 1}`,
 			className: "border-sky-300 bg-sky-500/90 text-white",
 		},
 		{
+			key: "branch",
+			label: `Branch ${block.branch.position.index + 1}`,
+			className: "border-lime-300 bg-lime-500/90 text-lime-950",
+		},
+		{
 			key: "section",
-			label: `Section ${block.section.index + 1}`,
+			label: `Section ${block.section.position.index + 1}`,
 			className: "border-emerald-300 bg-emerald-500/90 text-white",
 		},
 		{
 			key: "part",
-			label: `Part ${block.part.index + 1}`,
+			label: `Part ${block.part.position.index + 1}`,
 			className: "border-rose-300 bg-rose-500/90 text-white",
 		},
 		{
 			key: "entry",
-			label: `Entry ${block.entry.globalIndex + 1}`,
+			label: `Entry ${block.entry.position.entryNumber}`,
 			className: "border-violet-300 bg-violet-500/90 text-white",
 		},
-		block.page?.globalIndex !== undefined
+		block.page?.position.globalPageNumber !== undefined
 			? {
 					key: "page",
-					label: `Page ${block.page.globalIndex + 1}`,
+					label: `Page ${block.page.position.globalPageNumber}`,
 					className: "border-pink-300 bg-pink-500/90 text-white",
 				}
 			: null,
 	].filter(Boolean) as { key: string; label: string; className: string }[];
 
 	const stateBadges = [
-		block.isPageBlock
+		block.position.isPageBlock
 			? {
 					key: "page-block",
 					label: "Page Block",
@@ -78,21 +83,21 @@ function ReaderBlockDebugBadgesComponent({ block }: Props) {
 				block.section.orientation === "horizontal" ? "Horizontal" : "Vertical",
 			className: "border-emerald-300 bg-emerald-500/95 text-emerald-900",
 		},
-		block.isFirst
+		block.position.isFirst
 			? {
 					key: "first",
 					label: "First",
 					className: "border-sky-300 bg-sky-100/95 text-sky-900",
 				}
 			: null,
-		block.isLast
+		block.position.isLast
 			? {
 					key: "last",
 					label: "Last",
 					className: "border-sky-300 bg-sky-900/90 text-white",
 				}
 			: null,
-		block.isFirstInSection
+		block.position.isFirstInSection
 			? {
 					key: "first-section",
 					label: "First in Section",
@@ -100,35 +105,35 @@ function ReaderBlockDebugBadgesComponent({ block }: Props) {
 				}
 			: null,
 
-		block.isLastInSection
+		block.position.isLastInSection
 			? {
 					key: "last-section",
 					label: "Last in Section",
 					className: "border-emerald-300 bg-emerald-900/90 text-white",
 				}
 			: null,
-		block.isFirstInPart
+		block.position.isFirstInPart
 			? {
 					key: "first-part",
 					label: "First in Part",
 					className: "border-rose-300 bg-rose-100/95 text-rose-900",
 				}
 			: null,
-		block.isLastInPart
+		block.position.isLastInPart
 			? {
 					key: "last-part",
 					label: "Last in Part",
 					className: "border-rose-300 bg-rose-900/90 text-white",
 				}
 			: null,
-		block.isFirstInEntry
+		block.position.isFirstInEntry
 			? {
 					key: "first-entry",
 					label: "First in Entry",
 					className: "border-violet-300 bg-violet-100/95 text-violet-900",
 				}
 			: null,
-		block.isLastInEntry
+		block.position.isLastInEntry
 			? {
 					key: "last-entry",
 					label: "Last in Entry",

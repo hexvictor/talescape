@@ -7,14 +7,18 @@ export async function createNewProgress(
 	userId: string,
 ): Promise<ReaderProgressSchema> {
 	const firstBlockId = blockIds[0];
+	const initialProgress =
+		blockIds.length > 0 ? (1 / blockIds.length).toFixed(4) : "0";
 	const newProgressData = {
 		userId,
 		taleId,
 		seenBlockIds: firstBlockId ? [firstBlockId] : [],
 		lastBlockId: firstBlockId ?? null,
 		maxBlockIdReached: firstBlockId ?? null,
-		seenBlockProgress: (1 / blockIds.length).toFixed(4),
-		maxReadProgress: (1 / blockIds.length).toFixed(4),
+		activePathIds: [],
+		seenPathIds: [],
+		seenBlockProgress: initialProgress,
+		maxReadProgress: initialProgress,
 	};
 
 	const [insertedProgress] = await db

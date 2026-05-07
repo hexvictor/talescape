@@ -3,7 +3,9 @@
 import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
 
 export default function ReaderRebuildOverlay() {
-	const isViewportRebuilding = useReaderStore((s) => s.isViewportRebuilding);
+	const isViewportRebuilding = useReaderStore(
+		(s) => s.reader.isViewportRebuilding,
+	);
 
 	if (!isViewportRebuilding) return null;
 

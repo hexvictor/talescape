@@ -17,8 +17,7 @@ export type ScrollSnapRange = {
 };
 
 export type ScrollSnapModelApi = {
-	// biome-ignore lint/suspicious/noExplicitAny:
-	itemsRef: React.RefObject<any>;
+	itemsRef: { current: ScrollSnapItem[] };
 	rebuild: () => void;
 	getIndexFromScroll: (scroll: number) => number;
 	getRangeForElement: (el: HTMLElement) => ScrollSnapRange;
@@ -182,6 +181,8 @@ export function createScrollSnapModel({
 
 		for (let i = items.length - 1; i >= 0; i--) {
 			const item = items[i];
+			if (!item) continue;
+
 			if (scroll >= item.start - epsilon && scroll <= item.end + epsilon) {
 				return i;
 			}
@@ -191,7 +192,10 @@ export function createScrollSnapModel({
 		let bestDist = Number.POSITIVE_INFINITY;
 
 		for (let i = 0; i < items.length; i++) {
-			const dist = Math.abs(items[i].start - scroll);
+			const item = items[i];
+			if (!item) continue;
+
+			const dist = Math.abs(item.start - scroll);
 			if (dist < bestDist) {
 				bestDist = dist;
 				best = i;
@@ -206,7 +210,7 @@ export function createScrollSnapModel({
 	};
 
 	return {
-		itemsRef: itemsRef as React.RefObject<ScrollSnapItem[]>,
+		itemsRef,
 		rebuild,
 		getIndexFromScroll,
 		getRangeForElement,

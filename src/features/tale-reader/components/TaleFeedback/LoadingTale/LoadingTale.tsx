@@ -1,28 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useReaderStore } from "~/features/tale-reader/contexts/ReaderStoreContext";
 import AnimationReadyProbe from "./AnimationReadyProbe";
+import { useLoadingTaleReadiness } from "./useLoadingTaleReadiness";
 
 export default function LoadingTale({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	const isLayoutReady = useReaderStore((s) => s.isLayoutReady);
-	const isInitialLoadComplete = useReaderStore((s) => s.isInitialLoadComplete);
-	const [isMotionReady, setIsMotionReady] = useState(false);
-
-	const isReady = isMotionReady && isInitialLoadComplete;
-
-	useEffect(() => {
-		console.log("[LoadingTale] state", {
-			isMotionReady,
-			isLayoutReady,
-			isInitialLoadComplete,
-			isReady,
-		});
-	}, [isMotionReady, isLayoutReady, isInitialLoadComplete, isReady]);
+	const { isMotionReady, isReady, markMotionReady } = useLoadingTaleReadiness();
 
 	return (
 		<>
@@ -32,14 +18,7 @@ export default function LoadingTale({
 				</div>
 			)}
 
-			{!isMotionReady && (
-				<AnimationReadyProbe
-					onReady={() => {
-						console.log("[LoadingTale] motion ready");
-						setIsMotionReady(true);
-					}}
-				/>
-			)}
+			{!isMotionReady && <AnimationReadyProbe onReady={markMotionReady} />}
 
 			<div
 				className={isReady ? "" : "pointer-events-none invisible"}

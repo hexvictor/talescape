@@ -1,134 +1,119 @@
-import { mapByKey } from "~/lib/utils/array";
+import type { TaleBlock } from "../../types/blocks";
+import type { TaleBranch } from "../../types/branches";
+import type { TaleEntry } from "../../types/entries";
+import type { TalePage } from "../../types/pages";
+import type { TalePart } from "../../types/parts";
+import type { TaleSection } from "../../types/sections";
 import type {
-	Block,
-	EmbeddedBlock,
-	EmbeddedSection,
-	Entry,
-	EntryWithRange,
-	Page,
-	Part,
-	PartWithRange,
-	Section,
-} from "~/server/db/data/tale-reader/types/tales";
-import type { PageSchema } from "~/server/db/schema";
-import type { IdListMap } from "~/types/utils";
-import { formatEntriesByBlockIds } from "../entries/formatEntries";
-import { formatPartsByBlockIds } from "../parts/formatParts";
+	DerivedTaleIndexes,
+	FlatTaleRecord,
+} from "../tale/formatTaleContext";
 
-export function formatBlocksByPageId(
-	blocks: EmbeddedBlock[],
-): Record<string, number> {
-	return Object.fromEntries(blocks.map((block) => [block.pageId, block.id]));
-}
+export function formatBlocks(
+	flat: FlatTaleRecord,
+	args: {
+		branchesById: Record<number, TaleBranch>;
+		partsById: Record<number, TalePart>;
+		entriesById: Record<number, TaleEntry>;
+		pagesById: Record<number, TalePage>;
+		sectionsById: Record<number, TaleSection>;
+		derived: DerivedTaleIndexes;
+	},
+): TaleBlock[] {
+	const entryIndexById = new Map<number, number>();
+	const partIndexById = new Map<number, number>();
+	const sectionIndexById = new Map<number, number>();
+	const branchIndexById = new Map<number, number>();
 
-export function formatBlocksBySectionId(
-	blocks: EmbeddedBlock[],
-	sections: EmbeddedSection[],
-): IdListMap {
-	return Object.fromEntries(
-		sections.map((section) => [
-			section.id,
-			blocks
-				.filter((block) => block.sectionId === section.id)
-				.map((block) => block.id),
-		]),
-	);
-}
+	return flat.blocks.map((block, index) => {
+		const {
+			page: _rawPage,
+			entry: _rawEntry,
+			part: _rawPart,
+			fragments: _rawFragments,
+			...baseBlock
+		} = block;
+		const structuredPart = args.partsById[block.partId];
+		const structuredEntry = args.entriesById[block.entryId];
+		const structuredSection = args.sectionsById[block.sectionId];
 
-export function formatBlocksById(
-	blocks: EmbeddedBlock[],
-	fragmentsByBlockId: IdListMap,
-	sectionsById: Record<string, Section>,
-	partsById: Record<string, Part>,
-	entriesById: Record<string, Entry>,
-	pagesById: Record<string, Page>,
-	parts: PartWithRange[],
-	entries: EntryWithRange[],
-	pages: PageSchema[],
-): Record<string, Block> {
-	const firstPage = pages[0];
-	const entryIdByBlockId = formatEntriesByBlockIds(entries, blocks);
-	const partIdByBlockId = formatPartsByBlockIds(parts, blocks);
+		if (!structuredPart) throw new Error(`Missing part for block ${block.id}`);
+		if (!structuredEntry)
+			throw new Error(`Missing entry for block ${block.id}`);
+		if (!structuredSection)
+			throw new Error(`Missing section for block ${block.id}`);
 
-	const entryIndexMap: Record<string, number> = {};
-	const partIndexMap: Record<string, number> = {};
+		const structuredBranch = args.branchesById[structuredSection.branchId];
+		if (!structuredBranch)
+			throw new Error(`Missing branch for block ${block.id}`);
 
-	let pageId: number | null = firstPage ? firstPage.id : null;
+		const entryIndex = entryIndexById.get(block.entryId) ?? 0;
+		const partIndex = partIndexById.get(block.partId) ?? 0;
+		const sectionIndex = sectionIndexById.get(block.sectionId) ?? 0;
+		const branchIndex = branchIndexById.get(structuredSection.branchId) ?? 0;
 
-	return mapByKey(
-		blocks.map((block, i) => {
-			const currentPageId = block.pageId ?? pageId;
-			const page = currentPageId
-				? (pagesById[currentPageId || ""] ?? null)
-				: null;
+		entryIndexById.set(block.entryId, entryIndex + 1);
+		partIndexById.set(block.partId, partIndex + 1);
+		sectionIndexById.set(block.sectionId, sectionIndex + 1);
+		branchIndexById.set(structuredSection.branchId, branchIndex + 1);
 
-			const section = sectionsById[block.sectionId];
-			if (!section)
-				throw new Error(`No section found for block ID: ${block.id}`);
+		const fragmentIds = args.derived.fragmentIdsByBlockId[block.id] ?? [];
+		const branchBlockIds =
+			args.derived.blockIdsByBranchId[structuredSection.branchId] ?? [];
+		const sectionBlockIds =
+			args.derived.blockIdsBySectionId[block.sectionId] ?? [];
+		const entryBlockIds = args.derived.blockIdsByEntryId[block.entryId] ?? [];
+		const partBlockIds = args.derived.blockIdsByPartId[block.partId] ?? [];
+		const page =
+			block.pageId != null ? (args.pagesById[block.pageId] ?? null) : null;
 
-			const hasPage = block.pageId !== null;
-			if (hasPage) pageId = block.pageId;
-
-			const entryId = entryIdByBlockId[block.id];
-			if (!entryId)
-				throw new Error(`No entryId found for block ID: ${block.id}`);
-			const entry = entriesById[entryId];
-			if (!entry) throw new Error(`No entry found for block ID: ${block.id}`);
-
-			const partId = partIdByBlockId[block.id];
-			if (!partId) throw new Error(`No partId found for block ID: ${block.id}`);
-			const part = partsById[partId];
-			if (!part) throw new Error(`No part found for block ID: ${block.id}`);
-
-			const fragmentIds = fragmentsByBlockId[block.id];
-			if (!fragmentIds)
-				throw new Error(`No fragmentIds found for block ID: ${block.id}`);
-
-			// Calculate indices
-			const entryIndex = entryIndexMap[entryId] ?? 0;
-			const partIndex = partIndexMap[partId] ?? 0;
-
-			// Increment maps
-			entryIndexMap[entryId] = entryIndex + 1;
-			partIndexMap[partId] = partIndex + 1;
-
-			const globalIndex = i;
-			const isFirst = i === 0;
-			const isLast = i === blocks.length - 1;
-
-			const isFirstInEntry = entry.firstBlockId === block.id;
-			const isLastInEntry = entry.lastBlockId === block.id;
-			const isFirstInPart = part.firstBlockId === block.id;
-			const isLastInPart = part.lastBlockId === block.id;
-			const isFirstInSection = section.firstBlockId === block.id;
-			const isLastInSection = section.lastBlockId === block.id;
-
-			const isPageBlock = block.pageId !== null;
-
-			return {
-				...block,
-				pageId,
-				partId,
-				entryId,
-				globalIndex,
+		return {
+			...baseBlock,
+			branchId: structuredSection.branchId,
+			pageId: block.pageId,
+			children: {
 				fragmentIds,
-				isPageBlock,
-				isFirst,
-				isLast,
-				isFirstInEntry,
-				isLastInEntry,
-				isFirstInPart,
-				isLastInPart,
-				isFirstInSection,
-				isLastInSection,
+			},
+			links: {
+				previousBlockIdInBranch: siblingId(branchBlockIds, block.id, -1),
+				nextBlockIdInBranch: siblingId(branchBlockIds, block.id, 1),
+				previousBlockIdInSection: siblingId(sectionBlockIds, block.id, -1),
+				nextBlockIdInSection: siblingId(sectionBlockIds, block.id, 1),
+				previousBlockIdInEntry: siblingId(entryBlockIds, block.id, -1),
+				nextBlockIdInEntry: siblingId(entryBlockIds, block.id, 1),
+				previousBlockIdInPart: siblingId(partBlockIds, block.id, -1),
+				nextBlockIdInPart: siblingId(partBlockIds, block.id, 1),
+			},
+			position: {
+				index,
 				entryIndex,
 				partIndex,
-				page,
-				entry,
-				part,
-				section,
-			};
-		}),
-		"id",
-	);
+				sectionIndex,
+				branchIndex,
+				isPageBlock: block.pageId != null,
+				isFirst: index === 0,
+				isLast: index === flat.blocks.length - 1,
+				isFirstInBranch: branchBlockIds[0] === block.id,
+				isLastInBranch: branchBlockIds.at(-1) === block.id,
+				isFirstInEntry: structuredEntry.bounds.firstBlockId === block.id,
+				isLastInEntry: structuredEntry.bounds.lastBlockId === block.id,
+				isFirstInPart: structuredPart.bounds.firstBlockId === block.id,
+				isLastInPart: structuredPart.bounds.lastBlockId === block.id,
+				isFirstInSection: structuredSection.bounds.firstBlockId === block.id,
+				isLastInSection: structuredSection.bounds.lastBlockId === block.id,
+			},
+			page,
+			branch: structuredBranch,
+			entry: structuredEntry,
+			part: structuredPart,
+			section: structuredSection,
+		};
+	});
+}
+
+function siblingId(ids: number[], currentId: number, offset: -1 | 1) {
+	const index = ids.indexOf(currentId);
+	if (index < 0) return null;
+
+	return ids[index + offset] ?? null;
 }
