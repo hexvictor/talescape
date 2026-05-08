@@ -3,6 +3,7 @@ export const revalidate = 60;
 import { TaleNotFound, TaleReader } from "~/features/tale-reader/components";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import { getOfficialTale } from "~/server/db/data/tale-reader/queries/tales";
+import { logDatabaseDiagnostics } from "~/server/db/diagnostics";
 import type { OfficialTalePageProps } from "./types";
 
 export default async function OfficialTalePage({
@@ -25,6 +26,7 @@ export default async function OfficialTalePage({
 			}
 
 			console.error("Unexpected error loading official tale:", error);
+			await logDatabaseDiagnostics(`official tale load failed: ${taleSlug}`);
 			return <TaleNotFound />;
 		}
 	}
