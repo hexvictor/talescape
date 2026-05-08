@@ -16,6 +16,7 @@ export default async function OfficialTalePage({
 			const { tale, progress } = await getOfficialTale(taleSlug);
 
 			if (!tale) {
+				await logDatabaseDiagnostics(`official tale load failed: ${taleSlug}`);
 				return <TaleNotFound />;
 			}
 
