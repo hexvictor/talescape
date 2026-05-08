@@ -15,9 +15,13 @@ const seedUserIds = {
 		userId1: previewUserId1,
 		userId2: previewUserId2,
 	},
+	prod: {
+		userId1: previewUserId1,
+		userId2: previewUserId2,
+	},
 } as const;
 
-if (seedTarget !== "dev" && seedTarget !== "preview") {
+if (seedTarget !== "dev" && seedTarget !== "preview" && seedTarget !== "prod") {
 	throw new Error(`Unsupported seed target: ${seedTarget}`);
 }
 
