@@ -1,7 +1,7 @@
 export type PageType =
-  | "book"
-  | "quote"
-  | "illustration"
-  | "map"
-  | "timeline"
-  | "custom";
+	| "book"
+	| "quote"
+	| "illustration"
+	| "map"
+	| "timeline"
+	| "custom";

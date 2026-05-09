@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1750173856366,
-      "tag": "0000_secret_barracuda",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1750350995877,
-      "tag": "0001_jittery_whistler",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1751981444835,
-      "tag": "0002_short_molecule_man",
+      "when": 1776971703631,
+      "tag": "0000_breezy_vivisector",
       "breakpoints": true
     }
   ]

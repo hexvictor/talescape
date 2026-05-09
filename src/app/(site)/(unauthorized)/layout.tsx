@@ -1,15 +1,15 @@
 import { Header } from "~/components/layout";
-import "~/styles/globals.css";
+import { AuthPageLinkHandler } from "~/features/auth/components";
 
 export default function AuthLayout({
-  children,
+	children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <>
-      <Header />
-      <main className="flex flex-1 items-center justify-center p-4">
-        {children}
-      </main>
-    </>
-  );
+	return (
+		<>
+			<Header />
+			<main className="flex flex-1 items-center justify-center p-4">
+				<AuthPageLinkHandler>{children}</AuthPageLinkHandler>
+			</main>
+		</>
+	);
 }

@@ -1,5 +1,5 @@
 {
-  "id": "57906533-6271-4983-891b-c367d01ad2e5",
+  "id": "7c9b899a-788c-4f46-b09e-6f71e9452aa7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -49,15 +49,42 @@
           "primaryKey": false,
           "notNull": false
         },
-        "imageUrl": {
-          "name": "imageUrl",
-          "type": "text",
+        "imageId": {
+          "name": "imageId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "talescape_author_imageId_talescape_image_id_fk": {
+          "name": "talescape_author_imageId_talescape_image_id_fk",
+          "tableFrom": "talescape_author",
+          "tableTo": "talescape_image",
+          "columnsFrom": [
+            "imageId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -103,9 +130,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "coverImageUrl": {
-          "name": "coverImageUrl",
-          "type": "text",
+        "coverImageId": {
+          "name": "coverImageId",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -158,223 +185,22 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
+        "talescape_book_coverImageId_talescape_image_id_fk": {
+          "name": "talescape_book_coverImageId_talescape_image_id_fk",
+          "tableFrom": "talescape_book",
+          "tableTo": "talescape_image",
+          "columnsFrom": [
+            "coverImageId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "talescape_book_userId_talescape_user_id_fk": {
           "name": "talescape_book_userId_talescape_user_id_fk",
           "tableFrom": "talescape_book",
-          "tableTo": "talescape_user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_block_embed": {
-      "name": "talescape_block_embed",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_block_embed_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "blockId": {
-          "name": "blockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "taleId": {
-          "name": "taleId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sectionId": {
-          "name": "sectionId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "pageId": {
-          "name": "pageId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "index": {
-          "name": "index",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_block_embed_blockId_talescape_block_id_fk": {
-          "name": "talescape_block_embed_blockId_talescape_block_id_fk",
-          "tableFrom": "talescape_block_embed",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "blockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_block_embed_taleId_talescape_tale_id_fk": {
-          "name": "talescape_block_embed_taleId_talescape_tale_id_fk",
-          "tableFrom": "talescape_block_embed",
-          "tableTo": "talescape_tale",
-          "columnsFrom": [
-            "taleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_block_embed_sectionId_talescape_section_id_fk": {
-          "name": "talescape_block_embed_sectionId_talescape_section_id_fk",
-          "tableFrom": "talescape_block_embed",
-          "tableTo": "talescape_section",
-          "columnsFrom": [
-            "sectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_block_embed_pageId_talescape_page_id_fk": {
-          "name": "talescape_block_embed_pageId_talescape_page_id_fk",
-          "tableFrom": "talescape_block_embed",
-          "tableTo": "talescape_page",
-          "columnsFrom": [
-            "pageId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_block_permission": {
-      "name": "talescape_block_permission",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_block_permission_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "blockId": {
-          "name": "blockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permissionTypes": {
-          "name": "permissionTypes",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_block_permission_blockId_talescape_block_id_fk": {
-          "name": "talescape_block_permission_blockId_talescape_block_id_fk",
-          "tableFrom": "talescape_block_permission",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "blockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_block_permission_userId_talescape_user_id_fk": {
-          "name": "talescape_block_permission_userId_talescape_user_id_fk",
-          "tableFrom": "talescape_block_permission",
           "tableTo": "talescape_user",
           "columnsFrom": [
             "userId"
@@ -413,11 +239,228 @@
             "cycle": false
           }
         },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sectionId": {
+          "name": "sectionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entryId": {
+          "name": "entryId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partId": {
+          "name": "partId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "creatorId": {
           "name": "creatorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "isOfficial": {
+          "name": "isOfficial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "editable": {
+          "name": "editable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "pageId": {
+          "name": "pageId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isSnap": {
+          "name": "isSnap",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "index": {
+          "name": "index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "cloneable": {
+          "name": "cloneable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_block_taleId_talescape_tale_id_fk": {
+          "name": "talescape_block_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_tale",
+          "columnsFrom": [
+            "taleId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_sectionId_talescape_section_id_fk": {
+          "name": "talescape_block_sectionId_talescape_section_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_section",
+          "columnsFrom": [
+            "sectionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_entryId_talescape_entry_id_fk": {
+          "name": "talescape_block_entryId_talescape_entry_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_entry",
+          "columnsFrom": [
+            "entryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_partId_talescape_part_id_fk": {
+          "name": "talescape_block_partId_talescape_part_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_part",
+          "columnsFrom": [
+            "partId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_creatorId_talescape_user_id_fk": {
+          "name": "talescape_block_creatorId_talescape_user_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "creatorId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_pageId_talescape_page_id_fk": {
+          "name": "talescape_block_pageId_talescape_page_id_fk",
+          "tableFrom": "talescape_block",
+          "tableTo": "talescape_page",
+          "columnsFrom": [
+            "pageId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_branch": {
+      "name": "talescape_branch",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_branch_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creatorId": {
+          "name": "creatorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "index": {
+          "name": "index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         },
         "isOfficial": {
           "name": "isOfficial",
@@ -440,13 +483,6 @@
           "notNull": true,
           "default": "'private'"
         },
-        "embeddable": {
-          "name": "embeddable",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'private'"
-        },
         "cloneable": {
           "name": "cloneable",
           "type": "text",
@@ -454,13 +490,6 @@
           "notNull": true,
           "default": "'private'"
         },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp with time zone",
@@ -477,103 +506,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "talescape_block_creatorId_talescape_user_id_fk": {
-          "name": "talescape_block_creatorId_talescape_user_id_fk",
-          "tableFrom": "talescape_block",
-          "tableTo": "talescape_user",
-          "columnsFrom": [
-            "creatorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_fragment_embed": {
-      "name": "talescape_fragment_embed",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_fragment_embed_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "fragmentId": {
-          "name": "fragmentId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "taleId": {
-          "name": "taleId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "blockId": {
-          "name": "blockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "index": {
-          "name": "index",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_fragment_embed_fragmentId_talescape_fragment_id_fk": {
-          "name": "talescape_fragment_embed_fragmentId_talescape_fragment_id_fk",
-          "tableFrom": "talescape_fragment_embed",
-          "tableTo": "talescape_fragment",
-          "columnsFrom": [
-            "fragmentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_fragment_embed_taleId_talescape_tale_id_fk": {
-          "name": "talescape_fragment_embed_taleId_talescape_tale_id_fk",
-          "tableFrom": "talescape_fragment_embed",
+        "talescape_branch_taleId_talescape_tale_id_fk": {
+          "name": "talescape_branch_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_branch",
           "tableTo": "talescape_tale",
           "columnsFrom": [
             "taleId"
@@ -584,100 +519,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "talescape_fragment_embed_blockId_talescape_block_id_fk": {
-          "name": "talescape_fragment_embed_blockId_talescape_block_id_fk",
-          "tableFrom": "talescape_fragment_embed",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "blockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_fragment_permission": {
-      "name": "talescape_fragment_permission",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_fragment_permission_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "fragmentId": {
-          "name": "fragmentId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permissionTypes": {
-          "name": "permissionTypes",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_fragment_permission_fragmentId_talescape_fragment_id_fk": {
-          "name": "talescape_fragment_permission_fragmentId_talescape_fragment_id_fk",
-          "tableFrom": "talescape_fragment_permission",
-          "tableTo": "talescape_fragment",
-          "columnsFrom": [
-            "fragmentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_fragment_permission_userId_talescape_user_id_fk": {
-          "name": "talescape_fragment_permission_userId_talescape_user_id_fk",
-          "tableFrom": "talescape_fragment_permission",
+        "talescape_branch_creatorId_talescape_user_id_fk": {
+          "name": "talescape_branch_creatorId_talescape_user_id_fk",
+          "tableFrom": "talescape_branch",
           "tableTo": "talescape_user",
           "columnsFrom": [
-            "userId"
+            "creatorId"
           ],
           "columnsTo": [
             "id"
@@ -713,11 +560,170 @@
             "cycle": false
           }
         },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blockId": {
+          "name": "blockId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "creatorId": {
           "name": "creatorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isOfficial": {
+          "name": "isOfficial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "editable": {
+          "name": "editable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "index": {
+          "name": "index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "cloneable": {
+          "name": "cloneable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "data": {
+          "name": "data",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_fragment_taleId_talescape_tale_id_fk": {
+          "name": "talescape_fragment_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_fragment",
+          "tableTo": "talescape_tale",
+          "columnsFrom": [
+            "taleId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_fragment_blockId_talescape_block_id_fk": {
+          "name": "talescape_fragment_blockId_talescape_block_id_fk",
+          "tableFrom": "talescape_fragment",
+          "tableTo": "talescape_block",
+          "columnsFrom": [
+            "blockId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_fragment_creatorId_talescape_user_id_fk": {
+          "name": "talescape_fragment_creatorId_talescape_user_id_fk",
+          "tableFrom": "talescape_fragment",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "creatorId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_path": {
+      "name": "talescape_path",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_path_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fromBranchId": {
+          "name": "fromBranchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toBranchId": {
+          "name": "toBranchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         },
         "type": {
           "name": "type",
@@ -746,104 +752,14 @@
           "notNull": true,
           "default": "'private'"
         },
-        "embeddable": {
-          "name": "embeddable",
+        "label": {
+          "name": "label",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'private'"
-        },
-        "cloneable": {
-          "name": "cloneable",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'private'"
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
-        "data": {
-          "name": "data",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_fragment_creatorId_talescape_user_id_fk": {
-          "name": "talescape_fragment_creatorId_talescape_user_id_fk",
-          "tableFrom": "talescape_fragment",
-          "tableTo": "talescape_user",
-          "columnsFrom": [
-            "creatorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_section_embed": {
-      "name": "talescape_section_embed",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_section_embed_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
         },
-        "sectionId": {
-          "name": "sectionId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "taleId": {
-          "name": "taleId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "index": {
-          "name": "index",
+        "order": {
+          "name": "order",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -864,22 +780,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "talescape_section_embed_sectionId_talescape_section_id_fk": {
-          "name": "talescape_section_embed_sectionId_talescape_section_id_fk",
-          "tableFrom": "talescape_section_embed",
-          "tableTo": "talescape_section",
-          "columnsFrom": [
-            "sectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_section_embed_taleId_talescape_tale_id_fk": {
-          "name": "talescape_section_embed_taleId_talescape_tale_id_fk",
-          "tableFrom": "talescape_section_embed",
+        "talescape_path_taleId_talescape_tale_id_fk": {
+          "name": "talescape_path_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_path",
           "tableTo": "talescape_tale",
           "columnsFrom": [
             "taleId"
@@ -889,75 +792,13 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_section_permission": {
-      "name": "talescape_section_permission",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_section_permission_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
         },
-        "sectionId": {
-          "name": "sectionId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permissionTypes": {
-          "name": "permissionTypes",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_section_permission_sectionId_talescape_section_id_fk": {
-          "name": "talescape_section_permission_sectionId_talescape_section_id_fk",
-          "tableFrom": "talescape_section_permission",
-          "tableTo": "talescape_section",
+        "talescape_path_fromBranchId_talescape_branch_id_fk": {
+          "name": "talescape_path_fromBranchId_talescape_branch_id_fk",
+          "tableFrom": "talescape_path",
+          "tableTo": "talescape_branch",
           "columnsFrom": [
-            "sectionId"
+            "fromBranchId"
           ],
           "columnsTo": [
             "id"
@@ -965,12 +806,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "talescape_section_permission_userId_talescape_user_id_fk": {
-          "name": "talescape_section_permission_userId_talescape_user_id_fk",
-          "tableFrom": "talescape_section_permission",
-          "tableTo": "talescape_user",
+        "talescape_path_toBranchId_talescape_branch_id_fk": {
+          "name": "talescape_path_toBranchId_talescape_branch_id_fk",
+          "tableFrom": "talescape_path",
+          "tableTo": "talescape_branch",
           "columnsFrom": [
-            "userId"
+            "toBranchId"
           ],
           "columnsTo": [
             "id"
@@ -1006,23 +847,37 @@
             "cycle": false
           }
         },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "branchId": {
+          "name": "branchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "creatorId": {
           "name": "creatorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "layout": {
-          "name": "layout",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "orientation": {
           "name": "orientation",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'vertical'"
+        },
+        "direction": {
+          "name": "direction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'down'"
         },
         "inputMode": {
           "name": "inputMode",
@@ -1044,15 +899,21 @@
           "notNull": true,
           "default": true
         },
-        "visibility": {
-          "name": "visibility",
-          "type": "text",
+        "isSnap": {
+          "name": "isSnap",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "'private'"
+          "default": false
         },
-        "embeddable": {
-          "name": "embeddable",
+        "index": {
+          "name": "index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visibility": {
+          "name": "visibility",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1064,13 +925,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'private'"
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
         },
         "createdAt": {
           "name": "createdAt",
@@ -1088,6 +942,32 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "talescape_section_taleId_talescape_tale_id_fk": {
+          "name": "talescape_section_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_section",
+          "tableTo": "talescape_tale",
+          "columnsFrom": [
+            "taleId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_section_branchId_talescape_branch_id_fk": {
+          "name": "talescape_section_branchId_talescape_branch_id_fk",
+          "tableFrom": "talescape_section",
+          "tableTo": "talescape_branch",
+          "columnsFrom": [
+            "branchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "talescape_section_creatorId_talescape_user_id_fk": {
           "name": "talescape_section_creatorId_talescape_user_id_fk",
           "tableFrom": "talescape_section",
@@ -1194,126 +1074,6 @@
           "tableTo": "talescape_part",
           "columnsFrom": [
             "partId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_entry_range": {
-      "name": "talescape_entry_range",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_entry_range_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "taleId": {
-          "name": "taleId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "entryId": {
-          "name": "entryId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "firstBlockId": {
-          "name": "firstBlockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lastBlockId": {
-          "name": "lastBlockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_entry_range_taleId_talescape_tale_id_fk": {
-          "name": "talescape_entry_range_taleId_talescape_tale_id_fk",
-          "tableFrom": "talescape_entry_range",
-          "tableTo": "talescape_tale",
-          "columnsFrom": [
-            "taleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_entry_range_entryId_talescape_entry_id_fk": {
-          "name": "talescape_entry_range_entryId_talescape_entry_id_fk",
-          "tableFrom": "talescape_entry_range",
-          "tableTo": "talescape_entry",
-          "columnsFrom": [
-            "entryId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_entry_range_firstBlockId_talescape_block_id_fk": {
-          "name": "talescape_entry_range_firstBlockId_talescape_block_id_fk",
-          "tableFrom": "talescape_entry_range",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "firstBlockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_entry_range_lastBlockId_talescape_block_id_fk": {
-          "name": "talescape_entry_range_lastBlockId_talescape_block_id_fk",
-          "tableFrom": "talescape_entry_range",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "lastBlockId"
           ],
           "columnsTo": [
             "id"
@@ -1447,126 +1207,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.talescape_part_range": {
-      "name": "talescape_part_range",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "talescape_part_range_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "taleId": {
-          "name": "taleId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "partId": {
-          "name": "partId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "firstBlockId": {
-          "name": "firstBlockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lastBlockId": {
-          "name": "lastBlockId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "talescape_part_range_taleId_talescape_tale_id_fk": {
-          "name": "talescape_part_range_taleId_talescape_tale_id_fk",
-          "tableFrom": "talescape_part_range",
-          "tableTo": "talescape_tale",
-          "columnsFrom": [
-            "taleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_part_range_partId_talescape_part_id_fk": {
-          "name": "talescape_part_range_partId_talescape_part_id_fk",
-          "tableFrom": "talescape_part_range",
-          "tableTo": "talescape_part",
-          "columnsFrom": [
-            "partId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_part_range_firstBlockId_talescape_block_id_fk": {
-          "name": "talescape_part_range_firstBlockId_talescape_block_id_fk",
-          "tableFrom": "talescape_part_range",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "firstBlockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "talescape_part_range_lastBlockId_talescape_block_id_fk": {
-          "name": "talescape_part_range_lastBlockId_talescape_block_id_fk",
-          "tableFrom": "talescape_part_range",
-          "tableTo": "talescape_block",
-          "columnsFrom": [
-            "lastBlockId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.talescape_part": {
       "name": "talescape_part",
       "schema": "",
@@ -1642,6 +1282,446 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.talescape_block_permission": {
+      "name": "talescape_block_permission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_block_permission_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "blockId": {
+          "name": "blockId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permissionTypes": {
+          "name": "permissionTypes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_block_permission_blockId_talescape_block_id_fk": {
+          "name": "talescape_block_permission_blockId_talescape_block_id_fk",
+          "tableFrom": "talescape_block_permission",
+          "tableTo": "talescape_block",
+          "columnsFrom": [
+            "blockId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_block_permission_userId_talescape_user_id_fk": {
+          "name": "talescape_block_permission_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_block_permission",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_branch_permission": {
+      "name": "talescape_branch_permission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_branch_permission_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "branchId": {
+          "name": "branchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permissionTypes": {
+          "name": "permissionTypes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_branch_permission_branchId_talescape_branch_id_fk": {
+          "name": "talescape_branch_permission_branchId_talescape_branch_id_fk",
+          "tableFrom": "talescape_branch_permission",
+          "tableTo": "talescape_branch",
+          "columnsFrom": [
+            "branchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_branch_permission_userId_talescape_user_id_fk": {
+          "name": "talescape_branch_permission_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_branch_permission",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_fragment_permission": {
+      "name": "talescape_fragment_permission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_fragment_permission_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "fragmentId": {
+          "name": "fragmentId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permissionTypes": {
+          "name": "permissionTypes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_fragment_permission_fragmentId_talescape_fragment_id_fk": {
+          "name": "talescape_fragment_permission_fragmentId_talescape_fragment_id_fk",
+          "tableFrom": "talescape_fragment_permission",
+          "tableTo": "talescape_fragment",
+          "columnsFrom": [
+            "fragmentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_fragment_permission_userId_talescape_user_id_fk": {
+          "name": "talescape_fragment_permission_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_fragment_permission",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_path_permission": {
+      "name": "talescape_path_permission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_path_permission_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "pathId": {
+          "name": "pathId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permissionTypes": {
+          "name": "permissionTypes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_path_permission_pathId_talescape_path_id_fk": {
+          "name": "talescape_path_permission_pathId_talescape_path_id_fk",
+          "tableFrom": "talescape_path_permission",
+          "tableTo": "talescape_path",
+          "columnsFrom": [
+            "pathId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_path_permission_userId_talescape_user_id_fk": {
+          "name": "talescape_path_permission_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_path_permission",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_section_permission": {
+      "name": "talescape_section_permission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_section_permission_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "sectionId": {
+          "name": "sectionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permissionTypes": {
+          "name": "permissionTypes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_section_permission_sectionId_talescape_section_id_fk": {
+          "name": "talescape_section_permission_sectionId_talescape_section_id_fk",
+          "tableFrom": "talescape_section_permission",
+          "tableTo": "talescape_section",
+          "columnsFrom": [
+            "sectionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_section_permission_userId_talescape_user_id_fk": {
+          "name": "talescape_section_permission_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_section_permission",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.talescape_tale_permission": {
       "name": "talescape_tale_permission",
       "schema": "",
@@ -1667,13 +1747,13 @@
           "name": "taleId",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "userId": {
           "name": "userId",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "permissionTypes": {
           "name": "permissionTypes",
@@ -1716,6 +1796,129 @@
           "tableTo": "talescape_user",
           "columnsFrom": [
             "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_tale_progress": {
+      "name": "talescape_tale_progress",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "talescape_tale_progress_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "taleId": {
+          "name": "taleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seenBlockIds": {
+          "name": "seenBlockIds",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "lastBlockId": {
+          "name": "lastBlockId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maxBlockIdReached": {
+          "name": "maxBlockIdReached",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activePathIds": {
+          "name": "activePathIds",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "seenPathIds": {
+          "name": "seenPathIds",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "seenBlockProgress": {
+          "name": "seenBlockProgress",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "maxReadProgress": {
+          "name": "maxReadProgress",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "talescape_tale_progress_userId_talescape_user_id_fk": {
+          "name": "talescape_tale_progress_userId_talescape_user_id_fk",
+          "tableFrom": "talescape_tale_progress",
+          "tableTo": "talescape_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "talescape_tale_progress_taleId_talescape_tale_id_fk": {
+          "name": "talescape_tale_progress_taleId_talescape_tale_id_fk",
+          "tableFrom": "talescape_tale_progress",
+          "tableTo": "talescape_tale",
+          "columnsFrom": [
+            "taleId"
           ],
           "columnsTo": [
             "id"
@@ -1908,7 +2111,14 @@
           "name": "userId",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "isOfficial": {
+          "name": "isOfficial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -1956,6 +2166,37 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.talescape_userEmail": {
+      "name": "talescape_userEmail",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2027,37 +2268,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.talescape_userEmail": {
-      "name": "talescape_userEmail",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

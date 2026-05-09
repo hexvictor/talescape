@@ -1,9 +1,8 @@
-// middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 export const clerkMiddlewareConfig = {
-	signInUrl: "/sign-in", // 👈 Custom sign-in route
-	signUpUrl: "/sign-up", // Optional
+	signInUrl: "/sign-in",
+	signUpUrl: "/sign-up",
 };
 
 const isProtectedRoute = createRouteMatcher([
@@ -16,13 +15,23 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-	if (isProtectedRoute(req)) await auth.protect();
+	console.log("middleware hit:", req.nextUrl.pathname);
+	if (isProtectedRoute(req)) {
+		await auth.protect();
+	}
+	//  const { isAuthenticated, redirectToSignIn } = await auth()
+
+	// if (!isAuthenticated && isProtectedRoute(req)) {
+	// // Add custom logic to run before redirecting
+
+	// return redirectToSignIn()
+	// }
 }, clerkMiddlewareConfig);
 
 export const config = {
 	matcher: [
-		// Skip Next.js internals and all static files, unless found in search params
-		"/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+		// Skip Next.js internals, Sentry monitoring route, and all static files, unless found in search params
+		"/((?!_next|monitoring|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
 		// Always run for API routes
 		"/(api|trpc)(.*)",
 	],

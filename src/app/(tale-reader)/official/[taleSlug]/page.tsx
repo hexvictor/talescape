@@ -1,38 +1,36 @@
-import { getOfficialTale } from "~/server/db/queries/taleReader/tales";
+export const revalidate = 60;
+
+import { TaleNotFound, TaleReader } from "~/features/tale-reader/components";
 import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
-import {
-  LoadingTale,
-  TaleNotFound,
-  TaleReader,
-} from "~/features/tale-reader/components";
-type PageProps = {
-  params: { taleSlug: string };
-};
+import { getOfficialTale } from "~/server/db/data/tale-reader/queries/tales";
+import { logDatabaseDiagnostics } from "~/server/db/diagnostics";
+import type { OfficialTalePageProps } from "./types";
 
-export default async function OfficialTalePage({ params }: PageProps) {
-  // const { taleSlug } = useParams() as TaleParams;
-  const { taleSlug } = await params;
-  if (taleSlug) {
-    try {
-      const { tale, progress } = await getOfficialTale(taleSlug);
-      if (!tale) {
-        return <TaleNotFound />;
-      }
+export default async function OfficialTalePage({
+	params,
+}: OfficialTalePageProps) {
+	const { taleSlug } = await params;
 
-      return (
-        <LoadingTale>
-          <TaleReader tale={tale} progress={progress} />
-        </LoadingTale>
-      );
-    } catch (error) {
-      if (error instanceof TaleAccessError && error.status === 404) {
-        return <TaleNotFound />;
-      }
+	if (taleSlug) {
+		try {
+			const { tale, progress } = await getOfficialTale(taleSlug);
 
-      // Optional: log unexpected errors
-      console.error("Unexpected error loading official tale:", error);
-      return <TaleNotFound />;
-    }
-  }
-  return <TaleNotFound />;
+			if (!tale) {
+				await logDatabaseDiagnostics(`official tale load failed: ${taleSlug}`);
+				return <TaleNotFound />;
+			}
+
+			return <TaleReader tale={tale} progress={progress} />;
+		} catch (error) {
+			if (error instanceof TaleAccessError && error.status === 404) {
+				return <TaleNotFound />;
+			}
+
+			console.error("Unexpected error loading official tale:", error);
+			await logDatabaseDiagnostics(`official tale load failed: ${taleSlug}`);
+			return <TaleNotFound />;
+		}
+	}
+
+	return <TaleNotFound />;
 }

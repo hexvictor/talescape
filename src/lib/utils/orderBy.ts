@@ -2,8 +2,8 @@ import { asc, desc } from "drizzle-orm";
 import type { AnyPgColumn, AnyPgTable } from "drizzle-orm/pg-core";
 
 export type OrderByInput<TField extends string> = {
-  field: TField;
-  direction: "asc" | "desc";
+	field: TField;
+	direction: "asc" | "desc";
 };
 
 /**
@@ -15,25 +15,25 @@ export type OrderByInput<TField extends string> = {
  * @returns An array suitable for Drizzle's `orderBy` option in `findMany`.
  */
 export function getOrderBy<
-  TTable extends AnyPgTable,
-  TValidColumnKeys extends Extract<keyof TTable, string>
+	TTable extends AnyPgTable,
+	TValidColumnKeys extends Extract<keyof TTable, string>,
 >(
-  tableSchema: TTable,
-  orderByInput: OrderByInput<TValidColumnKeys> | undefined,
-  //biome-ignore lint/suspicious/noExplicitAny: ignore
-  defaultOrder: any[]
-  //biome-ignore lint/suspicious/noExplicitAny: ignore
+	tableSchema: TTable,
+	orderByInput: OrderByInput<TValidColumnKeys> | undefined,
+	//biome-ignore lint/suspicious/noExplicitAny: ignore
+	defaultOrder: any[],
+	//biome-ignore lint/suspicious/noExplicitAny: ignore
 ): any[] {
-  if (orderByInput) {
-    const column = tableSchema[orderByInput.field];
+	if (orderByInput) {
+		const column = tableSchema[orderByInput.field];
 
-    const drizzleColumn = column as AnyPgColumn;
+		const drizzleColumn = column as AnyPgColumn;
 
-    return [
-      orderByInput.direction === "desc"
-        ? desc(drizzleColumn)
-        : asc(drizzleColumn),
-    ];
-  }
-  return defaultOrder;
+		return [
+			orderByInput.direction === "desc"
+				? desc(drizzleColumn)
+				: asc(drizzleColumn),
+		];
+	}
+	return defaultOrder;
 }

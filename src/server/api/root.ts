@@ -10,12 +10,12 @@ import { bookRouter } from "./routers/book";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  library: {
-    author: authorRouter,
-    book: bookRouter,
-  },
-  image: imageRouter,
-  taleReader: { progress: taleProgressRouter },
+	library: {
+		author: authorRouter,
+		book: bookRouter,
+	},
+	image: imageRouter,
+	taleReader: { progress: taleProgressRouter },
 });
 
 // export type definition of API

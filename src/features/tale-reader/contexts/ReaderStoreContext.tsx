@@ -1,44 +1,60 @@
-import { useStore, type StoreApi } from "zustand";
-import { createContext, useContext, useEffect, useRef } from "react";
-import type { Tale } from "~/features/tale-reader/types/taleStructure";
+"use client";
+
+import { createContext, useContext, useRef } from "react";
+import { type StoreApi, useStore } from "zustand";
+import { getInitialProgressFromLocalStorage } from "~/features/tale-reader/services/readerProgressStorage";
 import {
-  createTaleReaderStore,
-  type TaleReaderState,
-} from "~/features/tale-reader/store/TaleReaderStore";
-import type { TaleProgressSchema } from "~/server/db/schema";
+	type TaleReaderState,
+	createReaderStore,
+} from "~/features/tale-reader/store/createReaderStore";
+import type { Tale } from "~/server/db/data/tale-reader/types/tales";
+import type { ReaderProgressSchema } from "~/server/db/schema";
 
-const ReaderStoreContext = createContext<ReturnType<
-  typeof createTaleReaderStore
-> | null>(null);
+const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
+	null,
+);
 
-export const ReaderStoreProvider = ({
-  children,
-  initialTale,
-  initialProgress,
-}: {
-  children: React.ReactNode;
-  initialTale: Tale;
-  initialProgress: TaleProgressSchema;
-}) => {
-  const store = useRef(
-    createTaleReaderStore(initialTale, initialProgress)
-  ).current;
-
-  return (
-    <ReaderStoreContext.Provider value={store}>
-      {children}
-    </ReaderStoreContext.Provider>
-  );
+type ReaderStoreProviderProps = {
+	children: React.ReactNode;
+	initialTale: Tale;
+	initialProgress: ReaderProgressSchema | null;
 };
 
-export function useReaderStoreInstance(): StoreApi<TaleReaderState> {
-  const store = useContext(ReaderStoreContext);
-  if (!store) throw new Error("Must be used within ReaderStoreProvider");
-  return store;
+export function ReaderStoreProvider({
+	children,
+	initialTale,
+	initialProgress,
+}: ReaderStoreProviderProps) {
+	const storeRef = useRef<StoreApi<TaleReaderState> | null>(null);
+
+	if (!storeRef.current) {
+		const resolvedProgress =
+			initialProgress ?? getInitialProgressFromLocalStorage(initialTale);
+
+		storeRef.current = createReaderStore(initialTale, resolvedProgress);
+	}
+
+	return (
+		<ReaderStoreContext.Provider value={storeRef.current}>
+			{children}
+		</ReaderStoreContext.Provider>
+	);
 }
 
-export const useReaderStore = <T,>(selector: (state: TaleReaderState) => T) => {
-  const store = useContext(ReaderStoreContext);
-  if (!store) throw new Error("ReaderStore not found");
-  return useStore(store, selector);
-};
+export function useReaderStoreInstance(): StoreApi<TaleReaderState> {
+	const store = useContext(ReaderStoreContext);
+	if (!store) {
+		throw new Error(
+			"useReaderStoreInstance must be used within ReaderStoreProvider",
+		);
+	}
+	return store;
+}
+
+export function useReaderStore<T>(selector: (state: TaleReaderState) => T): T {
+	const store = useContext(ReaderStoreContext);
+	if (!store) {
+		throw new Error("useReaderStore must be used within ReaderStoreProvider");
+	}
+	return useStore(store, selector);
+}

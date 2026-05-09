@@ -1,16 +1,12 @@
-export type AssetVisibility = "public" | "private" | "unlisted" | "restricted";
+export type AssetVisibility = "public" | "private" | "restricted";
+export type AssetAccessLevel = "private" | "public" | "shared";
+
+export type AssetPermissionType = "viewer" | "collaborator" | "cloner";
 
 export type AssetStatus =
-  | "draft"
-  | "review"
-  | "approved"
-  | "rejected"
-  | "published"
-  | "archived";
-
-export type AssetAccessLevel = "private" | "public" | "shared";
-export type AssetPermissionType =
-  | "viewer"
-  | "embedder"
-  | "collaborator"
-  | "cloner";
+	| "draft"
+	| "review"
+	| "approved"
+	| "rejected"
+	| "published"
+	| "archived";

@@ -1,6 +1,5 @@
-import { SignUp as ClerkSignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import React from "react";
+import SignUpForm from "~/features/auth/components/SignUpForm";
 
 export const metadata: Metadata = {
 	title: "Sign up | Talescape",
@@ -8,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 function SignUp() {
-	return <ClerkSignUp />;
+	return <SignUpForm />;
 }
 
 export default SignUp;
