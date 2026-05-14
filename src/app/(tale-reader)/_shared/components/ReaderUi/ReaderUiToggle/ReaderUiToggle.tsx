@@ -1,0 +1,43 @@
+"use client";
+
+import clsx from "clsx";
+import { Eye, EyeOff } from "lucide-react";
+import { useReaderStore } from "~/app/(tale-reader)/_shared/contexts/ReaderStoreContext";
+import { Button } from "~/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "~/components/ui/tooltip";
+
+export default function ReaderUiToggle() {
+	const uiVisible = useReaderStore((s) => s.ui.isVisible);
+	const toggleVisibility = useReaderStore((s) => s.ui.toggleVisibility);
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					variant={uiVisible ? "outline" : "ghost"}
+					size="icon"
+					className={clsx(
+						"pointer-events-auto absolute bottom-6 left-6 z-50 cursor-pointer rounded-full shadow-lg hover:scale-105",
+					)}
+					onClick={() => {
+						toggleVisibility();
+					}}
+					aria-label={uiVisible ? "Hide interface" : "Show interface"}
+				>
+					{uiVisible ? (
+						<EyeOff className="h-5 w-5" />
+					) : (
+						<Eye className="h-5 w-5" />
+					)}
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent side="top">
+				{uiVisible ? "Hide interface" : "Show interface"}
+			</TooltipContent>
+		</Tooltip>
+	);
+}

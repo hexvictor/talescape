@@ -1,6 +1,6 @@
 import "server-only";
-import { db } from "~/server/db";
 import { auth } from "@clerk/nextjs/server";
+import { db } from "~/server/db";
 
 export async function getBookById(id: number) {
 	const user = await auth();
@@ -11,7 +11,7 @@ export async function getBookById(id: number) {
 	});
 
 	if (!book) throw new Error("Book not found");
-	if (book.userId !== user.userId) throw new Error("Unauthorized");
+	if (book.creatorId !== user.userId) throw new Error("Unauthorized");
 
 	return book;
 }

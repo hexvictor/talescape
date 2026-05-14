@@ -8,6 +8,7 @@ type BranchSeed = Pick<
 	| "name"
 	| "index"
 	| "isOfficial"
+	| "isVerified"
 	| "editable"
 	| "visibility"
 	| "cloneable"
@@ -19,6 +20,7 @@ export async function seedBranches() {
 			id: tales.id,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
+			isVerified: tales.isVerified,
 			editable: tales.editable,
 			visibility: tales.visibility,
 			cloneable: tales.cloneable,
@@ -34,6 +36,7 @@ export async function seedBranches() {
 					name: "Beginning",
 					index: 0,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -44,6 +47,7 @@ export async function seedBranches() {
 					name: "First Path",
 					index: 1,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -54,6 +58,7 @@ export async function seedBranches() {
 					name: "Second Path",
 					index: 2,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -64,6 +69,7 @@ export async function seedBranches() {
 					name: "Third Path",
 					index: 3,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -74,6 +80,7 @@ export async function seedBranches() {
 					name: "Fourth Path",
 					index: 4,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -84,6 +91,7 @@ export async function seedBranches() {
 					name: "The Choice",
 					index: 5,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -94,6 +102,7 @@ export async function seedBranches() {
 					name: "The Good Choice",
 					index: 6,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -104,6 +113,7 @@ export async function seedBranches() {
 					name: "The Bad Choice",
 					index: 7,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -114,6 +124,7 @@ export async function seedBranches() {
 					name: "Ending",
 					index: 8,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -128,6 +139,7 @@ export async function seedBranches() {
 				name: "Main",
 				index: 0,
 				isOfficial: tale.isOfficial,
+				isVerified: tale.isVerified,
 				editable: tale.editable,
 				visibility: tale.visibility,
 				cloneable: tale.cloneable,

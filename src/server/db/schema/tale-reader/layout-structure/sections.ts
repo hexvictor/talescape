@@ -27,7 +27,10 @@ export const sections = createTable("section", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => branches.id),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	orientation: d
 		.text()
 		.notNull()
@@ -36,6 +39,7 @@ export const sections = createTable("section", (d) => ({
 	direction: d.text().notNull().$type<SectionDirection>().default("down"),
 	inputMode: d.text().array().notNull().$type<SectionInputMode[]>(),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	isSnap: d.boolean().notNull().default(false),
 	index: d.integer().notNull(),

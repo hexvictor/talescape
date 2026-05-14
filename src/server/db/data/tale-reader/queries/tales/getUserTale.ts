@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
+import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import { db } from "~/server/db";
 import { getTale } from "~/server/db/data/tale-reader/queries/tales/getTale";
 import type { Tale, TaleData } from "~/server/db/data/tale-reader/types/tales";

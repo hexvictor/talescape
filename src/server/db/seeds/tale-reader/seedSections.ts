@@ -17,6 +17,7 @@ type SectionSeed = Pick<
 	| "isSnap"
 	| "index"
 	| "isOfficial"
+	| "isVerified"
 	| "editable"
 	| "visibility"
 	| "cloneable"
@@ -28,6 +29,7 @@ export async function seedSections() {
 			id: tales.id,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
+			isVerified: tales.isVerified,
 			editable: tales.editable,
 			visibility: tales.visibility,
 			cloneable: tales.cloneable,
@@ -154,6 +156,7 @@ export async function seedSections() {
 					isSnap: false,
 					index: plan.index,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,
@@ -200,6 +203,7 @@ export async function seedSections() {
 				isSnap: false,
 				index: plan.index,
 				isOfficial: tale.isOfficial,
+				isVerified: tale.isVerified,
 				editable: tale.editable,
 				visibility: tale.visibility,
 				cloneable: tale.cloneable,

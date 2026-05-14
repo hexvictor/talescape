@@ -33,8 +33,12 @@ export const blocks = createTable("block", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => parts.id),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	pageId: d.integer().references(() => pages.id),
 	isSnap: d.boolean().notNull().default(false),

@@ -1,4 +1,4 @@
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
+import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import { db } from "~/server/db";
 import type { TaleData } from "~/server/db/data/tale-reader/types/tales";
 import { getSignedInUserId } from "../auth/getSignedInUserId";

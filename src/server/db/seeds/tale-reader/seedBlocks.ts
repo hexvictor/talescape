@@ -20,10 +20,13 @@ type BlockSeed = Pick<
 	| "isSnap"
 	| "index"
 	| "isOfficial"
+	| "isVerified"
 	| "editable"
 	| "visibility"
 	| "cloneable"
 >;
+
+const shouldSeedBlockSnap = (pageId: number | null) => pageId != null;
 
 export async function seedBlocks() {
 	const allEntries = await db
@@ -67,6 +70,7 @@ export async function seedBlocks() {
 			id: tales.id,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
+			isVerified: tales.isVerified,
 			editable: tales.editable,
 			visibility: tales.visibility,
 			cloneable: tales.cloneable,
@@ -177,17 +181,19 @@ export async function seedBlocks() {
 				for (let i = 0; i < 3; i++) {
 					const currentIndex = sectionCounters.get(sectionId) ?? 0;
 					sectionCounters.set(sectionId, currentIndex + 1);
+					const pageId = pageIds[i] ?? null;
 
 					seeds.push({
 						taleId,
 						sectionId,
 						entryId: entry.id,
 						partId: entry.partId,
-						pageId: pageIds[i] ?? null,
+						pageId,
 						creatorId: tale.creatorId,
-						isSnap: false,
+						isSnap: shouldSeedBlockSnap(pageId),
 						index: currentIndex,
 						isOfficial: tale.isOfficial,
+						isVerified: tale.isVerified,
 						editable: tale.editable,
 						visibility: tale.visibility,
 						cloneable: tale.cloneable,
@@ -231,17 +237,19 @@ export async function seedBlocks() {
 			for (let i = 0; i < 4; i++) {
 				const currentIndex = sectionCounters.get(sectionId) ?? 0;
 				sectionCounters.set(sectionId, currentIndex + 1);
+				const pageId = pageIds[i] ?? null;
 
 				seeds.push({
 					taleId,
 					sectionId,
 					entryId: entry.id,
 					partId: entry.partId,
-					pageId: pageIds[i] ?? null,
+					pageId,
 					creatorId: tale.creatorId,
-					isSnap: false,
+					isSnap: shouldSeedBlockSnap(pageId),
 					index: currentIndex,
 					isOfficial: tale.isOfficial,
+					isVerified: tale.isVerified,
 					editable: tale.editable,
 					visibility: tale.visibility,
 					cloneable: tale.cloneable,

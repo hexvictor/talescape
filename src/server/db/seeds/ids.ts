@@ -1,8 +1,8 @@
 const devUserId1 = "user_2ydsCbXHNJd6Cl6ycKEeIQEnOX2";
 const devUserId2 = "user_2ydsIYHFnj03ySTWvgkcgYXLvN0";
 
-const previewUserId1 = "user_2ymhkayaRPisrXkmWI05I13qj2m";
-const previewUserId2 = "user_2ymhoyeoUYhg09DZixKuZ0rEFDm";
+const prodUserId1 = "user_2ymhkayaRPisrXkmWI05I13qj2m";
+const prodUserId2 = "user_2ymhoyeoUYhg09DZixKuZ0rEFDm";
 
 const seedTarget = process.env.SEED_TARGET ?? "dev";
 
@@ -12,12 +12,12 @@ const seedUserIds = {
 		userId2: devUserId2,
 	},
 	preview: {
-		userId1: previewUserId1,
-		userId2: previewUserId2,
+		userId1: prodUserId1,
+		userId2: prodUserId2,
 	},
 	prod: {
-		userId1: previewUserId1,
-		userId2: previewUserId2,
+		userId1: prodUserId1,
+		userId2: prodUserId2,
 	},
 } as const;
 
@@ -42,6 +42,8 @@ export const seedUserRecords = [
 		emailVerifiedAt: new Date("2025-06-17T15:54:25.667Z"),
 		imageUrl:
 			"https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yeWRzQ2w4M2lEcWtMZ016QTgweWE0bjFQZWQifQ",
+		role: "administrator",
+		isVerified: true,
 		email: "jvoliveiralive@gmail.com",
 	},
 	{
@@ -54,6 +56,8 @@ export const seedUserRecords = [
 		emailVerifiedAt: new Date("2025-06-17T15:55:05.671Z"),
 		imageUrl:
 			"https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yeWRzSVp6QlBwOE83VmxFOGZzMWFwRllSQ3gifQ",
+		role: "member",
+		isVerified: false,
 		email: "jvictorddo@gmail.com",
 	},
 ] as const;

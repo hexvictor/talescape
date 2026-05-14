@@ -1,3 +1,3 @@
 export type UserTalePageProps = {
-	params: { creatorUsername: string; taleSlug: string };
+	params: Promise<{ creatorUsername: string; taleSlug: string }>;
 };

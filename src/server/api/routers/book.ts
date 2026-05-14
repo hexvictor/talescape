@@ -16,7 +16,6 @@ export const createBookInputSchema = z.object({
 		.int("Author ID must be an integer")
 		.nullable()
 		.optional(),
-	userId: z.string().nullable().optional(),
 	description: z.string().nullable().optional(),
 	coverImageId: z
 		.number()
@@ -78,7 +77,7 @@ export const bookRouter = createTRPCRouter({
 			await ctx.db.insert(books).values({
 				title: input.title,
 				authorId: input.authorId || null,
-				userId: input.userId || null,
+				creatorId: ctx.session.userId,
 				description: input.description || null,
 				coverImageId: input.coverImageId || null,
 				type: input.type,
@@ -107,7 +106,7 @@ export const bookRouter = createTRPCRouter({
 				where: whereClause,
 				with: {
 					author: true,
-					user: true,
+					creator: true,
 					coverImage: true,
 				},
 			});
@@ -126,7 +125,7 @@ export const bookRouter = createTRPCRouter({
 				type: type,
 			};
 
-			const requiredConditions = [eq(books.userId, ctx.session.userId)];
+			const requiredConditions = [eq(books.creatorId, ctx.session.userId)];
 
 			// Call the helper with both dynamic filters AND required conditions
 			const whereClause = createWhereConditions(
@@ -142,7 +141,7 @@ export const bookRouter = createTRPCRouter({
 				where: whereClause,
 				with: {
 					author: true,
-					user: true,
+					creator: true,
 					coverImage: true,
 				},
 			});
@@ -156,7 +155,7 @@ export const bookRouter = createTRPCRouter({
 				where: (books, { eq }) => eq(books.id, input.id),
 				with: {
 					author: true,
-					user: true,
+					creator: true,
 					coverImage: true,
 				},
 			});

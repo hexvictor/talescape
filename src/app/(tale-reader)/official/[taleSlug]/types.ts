@@ -1,3 +1,3 @@
 export type OfficialTalePageProps = {
-	params: { taleSlug: string };
+	params: Promise<{ taleSlug: string }>;
 };

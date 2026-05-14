@@ -17,6 +17,7 @@ type FragmentSeed = Pick<
 	| "type"
 	| "index"
 	| "isOfficial"
+	| "isVerified"
 	| "editable"
 	| "visibility"
 	| "cloneable"
@@ -67,6 +68,7 @@ export async function seedFragments() {
 			id: tales.id,
 			title: tales.title,
 			isOfficial: tales.isOfficial,
+			isVerified: tales.isVerified,
 			editable: tales.editable,
 			visibility: tales.visibility,
 			cloneable: tales.cloneable,
@@ -114,6 +116,7 @@ export async function seedFragments() {
 				type: "text",
 				index: 0,
 				isOfficial: tale.isOfficial,
+				isVerified: tale.isVerified,
 				editable: tale.editable,
 				visibility: tale.visibility,
 				cloneable: tale.cloneable,
@@ -128,6 +131,7 @@ export async function seedFragments() {
 				type: "image",
 				index: 1,
 				isOfficial: tale.isOfficial,
+				isVerified: tale.isVerified,
 				editable: tale.editable,
 				visibility: tale.visibility,
 				cloneable: tale.cloneable,

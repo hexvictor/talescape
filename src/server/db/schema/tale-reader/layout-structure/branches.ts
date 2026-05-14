@@ -18,10 +18,14 @@ export const branches = createTable("branch", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	name: d.text().notNull(),
 	index: d.integer().notNull(),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),

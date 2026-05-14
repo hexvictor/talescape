@@ -58,8 +58,18 @@ async function main() {
 	await db.execute(sql`DELETE FROM talescape_tale;`);
 	await db.execute(sql`ALTER SEQUENCE talescape_tale_id_seq RESTART WITH 1;`);
 
+	await db.execute(sql`DELETE FROM talescape_book_permission;`);
+	await db.execute(
+		sql`ALTER SEQUENCE talescape_book_permission_id_seq RESTART WITH 1;`,
+	);
+
 	await db.execute(sql`DELETE FROM talescape_book;`);
 	await db.execute(sql`ALTER SEQUENCE talescape_book_id_seq RESTART WITH 1;`);
+
+	await db.execute(sql`DELETE FROM talescape_author_permission;`);
+	await db.execute(
+		sql`ALTER SEQUENCE talescape_author_permission_id_seq RESTART WITH 1;`,
+	);
 
 	await db.execute(sql`DELETE FROM talescape_author;`);
 	await db.execute(sql`ALTER SEQUENCE talescape_author_id_seq RESTART WITH 1;`);

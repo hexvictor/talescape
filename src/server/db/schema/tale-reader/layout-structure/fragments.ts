@@ -20,9 +20,13 @@ export const fragments = createTable("fragment", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => blocks.id),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	type: d.text().notNull().$type<FragmentType>(),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	index: d.integer().notNull(),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),

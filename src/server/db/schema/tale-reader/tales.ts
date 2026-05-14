@@ -23,12 +23,16 @@ import type { TaleType } from "~/server/db/types/tale-reader/tale";
 
 export const tales = createTable("tale", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
 	bookId: d.integer().references(() => books.id),
 	title: d.text().notNull(),
 	slug: d.text().notNull(),
 	description: d.text().notNull(),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("public"),
 	status: d.text().notNull().$type<AssetStatus>().default("draft"),

@@ -1,5 +1,7 @@
 export * from "./schema/library/authors";
 export * from "./schema/library/books";
+export * from "./schema/library/permissions/authorPermissions";
+export * from "./schema/library/permissions/bookPermissions";
 
 export * from "./schema/tale-reader/layout-structure/blocks";
 export * from "./schema/tale-reader/layout-structure/branches";

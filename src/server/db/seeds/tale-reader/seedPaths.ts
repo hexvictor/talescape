@@ -10,7 +10,9 @@ type PathSeed = Pick<
 	| "type"
 	| "label"
 	| "order"
+	| "creatorId"
 	| "isOfficial"
+	| "isVerified"
 	| "editable"
 	| "visibility"
 >;
@@ -19,7 +21,9 @@ export async function seedPaths() {
 	const branchedTale = await db
 		.select({
 			id: tales.id,
+			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
+			isVerified: tales.isVerified,
 			editable: tales.editable,
 			visibility: tales.visibility,
 		})
@@ -79,7 +83,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "First Path",
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -90,7 +96,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "Second Path",
 			order: 1,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -101,7 +109,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "Third Path",
 			order: 2,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -112,7 +122,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "Fourth Path",
 			order: 3,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -123,7 +135,9 @@ export async function seedPaths() {
 			type: "auto",
 			label: null,
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -134,7 +148,9 @@ export async function seedPaths() {
 			type: "auto",
 			label: null,
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -145,7 +161,9 @@ export async function seedPaths() {
 			type: "auto",
 			label: null,
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -156,7 +174,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "The Good Choice",
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -167,7 +187,9 @@ export async function seedPaths() {
 			type: "choice",
 			label: "The Bad Choice",
 			order: 1,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},
@@ -178,7 +200,9 @@ export async function seedPaths() {
 			type: "auto",
 			label: null,
 			order: 0,
+			creatorId: tale.creatorId,
 			isOfficial: tale.isOfficial,
+			isVerified: tale.isVerified,
 			editable: tale.editable,
 			visibility: tale.visibility,
 		},

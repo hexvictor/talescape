@@ -1,7 +1,10 @@
 export const revalidate = 60;
 
-import { TaleNotFound, TaleReader } from "~/features/tale-reader/components";
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
+import {
+	TaleNotFound,
+	TaleReader,
+} from "~/app/(tale-reader)/_shared/components";
+import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import { getOfficialTale } from "~/server/db/data/tale-reader/queries/tales";
 import { logDatabaseDiagnostics } from "~/server/db/diagnostics";
 import type { OfficialTalePageProps } from "./types";
