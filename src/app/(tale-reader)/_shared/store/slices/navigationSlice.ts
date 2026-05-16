@@ -6,15 +6,22 @@ import type {
 } from "~/server/db/data/tale-reader/types/tales";
 import type { ReaderProgressSchema } from "~/server/db/schema";
 import type { TaleReaderState } from "../createReaderStore";
+import {
+	createNavigationContext,
+	getEffectivePage,
+} from "../selectors/navigationContext";
 import type {
 	Navigation,
+	NavigationContext,
 	NavigationNodeMap,
 	NavigationNodeType,
 } from "../types/navigation";
 
 export type NavigationSlice = {
 	navigation: {
+		context: NavigationContext | null;
 		current: Navigation | null;
+		refreshContext: () => void;
 		set: (id: number, type?: NavigationNodeType) => void;
 		getNodeBlock: (id: number, type: NavigationNodeType) => Block | undefined;
 		getNext: <T extends NavigationNodeType>(
@@ -71,34 +78,77 @@ export const createNavigationSlice =
 				: null;
 
 		const getNodeBlock = createGetNodeBlock(content);
+		const createCurrentNavigation = (
+			block: Block,
+			activePathIds: number[],
+		): Navigation => ({
+			block,
+			effectivePage: getEffectivePage({
+				activePathIds,
+				block,
+				content,
+			}),
+			entry: block.entry,
+			page: block.page,
+			part: block.part,
+			section: block.section,
+		});
+		const createCurrentContext = (
+			block: Block,
+			activePathIds: number[],
+		): NavigationContext =>
+			createNavigationContext({
+				activePathIds,
+				block,
+				content,
+			});
+		const initialActivePathIds = initialProgress?.activePathIds ?? [];
 
 		return {
 			navigation: {
+				context:
+					activeBlock === null
+						? null
+						: createCurrentContext(activeBlock, initialActivePathIds),
 				current:
 					activeBlock === null
 						? null
-						: {
-								block: activeBlock,
-								entry: activeBlock.entry,
-								page: activeBlock.page,
-								part: activeBlock.part,
-								section: activeBlock.section,
-							},
+						: createCurrentNavigation(activeBlock, initialActivePathIds),
+
+				refreshContext: () => {
+					const state = get();
+					const currentBlock = state.navigation.current?.block;
+					if (!currentBlock) return;
+
+					const activePathIds = state.progress.data.activePathIds ?? [];
+					set((nextState) => ({
+						navigation: {
+							...nextState.navigation,
+							context: createNavigationContext({
+								activePathIds,
+								block: currentBlock,
+								content: nextState.tale.data.content,
+							}),
+							current: createCurrentNavigation(currentBlock, activePathIds),
+						},
+					}));
+				},
 
 				set: (id, type = "block") => {
 					const targetBlock = getNodeBlock(id, type);
 					if (!targetBlock) return;
+					const state = get();
+					const activePathIds = state.progress.data.activePathIds ?? [];
 
 					set((state) => ({
 						navigation: {
 							...state.navigation,
-							current: {
-								page: targetBlock.page,
-								entry: targetBlock.entry,
-								part: targetBlock.part,
+							context: createNavigationContext({
+								activePathIds,
 								block: targetBlock,
-								section: targetBlock.section,
-							},
+								content: state.tale.data.content,
+							}),
+							current: createCurrentNavigation(targetBlock, activePathIds),
 						},
 					}));
 				},

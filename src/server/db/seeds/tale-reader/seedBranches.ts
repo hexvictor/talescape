@@ -1,5 +1,6 @@
 import { db } from "~/server/db";
 import { type BranchSchema, branches, tales } from "~/server/db/schema";
+import { isBranchedTaleSlug } from "./branchedTales";
 
 type BranchSeed = Pick<
 	BranchSchema,
@@ -18,6 +19,7 @@ export async function seedBranches() {
 	const allTales = await db
 		.select({
 			id: tales.id,
+			slug: tales.slug,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
 			isVerified: tales.isVerified,
@@ -28,7 +30,7 @@ export async function seedBranches() {
 		.from(tales);
 
 	const seeds: BranchSeed[] = allTales.flatMap((tale) => {
-		if (tale.id === 10) {
+		if (isBranchedTaleSlug(tale.slug)) {
 			return [
 				{
 					taleId: tale.id,

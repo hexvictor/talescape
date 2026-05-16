@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { StoreApi } from "zustand";
 import type { TaleReaderState } from "../store/createReaderStore";
 import { afterFrame } from "./frameTiming";
@@ -21,6 +22,8 @@ type Args = {
 	store: ReaderStore;
 	driver: ScrollDriverApi;
 	getSnapModel: () => ScrollSnapModelApi | null;
+	setProgrammaticScroll: (value: boolean) => void;
+	rememberCurrentBlock: (blockId: number | null) => void;
 };
 
 export type ScrollPositionRestorerApi = {
@@ -44,12 +47,23 @@ export function createScrollPositionRestorer({
 	store,
 	driver,
 	getSnapModel,
+	setProgrammaticScroll,
+	rememberCurrentBlock,
 }: Args): ScrollPositionRestorerApi {
 	const getFallbackBlockId = () =>
 		store.getState().tale.data.content.bounds.firstBlockId ?? null;
 
 	const findBlockElement = (blockId: number) =>
 		document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+
+	const getRangeForBlockId = (blockId: number) => {
+		const model = getSnapModel();
+		const item = model?.getItemByBlockId(blockId);
+		if (item) return item;
+
+		const element = findBlockElement(blockId);
+		return element ? (model?.getRangeForElement(element) ?? null) : null;
+	};
 
 	const restoreBlockStart = (
 		blockId: number | null,
@@ -72,8 +86,7 @@ export function createScrollPositionRestorer({
 			return;
 		}
 
-		const element = findBlockElement(block.id);
-		if (!element) {
+		if (!findBlockElement(block.id)) {
 			if (attempt < 24) {
 				afterFrame(() => {
 					restoreBlockStart(targetBlockId, reason, onDone, attempt + 1);
@@ -94,9 +107,10 @@ export function createScrollPositionRestorer({
 			return;
 		}
 
-		const range = getSnapModel()?.getRangeForElement(element);
+		const range = getRangeForBlockId(block.id);
 		if (!range) {
 			if (attempt < 24) {
+				ScrollTrigger.refresh();
 				getSnapModel()?.rebuild();
 				afterFrame(() => {
 					restoreBlockStart(targetBlockId, reason, onDone, attempt + 1);
@@ -117,12 +131,15 @@ export function createScrollPositionRestorer({
 			return;
 		}
 
+		setProgrammaticScroll(true);
 		store.getState().navigation.set(block.id);
 
 		driver.scrollTo(range.start, {
 			duration: 0,
 			ease: "none",
 			onDone: () => {
+				setProgrammaticScroll(false);
+				rememberCurrentBlock(targetBlockId);
 				onDone?.({ blockId: targetBlockId });
 			},
 		});
@@ -132,8 +149,7 @@ export function createScrollPositionRestorer({
 		const activeBlock = store.getState().navigation.current?.block;
 		if (activeBlock === undefined) return null;
 
-		const element = findBlockElement(activeBlock.id);
-		const range = element ? getSnapModel()?.getRangeForElement(element) : null;
+		const range = getRangeForBlockId(activeBlock.id);
 		const scroll = driver.getScroll();
 		const scrollProgress =
 			range && range.end > range.start
@@ -161,13 +177,12 @@ export function createScrollPositionRestorer({
 			return;
 		}
 
-		const element = findBlockElement(block.id);
-		if (!element) {
+		if (!findBlockElement(block.id)) {
 			onDone?.({ blockId: null });
 			return;
 		}
 
-		const range = getSnapModel()?.getRangeForElement(element);
+		const range = getRangeForBlockId(block.id);
 		if (!range) {
 			onDone?.({ blockId: null });
 			return;
@@ -176,8 +191,12 @@ export function createScrollPositionRestorer({
 		const targetScroll =
 			range.start + (range.end - range.start) * snapshot.scrollProgress;
 
+		setProgrammaticScroll(true);
 		store.getState().navigation.set(block.id);
 		driver.setScroll(targetScroll);
+		ScrollTrigger.update();
+		setProgrammaticScroll(false);
+		rememberCurrentBlock(block.id);
 		onDone?.({ blockId: block.id });
 	};
 

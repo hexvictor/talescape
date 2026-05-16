@@ -5,9 +5,12 @@ import {
 	branches,
 	entries,
 	fragments,
+	pages,
 	sections,
 	tales,
 } from "~/server/db/schema";
+import type { PageType } from "~/server/db/types/tale-reader/page";
+import { isBranchedTaleSlug } from "./branchedTales";
 
 type FragmentSeed = Pick<
 	FragmentSchema,
@@ -41,9 +44,17 @@ export async function seedFragments() {
 		.select({
 			id: entries.id,
 			title: entries.title,
+			type: entries.type,
 			index: entries.index,
 		})
 		.from(entries);
+	const allPages = await db
+		.select({
+			id: pages.id,
+			type: pages.type,
+			isPaginated: pages.isPaginated,
+		})
+		.from(pages);
 
 	const allSections = await db
 		.select({
@@ -66,6 +77,7 @@ export async function seedFragments() {
 	const allTales = await db
 		.select({
 			id: tales.id,
+			slug: tales.slug,
 			title: tales.title,
 			isOfficial: tales.isOfficial,
 			isVerified: tales.isVerified,
@@ -79,6 +91,7 @@ export async function seedFragments() {
 	const entryMap = new Map(
 		allEntries.map((entry) => [entry.id, entry] as const),
 	);
+	const pageMap = new Map(allPages.map((page) => [page.id, page] as const));
 	const sectionMap = new Map(
 		allSections.map((section) => [section.id, section] as const),
 	);
@@ -94,9 +107,11 @@ export async function seedFragments() {
 		const entry = entryMap.get(block.entryId) ?? null;
 		const section = sectionMap.get(block.sectionId) ?? null;
 		const branch = section ? (branchMap.get(section.branchId) ?? null) : null;
+		const page = block.pageId ? (pageMap.get(block.pageId) ?? null) : null;
 		const blockOrdinal = blockOrdinalById.get(block.id) ?? 0;
 		const fragmentContext = {
 			taleTitle: tale.title,
+			taleSlug: tale.slug,
 			taleId: block.taleId,
 			branchName: branch?.name ?? "Main",
 			entryTitle: entry?.title ?? "Untitled entry",
@@ -105,6 +120,7 @@ export async function seedFragments() {
 				: "unplaced section",
 			blockOrdinal,
 			pageId: block.pageId,
+			pageType: page?.type ?? null,
 		};
 		const image = getFragmentImage(fragmentContext);
 
@@ -149,12 +165,14 @@ export async function seedFragments() {
 
 type FragmentTextArgs = {
 	taleTitle: string;
+	taleSlug: string;
 	taleId: number;
 	branchName: string;
 	entryTitle: string;
 	sectionLabel: string;
 	blockOrdinal: number;
 	pageId: number | null;
+	pageType: PageType | null;
 };
 
 type FragmentImage = {
@@ -198,20 +216,24 @@ function getBlockOrdinalById(
 }
 
 function getFragmentText(args: FragmentTextArgs) {
-	if (args.taleId === 10) return getForkedFatesText(args);
+	if (isBranchedTaleSlug(args.taleSlug)) return getForkedFatesText(args);
 	return getLinearTaleText(args);
 }
 
 function getFragmentImage(args: FragmentTextArgs): FragmentImage {
-	if (args.taleId === 10) return getForkedFatesImage(args);
+	if (isBranchedTaleSlug(args.taleSlug)) return getForkedFatesImage(args);
 	return getLinearTaleImage(args);
 }
 
 function getLinearTaleImage({
+	pageType,
 	taleTitle,
 	entryTitle,
 	blockOrdinal,
 }: FragmentTextArgs): FragmentImage {
+	const specialImage = getSpecialPageImage({ entryTitle, pageType });
+	if (specialImage) return specialImage;
+
 	const assets = getLinearTaleImageAssets(taleTitle);
 	const asset = pickImageAsset(assets, blockOrdinal);
 	const beatLabel = getBeatImageLabel(blockOrdinal);
@@ -225,8 +247,12 @@ function getLinearTaleImage({
 function getForkedFatesImage({
 	branchName,
 	entryTitle,
+	pageType,
 	blockOrdinal,
 }: FragmentTextArgs): FragmentImage {
+	const specialImage = getSpecialPageImage({ entryTitle, pageType });
+	if (specialImage) return specialImage;
+
 	const theme =
 		forkedFatesImageAssetsByRoute[entryTitle] ??
 		forkedFatesImageAssetsByRoute[branchName] ??
@@ -440,13 +466,103 @@ function createCommonsImageUrl(fileName: string) {
 	return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=1200`;
 }
 
+function getSpecialPageText({
+	entryTitle,
+	pageType,
+	taleTitle,
+}: Pick<FragmentTextArgs, "entryTitle" | "pageType" | "taleTitle">) {
+	if (pageType === "map") {
+		return `${taleTitle} - ${entryTitle}. A weathered route map marks the passes, rivers, gates, and warning sigils the reader will need before the next chapter begins.`;
+	}
+
+	if (pageType === "custom") {
+		return [
+			`${taleTitle} - ${entryTitle}`,
+			"1. The First Threshold",
+			"2. The Road That Answers Back",
+			"3. A Door With Two Names",
+			"4. Appendix: Signs, Oaths, and Lost Places",
+		].join("\n");
+	}
+
+	if (pageType === "quote") {
+		return `"Every road remembers the first footstep, but only the last one decides what the journey meant." - marginal note from ${taleTitle}`;
+	}
+
+	if (pageType === "timeline") {
+		return [
+			`${taleTitle} - ${entryTitle}`,
+			"Year 0: The first gate opens.",
+			"Year 7: The oath is broken in public.",
+			"Year 19: The map is copied, burned, and copied again.",
+			"Year 23: The present story begins.",
+		].join("\n");
+	}
+
+	if (pageType === "illustration") {
+		return `${taleTitle} - ${entryTitle}. A full-page illustration establishes the tone before the numbered pages begin.`;
+	}
+
+	return null;
+}
+
+function getSpecialPageImage({
+	entryTitle,
+	pageType,
+}: Pick<FragmentTextArgs, "entryTitle" | "pageType">): FragmentImage | null {
+	if (pageType === "map") {
+		return {
+			url: "https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1200&q=80",
+			alt: `${entryTitle}: a detailed antique map used as a fictional route map`,
+		};
+	}
+
+	if (pageType === "timeline") {
+		return {
+			url: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1200&q=80",
+			alt: `${entryTitle}: a timeline-style historical reference image`,
+		};
+	}
+
+	if (pageType === "quote") {
+		return {
+			url: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
+			alt: `${entryTitle}: an illuminated manuscript page used as a quote plate`,
+		};
+	}
+
+	if (pageType === "custom") {
+		return {
+			url: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1200&q=80",
+			alt: `${entryTitle}: an old contents-like book page`,
+		};
+	}
+
+	if (pageType === "illustration") {
+		return {
+			url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1200&q=80",
+			alt: `${entryTitle}: a full-page fantasy illustration plate`,
+		};
+	}
+
+	return null;
+}
+
 function getLinearTaleText({
 	taleTitle,
 	entryTitle,
 	sectionLabel,
 	blockOrdinal,
 	pageId,
+	pageType,
 }: FragmentTextArgs) {
+	const specialText = getSpecialPageText({
+		entryTitle,
+		pageType,
+		taleTitle,
+	});
+	if (specialText) return specialText;
+
 	const pageLabel = pageId == null ? "opening panel" : `page ${blockOrdinal}`;
 	const beats = [
 		`${taleTitle} - ${entryTitle}. The scene opens in the ${sectionLabel}; this ${pageLabel} names the place, the danger, and the promise that pulls the reader forward.`,
@@ -464,7 +580,16 @@ function getForkedFatesText({
 	sectionLabel,
 	blockOrdinal,
 	pageId,
+	pageType,
+	taleTitle,
 }: FragmentTextArgs) {
+	const specialText = getSpecialPageText({
+		entryTitle,
+		pageType,
+		taleTitle,
+	});
+	if (specialText) return specialText;
+
 	const pageLabel =
 		pageId == null ? "branch opening" : `page beat ${blockOrdinal}`;
 	const fallback = `[${branchName} / ${entryTitle}] In this ${sectionLabel}, ${pageLabel} keeps the branch readable and marks exactly where this route sits in Forked Fates.`;

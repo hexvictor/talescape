@@ -3,7 +3,7 @@ import { db } from "../..";
 import { userId1, userId2 } from "../ids";
 
 export async function seedTales() {
-	await db.insert(tales).values([
+	const baseTales = [
 		{
 			creatorId: userId1,
 			bookId: 1,
@@ -135,7 +135,60 @@ export async function seedTales() {
 			cloneable: "private",
 			type: "story",
 		},
-	]);
+		{
+			creatorId: userId1,
+			bookId: 1,
+			title: "Forked Fates - Snap Off",
+			slug: "official-tale-branched-snap-off",
+			description:
+				"Forked Fates with the same branches and every block snap disabled.",
+			isOfficial: true,
+			isVerified: true,
+			editable: true,
+			visibility: "public",
+			cloneable: "private",
+			type: "story",
+		},
+		{
+			creatorId: userId1,
+			bookId: 1,
+			title: "Forked Fates - Snap On",
+			slug: "official-tale-branched-snap-on",
+			description:
+				"Forked Fates with the same branches and every block snap enabled.",
+			isOfficial: true,
+			isVerified: true,
+			editable: true,
+			visibility: "public",
+			cloneable: "private",
+			type: "story",
+		},
+	] as const;
+
+	await db
+		.insert(tales)
+		.values([...baseTales, ...createSnapVariantTales(baseTales)]);
 
 	console.log("✅ Tales seeded!");
+}
+
+function createSnapVariantTales(
+	taleSeeds: readonly (typeof tales.$inferInsert)[],
+) {
+	return taleSeeds
+		.filter((tale) => !tale.slug.includes("branched"))
+		.flatMap((tale) => [
+			{
+				...tale,
+				title: `${tale.title} - Snap Off`,
+				slug: `${tale.slug}-snap-off`,
+				description: `${tale.description} Every block snap disabled.`,
+			},
+			{
+				...tale,
+				title: `${tale.title} - Snap On`,
+				slug: `${tale.slug}-snap-on`,
+				description: `${tale.description} Every block snap enabled.`,
+			},
+		]);
 }

@@ -2,6 +2,7 @@ import { devtools } from "zustand/middleware";
 import { type StateCreator, createStore } from "zustand/vanilla";
 import type { Tale } from "~/server/db/data/tale-reader/types/tales";
 import type { ReaderProgressSchema } from "~/server/db/schema";
+import { type DebugSlice, createDebugSlice } from "./slices/debugSlice";
 import { type HubSlice, createHubSlice } from "./slices/hubSlice";
 import {
 	type NavigationSlice,
@@ -22,7 +23,8 @@ export type TaleReaderState = TaleSlice &
 	ReaderSlice &
 	NavigationSlice &
 	ProgressSlice &
-	ScrollSlice;
+	ScrollSlice &
+	DebugSlice;
 
 export function createReaderStore(
 	initialTale: Tale,
@@ -36,6 +38,7 @@ export function createReaderStore(
 		...createNavigationSlice(initialTale, initialProgress)(set, get, api),
 		...createProgressSlice(initialProgress)(set, get, api),
 		...createScrollSlice()(set, get, api),
+		...createDebugSlice()(set, get, api),
 	});
 
 	return createStore<TaleReaderState>()(

@@ -36,13 +36,15 @@ export const createProgressSlice =
 			isSaving: false,
 			isTrackingPaused: false,
 
-			setProgress: (newProgress) =>
+			setProgress: (newProgress) => {
 				set((state) => ({
 					progress: {
 						...state.progress,
 						data: newProgress,
 					},
-				})),
+				}));
+				get().navigation.refreshContext();
+			},
 
 			generateProgressUpdate: (blockId) => {
 				const { tale, progress } = get();
@@ -106,6 +108,7 @@ export const createProgressSlice =
 						data: updated,
 					},
 				}));
+				get().navigation.refreshContext();
 
 				return updated;
 			},
@@ -138,6 +141,7 @@ export const createProgressSlice =
 						data: updated,
 					},
 				}));
+				get().navigation.refreshContext();
 
 				const firstBlockId =
 					content.indexMap.branchesById[path.toBranchId]?.bounds.firstBlockId;

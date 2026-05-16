@@ -5,6 +5,7 @@ import {
 	sections,
 	tales,
 } from "~/server/db/schema";
+import { isBranchedTaleSlug } from "./branchedTales";
 
 type SectionSeed = Pick<
 	SectionSchema,
@@ -27,6 +28,7 @@ export async function seedSections() {
 	const allTales = await db
 		.select({
 			id: tales.id,
+			slug: tales.slug,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
 			isVerified: tales.isVerified,
@@ -70,7 +72,7 @@ export async function seedSections() {
 		const taleBranches = branchesByTale.get(tale.id) ?? [];
 		if (!taleBranches.length) continue;
 
-		if (tale.id === 10) {
+		if (isBranchedTaleSlug(tale.slug)) {
 			const byName = new Map(taleBranches.map((b) => [b.name, b.id] as const));
 
 			const sectionPlan = [

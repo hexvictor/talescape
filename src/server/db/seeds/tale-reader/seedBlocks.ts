@@ -8,6 +8,7 @@ import {
 	sections,
 	tales,
 } from "~/server/db/schema";
+import { getTaleBlockSnapOverride, isBranchedTaleSlug } from "./branchedTales";
 
 type BlockSeed = Pick<
 	BlockSchema,
@@ -27,6 +28,9 @@ type BlockSeed = Pick<
 >;
 
 const shouldSeedBlockSnap = (pageId: number | null) => pageId != null;
+
+const getSeedBlockSnap = (taleSlug: string, pageId: number | null) =>
+	getTaleBlockSnapOverride(taleSlug) ?? shouldSeedBlockSnap(pageId);
 
 export async function seedBlocks() {
 	const allEntries = await db
@@ -68,6 +72,7 @@ export async function seedBlocks() {
 	const allTales = await db
 		.select({
 			id: tales.id,
+			slug: tales.slug,
 			creatorId: tales.creatorId,
 			isOfficial: tales.isOfficial,
 			isVerified: tales.isVerified,
@@ -128,7 +133,7 @@ export async function seedBlocks() {
 		const tale = taleMap.get(taleId);
 		if (!tale) continue;
 
-		if (taleId === 10) {
+		if (isBranchedTaleSlug(tale.slug)) {
 			const taleBranches = branchesByTaleId.get(taleId) ?? [];
 			const taleSections = sectionsByTaleId.get(taleId) ?? [];
 
@@ -149,6 +154,8 @@ export async function seedBlocks() {
 
 			const entryOrder = [
 				{ title: "Beginning", section: sectionKey("Beginning", 0) },
+				{ title: "Forked Contents", section: sectionKey("Beginning", 0) },
+				{ title: "Fork Map", section: sectionKey("Beginning", 0) },
 				{ title: "First Path", section: sectionKey("First Path", 0) },
 				{ title: "Third Path", section: sectionKey("Third Path", 0) },
 				{ title: "Second Path I", section: sectionKey("Second Path", 0) },
@@ -156,6 +163,7 @@ export async function seedBlocks() {
 				{ title: "Fourth Path I", section: sectionKey("Fourth Path", 0) },
 				{ title: "Fourth Path II", section: sectionKey("Fourth Path", 1) },
 				{ title: "The Choice", section: sectionKey("The Choice", 0) },
+				{ title: "Fork Quote", section: sectionKey("The Choice", 0) },
 				{ title: "The Good Choice", section: sectionKey("The Good Choice", 0) },
 				{ title: "The Bad Choice", section: sectionKey("The Bad Choice", 0) },
 				{ title: "Ending", section: sectionKey("Ending", 0) },
@@ -190,7 +198,7 @@ export async function seedBlocks() {
 						partId: entry.partId,
 						pageId,
 						creatorId: tale.creatorId,
-						isSnap: shouldSeedBlockSnap(pageId),
+						isSnap: getSeedBlockSnap(tale.slug, pageId),
 						index: currentIndex,
 						isOfficial: tale.isOfficial,
 						isVerified: tale.isVerified,
@@ -246,7 +254,7 @@ export async function seedBlocks() {
 					partId: entry.partId,
 					pageId,
 					creatorId: tale.creatorId,
-					isSnap: shouldSeedBlockSnap(pageId),
+					isSnap: getSeedBlockSnap(tale.slug, pageId),
 					index: currentIndex,
 					isOfficial: tale.isOfficial,
 					isVerified: tale.isVerified,

@@ -14,6 +14,12 @@ type ActiveBlockTrackerArgs = {
 	model: ScrollSnapModelApi;
 	getScroll: () => number;
 	onVisibleBlockChange: (blockId: number) => void;
+	onScrollStateChange?: (state: {
+		maxPx: number;
+		progress: number;
+		scrollPx: number;
+		viewportHeight: number;
+	}) => void;
 	shouldTrack: () => boolean;
 };
 
@@ -21,6 +27,7 @@ export function initActiveBlockTracker({
 	model,
 	getScroll,
 	onVisibleBlockChange,
+	onScrollStateChange,
 	shouldTrack,
 }: ActiveBlockTrackerArgs): ActiveBlockTrackerApi {
 	let scrollTrigger: ScrollTrigger | null = null;
@@ -38,20 +45,22 @@ export function initActiveBlockTracker({
 		pendingAnimationFrameId = null;
 		if (!shouldTrack()) return;
 
-		const snapItems = model.itemsRef.current;
-		if (!snapItems.length) return;
-
 		const scroll = getScroll();
-		const index = model.getIndexFromScroll(scroll);
-		const item = snapItems[index];
+		const max = ScrollTrigger.maxScroll(window);
+		onScrollStateChange?.({
+			maxPx: max,
+			progress: max > 0 ? scroll / max : 0,
+			scrollPx: scroll,
+			viewportHeight: window.innerHeight,
+		});
+
+		const item = model.getCurrentItem(scroll);
 		if (!item) return;
 
-		const blockId = Number(item.el.dataset.blockId ?? item.el.id);
-		if (!Number.isFinite(blockId)) return;
-		if (blockId === lastReportedBlockId) return;
+		if (item.blockId === lastReportedBlockId) return;
 
-		lastReportedBlockId = blockId;
-		onVisibleBlockChange(blockId);
+		lastReportedBlockId = item.blockId;
+		onVisibleBlockChange(item.blockId);
 	};
 
 	const scheduleUpdate = () => {

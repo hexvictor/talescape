@@ -9,7 +9,6 @@ import type { Path } from "~/server/db/data/tale-reader/types/paths";
 import type { SectionOrientation } from "~/server/db/types/tale-reader/section";
 import { ReaderScrollCue } from "../../ReaderUi";
 import { ReaderFragment } from "../ReaderFragment";
-import ReaderBlockDebug from "./BlockDebug/ReaderBlockDebug";
 
 type ReaderBlockProps = {
 	block: Block;
@@ -68,8 +67,6 @@ export function ReaderBlockComponent({ block }: ReaderBlockProps) {
 				bg,
 			)}
 		>
-			<ReaderBlockDebug block={block} />
-
 			<div
 				className={clsx(
 					"relative z-10 flex items-center justify-center",
