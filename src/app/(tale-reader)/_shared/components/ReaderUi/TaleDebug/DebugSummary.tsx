@@ -6,7 +6,7 @@ import type {
 	NavigationEntityPosition,
 	NavigationPagePosition,
 } from "~/app/(tale-reader)/_shared/store/types/navigation";
-import { Chip, DebugField } from "./DebugPrimitives";
+import { Chip, DebugField, DebugHeading } from "./DebugPrimitives";
 import { round } from "./debugFormatters";
 import type { SummaryDebugData } from "./types";
 
@@ -69,18 +69,22 @@ export function SummaryMetrics({
 	return (
 		<div className="grid grid-cols-2 gap-2">
 			<DebugField
+				description="Current reader scroll compared with the maximum virtual scroll."
 				label="Scroll"
 				value={`${round(scrollPx)}px / ${round(scrollMaxPx)}px`}
 			/>
 			<DebugField
+				description="Position inside the current block based on the navigation context."
 				label="Block Progress"
 				value={formatPercent(getPositionProgress(navigationContext?.block))}
 			/>
 			<DebugField
+				description="Reader progress through the narrative page sequence."
 				label="Narrative Progress"
 				value={formatNarrativeProgress(navigationContext?.page)}
 			/>
 			<DebugField
+				description="Raw scroll progress from top to bottom of the scroll engine."
 				label="Scroll Progress"
 				value={`${round(scrollProgress * 100)}%`}
 			/>
@@ -424,10 +428,11 @@ function BadgeGroup({
 }) {
 	return (
 		<div className="space-y-1">
-			<div>
-				<p className="font-semibold text-[10px] text-white/35 uppercase tracking-wide">
-					{title}
-				</p>
+			<div title={subtitle ? `${title}: ${subtitle}` : title}>
+				<DebugHeading
+					label={title}
+					description={subtitle ?? "Navigation context group."}
+				/>
 				{subtitle ? (
 					<p className="font-semibold text-[10px] text-white/25 uppercase tracking-wide">
 						{subtitle}
@@ -447,7 +452,10 @@ function BoundaryGroup({
 	label: string;
 }) {
 	return (
-		<span className="flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-2 py-1">
+		<span
+			className="flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-2 py-1"
+			title={label}
+		>
 			<span className="font-semibold text-[10px] text-white/45 uppercase tracking-wide">
 				{label}
 			</span>

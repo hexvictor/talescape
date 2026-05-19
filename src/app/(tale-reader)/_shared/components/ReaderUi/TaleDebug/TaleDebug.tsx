@@ -13,11 +13,31 @@ import { ScrollDebugPanel } from "./ScrollDebugPanel";
 import { SettingsDebugPanel } from "./SettingsDebugPanel";
 import type { DebugTab } from "./types";
 
-const tabs: { id: DebugTab; label: string }[] = [
-	{ id: "navigation", label: "Navigation" },
-	{ id: "scroll", label: "Scroll" },
-	{ id: "progress", label: "Progress" },
-	{ id: "settings", label: "Settings" },
+const tabs: { description: string; id: DebugTab; label: string }[] = [
+	{ id: "summary", label: "Summary", description: "Compact reader state." },
+	{
+		id: "navigation",
+		label: "Navigation",
+		description:
+			"Current tale, block, branch, section, part, entry, page, and path context.",
+	},
+	{
+		id: "scroll",
+		label: "Scroll",
+		description:
+			"Scroll position, progress, viewport, and scroll engine state.",
+	},
+	{
+		id: "progress",
+		label: "Progress",
+		description: "Saved reading progress and path tracking state.",
+	},
+	{
+		id: "settings",
+		label: "Settings",
+		description:
+			"Live input and snapping settings for keyboard, wheel, and drag.",
+	},
 ];
 
 export default function TaleDebug() {
@@ -32,7 +52,7 @@ export default function TaleDebug() {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [showPeekBadges, setShowPeekBadges] = useState(true);
-	const [activeTab, setActiveTab] = useState<DebugTab>("navigation");
+	const [activeTab, setActiveTab] = useState<DebugTab>("summary");
 
 	useEffect(() => {
 		if (!debugMode || !uiVisible) {
@@ -136,7 +156,7 @@ export default function TaleDebug() {
 						"flex h-full w-full flex-col border-white/15 bg-black/80 shadow-2xl backdrop-blur-md sm:h-auto sm:rounded-2xl sm:border",
 						isExpanded
 							? "sm:max-h-[80vh] sm:w-[min(calc(100vw-2rem),58rem)] sm:overflow-hidden"
-							: "h-[40vh] max-h-[40vh] self-end sm:h-auto sm:max-h-[80vh] sm:w-[min(calc(100vw-2rem),24rem)] sm:self-auto",
+							: "h-[58vh] max-h-[58vh] self-end sm:h-auto sm:max-h-[80vh] sm:w-[min(calc(100vw-2rem),30rem)] sm:self-auto",
 					)}
 				>
 					<div className="border-white/10 border-b p-3 sm:p-4">
@@ -145,39 +165,52 @@ export default function TaleDebug() {
 						</p>
 					</div>
 
-					{isExpanded ? (
-						<div className="flex min-h-0 flex-1 flex-col sm:max-h-[calc(80vh-6.5rem)]">
-							<DebugTabList
-								activeTab={activeTab}
-								onChange={setActiveTab}
-								tabs={tabs}
-							/>
+					<div className="flex min-h-0 flex-1 flex-col sm:max-h-[calc(80vh-6.5rem)]">
+						<DebugTabList
+							activeTab={activeTab}
+							onChange={setActiveTab}
+							tabs={tabs}
+						/>
 
-							<div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
-								{activeTab === "navigation" ? (
-									<NavigationDebugPanel
-										block={block}
-										branch={branch}
-										entry={entry}
-										effectivePage={effectivePage}
-										navigationContext={navigationContext}
-										page={page}
-										part={part}
-										section={section}
-										taleTitle={tale.title}
-									/>
-								) : null}
+						<div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+							{activeTab === "summary" ? (
+								<DebugSummary
+									block={block}
+									branch={branch}
+									entry={entry}
+									effectivePage={effectivePage}
+									navigationContext={navigationContext}
+									page={page}
+									part={part}
+									section={section}
+								/>
+							) : null}
 
-								{activeTab === "scroll" ? (
-									<ScrollDebugPanel reader={reader} />
-								) : null}
+							{activeTab === "navigation" ? (
+								<NavigationDebugPanel
+									block={block}
+									branch={branch}
+									entry={entry}
+									effectivePage={effectivePage}
+									navigationContext={navigationContext}
+									page={page}
+									part={part}
+									section={section}
+									taleTitle={tale.title}
+								/>
+							) : null}
 
-								{activeTab === "progress" ? (
-									<ProgressDebugPanel progress={progress} />
-								) : null}
+							{activeTab === "scroll" ? (
+								<ScrollDebugPanel reader={reader} />
+							) : null}
 
-								{activeTab === "settings" ? <SettingsDebugPanel /> : null}
+							{activeTab === "progress" ? (
+								<ProgressDebugPanel progress={progress} />
+							) : null}
 
+							{activeTab === "settings" ? <SettingsDebugPanel /> : null}
+
+							{activeTab !== "summary" ? (
 								<div className="mt-4 border-white/10 border-t pt-4">
 									<SummaryBadges
 										block={block}
@@ -187,22 +220,9 @@ export default function TaleDebug() {
 										section={section}
 									/>
 								</div>
-							</div>
+							) : null}
 						</div>
-					) : (
-						<div className="min-h-0 flex-1 overflow-y-auto">
-							<DebugSummary
-								block={block}
-								branch={branch}
-								entry={entry}
-								effectivePage={effectivePage}
-								navigationContext={navigationContext}
-								page={page}
-								part={part}
-								section={section}
-							/>
-						</div>
-					)}
+					</div>
 
 					<div className="flex flex-wrap justify-end gap-2 border-white/10 border-t p-3">
 						<button

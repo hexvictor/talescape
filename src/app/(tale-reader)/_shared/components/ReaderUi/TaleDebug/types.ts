@@ -1,7 +1,12 @@
 import type { NavigationContext } from "~/app/(tale-reader)/_shared/store/types/navigation";
 import type { Block } from "~/server/db/data/tale-reader/types/blocks";
 
-export type DebugTab = "navigation" | "scroll" | "progress" | "settings";
+export type DebugTab =
+	| "summary"
+	| "navigation"
+	| "scroll"
+	| "progress"
+	| "settings";
 
 export type NavigationDebugTab =
 	| "tale"

@@ -95,6 +95,7 @@ async function main() {
 	await seedBlocks();
 	await seedPaths();
 	await seedFragments();
+	console.log("✅ Database seeding complete!");
 }
 
 main().catch((err) => {

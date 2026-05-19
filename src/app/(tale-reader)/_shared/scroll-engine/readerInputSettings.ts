@@ -1,55 +1,79 @@
 "use client";
 
 export type ReaderInputBindingSettings = {
+	desktopDragBaseMultiplier: number;
+	desktopDragFreeGestureCount: number;
+	desktopDragFreeScrollEnabled: boolean;
+	desktopDragRepeatMultiplier: number;
+	desktopDragStopSnapDelayMs: number;
+	desktopDragWindowMs: number;
+	touchDragBaseMultiplier: number;
+	touchDragFreeScrollEnabled: boolean;
+	touchDragFreeGestureCount: number;
+	touchDragHorizontalMultiplier: number;
+	touchDragRepeatMultiplier: number;
+	touchDragStopSnapDelayMs: number;
+	touchDragWindowMs: number;
 	keyboardAccelerationPx: number;
 	keyboardBaseStepPx: number;
+	keyboardBurstFreeScrollCount: number;
+	keyboardBurstWindowMs: number;
 	keyboardDuration: number;
 	keyboardEase: gsap.EaseString;
+	keyboardFreeScrollEnabled: boolean;
 	keyboardHoldIntervalMs: number;
 	keyboardMaxStepPx: number;
-	keyboardSustainedAccelerationDelayMs: number;
-	keyboardSustainedAccelerationMultiplier: number;
+	keyboardRepeatMultiplier: number;
+	keyboardStopSnapDelayMs: number;
 	releaseThreshold: number;
 	snapDuration: number;
 	snapEase: gsap.EaseString;
-	touchDragGentleDistancePx: number;
-	touchDragGentleVelocityPxPerMs: number;
-	touchDragScrollMultiplier: number;
-	touchDragStopSnapDelayMs: number;
 	wheelAccelerationPx: number;
 	wheelBaseStepPx: number;
 	wheelDuration: number;
 	wheelEase: gsap.EaseString;
+	wheelFreeScrollEventCount: number;
+	wheelFreeScrollEnabled: boolean;
 	wheelMaxStepPx: number;
-	wheelSnapBypassBurstCount: number;
+	wheelRepeatMultiplier: number;
 	wheelStopSnapDelayMs: number;
-	wheelSustainedAccelerationDelayMs: number;
-	wheelSustainedAccelerationMultiplier: number;
 };
 
 export const READER_INPUT_BINDING_SETTINGS: ReaderInputBindingSettings = {
 	snapDuration: 0.38,
 	snapEase: "power2.out",
 	releaseThreshold: 24,
-	touchDragGentleDistancePx: 180,
-	touchDragGentleVelocityPxPerMs: 0.75,
-	touchDragScrollMultiplier: 1,
-	touchDragStopSnapDelayMs: 800,
+	desktopDragBaseMultiplier: 3,
+	desktopDragFreeGestureCount: 1,
+	desktopDragFreeScrollEnabled: false,
+	desktopDragRepeatMultiplier: 1.35,
+	desktopDragStopSnapDelayMs: 180,
+	desktopDragWindowMs: 650,
+	touchDragBaseMultiplier: 1.6,
+	touchDragFreeScrollEnabled: false,
+	touchDragFreeGestureCount: 1,
+	touchDragHorizontalMultiplier: 1.9,
+	touchDragRepeatMultiplier: 1.25,
+	touchDragStopSnapDelayMs: 2000,
+	touchDragWindowMs: 800,
 	keyboardBaseStepPx: 7,
-	wheelStopSnapDelayMs: 800,
-	wheelSnapBypassBurstCount: 5,
-	keyboardAccelerationPx: 35,
-	keyboardSustainedAccelerationDelayMs: 2000,
-	keyboardSustainedAccelerationMultiplier: 2.5,
-	keyboardMaxStepPx: 1400,
+	keyboardBurstFreeScrollCount: 3,
+	keyboardBurstWindowMs: 500,
+	keyboardRepeatMultiplier: 2,
+	keyboardStopSnapDelayMs: 150,
+	keyboardFreeScrollEnabled: false,
+	keyboardAccelerationPx: 80,
+	keyboardMaxStepPx: 2400,
 	keyboardHoldIntervalMs: 60,
 	keyboardDuration: 0.38,
 	keyboardEase: "power2.out",
+	wheelStopSnapDelayMs: 500,
+	wheelFreeScrollEventCount: 5,
+	wheelFreeScrollEnabled: false,
 	wheelBaseStepPx: 12,
-	wheelAccelerationPx: 85,
-	wheelSustainedAccelerationDelayMs: 2000,
-	wheelSustainedAccelerationMultiplier: 2.5,
-	wheelMaxStepPx: 1400,
+	wheelAccelerationPx: 60,
+	wheelRepeatMultiplier: 1.2,
+	wheelMaxStepPx: 2400,
 	wheelDuration: 0.38,
 	wheelEase: "power2.out",
 };

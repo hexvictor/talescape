@@ -412,9 +412,9 @@ export function createScrollSnapModel({
 	};
 
 	/**
-	 * Chooses a visible snap after free wheel scrolling settles.
+	 * Chooses a visible snap after free wheel or touch scrolling settles.
 	 *
-	 * Burst wheel input is allowed to move through snap blocks first. When it
+	 * Burst input is allowed to move through snap blocks first. When it
 	 * stops, the reader settles to the dominant snap block unless the next snap in
 	 * the user's last direction is visible enough to feel intentional. A dominant
 	 * non-snap block intentionally means "stay here."

@@ -28,10 +28,16 @@ type Args = {
 
 type KeyboardDirection = 1 | -1;
 type ScrollDirection = 1 | -1;
+type DragSource = "desktop" | "touch";
+type DragDelta = {
+	direction: ScrollDirection;
+	value: number;
+};
 
-const wheelListenerOptions = {
+const idleSnapRetryDelayMs = 50;
+const nativeScrollListenerOptions = {
 	capture: true,
-	passive: false,
+	passive: true,
 } as const;
 
 /**
@@ -53,22 +59,36 @@ export function attachInputBindings({
 }: Args): InputBindingsApi {
 	let enabled = true;
 	let isSnapAnimationRunning = false;
+	let isPointerDragPressing = false;
 	let isTouchPressing = false;
-	let touchDragDirection: ScrollDirection | null = null;
+	let nativeScrollStopTimerId: number | null = null;
+	let nativeScrollLastValue = 0;
 	let touchReleaseTimerId: number | null = null;
-	let touchDragStartedAt = 0;
+	let activeDragSource: DragSource | null = null;
 	let touchDragStartedScroll = 0;
+	let touchStartX: number | null = null;
 	let touchStartY: number | null = null;
+	let touchLastX: number | null = null;
 	let touchLastY: number | null = null;
+	let touchBurstDirection: ScrollDirection | null = null;
+	let touchBurstCount = 0;
+	let touchBurstLastAt = 0;
+	let touchBurstStartedScroll = 0;
+	let touchMoveDirection: ScrollDirection | null = null;
+	let touchMoveCount = 0;
 	let keyboardDirection: KeyboardDirection | null = null;
+	let keyboardBurstDirection: KeyboardDirection | null = null;
+	let keyboardBurstCount = 0;
+	let keyboardBurstLastAt = 0;
+	let keyboardBurstStartedScroll = 0;
 	let keyboardStepCount = 0;
 	let keyboardHoldTimerId: number | null = null;
+	let keyboardStopTimerId: number | null = null;
+	let keyboardTweenTargetScroll: number | null = null;
 	let snapAfterKeyboardTween: KeyboardDirection | null = null;
 	let wheelBurstDirection: ScrollDirection | null = null;
 	let wheelBurstCount = 0;
-	let wheelBurstStartedAt = 0;
 	let wheelBurstStartedScroll = 0;
-	let wheelSustainedBoostStartCount: number | null = null;
 	let wheelStopTimerId: number | null = null;
 
 	// A GSAP tween is the short-lived animation object that moves the
@@ -76,7 +96,8 @@ export function attachInputBindings({
 	let activeSnapTween: gsap.core.Tween | null = null;
 	let keyboardTween: gsap.core.Tween | null = null;
 	let wheelTween: gsap.core.Tween | null = null;
-	let snapObserver: ReturnType<typeof ScrollTrigger.observe> | null = null;
+	let gestureObserver: ReturnType<typeof ScrollTrigger.observe> | null = null;
+	let wheelObserver: ReturnType<typeof ScrollTrigger.observe> | null = null;
 
 	const clearKeyboardHoldTimer = () => {
 		if (keyboardHoldTimerId == null) return;
@@ -89,6 +110,22 @@ export function attachInputBindings({
 		clearKeyboardHoldTimer();
 		keyboardDirection = null;
 		keyboardStepCount = 0;
+		keyboardTweenTargetScroll = null;
+	};
+
+	const clearKeyboardStopTimer = () => {
+		if (keyboardStopTimerId == null) return;
+
+		window.clearTimeout(keyboardStopTimerId);
+		keyboardStopTimerId = null;
+	};
+
+	const resetKeyboardBurst = () => {
+		clearKeyboardStopTimer();
+		keyboardBurstDirection = null;
+		keyboardBurstCount = 0;
+		keyboardBurstLastAt = 0;
+		keyboardBurstStartedScroll = 0;
 	};
 
 	const clearTouchReleaseTimer = () => {
@@ -99,11 +136,76 @@ export function attachInputBindings({
 	};
 
 	const resetTouchDrag = () => {
-		touchDragDirection = null;
-		touchDragStartedAt = 0;
+		activeDragSource = null;
 		touchDragStartedScroll = 0;
+		touchStartX = null;
 		touchStartY = null;
+		touchLastX = null;
 		touchLastY = null;
+		touchMoveDirection = null;
+		touchMoveCount = 0;
+	};
+
+	const resetTouchBurst = () => {
+		touchBurstDirection = null;
+		touchBurstCount = 0;
+		touchBurstLastAt = 0;
+		touchBurstStartedScroll = 0;
+	};
+
+	const getDragFreeGestureCount = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragFreeGestureCount
+			: settings.touchDragFreeGestureCount;
+	};
+
+	const getDragFreeScrollEnabled = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragFreeScrollEnabled
+			: settings.touchDragFreeScrollEnabled;
+	};
+
+	const getDragWindowMs = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragWindowMs
+			: settings.touchDragWindowMs;
+	};
+
+	const getDragStopSnapDelayMs = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragStopSnapDelayMs
+			: settings.touchDragStopSnapDelayMs;
+	};
+
+	const getDragBaseMultiplier = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragBaseMultiplier
+			: settings.touchDragBaseMultiplier;
+	};
+
+	const getDragRepeatMultiplier = (source: DragSource) => {
+		const settings = getSettings();
+		return source === "desktop"
+			? settings.desktopDragRepeatMultiplier
+			: settings.touchDragRepeatMultiplier;
+	};
+
+	const getDragHorizontalMultiplier = (source: DragSource) => {
+		return source === "touch" ? getSettings().touchDragHorizontalMultiplier : 1;
+	};
+
+	const scheduleTouchBurstReset = (source: DragSource) => {
+		clearTouchReleaseTimer();
+
+		touchReleaseTimerId = window.setTimeout(() => {
+			touchReleaseTimerId = null;
+			resetTouchBurst();
+		}, getDragWindowMs(source));
 	};
 
 	const clearWheelStopTimer = () => {
@@ -113,12 +215,22 @@ export function attachInputBindings({
 		wheelStopTimerId = null;
 	};
 
+	const clearNativeScrollStopTimer = () => {
+		if (nativeScrollStopTimerId == null) return;
+
+		window.clearTimeout(nativeScrollStopTimerId);
+		nativeScrollStopTimerId = null;
+	};
+
+	const resetNativeScroll = () => {
+		clearNativeScrollStopTimer();
+		nativeScrollLastValue = driver.getScroll();
+	};
+
 	const resetWheelBurst = () => {
 		wheelBurstDirection = null;
 		wheelBurstCount = 0;
-		wheelBurstStartedAt = 0;
 		wheelBurstStartedScroll = 0;
-		wheelSustainedBoostStartCount = null;
 	};
 
 	const killSnapTween = () => {
@@ -133,6 +245,7 @@ export function attachInputBindings({
 
 		keyboardTween.kill();
 		keyboardTween = null;
+		keyboardTweenTargetScroll = null;
 	};
 
 	const killWheelTween = () => {
@@ -146,16 +259,35 @@ export function attachInputBindings({
 		killSnapTween();
 		killKeyboardTween();
 		killWheelTween();
+		isPointerDragPressing = false;
+		isTouchPressing = false;
 		resetKeyboardHold();
+		resetKeyboardBurst();
 		clearTouchReleaseTimer();
 		resetTouchDrag();
 		snapAfterKeyboardTween = null;
 		clearWheelStopTimer();
+		resetNativeScroll();
 		resetWheelBurst();
 
 		if (setNotAnimating) {
 			isSnapAnimationRunning = false;
 		}
+	};
+
+	const interruptForUserInput = () => {
+		killSnapTween();
+		killKeyboardTween();
+		killWheelTween();
+		isPointerDragPressing = false;
+		isTouchPressing = false;
+		resetKeyboardHold();
+		resetKeyboardBurst();
+		snapAfterKeyboardTween = null;
+		clearWheelStopTimer();
+		resetNativeScroll();
+		resetWheelBurst();
+		isSnapAnimationRunning = false;
 	};
 
 	const gotoSnapItem = (target: ScrollSnapItem, forward: boolean) => {
@@ -218,8 +350,8 @@ export function attachInputBindings({
 		burstStartedScroll: number,
 	): ScrollSnapItem | null => {
 		const current = driver.getScroll();
-		const burstThreshold = getSettings().wheelSnapBypassBurstCount;
-		if (burstCount > burstThreshold) {
+		const burstThreshold = getSettings().wheelFreeScrollEventCount;
+		if (getSettings().wheelFreeScrollEnabled || burstCount > burstThreshold) {
 			return model.getBestVisibleSnapItem(direction, current);
 		}
 
@@ -240,6 +372,84 @@ export function attachInputBindings({
 			burstCount,
 			burstStartedScroll,
 		);
+		if (!target) return false;
+
+		gotoSnapItem(target, direction > 0);
+		return true;
+	};
+
+	const getKeyboardIdleSnapTarget = (
+		direction: KeyboardDirection,
+		burstCount: number,
+		burstStartedScroll: number,
+	): ScrollSnapItem | null => {
+		const current = driver.getScroll();
+		if (
+			getSettings().keyboardFreeScrollEnabled ||
+			burstCount > getSettings().keyboardBurstFreeScrollCount
+		) {
+			return model.getBestVisibleSnapItem(direction, current);
+		}
+
+		const adjacentItem = model.getAdjacentItem(direction, burstStartedScroll);
+		return adjacentItem?.snap ? adjacentItem : null;
+	};
+
+	const tryKeyboardIdleSnap = (
+		direction: KeyboardDirection,
+		burstCount: number,
+		burstStartedScroll: number,
+	) => {
+		if (!enabled) return false;
+		if (isSnapAnimationRunning) return false;
+
+		const target = getKeyboardIdleSnapTarget(
+			direction,
+			burstCount,
+			burstStartedScroll,
+		);
+		if (!target) return false;
+
+		gotoSnapItem(target, direction > 0);
+		return true;
+	};
+
+	const tryNativeScrollIdleSnap = (direction: ScrollDirection) => {
+		if (!enabled) return false;
+		if (isSnapAnimationRunning) return false;
+
+		const target = model.getBestVisibleSnapItem(direction, driver.getScroll());
+		if (!target) return false;
+
+		gotoSnapItem(target, direction > 0);
+		return true;
+	};
+
+	const getTouchIdleSnapTarget = (
+		direction: ScrollDirection,
+		gestureCount: number,
+		source: DragSource,
+	): ScrollSnapItem | null => {
+		const current = driver.getScroll();
+		if (
+			getDragFreeScrollEnabled(source) ||
+			gestureCount > getDragFreeGestureCount(source)
+		) {
+			return model.getBestVisibleSnapItem(direction, current);
+		}
+
+		return null;
+	};
+
+	const tryTouchIdleSnap = (
+		direction: ScrollDirection,
+		gestureCount: number,
+		source: DragSource,
+	) => {
+		if (!enabled) return false;
+		if (isSnapAnimationRunning) return false;
+
+		const target = getTouchIdleSnapTarget(direction, gestureCount, source);
 		if (!target) return false;
 
 		gotoSnapItem(target, direction > 0);
@@ -289,29 +499,6 @@ export function attachInputBindings({
 		tryStep(direction > 0);
 	};
 
-	const getSustainedAcceleration = ({
-		accelerationCount,
-		accelerationPx,
-		boostStartCount,
-		multiplier,
-	}: {
-		accelerationCount: number;
-		accelerationPx: number;
-		boostStartCount: number | null;
-		multiplier: number;
-	}) => {
-		if (boostStartCount == null) {
-			return accelerationCount * accelerationPx;
-		}
-
-		const normalCount = Math.min(accelerationCount, boostStartCount);
-		const boostedCount = Math.max(0, accelerationCount - normalCount);
-
-		return (
-			normalCount * accelerationPx + boostedCount * accelerationPx * multiplier
-		);
-	};
-
 	const scrollByKeyboard = (direction: KeyboardDirection) => {
 		if (!enabled) return;
 
@@ -321,37 +508,39 @@ export function attachInputBindings({
 		}
 
 		const current = driver.getScroll();
+		const baseScroll = keyboardTweenTargetScroll ?? current;
 		const max = ScrollTrigger.maxScroll(window);
 		const {
 			keyboardAccelerationPx,
 			keyboardBaseStepPx,
-			keyboardHoldIntervalMs,
+			keyboardBurstFreeScrollCount,
 			keyboardMaxStepPx,
-			keyboardSustainedAccelerationDelayMs,
-			keyboardSustainedAccelerationMultiplier,
+			keyboardRepeatMultiplier,
 		} = getSettings();
-		const sustainedBoostStartCount = Math.ceil(
-			keyboardSustainedAccelerationDelayMs / keyboardHoldIntervalMs,
+		const accelerationCount = Math.max(0, keyboardStepCount);
+		const baseStep =
+			keyboardBaseStepPx + accelerationCount * keyboardAccelerationPx;
+		const exponent = Math.max(
+			0,
+			keyboardStepCount + 1 - keyboardBurstFreeScrollCount,
 		);
-		const acceleration = getSustainedAcceleration({
-			accelerationCount: keyboardStepCount,
-			accelerationPx: keyboardAccelerationPx,
-			boostStartCount: sustainedBoostStartCount,
-			multiplier: keyboardSustainedAccelerationMultiplier,
-		});
-		const step = Math.min(keyboardMaxStepPx, keyboardBaseStepPx + acceleration);
-		const target = Math.max(0, Math.min(max, current + direction * step));
+		const multiplier = keyboardRepeatMultiplier ** exponent;
+		const step = Math.min(keyboardMaxStepPx, baseStep * multiplier);
+		const target = Math.max(0, Math.min(max, baseScroll + direction * step));
 
 		keyboardStepCount += 1;
 
 		if (Math.abs(target - current) < 1) return;
 
+		keyboardTweenTargetScroll = target;
 		killKeyboardTween();
+		keyboardTweenTargetScroll = target;
 
 		const tween = driver.scrollTo(target, {
 			duration: getSettings().keyboardDuration,
 			ease: getSettings().keyboardEase,
 			onDone: () => {
+				keyboardTweenTargetScroll = null;
 				finishKeyboardTween(direction);
 			},
 		});
@@ -359,8 +548,103 @@ export function attachInputBindings({
 		keyboardTween = tween;
 
 		if (!tween) {
+			keyboardTweenTargetScroll = null;
 			finishKeyboardTween(direction);
 		}
+	};
+
+	const registerKeyboardBurstPress = (direction: KeyboardDirection) => {
+		const now = performance.now();
+		const current = driver.getScroll();
+		const isSameBurst =
+			keyboardBurstDirection === direction &&
+			now - keyboardBurstLastAt <= getSettings().keyboardBurstWindowMs;
+
+		if (!isSameBurst) {
+			keyboardBurstDirection = direction;
+			keyboardBurstCount = 0;
+			keyboardBurstStartedScroll = current;
+		}
+
+		keyboardBurstCount += 1;
+		keyboardBurstLastAt = now;
+
+		return keyboardBurstCount;
+	};
+
+	const scrollByKeyboardBurst = (
+		direction: KeyboardDirection,
+		burstCount: number,
+	) => {
+		if (!enabled) return;
+
+		if (isSnapAnimationRunning) {
+			killSnapTween();
+			isSnapAnimationRunning = false;
+		}
+
+		const current = driver.getScroll();
+		const baseScroll = keyboardTweenTargetScroll ?? current;
+		const max = ScrollTrigger.maxScroll(window);
+		const {
+			keyboardAccelerationPx,
+			keyboardBaseStepPx,
+			keyboardBurstFreeScrollCount,
+			keyboardMaxStepPx,
+			keyboardRepeatMultiplier,
+		} = getSettings();
+		const accelerationCount = Math.max(0, burstCount - 1);
+		const baseStep =
+			keyboardBaseStepPx + accelerationCount * keyboardAccelerationPx;
+		const exponent = Math.max(0, burstCount - keyboardBurstFreeScrollCount);
+		const multiplier = keyboardRepeatMultiplier ** exponent;
+		const step = Math.min(keyboardMaxStepPx, baseStep * multiplier);
+		const target = Math.max(0, Math.min(max, baseScroll + direction * step));
+
+		if (Math.abs(target - current) < 1) return;
+
+		keyboardTweenTargetScroll = target;
+		killKeyboardTween();
+		keyboardTweenTargetScroll = target;
+
+		const tween = driver.scrollTo(target, {
+			duration: getSettings().keyboardDuration,
+			ease: getSettings().keyboardEase,
+			onDone: () => {
+				keyboardTween = null;
+				keyboardTweenTargetScroll = null;
+			},
+		});
+
+		keyboardTween = tween;
+
+		if (!tween) {
+			keyboardTween = null;
+			keyboardTweenTargetScroll = null;
+		}
+	};
+
+	const scheduleKeyboardStopSnap = (
+		direction: KeyboardDirection,
+		delayMs = getSettings().keyboardStopSnapDelayMs,
+	) => {
+		clearKeyboardStopTimer();
+
+		keyboardStopTimerId = window.setTimeout(() => {
+			if (keyboardTween) {
+				keyboardStopTimerId = null;
+				scheduleKeyboardStopSnap(direction, idleSnapRetryDelayMs);
+				return;
+			}
+
+			const burstCount = keyboardBurstCount;
+			const burstStartedScroll = keyboardBurstStartedScroll;
+
+			keyboardStopTimerId = null;
+			resetKeyboardBurst();
+
+			tryKeyboardIdleSnap(direction, burstCount, burstStartedScroll);
+		}, delayMs);
 	};
 
 	const scrollByWheel = (direction: ScrollDirection, deltaY: number) => {
@@ -370,15 +654,12 @@ export function attachInputBindings({
 		if (wheelBurstDirection !== direction) {
 			wheelBurstDirection = direction;
 			wheelBurstCount = 0;
-			wheelBurstStartedAt = 0;
 			wheelBurstStartedScroll = 0;
-			wheelSustainedBoostStartCount = null;
 		}
 
 		const current = driver.getScroll();
 
 		if (wheelBurstCount === 0) {
-			wheelBurstStartedAt = performance.now();
 			wheelBurstStartedScroll = current;
 		}
 
@@ -388,29 +669,19 @@ export function attachInputBindings({
 			wheelAccelerationPx,
 			wheelBaseStepPx,
 			wheelMaxStepPx,
-			wheelSustainedAccelerationDelayMs,
-			wheelSustainedAccelerationMultiplier,
+			wheelRepeatMultiplier,
 		} = getSettings();
-		if (
-			wheelSustainedBoostStartCount == null &&
-			performance.now() - wheelBurstStartedAt >=
-				wheelSustainedAccelerationDelayMs
-		) {
-			wheelSustainedBoostStartCount = Math.max(0, wheelBurstCount - 1);
-		}
 
 		const magnitudeStep = Math.min(wheelAccelerationPx, magnitude * 0.5);
 		const accelerationCount = Math.max(0, wheelBurstCount - 1);
-		const acceleration = getSustainedAcceleration({
-			accelerationCount,
-			accelerationPx: wheelAccelerationPx,
-			boostStartCount: wheelSustainedBoostStartCount,
-			multiplier: wheelSustainedAccelerationMultiplier,
-		});
-		const step = Math.min(
-			wheelMaxStepPx,
-			wheelBaseStepPx + acceleration + magnitudeStep,
+		const baseStep =
+			wheelBaseStepPx + accelerationCount * wheelAccelerationPx + magnitudeStep;
+		const exponent = Math.max(
+			0,
+			wheelBurstCount - getSettings().wheelFreeScrollEventCount,
 		);
+		const multiplier = wheelRepeatMultiplier ** exponent;
+		const step = Math.min(wheelMaxStepPx, baseStep * multiplier);
 		const max = ScrollTrigger.maxScroll(window);
 		const target = Math.max(0, Math.min(max, current + direction * step));
 
@@ -442,10 +713,19 @@ export function attachInputBindings({
 		}, getSettings().wheelStopSnapDelayMs);
 	};
 
-	const scheduleWheelStopSnap = (direction: ScrollDirection) => {
+	const scheduleWheelStopSnap = (
+		direction: ScrollDirection,
+		delayMs = getSettings().wheelStopSnapDelayMs,
+	) => {
 		clearWheelStopTimer();
 
 		wheelStopTimerId = window.setTimeout(() => {
+			if (wheelTween) {
+				wheelStopTimerId = null;
+				scheduleWheelStopSnap(direction, idleSnapRetryDelayMs);
+				return;
+			}
+
 			const burstCount = wheelBurstCount;
 			const burstStartedScroll = wheelBurstStartedScroll;
 
@@ -453,7 +733,27 @@ export function attachInputBindings({
 			resetWheelBurst();
 
 			tryWheelIdleSnap(direction, burstCount, burstStartedScroll);
-		}, getSettings().wheelStopSnapDelayMs);
+		}, delayMs);
+	};
+
+	const scheduleNativeScrollStopSnap = (
+		direction: ScrollDirection,
+		delayMs = getSettings().wheelStopSnapDelayMs,
+	) => {
+		clearNativeScrollStopTimer();
+
+		nativeScrollStopTimerId = window.setTimeout(() => {
+			if (activeSnapTween || keyboardTween || wheelTween) {
+				nativeScrollStopTimerId = null;
+				scheduleNativeScrollStopSnap(direction, idleSnapRetryDelayMs);
+				return;
+			}
+
+			nativeScrollStopTimerId = null;
+			resetNativeScroll();
+
+			tryNativeScrollIdleSnap(direction);
+		}, delayMs);
 	};
 
 	const stopKeyboardHold = (shouldSnap = false) => {
@@ -462,6 +762,12 @@ export function attachInputBindings({
 		resetKeyboardHold();
 
 		if (!shouldSnap || direction == null) return;
+
+		if (getSettings().keyboardFreeScrollEnabled) {
+			snapAfterKeyboardTween = null;
+			scheduleKeyboardStopSnap(direction);
+			return;
+		}
 
 		snapAfterKeyboardTween = direction;
 
@@ -473,7 +779,10 @@ export function attachInputBindings({
 	const startKeyboardHold = (direction: KeyboardDirection) => {
 		stopKeyboardHold(false);
 
-		if (tryStep(direction > 0, { immediate: true })) {
+		if (
+			!getSettings().keyboardFreeScrollEnabled &&
+			tryStep(direction > 0, { immediate: true })
+		) {
 			return;
 		}
 
@@ -497,6 +806,16 @@ export function attachInputBindings({
 
 		event.preventDefault();
 
+		const burstCount = registerKeyboardBurstPress(direction);
+
+		if (burstCount > getSettings().keyboardBurstFreeScrollCount) {
+			stopKeyboardHold(false);
+			snapAfterKeyboardTween = null;
+			scrollByKeyboardBurst(direction, burstCount);
+			scheduleKeyboardStopSnap(direction);
+			return;
+		}
+
 		if (isSnapAnimationRunning) return;
 		if (keyboardDirection === direction) return;
 
@@ -506,7 +825,13 @@ export function attachInputBindings({
 	const onKeyboardUp = (event: KeyboardEvent) => {
 		const direction = getKeyboardDirection(event.key);
 		if (direction == null) return;
-		if (keyboardDirection !== direction) return;
+		if (keyboardDirection !== direction) {
+			if (keyboardBurstDirection === direction) {
+				event.preventDefault();
+			}
+
+			return;
+		}
 
 		event.preventDefault();
 		stopKeyboardHold(true);
@@ -514,69 +839,220 @@ export function attachInputBindings({
 
 	const onWindowBlur = () => {
 		stopKeyboardHold(false);
+		resetKeyboardBurst();
 	};
 
-	const getTouchClientY = (event: Event) => {
-		if (!("touches" in event)) return null;
+	const getTouchClientPoint = (event: Event) => {
+		if ("touches" in event) {
+			const touch = (event as TouchEvent).touches[0];
+			return touch ? { x: touch.clientX, y: touch.clientY } : null;
+		}
 
-		const touch = (event as TouchEvent).touches[0];
-		return touch?.clientY ?? null;
+		if (
+			"clientX" in event &&
+			"clientY" in event &&
+			typeof event.clientX === "number" &&
+			typeof event.clientY === "number"
+		) {
+			return { x: event.clientX, y: event.clientY };
+		}
+
+		return null;
 	};
 
-	const onUserPointerDown = (event: Event) => {
-		if (!enabled) return;
+	const getCombinedDragDelta = (
+		deltaX: number,
+		deltaY: number,
+		source: DragSource,
+	): DragDelta => {
+		const weightedDeltaX = deltaX * getDragHorizontalMultiplier(source);
+		const absX = Math.abs(weightedDeltaX);
+		const absY = Math.abs(deltaY);
+		if (absX < 1 && absY < 1) {
+			return { direction: 1, value: 0 };
+		}
+
+		if (Math.abs(weightedDeltaX) < 1) {
+			const direction: ScrollDirection = deltaY > 0 ? 1 : -1;
+			return { direction, value: direction * absY };
+		}
+
+		if (Math.abs(deltaY) < 1) {
+			const direction: ScrollDirection = weightedDeltaX > 0 ? 1 : -1;
+			return { direction, value: direction * absX };
+		}
+
+		const xDirection: ScrollDirection = weightedDeltaX > 0 ? 1 : -1;
+		const yDirection: ScrollDirection = deltaY > 0 ? 1 : -1;
+		if (xDirection === yDirection) {
+			return { direction: xDirection, value: xDirection * (absX + absY) };
+		}
+
+		const direction = absX >= absY ? xDirection : yDirection;
+		const dominantMagnitude = Math.max(absX, absY);
+		const secondaryMagnitude = Math.min(absX, absY);
+		return {
+			direction,
+			value:
+				direction * Math.max(0, dominantMagnitude - secondaryMagnitude * 0.25),
+		};
+	};
+
+	const shouldIgnorePointerPress = (event: Event) => {
+		if (!enabled) return true;
+		if (
+			"button" in event &&
+			typeof event.button === "number" &&
+			event.button !== 0
+		) {
+			return true;
+		}
 
 		const target = event.target as HTMLElement | null;
-		if (target && isSelectableZone(target)) return;
-		if (selectionIsActive()) return;
-		if (target && isInteractiveTarget(target)) return;
+		return (
+			!!(target && isSelectableZone(target)) ||
+			selectionIsActive() ||
+			!!(target && isInteractiveTarget(target))
+		);
+	};
 
-		killTweens(true);
+	const shouldIgnoreWheel = (event: Event) => {
+		const wheelEvent = event as WheelEvent;
+		return (
+			!enabled ||
+			!isReaderWheelTarget(event.target) ||
+			(ScrollTrigger.isTouch && isTouchPressing) ||
+			wheelEvent.ctrlKey ||
+			wheelEvent.metaKey ||
+			Math.abs(wheelEvent.deltaY) < 1 ||
+			isInteractiveTarget(event.target) ||
+			selectionIsActive()
+		);
+	};
+
+	const scrollByDrag = (delta: number, source: DragSource) => {
+		if (Math.abs(delta) < 1) return;
+
+		const current = driver.getScroll();
+		const max = ScrollTrigger.maxScroll(window);
+		const direction: ScrollDirection = delta > 0 ? 1 : -1;
+		if (touchMoveDirection !== direction) {
+			touchMoveDirection = direction;
+			touchMoveCount = 0;
+		}
+
+		touchMoveCount += 1;
+
+		const moveRepeatCount = Math.floor(touchMoveCount / 4);
+		const gestureRepeatCount =
+			touchBurstDirection === direction ? touchBurstCount : 0;
+		const repeatCount = Math.max(moveRepeatCount, gestureRepeatCount);
+		const exponent = Math.max(0, repeatCount - getDragFreeGestureCount(source));
+		const repeatMultiplier = getDragRepeatMultiplier(source) ** exponent;
+		const step = delta * getDragBaseMultiplier(source) * repeatMultiplier;
+		const next = Math.max(0, Math.min(max, current + step));
+
+		if (Math.abs(next - current) < 1) return;
+
+		driver.setScroll(next);
+	};
+
+	const scheduleTouchStopSnap = (
+		direction: ScrollDirection,
+		gestureCount: number,
+		source: DragSource,
+		delayMs = getDragStopSnapDelayMs(source),
+	) => {
+		clearTouchReleaseTimer();
+
+		touchReleaseTimerId = window.setTimeout(() => {
+			if (activeSnapTween || keyboardTween || wheelTween) {
+				touchReleaseTimerId = null;
+				scheduleTouchStopSnap(
+					direction,
+					gestureCount,
+					source,
+					idleSnapRetryDelayMs,
+				);
+				return;
+			}
+
+			touchReleaseTimerId = null;
+			resetTouchBurst();
+
+			tryTouchIdleSnap(direction, gestureCount, source);
+		}, delayMs);
 	};
 
 	const handleTouchReleaseSnap = () => {
-		const startedAt = touchDragStartedAt;
+		const source =
+			activeDragSource ?? (ScrollTrigger.isTouch ? "touch" : "desktop");
 		const startedScroll = touchDragStartedScroll;
 
-		if (touchStartY == null || touchLastY == null) {
+		if (
+			touchStartX == null ||
+			touchStartY == null ||
+			touchLastX == null ||
+			touchLastY == null
+		) {
 			resetTouchDrag();
 			return;
 		}
 
-		const deltaY = touchStartY - touchLastY;
-		const absDeltaY = Math.abs(deltaY);
-		const direction: ScrollDirection = deltaY > 0 ? 1 : -1;
-		const dragDurationMs = Math.max(1, performance.now() - startedAt);
-		const dragVelocity = absDeltaY / dragDurationMs;
-		const { touchDragGentleDistancePx, touchDragGentleVelocityPxPerMs } =
-			getSettings();
-		const isGentleDrag =
-			absDeltaY <= touchDragGentleDistancePx &&
-			dragVelocity <= touchDragGentleVelocityPxPerMs;
+		const dragDelta = getCombinedDragDelta(
+			touchStartX - touchLastX,
+			touchStartY - touchLastY,
+			source,
+		);
+		const absDelta = Math.abs(dragDelta.value);
+		const direction = dragDelta.direction;
 
 		resetTouchDrag();
 
-		if (absDeltaY < getSettings().releaseThreshold) return;
+		if (absDelta < getSettings().releaseThreshold) return;
+
+		const now = performance.now();
+		const isSameTouchBurst =
+			touchBurstDirection === direction &&
+			now - touchBurstLastAt <= getDragWindowMs(source);
+
+		if (!isSameTouchBurst) {
+			touchBurstDirection = direction;
+			touchBurstCount = 0;
+			touchBurstStartedScroll = startedScroll;
+		}
+
+		touchBurstCount += 1;
+		touchBurstLastAt = now;
+
+		const gestureCount = touchBurstCount;
+		const gestureStartedScroll = touchBurstStartedScroll;
+		const shouldFreeScroll =
+			getDragFreeScrollEnabled(source) ||
+			gestureCount > getDragFreeGestureCount(source);
 
 		clearTouchReleaseTimer();
 
-		touchReleaseTimerId = window.setTimeout(() => {
-			touchReleaseTimerId = null;
+		if (!shouldFreeScroll) {
+			const adjacentItem = model.getAdjacentItem(
+				direction,
+				gestureStartedScroll,
+			);
 
-			if (isGentleDrag) {
-				const adjacentItem = model.getAdjacentItem(direction, startedScroll);
-				if (adjacentItem?.snap) {
-					gotoSnapItem(adjacentItem, direction > 0);
-				}
-
+			if (adjacentItem?.snap) {
+				scheduleTouchBurstReset(source);
+				gotoSnapItem(adjacentItem, direction > 0);
 				return;
 			}
 
-			tryWheelIdleSnap(direction, Number.POSITIVE_INFINITY, startedScroll);
-		}, getSettings().touchDragStopSnapDelayMs);
+			scheduleTouchBurstReset(source);
+			return;
+		}
+
+		scheduleTouchStopSnap(direction, gestureCount, source);
 	};
 
-	const onWheelInput = (event: WheelEvent) => {
+	const handleWheelInput = (event: WheelEvent, deltaY: number) => {
 		if (!enabled) return;
 		if (!isReaderWheelTarget(event.target)) return;
 		if (ScrollTrigger.isTouch && isTouchPressing) return;
@@ -584,7 +1060,6 @@ export function attachInputBindings({
 		if (isInteractiveTarget(event.target)) return;
 		if (selectionIsActive()) return;
 
-		const deltaY = event.deltaY;
 		if (Math.abs(deltaY) < 1) return;
 
 		if (event.cancelable) {
@@ -609,10 +1084,15 @@ export function attachInputBindings({
 		}
 
 		const nextBurstCount = wheelBurstCount + 1;
-		const burstThreshold = getSettings().wheelSnapBypassBurstCount;
+		const burstThreshold = getSettings().wheelFreeScrollEventCount;
+		const freeScrollEnabled = getSettings().wheelFreeScrollEnabled;
 
 		if (isSnapAnimationRunning) {
-			if (!didChangeDirection && nextBurstCount <= burstThreshold) {
+			if (
+				!freeScrollEnabled &&
+				!didChangeDirection &&
+				nextBurstCount <= burstThreshold
+			) {
 				wheelBurstDirection = direction;
 				wheelBurstCount = nextBurstCount;
 				scheduleWheelBurstReset();
@@ -624,6 +1104,7 @@ export function attachInputBindings({
 		}
 
 		if (
+			!freeScrollEnabled &&
 			nextBurstCount <= burstThreshold &&
 			tryStep(direction > 0, {
 				immediate: true,
@@ -639,61 +1120,98 @@ export function attachInputBindings({
 		scheduleWheelStopSnap(direction);
 	};
 
+	const onNativeScroll = () => {
+		if (!enabled) return;
+		if (activeSnapTween || keyboardTween || wheelTween) return;
+		if (isTouchPressing || isPointerDragPressing) return;
+
+		const current = driver.getScroll();
+		const deltaY = current - nativeScrollLastValue;
+		if (Math.abs(deltaY) < 1) return;
+
+		const direction: ScrollDirection = deltaY > 0 ? 1 : -1;
+
+		nativeScrollLastValue = current;
+		scheduleNativeScrollStopSnap(direction);
+	};
+
 	const initObservers = () => {
-		snapObserver = ScrollTrigger.observe({
-			type: "touch",
+		gestureObserver = ScrollTrigger.observe({
+			type: "touch,pointer",
 			tolerance: 10,
 			preventDefault: false,
 			debounce: true,
 			allowClicks: true,
 			onPress: (self) => {
 				if (!enabled) return;
+				if (shouldIgnorePointerPress(self.event)) return;
+
+				clearTouchReleaseTimer();
+				interruptForUserInput();
 
 				if (ScrollTrigger.isTouch) {
 					isTouchPressing = true;
-					killTweens(true);
 
-					const clientY = getTouchClientY(self.event);
-					touchStartY = clientY ?? null;
-					touchLastY = clientY ?? null;
-					touchDragDirection = null;
-					touchDragStartedAt = performance.now();
+					const point = getTouchClientPoint(self.event);
+					activeDragSource = "touch";
+					touchStartX = point?.x ?? null;
+					touchStartY = point?.y ?? null;
+					touchLastX = point?.x ?? null;
+					touchLastY = point?.y ?? null;
+					touchDragStartedScroll = driver.getScroll();
+				} else {
+					isPointerDragPressing = true;
+
+					const point = getTouchClientPoint(self.event);
+					activeDragSource = "desktop";
+					touchStartX = point?.x ?? null;
+					touchStartY = point?.y ?? null;
+					touchLastX = point?.x ?? null;
+					touchLastY = point?.y ?? null;
 					touchDragStartedScroll = driver.getScroll();
 				}
 
 				if (ScrollTrigger.isTouch && isSnapAnimationRunning) {
-					self.event.preventDefault();
+					killSnapTween();
+					isSnapAnimationRunning = false;
 				}
 			},
 			onDrag: (self) => {
 				if (!enabled) return;
-				if (!ScrollTrigger.isTouch) return;
 
-				const clientY = getTouchClientY(self.event);
-				if (clientY == null || touchLastY == null) return;
-
-				const deltaY = touchLastY - clientY;
-				if (Math.abs(deltaY) >= 1) {
-					const max = ScrollTrigger.maxScroll(window);
-					const current = driver.getScroll();
-					const next = Math.max(
-						0,
-						Math.min(
-							max,
-							current + deltaY * getSettings().touchDragScrollMultiplier,
-						),
-					);
-
-					touchDragDirection = deltaY > 0 ? 1 : -1;
-					driver.setScroll(next);
+				const point = getTouchClientPoint(self.event);
+				if (point == null || touchLastX == null || touchLastY == null) {
+					return;
 				}
 
-				touchLastY = clientY;
+				const dragDelta = getCombinedDragDelta(
+					touchLastX - point.x,
+					touchLastY - point.y,
+					ScrollTrigger.isTouch ? "touch" : "desktop",
+				);
+
+				if (ScrollTrigger.isTouch && isTouchPressing) {
+					if (self.event.cancelable) {
+						self.event.preventDefault();
+					}
+					scrollByDrag(dragDelta.value, "touch");
+				} else if (isPointerDragPressing) {
+					if (self.event.cancelable) {
+						self.event.preventDefault();
+					}
+					scrollByDrag(dragDelta.value, "desktop");
+				}
+
+				touchLastX = point.x;
+				touchLastY = point.y;
 			},
 			onRelease: () => {
-				const shouldSnap = enabled && ScrollTrigger.isTouch && isTouchPressing;
+				const shouldSnap =
+					enabled &&
+					((ScrollTrigger.isTouch && isTouchPressing) || isPointerDragPressing);
 
 				isTouchPressing = false;
+				isPointerDragPressing = false;
 
 				if (shouldSnap) {
 					handleTouchReleaseSnap();
@@ -703,10 +1221,26 @@ export function attachInputBindings({
 			},
 		});
 
-		window.addEventListener("pointerdown", onUserPointerDown, {
-			passive: true,
+		wheelObserver = ScrollTrigger.observe({
+			type: "wheel",
+			target: window,
+			capture: true,
+			preventDefault: true,
+			debounce: false,
+			ignoreCheck: (event) => shouldIgnoreWheel(event),
+			onWheel: (self) => {
+				const event = self.event as WheelEvent;
+				handleWheelInput(event, event.deltaY);
+			},
 		});
-		window.addEventListener("wheel", onWheelInput, wheelListenerOptions);
+
+		nativeScrollLastValue = driver.getScroll();
+		window.addEventListener(
+			"scroll",
+			onNativeScroll,
+			nativeScrollListenerOptions,
+		);
+
 		window.addEventListener("keydown", onKeyboardDown);
 		window.addEventListener("keyup", onKeyboardUp);
 		window.addEventListener("blur", onWindowBlur);
@@ -717,28 +1251,37 @@ export function attachInputBindings({
 	const disable = () => {
 		enabled = false;
 		killTweens(true);
-		snapObserver?.disable();
+		resetNativeScroll();
+		resetTouchBurst();
+		gestureObserver?.disable();
+		wheelObserver?.disable();
 	};
 
 	const enable = () => {
 		enabled = true;
-		snapObserver?.enable();
+		nativeScrollLastValue = driver.getScroll();
+		gestureObserver?.enable();
+		wheelObserver?.enable();
 	};
 
 	const cleanup = () => {
 		killTweens(true);
+		resetNativeScroll();
+		resetTouchBurst();
 
 		window.removeEventListener(
-			"pointerdown",
-			onUserPointerDown as EventListener,
+			"scroll",
+			onNativeScroll,
+			nativeScrollListenerOptions,
 		);
-		window.removeEventListener("wheel", onWheelInput, wheelListenerOptions);
 		window.removeEventListener("keydown", onKeyboardDown);
 		window.removeEventListener("keyup", onKeyboardUp);
 		window.removeEventListener("blur", onWindowBlur);
 
-		snapObserver?.kill();
-		snapObserver = null;
+		gestureObserver?.kill();
+		gestureObserver = null;
+		wheelObserver?.kill();
+		wheelObserver = null;
 	};
 
 	return {

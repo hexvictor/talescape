@@ -2,7 +2,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import Script from "next/script";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
 import { clerkAppearance } from "~/features/auth/utils/clerkAppearance";
@@ -43,7 +42,7 @@ export default function RootLayout({
 							__html: themeScript,
 						}}
 					/>
-					{isDev && (
+					{/* {isDev && (
 						<>
 							<Script
 								src="//unpkg.com/react-grab/dist/index.global.js"
@@ -52,7 +51,7 @@ export default function RootLayout({
 							/>
 							<Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
 						</>
-					)}
+					)} */}
 				</head>
 				<body className="relative flex flex-col">
 					<NextSSRPlugin
