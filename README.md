@@ -28,3 +28,5 @@
 - [ ] Reader section-transition boundaries can become very janky when scrolling across the lines between sections
 - [ ] Reader drag direction should account for section direction, including seamless left-direction sections that invert horizontal drag intent
 - [ ] Reader mobile white-space/layout gaps in Chrome and Safari; Firefox looks less affected, likely section measurement or GSAP refresh timing
+
+- [ ] Define proper HTML elements for tale reader components

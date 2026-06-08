@@ -22,7 +22,6 @@ import {
 	pages,
 	parts,
 	paths,
-	sections,
 	talePermissions,
 	tales,
 	users,
@@ -40,7 +39,6 @@ import {
 	getAccessLabel,
 	getSignedInLibraryUser,
 	pathAccessCondition,
-	sectionAccessCondition,
 	taleAccessCondition,
 	visibleTaleByIdCondition,
 } from "./access";
@@ -66,6 +64,26 @@ type LibraryTalesOptions = {
 
 type LibraryBooksOptions = {
 	creatorId?: string;
+};
+
+type LibrarySectionRow = {
+	branch: {
+		id: number;
+		index: number;
+		name: string;
+	};
+	direction: "down";
+	id: number;
+	index: number;
+	isSnap: boolean;
+	orientation: "vertical";
+	previewFragment: LibraryPreviewFragment | null;
+	tale: {
+		id: number;
+		title: string;
+	};
+	taleId: number;
+	visibility: "private" | "public" | "restricted";
 };
 
 export async function getLibraryTales(options: LibraryTalesOptions = {}) {
@@ -188,47 +206,14 @@ export async function getLibraryBranches() {
 
 	return rows.map((row) => ({
 		...row.branch,
+		index: row.branch.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		previewFragment: previews.get(row.branch.id) ?? null,
 	}));
 }
 
-export async function getLibrarySections() {
-	const { userId } = await getSignedInLibraryUser();
-	const rows = await db
-		.select({
-			section: sections,
-			taleId: tales.id,
-			taleTitle: tales.title,
-			branchId: branches.id,
-			branchName: branches.name,
-			branchIndex: branches.index,
-		})
-		.from(sections)
-		.innerJoin(tales, eq(tales.id, sections.taleId))
-		.innerJoin(branches, eq(branches.id, sections.branchId))
-		.where(
-			and(
-				taleAccessCondition(userId),
-				sectionAccessCondition(sections.id, sections, userId),
-			),
-		)
-		.orderBy(desc(sections.id));
-	const previews = await getPreviewFragmentsBySectionIds(
-		rows.map((row) => row.section.id),
-		userId,
-	);
-
-	return rows.map((row) => ({
-		...row.section,
-		tale: { id: row.taleId, title: row.taleTitle },
-		branch: {
-			id: row.branchId,
-			name: row.branchName,
-			index: row.branchIndex,
-		},
-		previewFragment: previews.get(row.section.id) ?? null,
-	}));
+export async function getLibrarySections(): Promise<LibrarySectionRow[]> {
+	return [];
 }
 
 export async function getLibraryBlocks() {
@@ -238,27 +223,24 @@ export async function getLibraryBlocks() {
 			block: blocks,
 			taleId: tales.id,
 			taleTitle: tales.title,
-			sectionId: sections.id,
-			sectionIndex: sections.index,
 			branchId: branches.id,
 			branchName: branches.name,
-			branchIndex: branches.index,
+			branchIndex: branches.order,
 			entryId: entries.id,
 			entryTitle: entries.title,
-			entryIndex: entries.index,
+			entryIndex: entries.order,
 			partId: parts.id,
 			partTitle: parts.title,
-			partIndex: parts.index,
+			partIndex: parts.order,
 			pageId: pages.id,
-			pageIndex: pages.index,
+			pageIndex: pages.order,
 		})
 		.from(blocks)
 		.innerJoin(tales, eq(tales.id, blocks.taleId))
-		.innerJoin(sections, eq(sections.id, blocks.sectionId))
-		.innerJoin(branches, eq(branches.id, sections.branchId))
-		.innerJoin(entries, eq(entries.id, blocks.entryId))
-		.innerJoin(parts, eq(parts.id, blocks.partId))
-		.leftJoin(pages, eq(pages.id, blocks.pageId))
+		.innerJoin(branches, eq(branches.id, blocks.branchId))
+		.innerJoin(pages, eq(pages.id, blocks.pageId))
+		.innerJoin(entries, eq(entries.id, pages.entryId))
+		.innerJoin(parts, eq(parts.id, pages.partId))
 		.where(
 			and(
 				taleAccessCondition(userId),
@@ -273,8 +255,9 @@ export async function getLibraryBlocks() {
 
 	return rows.map((row) => ({
 		...row.block,
+		index: row.block.order,
 		tale: { id: row.taleId, title: row.taleTitle },
-		section: { id: row.sectionId, index: row.sectionIndex },
+		section: { id: row.branchId, index: row.branchIndex },
 		branch: {
 			id: row.branchId,
 			name: row.branchName,
@@ -309,30 +292,26 @@ export async function getLibraryFragments() {
 			taleId: tales.id,
 			taleTitle: tales.title,
 			blockId: blocks.id,
-			blockIndex: blocks.index,
-			sectionId: sections.id,
-			sectionIndex: sections.index,
+			blockIndex: blocks.order,
 			branchId: branches.id,
 			branchName: branches.name,
-			branchIndex: branches.index,
+			branchIndex: branches.order,
 			entryId: entries.id,
 			entryTitle: entries.title,
-			entryIndex: entries.index,
+			entryIndex: entries.order,
 			partId: parts.id,
 			partTitle: parts.title,
-			partIndex: parts.index,
+			partIndex: parts.order,
 			pageId: pages.id,
-			pageIndex: pages.index,
-			sectionOrientation: sections.orientation,
+			pageIndex: pages.order,
 		})
 		.from(fragments)
 		.innerJoin(tales, eq(tales.id, fragments.taleId))
 		.innerJoin(blocks, eq(blocks.id, fragments.blockId))
-		.innerJoin(sections, eq(sections.id, blocks.sectionId))
-		.innerJoin(branches, eq(branches.id, sections.branchId))
-		.innerJoin(entries, eq(entries.id, blocks.entryId))
-		.innerJoin(parts, eq(parts.id, blocks.partId))
-		.leftJoin(pages, eq(pages.id, blocks.pageId))
+		.innerJoin(branches, eq(branches.id, blocks.branchId))
+		.innerJoin(pages, eq(pages.id, blocks.pageId))
+		.innerJoin(entries, eq(entries.id, pages.entryId))
+		.innerJoin(parts, eq(parts.id, pages.partId))
 		.where(
 			and(
 				taleAccessCondition(userId),
@@ -343,9 +322,10 @@ export async function getLibraryFragments() {
 
 	return rows.map((row) => ({
 		...row.fragment,
+		index: row.fragment.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		block: { id: row.blockId, index: row.blockIndex },
-		section: { id: row.sectionId, index: row.sectionIndex },
+		section: { id: row.branchId, index: row.branchIndex },
 		branch: {
 			id: row.branchId,
 			name: row.branchName,
@@ -372,7 +352,7 @@ export async function getLibraryFragments() {
 			id: row.fragment.id,
 			type: row.fragment.type,
 			data: row.fragment.data,
-			orientation: row.sectionOrientation,
+			orientation: "vertical" as const,
 		},
 	}));
 }
@@ -389,10 +369,10 @@ export async function getLibraryPaths() {
 			taleTitle: tales.title,
 			fromBranchId: fromBranches.id,
 			fromBranchName: fromBranches.name,
-			fromBranchIndex: fromBranches.index,
+			fromBranchIndex: fromBranches.order,
 			toBranchId: toBranches.id,
 			toBranchName: toBranches.name,
-			toBranchIndex: toBranches.index,
+			toBranchIndex: toBranches.order,
 		})
 		.from(paths)
 		.innerJoin(tales, eq(tales.id, paths.taleId))
@@ -442,6 +422,7 @@ export async function getLibraryParts() {
 
 	return rows.map((row) => ({
 		...row.part,
+		index: row.part.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 	}));
 }
@@ -455,7 +436,7 @@ export async function getLibraryEntries() {
 			taleTitle: tales.title,
 			partId: parts.id,
 			partTitle: parts.title,
-			partIndex: parts.index,
+			partIndex: parts.order,
 		})
 		.from(entries)
 		.innerJoin(tales, eq(tales.id, entries.taleId))
@@ -465,6 +446,7 @@ export async function getLibraryEntries() {
 
 	return rows.map((row) => ({
 		...row.entry,
+		index: row.entry.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		part: {
 			id: row.partId,
@@ -483,10 +465,10 @@ export async function getLibraryPages() {
 			taleTitle: tales.title,
 			partId: parts.id,
 			partTitle: parts.title,
-			partIndex: parts.index,
+			partIndex: parts.order,
 			entryId: entries.id,
 			entryTitle: entries.title,
-			entryIndex: entries.index,
+			entryIndex: entries.order,
 		})
 		.from(pages)
 		.innerJoin(tales, eq(tales.id, pages.taleId))
@@ -497,6 +479,7 @@ export async function getLibraryPages() {
 
 	return rows.map((row) => ({
 		...row.page,
+		index: row.page.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		part: {
 			id: row.partId,
@@ -530,49 +513,19 @@ async function getPreviewFragmentsByBranchIds(
 			fragmentId: fragments.id,
 			fragmentType: fragments.type,
 			fragmentData: fragments.data,
-			sectionOrientation: sections.orientation,
 		})
 		.from(fragments)
 		.innerJoin(blocks, eq(blocks.id, fragments.blockId))
-		.innerJoin(sections, eq(sections.id, blocks.sectionId))
-		.innerJoin(branches, eq(branches.id, sections.branchId))
+		.innerJoin(branches, eq(branches.id, blocks.branchId))
 		.where(
 			and(
 				inArray(branches.id, branchIds),
 				fragmentAccessCondition(fragments.id, fragments, userId),
 			),
 		)
-		.orderBy(asc(sections.index), asc(blocks.index), asc(fragments.index));
+		.orderBy(asc(blocks.order), asc(fragments.order));
 
 	return firstPreviewByKey(rows, (row) => row.branchId);
-}
-
-async function getPreviewFragmentsBySectionIds(
-	sectionIds: number[],
-	userId: string | null,
-) {
-	if (!sectionIds.length) return new Map<number, LibraryPreviewFragment>();
-
-	const rows = await db
-		.select({
-			sectionId: sections.id,
-			fragmentId: fragments.id,
-			fragmentType: fragments.type,
-			fragmentData: fragments.data,
-			sectionOrientation: sections.orientation,
-		})
-		.from(fragments)
-		.innerJoin(blocks, eq(blocks.id, fragments.blockId))
-		.innerJoin(sections, eq(sections.id, blocks.sectionId))
-		.where(
-			and(
-				inArray(sections.id, sectionIds),
-				fragmentAccessCondition(fragments.id, fragments, userId),
-			),
-		)
-		.orderBy(asc(blocks.index), asc(fragments.index));
-
-	return firstPreviewByKey(rows, (row) => row.sectionId);
 }
 
 async function getPreviewFragmentsByBlockIds(
@@ -587,18 +540,16 @@ async function getPreviewFragmentsByBlockIds(
 			fragmentId: fragments.id,
 			fragmentType: fragments.type,
 			fragmentData: fragments.data,
-			sectionOrientation: sections.orientation,
 		})
 		.from(fragments)
 		.innerJoin(blocks, eq(blocks.id, fragments.blockId))
-		.innerJoin(sections, eq(sections.id, blocks.sectionId))
 		.where(
 			and(
 				inArray(blocks.id, blockIds),
 				fragmentAccessCondition(fragments.id, fragments, userId),
 			),
 		)
-		.orderBy(asc(fragments.index));
+		.orderBy(asc(fragments.order));
 
 	return firstPreviewByKey(rows, (row) => row.blockId);
 }
@@ -608,7 +559,6 @@ function firstPreviewByKey<
 		fragmentId: number;
 		fragmentType: FragmentType;
 		fragmentData: FragmentData;
-		sectionOrientation: "vertical" | "horizontal";
 	},
 >(rows: TRow[], getKey: (row: TRow) => number) {
 	const previews = new Map<number, LibraryPreviewFragment>();
@@ -621,7 +571,7 @@ function firstPreviewByKey<
 			id: row.fragmentId,
 			type: row.fragmentType,
 			data: row.fragmentData,
-			orientation: row.sectionOrientation,
+			orientation: "vertical",
 		});
 	}
 

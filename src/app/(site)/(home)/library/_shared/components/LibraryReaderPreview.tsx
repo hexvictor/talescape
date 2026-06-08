@@ -1,7 +1,6 @@
 "use client";
 
 import { Eye } from "lucide-react";
-import { ReaderFragment } from "~/app/(tale-reader)/_shared/components/ReaderShell/ReaderFragment";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -11,7 +10,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import type { Fragment } from "~/server/db/data/tale-reader/types/fragments";
 import type {
 	FragmentData,
 	FragmentType,
@@ -51,10 +49,7 @@ export function LibraryReaderPreview({
 				<div className="px-6 pb-6">
 					<div className="relative flex min-h-[28rem] items-center justify-center overflow-hidden rounded-md bg-black text-white">
 						{fragment ? (
-							<ReaderFragment
-								fragment={toReaderFragment(fragment)}
-								orientation={fragment.orientation}
-							/>
+							<PreviewFragment fragment={fragment} />
 						) : (
 							<p className="max-w-sm text-center text-sm text-white/70">
 								This node does not have a readable fragment to preview yet.
@@ -67,35 +62,52 @@ export function LibraryReaderPreview({
 	);
 }
 
-function toReaderFragment(fragment: PreviewFragment): Fragment {
-	return {
-		id: fragment.id,
-		taleId: 0,
-		blockId: 0,
-		creatorId: "",
-		type: fragment.type,
-		isOfficial: false,
-		isVerified: false,
-		editable: false,
-		index: 0,
-		visibility: "public",
-		cloneable: "private",
-		data: fragment.data,
-		createdAt: new Date(),
-		updatedAt: null,
-		sectionId: 0,
-		links: {
-			previousFragmentId: null,
-			nextFragmentId: null,
-			previousFragmentIdInBlock: null,
-			nextFragmentIdInBlock: null,
-		},
-		position: {
-			index: 0,
-			isFirst: true,
-			isLast: true,
-			isFirstInBlock: true,
-			isLastInBlock: true,
-		},
-	};
+/**
+ * Renders a lightweight fragment preview for the library modal.
+ *
+ * @param props - The preview fragment props.
+ * @param props.fragment - The fragment data selected from the library item.
+ * @returns A static preview that does not depend on the production reader store.
+ *
+ * @example
+ * <PreviewFragment fragment={fragment} />
+ */
+function PreviewFragment({ fragment }: { fragment: PreviewFragment }) {
+	const data = fragment.data as Record<string, unknown>;
+	const text =
+		typeof data.content === "string"
+			? data.content
+			: typeof data.text === "string"
+				? data.text
+				: "";
+	const src =
+		typeof data.src === "string"
+			? data.src
+			: typeof data.url === "string"
+				? data.url
+				: "";
+
+	if (fragment.type === "image" && src) {
+		return (
+			<img
+				src={src}
+				alt={typeof data.alt === "string" ? data.alt : ""}
+				className="max-h-[26rem] max-w-full rounded object-contain"
+			/>
+		);
+	}
+
+	if (fragment.type === "quote") {
+		return (
+			<blockquote className="max-w-xl text-center font-serif text-2xl leading-relaxed">
+				{text}
+			</blockquote>
+		);
+	}
+
+	return (
+		<p className="max-w-xl whitespace-pre-wrap text-center text-lg leading-relaxed">
+			{text || "No preview text available."}
+		</p>
+	);
 }

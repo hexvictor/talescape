@@ -1,13 +1,10 @@
 import { relations, sql } from "drizzle-orm";
-import {
-	type Author,
-	authors,
-	bookPermissions,
-	images,
-	users,
-} from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { AssetVisibility } from "~/server/db/types/tale-builder/asset";
+import { images } from "../images";
+import { users } from "../users";
+import { type Author, authors } from "./authors";
+import { bookPermissions } from "./permissions/bookPermissions";
 
 export type BookType = "official" | "user";
 export type BookStatus =

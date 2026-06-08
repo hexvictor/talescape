@@ -1,33 +1,51 @@
 "use client";
 
-import { useRef } from "react";
-import { usePersistReaderProgress } from "~/app/(tale-reader)/_shared/hooks/usePersistReaderProgress";
-import { useReaderScrollEngine } from "~/app/(tale-reader)/_shared/hooks/useReaderScrollEngine";
-import ReaderContent from "../ReaderContent";
+import { useReaderViewportController } from "../../../hooks/useReaderViewportController";
+import { countReaderDiagnostic } from "../../../services/readerDiagnostics";
+import { ReaderLoading } from "../../ReaderUi/ReaderLoading/ReaderLoading";
+import { ReaderMotionReadiness } from "../../ReaderUi/ReaderLoading/ReaderMotionReadiness";
+import { ReaderMeasurementLayer } from "../ReaderMeasurementLayer/ReaderMeasurementLayer";
+import { ReaderStage } from "../ReaderStage/ReaderStage";
+import { ReaderOverlayUi } from "./ReaderOverlayUi";
 
-export default function ReaderViewport() {
-	const wrapperRef = useRef<HTMLDivElement | null>(null);
-
-	useReaderScrollEngine({
-		wrapperRef,
-	});
-
-	usePersistReaderProgress();
+export function ReaderViewport() {
+	countReaderDiagnostic("ReaderViewport React render");
+	const {
+		choosePath,
+		compiled,
+		measurementBlockIds,
+		measurementRef,
+		stageRef,
+		tale,
+		viewport,
+	} = useReaderViewportController();
 
 	return (
-		<div
-			id="smooth-wrapper"
-			ref={wrapperRef}
-			className="min-h-screen select-none"
-			style={{ touchAction: "none", overscrollBehavior: "none" }}
-		>
+		<>
+			{measurementBlockIds.length > 0 ? (
+				<ReaderMeasurementLayer
+					blockIds={measurementBlockIds}
+					rootRef={measurementRef}
+					tale={tale}
+				/>
+			) : null}
+			<main className="fixed inset-0 isolate overflow-hidden bg-[#0d0b08] text-[#fff8e8]">
+				{compiled ? (
+					<ReaderStage
+						compiled={compiled}
+						onChoosePath={choosePath}
+						stageRef={stageRef}
+						viewport={viewport}
+					/>
+				) : null}
+				<ReaderOverlayUi />
+				<ReaderMotionReadiness />
+				<ReaderLoading />
+			</main>
 			<div
-				id="smooth-content"
-				className="select-none"
-				style={{ touchAction: "none" }}
-			>
-				<ReaderContent />
-			</div>
-		</div>
+				aria-hidden="true"
+				style={{ height: (compiled?.totalScroll ?? 1) + viewport.height }}
+			/>
+		</>
 	);
 }

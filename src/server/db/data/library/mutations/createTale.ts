@@ -9,7 +9,6 @@ import {
 	pages,
 	parts,
 	paths,
-	sections,
 	talePermissions,
 	tales,
 } from "~/server/db/schema";
@@ -25,13 +24,6 @@ const statusTypes = [
 	"archived",
 ] as const;
 const branchModes = ["linear", "branching"] as const;
-const orientations = ["vertical", "horizontal"] as const;
-const directions = ["down", "up", "right", "left"] as const;
-const defaultInputMode = ["buttons", "keyboard", "touch"] as [
-	"buttons",
-	"keyboard",
-	"touch",
-];
 
 export async function createTaleFromForm(userId: string, formData: FormData) {
 	const existingUser = await db.query.users.findFirst({
@@ -68,13 +60,6 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 		"Choice Path",
 	);
 	const pathLabel = readText(formData, "pathLabel", "Choose another route");
-	const orientation = readOption(
-		formData,
-		"orientation",
-		orientations,
-		"vertical",
-	);
-	const direction = readOption(formData, "direction", directions, "down");
 	const blocksPerBranch = readNumber(formData, "blocksPerBranch", 3, 1, 12);
 	const starterText = readText(
 		formData,
@@ -117,7 +102,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			.values({
 				taleId: createdTale.id,
 				title: partTitle,
-				index: 0,
+				order: 0,
 			})
 			.returning({ id: parts.id });
 
@@ -130,7 +115,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				partId: createdPart.id,
 				title: entryTitle,
 				type: "chapter",
-				index: 0,
+				order: 0,
 			})
 			.returning({ id: entries.id });
 
@@ -145,10 +130,13 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					entryId: createdEntry.id,
 					type: "book" as const,
 					isPaginated: true,
-					index,
+					order: index,
 				})),
 			)
-			.returning({ id: pages.id, index: pages.index });
+			.returning({ id: pages.id });
+
+		const firstPage = createdPages[0];
+		if (!firstPage) throw new Error("Unable to create first page");
 
 		const branchNames =
 			branchMode === "branching"
@@ -162,7 +150,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					taleId: createdTale.id,
 					creatorId: userId,
 					name,
-					index,
+					order: index,
 					isOfficial: false,
 					isVerified: false,
 					editable: true,
@@ -170,28 +158,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					cloneable: "private" as const,
 				})),
 			)
-			.returning({ id: branches.id, index: branches.index });
-
-		const createdSections = await tx
-			.insert(sections)
-			.values(
-				createdBranches.map((branch) => ({
-					taleId: createdTale.id,
-					branchId: branch.id,
-					creatorId: userId,
-					orientation,
-					direction,
-					inputMode: defaultInputMode,
-					isOfficial: false,
-					isVerified: false,
-					editable: true,
-					isSnap: false,
-					index: 0,
-					visibility,
-					cloneable: "private" as const,
-				})),
-			)
-			.returning({ id: sections.id, branchId: sections.branchId });
+			.returning({ id: branches.id });
 
 		if (branchMode === "branching" && createdBranches.length > 1) {
 			const [fromBranch, toBranch] = createdBranches;
@@ -213,33 +180,32 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			}
 		}
 
-		const blockValues = createdSections.flatMap((section, sectionIndex) =>
+		const blockValues = createdBranches.flatMap((branch) =>
 			Array.from({ length: blocksPerBranch }, (_, blockIndex) => {
 				const page = createdPages[blockIndex % createdPages.length];
 
 				return {
 					taleId: createdTale.id,
-					sectionId: section.id,
-					entryId: createdEntry.id,
-					partId: createdPart.id,
+					branchId: branch.id,
 					creatorId: userId,
 					isOfficial: false,
 					isVerified: false,
 					editable: true,
-					pageId: page?.id ?? null,
+					entryId: createdEntry.id,
+					pageId: page?.id ?? firstPage.id,
+					partId: createdPart.id,
 					isSnap: false,
-					index: blockIndex,
+					order: blockIndex,
 					visibility,
 					cloneable: "private" as const,
-					sectionIndex,
 				};
 			}),
 		);
 
 		const createdBlocks = await tx
 			.insert(blocks)
-			.values(blockValues.map(({ sectionIndex: _, ...value }) => value))
-			.returning({ id: blocks.id, index: blocks.index });
+			.values(blockValues)
+			.returning({ id: blocks.id });
 
 		await tx.insert(fragments).values(
 			createdBlocks.map((block, index) => ({
@@ -250,7 +216,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				isOfficial: false,
 				isVerified: false,
 				editable: true,
-				index: 0,
+				order: 0,
 				visibility,
 				cloneable: "private" as const,
 				data: {

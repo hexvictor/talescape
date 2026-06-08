@@ -12,7 +12,6 @@ import {
 	pages,
 	parts,
 	paths,
-	sections,
 	tales,
 } from "~/server/db/schema";
 import {
@@ -23,7 +22,6 @@ import {
 	fragmentAccessCondition,
 	getSignedInLibraryUser,
 	pathAccessCondition,
-	sectionAccessCondition,
 	taleAccessCondition,
 	visibleTaleByIdCondition,
 } from "./access";
@@ -40,7 +38,6 @@ export async function getLibraryCounts() {
 		authorsCount,
 		talesCount,
 		branchesCount,
-		sectionsCount,
 		blocksCount,
 		fragmentsCount,
 		pathsCount,
@@ -52,7 +49,6 @@ export async function getLibraryCounts() {
 		getVisibleAuthorCount(userId),
 		getVisibleTaleCount(userId),
 		getVisibleBranchCount(userId),
-		getVisibleSectionCount(userId),
 		getVisibleBlockCount(userId),
 		getVisibleFragmentCount(userId),
 		getVisiblePathCount(userId),
@@ -65,9 +61,9 @@ export async function getLibraryCounts() {
 		books: booksCount,
 		authors: authorsCount,
 		tales: talesCount,
-		nodes: branchesCount + sectionsCount + blocksCount + fragmentsCount,
+		nodes: branchesCount + blocksCount + fragmentsCount,
 		branches: branchesCount,
-		sections: sectionsCount,
+		sections: 0,
 		blocks: blocksCount,
 		fragments: fragmentsCount,
 		paths: pathsCount,
@@ -96,7 +92,6 @@ export async function getCountsByTaleIds(
 
 	const [
 		branchCounts,
-		sectionCounts,
 		blockCounts,
 		fragmentCounts,
 		pathCounts,
@@ -114,16 +109,6 @@ export async function getCountsByTaleIds(
 				),
 			)
 			.groupBy(branches.taleId),
-		db
-			.select({ taleId: sections.taleId, value: count() })
-			.from(sections)
-			.where(
-				and(
-					inArray(sections.taleId, taleIds),
-					sectionAccessCondition(sections.id, sections, userId),
-				),
-			)
-			.groupBy(sections.taleId),
 		db
 			.select({ taleId: blocks.taleId, value: count() })
 			.from(blocks)
@@ -174,7 +159,7 @@ export async function getCountsByTaleIds(
 
 	return {
 		branches: toCountMap(branchCounts),
-		sections: toCountMap(sectionCounts),
+		sections: new Map<number, number>(),
 		blocks: toCountMap(blockCounts),
 		fragments: toCountMap(fragmentCounts),
 		paths: toCountMap(pathCounts),
@@ -219,20 +204,6 @@ async function getVisibleBranchCount(userId: string | null) {
 			and(
 				visibleTaleByIdCondition(branches.taleId, userId),
 				branchAccessCondition(branches.id, branches, userId),
-			),
-		);
-
-	return row?.value ?? 0;
-}
-
-async function getVisibleSectionCount(userId: string | null) {
-	const [row] = await db
-		.select({ value: count() })
-		.from(sections)
-		.where(
-			and(
-				visibleTaleByIdCondition(sections.taleId, userId),
-				sectionAccessCondition(sections.id, sections, userId),
 			),
 		);
 

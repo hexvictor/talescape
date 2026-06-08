@@ -1,93 +1,46 @@
+import { eq } from "drizzle-orm";
+import { db } from "~/server/db";
 import { entries, pages, tales } from "~/server/db/schema";
-import type { EntryType } from "~/server/db/types/tale-reader/entry";
-import type { PageType } from "~/server/db/types/tale-reader/page";
-import { db } from "../..";
-import { isBranchedTaleSlug } from "./branchedTales";
+import { readerPageBlueprints } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type PageSeed = {
-	taleId: number;
-	partId: number;
-	entryId: number;
-	type: PageType;
-	isPaginated: boolean;
-	index: number;
-};
-
-export async function seedPages() {
+/**
+ * Queries real entry rows and inserts globally ordered pages.
+ *
+ * @returns Nothing.
+ */
+export async function seedPages(): Promise<void> {
+	logSeedStart("Pages");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "official-tale-branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 	const allEntries = await db
 		.select({
 			id: entries.id,
-			taleId: entries.taleId,
+			order: entries.order,
 			partId: entries.partId,
-			type: entries.type,
 		})
-		.from(entries);
-	const allTales = await db
-		.select({
-			id: tales.id,
-			slug: tales.slug,
-		})
-		.from(tales);
-	const taleSlugById = new Map(
-		allTales.map((tale) => [tale.id, tale.slug] as const),
+		.from(entries)
+		.where(eq(entries.taleId, tale.id));
+	const entryByOrder = new Map(allEntries.map((entry) => [entry.order, entry]));
+
+	await db.insert(pages).values(
+		readerPageBlueprints.map((page) => {
+			const entry = entryByOrder.get(page.entryOrder);
+			if (!entry) throw new Error(`Missing entry ${page.entryOrder}.`);
+			return {
+				description: `${page.title}, page ${page.localOrder + 1} of its entry.`,
+				entryId: entry.id,
+				isPaginated: page.isPaginated,
+				order: page.order,
+				partId: entry.partId,
+				taleId: tale.id,
+				title: page.title,
+				type: page.type,
+			};
+		}),
 	);
-
-	const pagesData: PageSeed[] = allEntries.flatMap((entry) => {
-		const taleSlug = taleSlugById.get(entry.taleId) ?? "";
-		const specialPageType = getSpecialPageType(entry.type);
-		if (specialPageType) {
-			return [
-				{
-					taleId: entry.taleId,
-					partId: entry.partId,
-					entryId: entry.id,
-					type: specialPageType,
-					isPaginated: false,
-					index: 0,
-				},
-			];
-		}
-
-		if (isBranchedTaleSlug(taleSlug)) {
-			return createBookPages(entry, 2);
-		}
-
-		return createBookPages(entry, 3);
-	});
-
-	await db.insert(pages).values(pagesData);
-	console.log(
-		`✅ Seeded ${pagesData.length} pages for ${allEntries.length} entries.`,
-	);
-}
-
-function createBookPages(
-	entry: { id: number; taleId: number; partId: number },
-	count: number,
-): PageSeed[] {
-	return Array.from({ length: count }).map((_, pageIndex) => ({
-		taleId: entry.taleId,
-		partId: entry.partId,
-		entryId: entry.id,
-		type: "book",
-		isPaginated: true,
-		index: pageIndex,
-	}));
-}
-
-function getSpecialPageType(entryType: EntryType): PageType | null {
-	switch (entryType) {
-		case "cover":
-			return "illustration";
-		case "map":
-			return "map";
-		case "quote":
-			return "quote";
-		case "table_of_contents":
-			return "custom";
-		case "timeline":
-			return "timeline";
-		default:
-			return null;
-	}
+	logSeedComplete("Pages");
 }

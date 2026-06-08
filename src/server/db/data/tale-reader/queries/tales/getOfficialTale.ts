@@ -1,11 +1,11 @@
-import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import { db } from "~/server/db";
+import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import type { TaleData } from "~/server/db/data/tale-reader/types/tales";
 import { getSignedInUserId } from "../auth/getSignedInUserId";
-import { createNewProgress } from "../progress/createNewProgress";
 import { getTale } from "./getTale";
+import { getTaleDataWithProgress } from "./getTaleDataWithProgress";
 
-export async function getOfficialTaleQuery(slug: string): Promise<TaleData> {
+async function getOfficialTaleQuery(slug: string): Promise<TaleData> {
 	const tale = await getTale({
 		where: (model, { eq, and }) =>
 			and(
@@ -23,22 +23,7 @@ export async function getOfficialTaleQuery(slug: string): Promise<TaleData> {
 		return { tale, progress: null };
 	}
 
-	const progress = await db.query.taleProgresses.findFirst({
-		where: (model, { eq, and }) =>
-			and(eq(model.taleId, tale.id), eq(model.userId, userId)),
-	});
-
-	if (progress === undefined) {
-		const newProgress = await createNewProgress(
-			tale.id,
-			tale.content.order.blockIds,
-			userId,
-		);
-
-		return { tale, progress: newProgress };
-	}
-
-	return { tale, progress };
+	return getTaleDataWithProgress(tale, userId);
 }
 
 export const getOfficialTale = getOfficialTaleQuery;

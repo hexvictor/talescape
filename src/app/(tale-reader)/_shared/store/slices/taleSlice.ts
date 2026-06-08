@@ -1,11 +1,11 @@
 import type { StateCreator } from "zustand/vanilla";
-import type { Tale } from "~/server/db/data/tale-reader/types/tales";
+import type { Tale } from "../../types";
 import type { TaleReaderState } from "../createReaderStore";
 
 export type TaleSlice = {
 	tale: {
 		data: Tale;
-		set: (tale: Tale) => void;
+		setData: (tale: Tale) => void;
 	};
 };
 
@@ -14,12 +14,9 @@ export const createTaleSlice =
 	(set) => ({
 		tale: {
 			data: initialTale,
-			set: (tale) =>
+			setData: (data) =>
 				set((state) => ({
-					tale: {
-						...state.tale,
-						data: tale,
-					},
+					tale: { ...state.tale, data },
 				})),
 		},
 	});

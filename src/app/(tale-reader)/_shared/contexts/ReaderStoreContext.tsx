@@ -1,37 +1,49 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import {
+	type PropsWithChildren,
+	createContext,
+	useContext,
+	useRef,
+} from "react";
 import { type StoreApi, useStore } from "zustand";
-import { getInitialProgressFromLocalStorage } from "~/app/(tale-reader)/_shared/services/readerProgressStorage";
+import { useShallow } from "zustand/react/shallow";
 import {
 	type TaleReaderState,
 	createReaderStore,
-} from "~/app/(tale-reader)/_shared/store/createReaderStore";
-import type { Tale } from "~/server/db/data/tale-reader/types/tales";
-import type { ReaderProgressSchema } from "~/server/db/schema";
+} from "../store/createReaderStore";
+import type { ReaderMode, SavedReaderProgress, Tale } from "../types";
 
 const ReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
 	null,
 );
 
-type ReaderStoreProviderProps = {
-	children: React.ReactNode;
-	initialTale: Tale;
-	initialProgress: ReaderProgressSchema | null;
-};
-
+/**
+ * Provides one reader store instance to all reader components.
+ *
+ * @param props - The provider props.
+ * @param props.children - Components that need access to the reader store.
+ * @param props.progress - The progress object used to initialize the store.
+ * @param props.tale - The formatted tale structure loaded for this reader.
+ * @returns A React context provider wrapping the reader subtree.
+ *
+ * @example
+ * <ReaderStoreProvider tale={tale} progress={progress}>{children}</ReaderStoreProvider>
+ */
 export function ReaderStoreProvider({
 	children,
-	initialTale,
-	initialProgress,
-}: ReaderStoreProviderProps) {
+	mode = "read",
+	progress,
+	tale,
+}: PropsWithChildren<{
+	mode?: ReaderMode;
+	progress: SavedReaderProgress;
+	tale: Tale;
+}>) {
 	const storeRef = useRef<StoreApi<TaleReaderState> | null>(null);
 
 	if (!storeRef.current) {
-		const resolvedProgress =
-			initialProgress ?? getInitialProgressFromLocalStorage(initialTale);
-
-		storeRef.current = createReaderStore(initialTale, resolvedProgress);
+		storeRef.current = createReaderStore(tale, progress, mode);
 	}
 
 	return (
@@ -41,20 +53,50 @@ export function ReaderStoreProvider({
 	);
 }
 
-export function useReaderStoreInstance(): StoreApi<TaleReaderState> {
+/**
+ * Reads the active reader store from context.
+ *
+ * @returns The vanilla Zustand reader store instance.
+ *
+ * @example
+ * const store = useReaderStoreInstance();
+ */
+export function useReaderStoreInstance() {
 	const store = useContext(ReaderStoreContext);
 	if (!store) {
-		throw new Error(
-			"useReaderStoreInstance must be used within ReaderStoreProvider",
-		);
+		throw new Error("useReaderStoreInstance must be used inside TaleReader.");
 	}
 	return store;
 }
 
-export function useReaderStore<T>(selector: (state: TaleReaderState) => T): T {
-	const store = useContext(ReaderStoreContext);
-	if (!store) {
-		throw new Error("useReaderStore must be used within ReaderStoreProvider");
-	}
-	return useStore(store, selector);
+/**
+ * Selects data from the active reader store.
+ *
+ * @param selector - Selector that receives the full reader state.
+ * @returns The selected store value.
+ *
+ * @example
+ * const current = useReaderStore((state) => state.navigation.current);
+ */
+export function useReaderStore<T>(selector: (state: TaleReaderState) => T) {
+	return useStore(useReaderStoreInstance(), selector);
+}
+
+/**
+ * Selects several reader values while preserving the previous shallow-equal
+ * snapshot.
+ *
+ * @param selector - Selector that returns a shallow object or array.
+ * @returns The selected value with stable snapshot identity.
+ *
+ * @example
+ * const { compiled, location } = useReaderStoreShallow((state) => ({
+ *   compiled: state.reader.compiled,
+ *   location: state.navigation.current,
+ * }));
+ */
+export function useReaderStoreShallow<T>(
+	selector: (state: TaleReaderState) => T,
+): T {
+	return useReaderStore(useShallow(selector));
 }

@@ -1,3 +1,3 @@
-export type PathType = "choice" | "auto";
+export type PathType = "choice" | "convergence" | "ending" | "return";
 
 export type PathPermissionType = "viewer" | "collaborator";

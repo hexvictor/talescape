@@ -1,88 +1,59 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
-import { useReaderStore } from "../contexts/ReaderStoreContext";
+import { useReaderStoreInstance } from "../contexts/ReaderStoreContext";
+import type { SavedReaderProgress } from "../types";
 
-export function usePersistReaderProgress() {
-	const { isLoaded, isSignedIn } = useAuth();
-
-	const progress = useReaderStore((s) => s.progress.data);
-	const progressTrackingPaused = useReaderStore(
-		(s) => s.progress.isTrackingPaused,
-	);
-	const setProgressSaving = useReaderStore((s) => s.progress.setIsSaving);
-
-	const { mutateAsync } = api.taleReader.progress.update.useMutation();
-
-	const lastSavedUpdatedAtRef = useRef<string | null>(null);
-	const hasSeededInitialProgressRef = useRef(false);
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	if (!hasSeededInitialProgressRef.current && progress?.updatedAt) {
-		hasSeededInitialProgressRef.current = true;
-		lastSavedUpdatedAtRef.current = getProgressUpdatedAtKey(progress.updatedAt);
-	}
-
-	useEffect(() => {
-		if (!isLoaded) return;
-		if (!progress?.updatedAt) return;
-
-		const updatedAtKey = getProgressUpdatedAtKey(progress.updatedAt);
-
-		if (progressTrackingPaused) return;
-
-		if (updatedAtKey === lastSavedUpdatedAtRef.current) return;
-
-		if (timerRef.current) clearTimeout(timerRef.current);
-
-		timerRef.current = setTimeout(async () => {
-			setProgressSaving(true);
-
-			try {
-				if (!isSignedIn) {
-					const key = `tale_progress_${progress.taleId}`;
-					localStorage.setItem(key, JSON.stringify(progress));
-				} else {
-					await mutateAsync({
-						id: progress.id,
-						taleId: progress.taleId,
-						updatedAt: new Date(progress.updatedAt),
-						seenBlockIds: progress.seenBlockIds,
-						lastBlockId: progress.lastBlockId,
-						maxBlockIdReached: progress.maxBlockIdReached,
-						activePathIds: progress.activePathIds,
-						seenPathIds: progress.seenPathIds,
-						seenBlockProgress: progress.seenBlockProgress,
-						maxReadProgress: progress.maxReadProgress,
-					});
-				}
-
-				lastSavedUpdatedAtRef.current = updatedAtKey;
-			} catch (error) {
-				console.error("[PersistReaderProgress] save failed", error);
-			} finally {
-				setProgressSaving(false);
-			}
-		}, 400);
-
-		return () => {
-			if (timerRef.current) clearTimeout(timerRef.current);
-			timerRef.current = null;
-		};
-	}, [
-		progress,
-		progressTrackingPaused,
-		isLoaded,
-		isSignedIn,
-		mutateAsync,
-		setProgressSaving,
-	]);
+/**
+ * Checks whether a progress object can be persisted to the database.
+ *
+ * @param progress - The current reader progress.
+ * @returns True when the progress row has database identity values.
+ *
+ * @example
+ * const canPersist = isDatabaseBackedProgress(progress);
+ */
+function isDatabaseBackedProgress(
+	progress: SavedReaderProgress,
+): progress is SavedReaderProgress & { id: number; taleId: number } {
+	return typeof progress.id === "number" && typeof progress.taleId === "number";
 }
 
-function getProgressUpdatedAtKey(updatedAt: Date | string) {
-	return updatedAt instanceof Date
-		? updatedAt.toISOString()
-		: new Date(updatedAt).toISOString();
+/**
+ * Persists reader progress to the database without subscribing React renders to scroll.
+ *
+ * @returns Nothing. The hook wires a debounced store subscription.
+ *
+ * @example
+ * usePersistReaderProgress();
+ */
+export function usePersistReaderProgress(): void {
+	const store = useReaderStoreInstance();
+	const lastPayloadRef = useRef<string>("");
+	const timerRef = useRef<number | null>(null);
+	const mutation = api.taleReader.progress.update.useMutation();
+
+	useEffect(() => {
+		return store.subscribe((state, previousState) => {
+			const progress = state.progress.data;
+			if (progress === previousState.progress.data) return;
+			if (!isDatabaseBackedProgress(progress)) return;
+
+			const payload = JSON.stringify(progress);
+			if (payload === lastPayloadRef.current) return;
+
+			if (timerRef.current) window.clearTimeout(timerRef.current);
+			timerRef.current = window.setTimeout(() => {
+				lastPayloadRef.current = payload;
+				mutation.mutate(progress);
+			}, 900);
+		});
+	}, [mutation, store]);
+
+	useEffect(() => {
+		return () => {
+			if (timerRef.current) window.clearTimeout(timerRef.current);
+		};
+	}, []);
 }

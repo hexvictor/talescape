@@ -1,1 +1,1 @@
-export { default } from "./TaleReader";
+export { TaleReader } from "./TaleReader";

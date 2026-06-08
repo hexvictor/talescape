@@ -1,0 +1,53 @@
+"use client";
+
+import { useReaderStore } from "../../../../contexts/ReaderStoreContext";
+import { getBranchColor } from "../../../../services/branchColors";
+import type { ResolvedTaleFragment, TalePath } from "../../../../types";
+
+function customStyle(fragment: ResolvedTaleFragment) {
+	return {
+		background: fragment.style?.backgroundCss,
+		border: fragment.style?.border,
+		borderRadius: fragment.style?.borderRadius,
+		boxShadow: fragment.style?.boxShadow,
+		color: fragment.style?.color,
+	};
+}
+
+export function ChoiceButtonFragment({
+	fragment,
+	onChoosePath,
+}: {
+	fragment: ResolvedTaleFragment;
+	onChoosePath: (path: TalePath) => void;
+}) {
+	const tale = useReaderStore((state) => state.tale.data);
+	const path = fragment.pathId
+		? tale.indexMap.pathsById[fragment.pathId]
+		: null;
+	if (!path) return null;
+
+	const color = getBranchColor(tale, path.toBranchId);
+	const isReturn = path.type === "return";
+	return (
+		<button
+			data-reader-ui="true"
+			type="button"
+			className="pointer-events-auto w-full rounded-lg border px-4 py-3 text-left shadow-2xl backdrop-blur-md transition hover:scale-[1.02] hover:bg-white/12"
+			style={{
+				...customStyle(fragment),
+				backgroundColor: isReturn ? "rgba(255,255,255,0.08)" : `${color}2e`,
+				borderColor: isReturn ? "rgba(255,255,255,0.14)" : `${color}96`,
+				color: isReturn ? undefined : color,
+			}}
+			onClick={() => onChoosePath(path)}
+		>
+			<span className="block font-black text-sm">
+				{fragment.label ?? path.label}
+			</span>
+			<span className="mt-1 block text-white/62 text-xs leading-5">
+				{fragment.text ?? path.description}
+			</span>
+		</button>
+	);
+}

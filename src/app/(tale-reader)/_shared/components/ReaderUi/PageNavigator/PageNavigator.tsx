@@ -1,188 +1,187 @@
 "use client";
 
-export default function PageNavigator() {
-	return null;
-	// const uiVisible = useReaderStore((s) => s.uiVisible);
-	// const blocks = useReaderStore((s) => s.tale.sections[0]?.blocks ?? []);
-	// const taleEntries = useReaderStore((s) => s.tale.entries);
-	// const currentBlockIndex = useReaderStore((s) => s.currentBlockIndex);
-	// const setCurrentBlockIndex = useReaderStore((s) => s.setCurrentBlockIndex);
-	// const { triggerScrollActivity } = ();
+import clsx from "clsx";
+import { ArrowLeft, ArrowRight, Grid3X3, Pin, PinOff } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { usePageNavigatorState } from "../../../hooks/store/useReaderNavigationSelectors";
+import { usePinnedHoverPanel } from "../../../hooks/usePinnedHoverPanel";
+import type { ReaderContentsPage } from "../../../types";
+import { EntryTypeIcon } from "../EntryNavigator/EntryTypeIcon";
 
-	// const goToBlock = useCallback(
-	//   (index: number) => {
-	//     triggerScrollActivity();
-	//     setCurrentBlockIndex(index);
-	//     const el = document.getElementById(blocks[index]?.anchorId || "");
-	//     if (el) {
-	//       requestAnimationFrame(() => {
-	//         el.scrollIntoView({ behavior: "auto", block: "start" });
-	//       });
-	//     }
-	//   },
-	//   [blocks, triggerScrollActivity, setCurrentBlockIndex],
-	// );
+/**
+ * Renders route-visible page navigation and a grouped page grid.
+ *
+ * @returns The page navigator.
+ *
+ * @example
+ * <PageNavigator />
+ */
+export function PageNavigator(): React.JSX.Element | null {
+	const { compiled, location, scrollApi } = usePageNavigatorState();
+	const [open, setOpen] = useState(false);
+	const panel = usePinnedHoverPanel(true);
+	if (!compiled || !location) return null;
 
-	// const annotatedBlocks = useMemo(() => {
-	//   const chapterEntries = taleEntries.filter((e) => e.type === "chapter");
+	const pageIndex = compiled.pageIndexById[location.pageId] ?? -1;
+	const currentPage = compiled.pages[pageIndex];
+	const currentEntry = compiled.entries.find(
+		(entry) => entry.id === location.entryId,
+	);
+	const previous = compiled.pages[pageIndex - 1];
+	const next = compiled.pages[pageIndex + 1];
+	if (!currentPage || !currentEntry) return null;
 
-	//   return blocks.map((block, index) => {
-	//     const entry = taleEntries.find(
-	//       (entry) =>
-	//         entry.id === block.anchorId ||
-	//         entry.pages.some((p) => p.id === block.anchorId),
-	//     );
+	/**
+	 * Navigates to a compiled page.
+	 *
+	 * @param page - Destination page.
+	 * @returns Nothing.
+	 */
+	const jump = (page: ReaderContentsPage): void => {
+		scrollApi?.capturePosition();
+		scrollApi?.scrollToBlock(page.firstBlockId);
+		setOpen(false);
+	};
 
-	//     const chapterIndex =
-	//       entry?.type === "chapter" ? chapterEntries.indexOf(entry) : null;
+	const paginatedCount = compiled.pages.filter(
+		(page) => page.isPaginated,
+	).length;
+	const currentLabel =
+		currentPage.isPaginated && currentPage.number !== null
+			? `Page ${currentPage.number} of ${paginatedCount}`
+			: currentPage.label;
 
-	//     const entryBlocks = blocks.filter((b) =>
-	//       entry?.pages.some((p) => p.id === b.anchorId),
-	//     );
-
-	//     const isEntryPageBlock = block.anchorId === entry?.id;
-	//     const entryHasPage = blocks[index - 1]?.anchorId === entry?.id;
-	//     const isFirstInEntry = entryBlocks[0]?.id === block.id;
-
-	//     const shouldShowBadge =
-	//       isEntryPageBlock ||
-	//       (!isEntryPageBlock && isFirstInEntry && !entryHasPage);
-
-	//     return {
-	//       block,
-	//       index,
-	//       entry,
-	//       chapterIndex,
-	//       shouldShowBadge,
-	//     };
-	//   });
-	// }, [blocks, taleEntries]);
-
-	// const isFirst = currentBlockIndex === 0;
-	// const isLast = currentBlockIndex === blocks.length - 1;
-
-	// const goPrev = useCallback(() => {
-	//   if (!isFirst) goToBlock(currentBlockIndex - 1);
-	// }, [isFirst, currentBlockIndex, goToBlock]);
-
-	// const goNext = useCallback(() => {
-	//   if (!isLast) goToBlock(currentBlockIndex + 1);
-	// }, [isLast, currentBlockIndex, goToBlock]);
-
-	// return (
-	//   <div
-	//     className={clsx(
-	//       "pointer-events-auto absolute right-8 bottom-6 z-50 flex items-center gap-2 transition-opacity duration-300",
-	//       uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
-	//     )}
-	//   >
-	//     <Tooltip>
-	//       <TooltipTrigger asChild>
-	//         <Button
-	//           variant="outline"
-	//           size="icon"
-	//           onClick={goPrev}
-	//           disabled={isFirst}
-	//           className="h-6 w-6 cursor-pointer rounded-full shadow-lg hover:scale-105"
-	//           aria-label="Previous page"
-	//         >
-	//           <ArrowLeft className="h-4 w-4" />
-	//         </Button>
-	//       </TooltipTrigger>
-	//       <TooltipContent side="top">Previous</TooltipContent>
-	//     </Tooltip>
-
-	//     <DropdownMenu>
-	//       <Tooltip>
-	//         <TooltipTrigger asChild>
-	//           <DropdownMenuTrigger disabled={blocks.length <= 1} asChild>
-	//             <Button
-	//               variant="outline"
-	//               className="min-w-[120px] cursor-pointer"
-	//             >
-	//               Page {currentBlockIndex + 1} of {blocks.length}
-	//             </Button>
-	//           </DropdownMenuTrigger>
-	//         </TooltipTrigger>
-	//         <TooltipContent side="top">Select a page</TooltipContent>
-	//       </Tooltip>
-
-	//       <DropdownMenuContent
-	//         align="center"
-	//         className="relative overflow-hidden p-4 pr-0"
-	//       >
-	//         <ScrollArea className="max-h-[calc(350px-2rem)] overflow-auto">
-	//           <div className="mt-1 grid min-w-[calc(4*2rem+3*0.5rem)] grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-2 pr-2">
-	//             {annotatedBlocks.map(
-	//               ({ block, index, entry, chapterIndex, shouldShowBadge }) => {
-	//                 const isCurrent = index === currentBlockIndex;
-	//                 const isChapter = entry?.type === "chapter";
-	//                 const hasChapterIndex = chapterIndex != null;
-	//                 const label = entry ? getEntryTypeLabel(entry.type) : "";
-	//                 const hasTitle = !!entry?.title;
-	//                 const tooltipText =
-	//                   isChapter && hasChapterIndex
-	//                     ? `Chapter ${chapterIndex + 1}`
-	//                     : hasTitle
-	//                       ? `${label}: ${entry.title}`
-	//                       : label;
-
-	//                 return (
-	//                   <div key={block.id} className="relative">
-	//                     <Button
-	//                       variant={isCurrent ? "default" : "outline"}
-	//                       size="sm"
-	//                       className="h-8 w-8 cursor-pointer p-0 text-xs hover:scale-105"
-	//                       onClick={() => goToBlock(index)}
-	//                     >
-	//                       {index + 1}
-	//                     </Button>
-
-	//                     {entry && shouldShowBadge && (
-	//                       <Tooltip>
-	//                         <TooltipTrigger asChild>
-	//                           <Badge className="-top-1 -right-1 absolute flex h-4 w-4 items-center justify-center bg-gray-300 p-0">
-	//                             {isChapter && hasChapterIndex ? (
-	//                               <span className="cursor-default text-[0.5rem] text-white">
-	//                                 {chapterIndex + 1}
-	//                               </span>
-	//                             ) : (
-	//                               <EntryTypeIcon
-	//                                 type={entry.type}
-	//                                 className="h-2 w-2 text-white"
-	//                               />
-	//                             )}
-	//                           </Badge>
-	//                         </TooltipTrigger>
-	//                         <TooltipContent side="top">
-	//                           {tooltipText}
-	//                         </TooltipContent>
-	//                       </Tooltip>
-	//                     )}
-	//                   </div>
-	//                 );
-	//               },
-	//             )}
-	//           </div>
-	//         </ScrollArea>
-	//       </DropdownMenuContent>
-	//     </DropdownMenu>
-
-	//     <Tooltip>
-	//       <TooltipTrigger asChild>
-	//         <Button
-	//           variant="outline"
-	//           size="icon"
-	//           onClick={goNext}
-	//           className="h-6 w-6 cursor-pointer rounded-full shadow-lg hover:scale-105"
-	//           disabled={isLast}
-	//           aria-label="Next page"
-	//         >
-	//           <ArrowRight className="h-4 w-4" />
-	//         </Button>
-	//       </TooltipTrigger>
-	//       <TooltipContent side="top">Next</TooltipContent>
-	//     </Tooltip>
-	//   </div>
-	// );
+	return (
+		<nav
+			data-reader-ui="true"
+			aria-label="Reader page navigation"
+			className="-translate-x-1/2 pointer-events-auto absolute bottom-4 left-1/2 z-40 max-w-[calc(100vw-2rem)]"
+			onMouseEnter={() => panel.setHovered(true)}
+			onMouseLeave={() => {
+				panel.setHovered(false);
+				if (!panel.pinned) setOpen(false);
+			}}
+		>
+			<AnimatePresence>
+				{open && panel.expanded ? (
+					<motion.div
+						className="absolute right-0 bottom-[calc(100%+0.5rem)] left-0 max-h-[min(34rem,70vh)] min-w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-white/12 bg-black/90 p-3 shadow-2xl backdrop-blur-md [scrollbar-width:none]"
+						initial={{ opacity: 0, y: 6 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 6 }}
+						transition={{ duration: 0.16 }}
+					>
+						{compiled.contents.map((part) => (
+							<section key={part.id} className="mb-4 last:mb-0">
+								<h2 className="mb-2 font-bold text-[10px] text-white/40 uppercase">
+									{part.title}
+								</h2>
+								{part.entries.map((entry) => (
+									<div
+										key={entry.id}
+										className="mb-3 border-white/8 border-b pb-3 last:mb-0 last:border-0 last:pb-0"
+									>
+										<p className="mb-2 flex items-center gap-2 text-white/65 text-xs">
+											<span className="grid h-5 w-5 place-items-center rounded bg-white/8 text-[9px]">
+												{entry.type === "chapter" ? (
+													entry.chapterNumber
+												) : (
+													<EntryTypeIcon type={entry.type} size={11} />
+												)}
+											</span>
+											{entry.title}
+										</p>
+										<div className="grid grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-1.5">
+											{entry.pages.map((page) => (
+												<button
+													key={page.id}
+													type="button"
+													title={`${entry.title} · ${page.label} · ${page.title}`}
+													aria-label={`Go to ${page.label}`}
+													className={clsx(
+														"grid min-h-11 place-items-center rounded border px-1 font-semibold text-[10px]",
+														page.id === currentPage.id
+															? "border-[#d9b56f] bg-[#d9b56f] text-black"
+															: "border-white/12 text-white/62 hover:bg-white/8 hover:text-white",
+													)}
+													onClick={() => jump(page)}
+												>
+													{page.number ?? (
+														<EntryTypeIcon type={entry.type} size={14} />
+													)}
+												</button>
+											))}
+										</div>
+									</div>
+								))}
+							</section>
+						))}
+					</motion.div>
+				) : null}
+			</AnimatePresence>
+			{!panel.expanded ? (
+				<button
+					type="button"
+					aria-label="Show page navigation"
+					className="grid h-5 w-16 place-items-center rounded-t-md border border-white/10 border-b-0 bg-black/46 text-white/24 transition hover:bg-black/72 hover:text-white/72"
+					onClick={panel.togglePinned}
+				>
+					<Grid3X3 size={11} />
+				</button>
+			) : (
+				<div className="relative flex items-center gap-1.5 rounded-lg border border-white/12 bg-black/76 p-1.5 shadow-2xl backdrop-blur-md">
+					<button
+						type="button"
+						aria-label={
+							panel.pinned ? "Unpin page navigation" : "Pin page navigation"
+						}
+						title={
+							panel.pinned
+								? "Hide when the pointer leaves"
+								: "Keep page navigation visible"
+						}
+						className="-top-5 absolute right-2 grid h-5 w-8 place-items-center rounded-t border border-white/10 border-b-0 bg-black/62 text-white/28 hover:text-white"
+						onClick={() => {
+							panel.togglePinned();
+							if (panel.pinned) setOpen(false);
+						}}
+					>
+						{panel.pinned ? <Pin size={10} /> : <PinOff size={10} />}
+					</button>
+					<button
+						type="button"
+						aria-label="Previous page"
+						className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/70 disabled:opacity-25"
+						disabled={!previous}
+						onClick={() => previous && jump(previous)}
+					>
+						<ArrowLeft size={16} />
+					</button>
+					<button
+						type="button"
+						aria-expanded={open}
+						className="min-w-36 px-3 text-center"
+						onClick={() => setOpen((current) => !current)}
+					>
+						<p className="truncate font-semibold text-white/86 text-xs">
+							{currentLabel}
+						</p>
+						<p className="truncate text-[10px] text-white/42">
+							{currentEntry.title}
+						</p>
+					</button>
+					<button
+						type="button"
+						aria-label="Next page"
+						className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/70 disabled:opacity-25"
+						disabled={!next}
+						onClick={() => next && jump(next)}
+					>
+						<ArrowRight size={16} />
+					</button>
+				</div>
+			)}
+		</nav>
+	);
 }

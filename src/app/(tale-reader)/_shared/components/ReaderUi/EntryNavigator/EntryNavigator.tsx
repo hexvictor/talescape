@@ -1,255 +1,223 @@
 "use client";
 
-export default function EntryNavigator() {
-	// Scroll Navigator
-	// const visibleCount = 7;
+import clsx from "clsx";
+import {
+	ChevronDown,
+	ChevronUp,
+	PanelRightOpen,
+	Pin,
+	PinOff,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { useEntryNavigatorState } from "../../../hooks/store/useReaderNavigationSelectors";
+import { usePinnedHoverPanel } from "../../../hooks/usePinnedHoverPanel";
+import type { ReaderContentsEntry } from "../../../types";
+import {
+	EntryPageRail,
+	PartSelector,
+	getVisibleEntries,
+} from "./EntryNavigatorParts";
+import { EntryTypeIcon, getEntryTypeLabel } from "./EntryTypeIcon";
 
-	// const { goToAnchor } = ();
+/**
+ * Renders the route-aware entry rail with part and page navigation.
+ *
+ * @returns The entry navigator.
+ *
+ * @example
+ * <EntryNavigator />
+ */
+export function EntryNavigator(): React.JSX.Element | null {
+	const {
+		compiled,
+		contents,
+		currentEntryId,
+		currentPageId,
+		currentPartId,
+		scrollApi,
+	} = useEntryNavigatorState();
+	const panel = usePinnedHoverPanel(true);
+	const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
+	const [suppressedEntryId, setSuppressedEntryId] = useState<string | null>(
+		null,
+	);
+	const [partsOpen, setPartsOpen] = useState(false);
+	const entries = compiled?.entries ?? [];
+	const currentIndex = compiled?.entryIndexById[currentEntryId ?? ""] ?? -1;
 
-	// const debugMode = useReaderStore((s) => s.debugMode);
-	// const isScrollActive = useReaderStore((s) => s.isScrollActive);
+	if (!compiled || entries.length <= 1 || currentIndex < 0) return null;
 
-	// const getNextEntry = useReaderStore((s) => s.getNextEntry);
+	/**
+	 * Navigates to a compiled block while preserving the current reader position.
+	 *
+	 * @param blockId - Destination block identifier.
+	 * @returns Nothing.
+	 */
+	const jumpToBlock = (blockId: string): void => {
+		scrollApi?.capturePosition();
+		scrollApi?.scrollToBlock(blockId);
+	};
 
-	// const getPreviousEntry = useReaderStore((s) => s.getPreviousEntry);
-	// const isReel = useReaderStore((s) => s.navigation?.section?.isReel);
-	// const isVertical = useReaderStore((s) => s.navigation?.section?.isVertical);
-	// const currentPage = useReaderStore((s) => s.navigation?.page);
-	// const currentEntry = useReaderStore((s) => s.navigation?.entry);
-	// const allEntries = useReaderStore((s) => s.tale?.structure.entries);
-	// const allPages = useReaderStore((s) => s.tale?.structure.pages);
-	// const uiVisible = useReaderStore((s) => s.uiVisible);
-	// const activeRef = useRef<HTMLButtonElement | null>(null);
+	/**
+	 * Opens a multi-page entry or navigates directly to a single-page entry.
+	 *
+	 * @param entry - Destination entry.
+	 * @returns Nothing.
+	 */
+	const selectEntry = (entry: ReaderContentsEntry): void => {
+		if (entry.id === currentEntryId) {
+			if (entry.pages.length > 1) {
+				setSuppressedEntryId((current) =>
+					current === entry.id ? null : entry.id,
+				);
+			}
+			return;
+		}
+		jumpToBlock(entry.firstBlockId);
+	};
 
-	// if (
-	//   !allPages ||
-	//   !allEntries ||
-	//   allEntries.length <= 1 ||
-	//   !currentEntry ||
-	//   isReel === undefined ||
-	//   isVertical === undefined
-	// ) {
-	//   return null;
-	// }
+	const visibleEntries = getVisibleEntries(entries, currentIndex);
+	const currentPart =
+		contents.find((part) => part.id === currentPartId) ?? contents[0];
 
-	// const currentEntries = allEntries;
-	// const currentEntryGlobalIndex = currentEntry.globalIndex;
-
-	// if (currentEntries.length <= 1) return null;
-
-	// const visibleEntries = () => {
-	//   let start = Math.max(
-	//     0,
-	//     currentEntryGlobalIndex - Math.floor(visibleCount / 2),
-	//   );
-	//   const end = Math.min(currentEntries.length - 1, start + visibleCount - 1);
-	//   if (end === currentEntries.length - 1) {
-	//     start = Math.max(0, end - visibleCount + 1);
-	//   }
-	//   return currentEntries.slice(start, end + 1);
-	// };
-
-	// const entryHeight = 40;
-	// const buttonOffset = 64;
-	// const containerSize = visibleCount * entryHeight + buttonOffset;
-
-	return null;
-
-	// return (
-	//   <div
-	//     className={clsx(
-	//       "pointer-events-auto ",
-	//       isReel && !isVertical
-	//         ? "-translate-x-1/2 absolute bottom-0 left-1/2 z-100 flex flex-col pb-4"
-	//         : "-translate-y-1/2 absolute top-1/2 right-0 z-100 flex pr-4",
-	//       "transition-opacity duration-300",
-	//       uiVisible ? "opacity-100" : "pointer-events-none opacity-0",
-	//     )}
-	//   >
-	//     {/* {debugMode && (
-	//       <div className="bg-white">
-	//         {currentPage?.globalPageNumber} - {isScrollActive ? "true" : "false"}
-	//       </div>
-	//     )} */}
-	//     <TooltipProvider>
-	//       <div
-	//         className={clsx(
-	//           "relative flex items-center justify-center",
-	//           isReel && !isVertical
-	//             ? `w-[${containerSize}]`
-	//             : `flex-col h-[${containerSize}]`,
-	//         )}
-	//       >
-	//         <AnimatePresence mode="wait">
-	//           {!currentEntry.isFirstEntry && (
-	//             <motion.div
-	//               initial={{ scale: 0.5, opacity: 0, y: 10 }}
-	//               animate={{ scale: 1, opacity: 1, y: -10 }}
-	//               exit={{ scale: 0.5, opacity: 0, y: 10 }}
-	//               transition={{ duration: 0.2 }}
-	//               className={clsx(
-	//                 "absolute z-10",
-	//                 isReel && !isVertical
-	//                   ? "-left-0 -translate-y-1/2 -rotate-90 top-1/2"
-	//                   : "-top-0 -translate-x-1/2 left-1/2",
-	//               )}
-	//             >
-	//               <Tooltip>
-	//                 <TooltipTrigger asChild>
-	//                   <Button
-	//                     variant="outline"
-	//                     size="icon"
-	//                     className="h-6 w-6 cursor-pointer rounded-full hover:scale-105"
-	//                     aria-label="Previous"
-	//                     onClick={() => {
-	//                       const previousEntry = getPreviousEntry();
-	//                       if (previousEntry) {
-	//                         requestAnimationFrame(() =>
-	//                           goToAnchor(previousEntry.id, {
-	//                             type: "entry",
-	//                           }),
-	//                         );
-	//                       }
-	//                     }}
-	//                   >
-	//                     <ChevronUp className="h-4 w-4" />
-	//                   </Button>
-	//                 </TooltipTrigger>
-	//                 <TooltipContent side={isReel && !isVertical ? "top" : "left"}>
-	//                   Previous
-	//                 </TooltipContent>
-	//               </Tooltip>
-	//             </motion.div>
-	//           )}
-	//         </AnimatePresence>
-
-	//         <AnimatePresence mode="popLayout">
-	//           <div
-	//             className={clsx(
-	//               "scrollbar-none flex items-center justify-center gap-3 overflow-hidden px-1",
-	//               isReel && !isVertical
-	//                 ? "mask-fade-horizontal w-full overflow-x-auto py-2 pr-8 pl-8"
-	//                 : "mask-fade-vertical h-full flex-col overflow-y-auto px-2 pt-8 pb-8",
-	//             )}
-	//             style={{ overflowAnchor: "none", scrollbarGutter: "stable" }}
-	//           >
-	//             {visibleEntries().map((entry) => {
-	//               const entryPages = allPages.filter((p) =>
-	//                 entry.pageIds.includes(p.id),
-	//               );
-	//               const isActive = entry.globalIndex === currentEntryGlobalIndex;
-
-	//               return (
-	//                 <Tooltip key={entry.id}>
-	//                   <TooltipTrigger asChild>
-	//                     <motion.div
-	//                       layout="position"
-	//                       initial={
-	//                         isReel && !isVertical
-	//                           ? { scale: 0.5, opacity: 0, x: 10 }
-	//                           : { scale: 0.5, opacity: 0, y: 10 }
-	//                       }
-	//                       animate={
-	//                         isReel && !isVertical
-	//                           ? { scale: 1, opacity: 1, x: 0 }
-	//                           : { scale: 1, opacity: 1, y: 0 }
-	//                       }
-	//                       exit={
-	//                         isReel && !isVertical
-	//                           ? { scale: 0.5, opacity: 0, x: -10 }
-	//                           : { scale: 0.5, opacity: 0, y: -10 }
-	//                       }
-	//                       transition={{ duration: 0.2 }}
-	//                       className="relative"
-	//                     >
-	//                       <Button
-	//                         size="icon"
-	//                         ref={isActive ? activeRef : null}
-	//                         onClick={() =>
-	//                           goToAnchor(entry.id, { type: "entry" })
-	//                         }
-	//                         aria-label={`Go to ${entry.type}: ${entry.title}`}
-	//                         className={clsx(
-	//                           "h-8 w-8 cursor-pointer rounded-full border bg-background p-0 font-medium text-black text-sm transition-transform hover:bg-muted",
-	//                           isActive
-	//                             ? "z-10 bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background hover:text-black"
-	//                             : "hover:scale-105",
-	//                         )}
-	//                       >
-	//                         {entry.isChapter ? (
-	//                           entry.chapterNumber
-	//                         ) : (
-	//                           <EntryTypeIcon
-	//                             type={entry.type}
-	//                             className="h-3 w-3"
-	//                           />
-	//                         )}
-	//                       </Button>
-	//                     </motion.div>
-	//                   </TooltipTrigger>
-	//                   <TooltipContent
-	//                     side={isReel && !isVertical ? "top" : "left"}
-	//                   >
-	//                     <div>
-	//                       <div className="capitalize">
-	//                         {entry.type.replace(/_/g, " ")}: {entry.title}
-	//                       </div>
-	//                       {entryPages.length > 0 && (
-	//                         <div className="text-muted-foreground text-xs">
-	//                           {entryPages.length} page
-	//                           {entryPages.length > 1 && "s"}
-	//                         </div>
-	//                       )}
-	//                     </div>
-	//                   </TooltipContent>
-	//                 </Tooltip>
-	//               );
-	//             })}
-	//           </div>
-	//         </AnimatePresence>
-
-	//         <AnimatePresence mode="wait">
-	//           {!currentEntry.isLastEntry && (
-	//             <motion.div
-	//               initial={{ scale: 0.5, opacity: 0, y: -10 }}
-	//               animate={{ scale: 1, opacity: 1, y: 10 }}
-	//               exit={{ scale: 0.5, opacity: 0, y: -10 }}
-	//               transition={{ duration: 0.2 }}
-	//               className={clsx(
-	//                 "absolute z-10",
-	//                 isReel && !isVertical
-	//                   ? "-right-0 -translate-y-1/2 -rotate-90 top-1/2"
-	//                   : "-bottom-0 -translate-x-1/2 left-1/2",
-	//               )}
-	//             >
-	//               <Tooltip>
-	//                 <TooltipTrigger asChild>
-	//                   <Button
-	//                     variant="outline"
-	//                     size="icon"
-	//                     className="h-6 w-6 cursor-pointer rounded-full hover:scale-105"
-	//                     aria-label="Next"
-	//                     onClick={() => {
-	//                       const nextEntry = getNextEntry();
-	//                       if (nextEntry) {
-	//                         requestAnimationFrame(() =>
-	//                           goToAnchor(nextEntry.id, { type: "entry" }),
-	//                         );
-	//                       }
-	//                     }}
-	//                   >
-	//                     <ChevronDown className="h-4 w-4" />
-	//                   </Button>
-	//                 </TooltipTrigger>
-	//                 <TooltipContent side={isReel && !isVertical ? "top" : "left"}>
-	//                   Next
-	//                 </TooltipContent>
-	//               </Tooltip>
-	//             </motion.div>
-	//           )}
-	//         </AnimatePresence>
-	//       </div>
-	//     </TooltipProvider>
-	//   </div>
-	// );
+	return (
+		<nav
+			data-reader-ui="true"
+			aria-label="Entry navigation"
+			className="-translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-30 hidden items-center md:flex"
+			onMouseEnter={() => panel.setHovered(true)}
+			onMouseLeave={() => {
+				panel.setHovered(false);
+				setHoveredEntryId(null);
+				setSuppressedEntryId(null);
+			}}
+		>
+			<button
+				type="button"
+				aria-label={
+					panel.pinned ? "Unpin entry navigation" : "Pin entry navigation"
+				}
+				className="grid h-12 w-7 place-items-center rounded-l-md border border-white/12 border-r-0 bg-black/78 text-white/45 backdrop-blur-md hover:text-white"
+				onClick={panel.togglePinned}
+			>
+				{panel.expanded ? (
+					panel.pinned ? (
+						<Pin size={13} />
+					) : (
+						<PinOff size={13} />
+					)
+				) : (
+					<PanelRightOpen size={15} />
+				)}
+			</button>
+			<AnimatePresence initial={false}>
+				{panel.expanded ? (
+					<motion.div
+						className="relative flex max-h-[84vh] w-16 flex-col items-center gap-2 rounded-l-lg border border-white/12 border-r-0 bg-black/76 py-3 shadow-2xl backdrop-blur-md"
+						initial={{ opacity: 0, width: 0 }}
+						animate={{ opacity: 1, width: 64 }}
+						exit={{ opacity: 0, width: 0 }}
+					>
+						<PartSelector
+							currentPart={currentPart}
+							open={partsOpen}
+							parts={contents}
+							onOpenChange={setPartsOpen}
+							onSelect={(part) => {
+								jumpToBlock(part.firstBlockId);
+								setPartsOpen(false);
+							}}
+						/>
+						<button
+							type="button"
+							aria-label="Previous entry"
+							disabled={currentIndex === 0}
+							className="grid h-7 w-7 place-items-center rounded-full text-white/65 hover:bg-white/8 disabled:opacity-20"
+							onClick={() => {
+								const entry = entries[currentIndex - 1];
+								if (entry) jumpToBlock(entry.firstBlockId);
+							}}
+						>
+							<ChevronUp size={16} />
+						</button>
+						<div className="flex min-h-0 flex-col items-center gap-2 overflow-y-auto [scrollbar-width:none]">
+							{visibleEntries.map(({ entry, index, scale }) => {
+								const active = entry.id === currentEntryId;
+								const expanded =
+									entry.id === hoveredEntryId &&
+									entry.id !== suppressedEntryId &&
+									entry.pages.length > 1;
+								return (
+									<div
+										key={entry.id}
+										className="flex flex-col items-center gap-1"
+										onMouseEnter={() => {
+											setHoveredEntryId(entry.id);
+											if (suppressedEntryId !== entry.id) {
+												setSuppressedEntryId(null);
+											}
+										}}
+										onMouseLeave={() => {
+											setHoveredEntryId(null);
+											setSuppressedEntryId(null);
+										}}
+									>
+										<motion.button
+											type="button"
+											title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
+											aria-label={`Go to ${entry.title}`}
+											className={clsx(
+												"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg",
+												active
+													? "border-[#d9b56f] bg-[#d9b56f] text-black"
+													: "border-white/12 bg-white/6 text-white/70 hover:bg-white/12 hover:text-white",
+											)}
+											animate={{ opacity: scale, scale }}
+											onClick={() => selectEntry(entry)}
+										>
+											{entry.type === "chapter" ? (
+												entry.chapterNumber
+											) : (
+												<EntryTypeIcon type={entry.type} size={16} />
+											)}
+										</motion.button>
+										{expanded ? (
+											<EntryPageRail
+												currentPageId={currentPageId}
+												entry={entry}
+												onNavigate={jumpToBlock}
+											/>
+										) : active && entry.pages.length > 1 ? (
+											<EntryPageRail
+												compact
+												currentPageId={currentPageId}
+												entry={entry}
+												onNavigate={jumpToBlock}
+											/>
+										) : null}
+										{index === currentIndex && entry.pages.length > 1 ? (
+											<span className="h-1 w-1 rounded-full bg-white/45" />
+										) : null}
+									</div>
+								);
+							})}
+						</div>
+						<button
+							type="button"
+							aria-label="Next entry"
+							disabled={currentIndex === entries.length - 1}
+							className="grid h-7 w-7 place-items-center rounded-full text-white/65 hover:bg-white/8 disabled:opacity-20"
+							onClick={() => {
+								const entry = entries[currentIndex + 1];
+								if (entry) jumpToBlock(entry.firstBlockId);
+							}}
+						>
+							<ChevronDown size={16} />
+						</button>
+					</motion.div>
+				) : null}
+			</AnimatePresence>
+		</nav>
+	);
 }

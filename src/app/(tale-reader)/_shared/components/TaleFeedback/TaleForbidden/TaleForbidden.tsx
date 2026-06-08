@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 type TaleForbiddenProps = {
+	action?: "edit" | "view";
 	slug: string;
 	creatorUsername: string;
 	visibility?: string;
@@ -12,6 +13,7 @@ type TaleForbiddenProps = {
 };
 
 export default function TaleForbidden({
+	action = "view",
 	slug,
 	creatorUsername,
 	visibility,
@@ -21,19 +23,21 @@ export default function TaleForbidden({
 }: TaleForbiddenProps) {
 	return (
 		<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white">
-			<h1 className="mb-2 font-bold text-2xl">Access Forbidden</h1>
+			<h1 className="mb-2 font-bold text-2xl">
+				{action === "edit" ? "Editing unavailable" : "Access forbidden"}
+			</h1>
 
 			{title ? (
 				<>
 					<p className="mb-1 text-lg italic">"{title}"</p>
 					<p className="mb-4 text-gray-400 text-sm">
 						This tale is <strong>{visibility}</strong> and you do not have
-						permission to view it.
+						permission to {action} it.
 					</p>
 				</>
 			) : (
 				<p className="mb-4 text-gray-400 text-sm">
-					You don’t have permission to view this tale.
+					You do not have permission to {action} this tale.
 				</p>
 			)}
 

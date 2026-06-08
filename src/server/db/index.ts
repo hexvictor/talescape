@@ -9,5 +9,5 @@ if (!process.env.POSTGRES_URL) {
 	throw new Error("POSTGRES_URL is not defined");
 }
 
-const sql = postgres(process.env.POSTGRES_URL);
-export const db = drizzle({ client: sql, schema: schema });
+export const dbClient = postgres(process.env.POSTGRES_URL);
+export const db = drizzle({ client: dbClient, schema: schema });

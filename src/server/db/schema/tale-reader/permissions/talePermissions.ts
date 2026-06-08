@@ -1,7 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { tales, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { TalePermissionType } from "~/server/db/types/tale-reader/tale";
+import { users } from "../../users";
+import { tales } from "../tales";
 
 export const talePermissions = createTable("tale_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

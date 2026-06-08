@@ -1,39 +1,35 @@
 import type { StateCreator } from "zustand/vanilla";
 import type { TaleReaderState } from "../createReaderStore";
 
+export type ReaderHubPanel = "art" | "codex" | "community" | "trivia";
+
 export type HubSlice = {
-	taleHub: {
-		isOpen: boolean;
-		open: () => void;
-		close: () => void;
-		toggle: () => void;
+	hub: {
+		activePanel: ReaderHubPanel;
+		open: boolean;
+		setActivePanel: (panel: ReaderHubPanel) => void;
+		toggleOpen: () => void;
 	};
 };
 
-export const createHubSlice =
-	(): StateCreator<TaleReaderState, [], [], HubSlice> => (set) => ({
-		taleHub: {
-			isOpen: false,
-			open: () =>
-				set((state) => ({
-					taleHub: {
-						...state.taleHub,
-						isOpen: true,
-					},
-				})),
-			close: () =>
-				set((state) => ({
-					taleHub: {
-						...state.taleHub,
-						isOpen: false,
-					},
-				})),
-			toggle: () =>
-				set((state) => ({
-					taleHub: {
-						...state.taleHub,
-						isOpen: !state.taleHub.isOpen,
-					},
-				})),
-		},
-	});
+/**
+ * Creates the reader hub overlay slice.
+ *
+ * @param set - Zustand state setter.
+ * @returns Hub state and actions.
+ *
+ * @example
+ * const slice = createHubSlice(set, get, api);
+ */
+export const createHubSlice: StateCreator<TaleReaderState, [], [], HubSlice> = (
+	set,
+) => ({
+	hub: {
+		activePanel: "community",
+		open: false,
+		setActivePanel: (activePanel) =>
+			set((state) => ({ hub: { ...state.hub, activePanel } })),
+		toggleOpen: () =>
+			set((state) => ({ hub: { ...state.hub, open: !state.hub.open } })),
+	},
+});

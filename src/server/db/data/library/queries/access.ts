@@ -20,7 +20,6 @@ import {
 	branchPermissions,
 	fragmentPermissions,
 	pathPermissions,
-	sectionPermissions,
 	talePermissions,
 	tales,
 	users,
@@ -113,36 +112,6 @@ export function branchAccessCondition(
 								sql`${branchPermissions.branchId} = ${branchIdColumn}`,
 								eq(branchPermissions.userId, userId),
 								readablePermissionOverlap(branchPermissions.permissionTypes),
-							),
-						),
-				)
-			: undefined,
-	);
-}
-
-export function sectionAccessCondition(
-	sectionIdColumn: AnyColumn,
-	asset: {
-		isOfficial: AnyColumn;
-		visibility: AnyColumn;
-		creatorId: AnyColumn;
-	},
-	userId: string | null,
-) {
-	return or(
-		eq(asset.isOfficial, true),
-		eq(asset.visibility, "public"),
-		userId ? eq(asset.creatorId, userId) : undefined,
-		userId
-			? exists(
-					db
-						.select({ id: sectionPermissions.id })
-						.from(sectionPermissions)
-						.where(
-							and(
-								sql`${sectionPermissions.sectionId} = ${sectionIdColumn}`,
-								eq(sectionPermissions.userId, userId),
-								readablePermissionOverlap(sectionPermissions.permissionTypes),
 							),
 						),
 				)

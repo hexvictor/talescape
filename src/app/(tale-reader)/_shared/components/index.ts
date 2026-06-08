@@ -1,2 +1,6 @@
-export { LoadingTale, TaleNotFound, TaleUnauthorized } from "./TaleFeedback";
-export { default as TaleReader } from "./TaleReader";
+export { TaleReader } from "./TaleReader";
+export {
+	TaleForbidden,
+	TaleNotFound,
+	TaleUnauthorized,
+} from "./TaleFeedback";

@@ -1,7 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { books, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { AssetPermissionType } from "~/server/db/types/tale-builder/asset";
+import { users } from "../../users";
+import { books } from "../books";
 
 export const bookPermissions = createTable("book_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

@@ -1,187 +1,86 @@
 "use client";
 
 import clsx from "clsx";
-import { CircleHelp } from "lucide-react";
-import type React from "react";
-import { useId } from "react";
+import type { ReactNode } from "react";
+
+export function DebugTabs<T extends string>({
+	active,
+	onChange,
+	tabs,
+}: {
+	active: T;
+	onChange: (tab: T) => void;
+	tabs: { id: T; label: string }[];
+}) {
+	return (
+		<div className="flex gap-1 overflow-x-auto border-white/10 border-b px-3 py-2">
+			{tabs.map((tab) => (
+				<button
+					key={tab.id}
+					type="button"
+					className={clsx(
+						"shrink-0 rounded px-2.5 py-1.5 font-bold text-[11px] transition",
+						active === tab.id
+							? "bg-[#d9b56f] text-black"
+							: "text-white/54 hover:bg-white/8 hover:text-white",
+					)}
+					onClick={() => onChange(tab.id)}
+				>
+					{tab.label}
+				</button>
+			))}
+		</div>
+	);
+}
 
 export function DebugCard({
 	children,
-	description,
 	title,
 }: {
-	children: React.ReactNode;
-	description?: string;
+	children: ReactNode;
 	title: string;
 }) {
 	return (
-		<section className="rounded-xl border border-white/10 bg-white/5 p-3">
-			<DebugHeading className="mb-2" description={description} label={title} />
-			<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{children}</div>
+		<section className="rounded-md border border-white/10 bg-white/[0.045] p-3">
+			<h3 className="mb-2 font-black text-[#d9b56f] text-[10px] uppercase tracking-[0.17em]">
+				{title}
+			</h3>
+			<div className="grid grid-cols-2 gap-2">{children}</div>
 		</section>
 	);
 }
 
 export function DebugField({
-	description,
 	label,
 	value,
 }: {
-	description?: string;
 	label: string;
-	value: React.ReactNode;
+	value: ReactNode;
 }) {
 	return (
-		<div className="min-w-0 rounded-lg bg-black/25 px-2.5 py-2">
-			<DebugLabel description={description} label={label} />
-			<p className="break-words text-[11px] text-white leading-tight sm:text-xs">
-				{value ?? "-"}
-			</p>
-		</div>
-	);
-}
-
-export function DebugHeading({
-	className,
-	description,
-	label,
-}: {
-	className?: string;
-	description?: string;
-	label: string;
-}) {
-	return (
-		<div
-			className={clsx("flex min-w-0 items-center gap-1.5", className)}
-			title={description ?? label}
-		>
-			<p className="truncate font-bold text-[10px] text-white/55 uppercase tracking-[0.18em]">
-				{label}
-			</p>
-			{description ? <DebugHelp description={description} /> : null}
-		</div>
-	);
-}
-
-export function DebugLabel({
-	description,
-	label,
-}: {
-	description?: string;
-	label: string;
-}) {
-	return (
-		<div
-			className="mb-1 flex min-w-0 items-center gap-1"
-			title={description ?? label}
-		>
-			<p className="truncate font-semibold text-[10px] text-white/45 uppercase tracking-wide">
-				{label}
-			</p>
-			{description ? <DebugHelp description={description} /> : null}
-		</div>
-	);
-}
-
-export function DebugHelp({ description }: { description: string }) {
-	return (
-		<span
-			aria-label={description}
-			className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-white/35"
-			title={description}
-		>
-			<CircleHelp className="h-3 w-3" />
-		</span>
-	);
-}
-
-export function Chip({
-	children,
-	tone,
-}: {
-	children: React.ReactNode;
-	tone:
-		| "amber"
-		| "blue"
-		| "emerald"
-		| "fuchsia"
-		| "rose"
-		| "sky"
-		| "violet"
-		| "zinc";
-}) {
-	return (
-		<span
-			className={clsx(
-				"rounded-full border px-2 py-0.5 font-semibold text-[10px] uppercase tracking-wide",
-				tone === "amber" &&
-					"border-amber-300/50 bg-amber-400/20 text-amber-100",
-				tone === "blue" && "border-blue-300/50 bg-blue-400/20 text-blue-100",
-				tone === "emerald" &&
-					"border-emerald-300/50 bg-emerald-400/20 text-emerald-100",
-				tone === "fuchsia" &&
-					"border-fuchsia-300/50 bg-fuchsia-400/20 text-fuchsia-100",
-				tone === "rose" && "border-rose-300/50 bg-rose-400/20 text-rose-100",
-				tone === "sky" && "border-sky-300/50 bg-sky-400/20 text-sky-100",
-				tone === "violet" &&
-					"border-violet-300/50 bg-violet-400/20 text-violet-100",
-				tone === "zinc" && "border-white/15 bg-white/10 text-white/70",
-			)}
-		>
-			{children}
-		</span>
-	);
-}
-
-export function DebugTabList<T extends string>({
-	activeTab,
-	tabs,
-	onChange,
-}: {
-	activeTab: T;
-	tabs: { description?: string; id: T; label: string }[];
-	onChange: (tab: T) => void;
-}) {
-	const selectId = useId();
-
-	return (
-		<div className="border-white/10 border-b p-2">
-			<label className="sr-only" htmlFor={selectId}>
-				Debug tab
-			</label>
-			<select
-				id={selectId}
-				className="w-full rounded-lg border border-white/15 bg-black/70 px-3 py-2 font-semibold text-white text-xs outline-none sm:hidden"
-				title={
-					tabs.find((tab) => tab.id === activeTab)?.description ?? activeTab
-				}
-				value={activeTab}
-				onChange={(event) => onChange(event.target.value as T)}
-			>
-				{tabs.map((tab) => (
-					<option key={tab.id} value={tab.id}>
-						{tab.label}
-					</option>
-				))}
-			</select>
-			<div className="hidden gap-1 overflow-x-auto sm:flex">
-				{tabs.map((tab) => (
-					<button
-						key={tab.id}
-						type="button"
-						className={clsx(
-							"shrink-0 rounded-full px-3 py-1.5 font-semibold text-xs transition",
-							activeTab === tab.id
-								? "bg-white text-black"
-								: "bg-white/10 text-white/75 hover:bg-white/15",
-						)}
-						onClick={() => onChange(tab.id)}
-						title={tab.description ?? tab.label}
-					>
-						{tab.label}
-					</button>
-				))}
+		<div className="min-w-0 rounded border border-white/[0.06] bg-black/20 p-2">
+			<p className="font-bold text-[10px] text-white/38 uppercase">{label}</p>
+			<div className="mt-1 truncate text-white/78 text-xs">
+				{value ?? "None"}
 			</div>
 		</div>
 	);
 }
+
+export function Setting({
+	children,
+	label,
+}: {
+	children: ReactNode;
+	label: string;
+}) {
+	return (
+		<div className="grid gap-1 text-[11px] text-white/52">
+			<span className="font-bold uppercase">{label}</span>
+			{children}
+		</div>
+	);
+}
+
+export const settingClassName =
+	"min-w-0 rounded border border-white/12 bg-black/32 px-2 py-2 text-xs text-white outline-none focus:border-[#d9b56f]";

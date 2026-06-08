@@ -1,18 +1,4 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import {
-	blocks,
-	books,
-	branches,
-	entries,
-	fragments,
-	pages,
-	parts,
-	paths,
-	sections,
-	talePermissions,
-	taleProgresses,
-	users,
-} from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
@@ -20,6 +6,18 @@ import type {
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
 import type { TaleType } from "~/server/db/types/tale-reader/tale";
+import { books } from "../library/books";
+import { users } from "../users";
+import { blocks } from "./layout-structure/blocks";
+import { branches } from "./layout-structure/branches";
+import { fragments } from "./layout-structure/fragments";
+import { nodes } from "./layout-structure/nodes";
+import { paths } from "./layout-structure/paths";
+import { entries } from "./narrative-structure/entries";
+import { pages } from "./narrative-structure/pages";
+import { parts } from "./narrative-structure/parts";
+import { talePermissions } from "./permissions/talePermissions";
+import { taleProgresses } from "./taleProgresses";
 
 export const tales = createTable("tale", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -59,9 +57,9 @@ export const talesRelations = relations(tales, ({ one, many }) => ({
 	pages: many(pages),
 	branches: many(branches),
 	paths: many(paths),
-	sections: many(sections),
 	blocks: many(blocks),
 	fragments: many(fragments),
+	nodes: many(nodes),
 	permissions: many(talePermissions),
 	progresses: many(taleProgresses),
 }));

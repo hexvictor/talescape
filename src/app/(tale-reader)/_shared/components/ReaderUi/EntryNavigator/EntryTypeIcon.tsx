@@ -1,65 +1,59 @@
-import type { LucideIcon } from "lucide-react";
 import {
-	BookAIcon,
-	BookMarkedIcon,
-	BookOpenIcon,
-	BrainIcon,
-	CircleHelpIcon,
-	DramaIcon,
-	HourglassIcon,
-	ListEndIcon,
-	ListStartIcon,
-	MailIcon,
-	MapIcon,
-	MoonStarIcon,
-	NotepadTextIcon,
-	PaperclipIcon,
-	QuoteIcon,
-	ScrollTextIcon,
-	TableOfContentsIcon,
+	BookA,
+	BookMarked,
+	BookOpen,
+	Brain,
+	CircleHelp,
+	Drama,
+	Hourglass,
+	ListEnd,
+	ListStart,
+	type LucideIcon,
+	Mail,
+	Map as MapIcon,
+	MoonStar,
+	NotepadText,
+	Paperclip,
+	Quote,
+	ScrollText,
+	TableOfContents,
 } from "lucide-react";
-import { memo } from "react";
 import type { ComponentProps } from "react";
-import type { EntryType } from "~/server/db/types/tale-reader/entry";
+import type { TaleEntry } from "../../../types";
 
-type IconProps = ComponentProps<LucideIcon>;
-
-const ICON_MAP: Record<EntryType, LucideIcon | null> = {
-	cover: BookOpenIcon,
+const entryTypeIcons: Record<TaleEntry["type"], LucideIcon | null> = {
+	appendix: Paperclip,
 	chapter: null,
-	prologue: ListStartIcon,
-	epilogue: ListEndIcon,
-	timeline: HourglassIcon,
-	codex: BookMarkedIcon,
-	flashback: BrainIcon,
-	quote: QuoteIcon,
-	dream: MoonStarIcon,
-	letter: MailIcon,
-	interlude: DramaIcon,
+	codex: BookMarked,
+	cover: BookOpen,
+	dream: MoonStar,
+	ending: ListEnd,
+	epilogue: ListEnd,
+	flashback: Brain,
+	interlude: Drama,
+	letter: Mail,
 	map: MapIcon,
-	table_of_contents: TableOfContentsIcon,
-	vocabulary: BookAIcon,
-	appendix: PaperclipIcon,
-	poem: ScrollTextIcon,
-	note: NotepadTextIcon,
-	unknown: CircleHelpIcon,
+	note: NotepadText,
+	poem: ScrollText,
+	prologue: ListStart,
+	quote: Quote,
+	table_of_contents: TableOfContents,
+	timeline: Hourglass,
+	unknown: CircleHelp,
+	vocabulary: BookA,
 };
 
-type EntryTypeIconProps = {
-	type: EntryType;
-} & IconProps;
-
-export function getEntryTypeLabel(type: EntryType): string {
+export function getEntryTypeLabel(type: TaleEntry["type"]): string {
 	return type
 		.split("_")
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(" ");
 }
 
-function EntryTypeIconComponent({ type, ...props }: EntryTypeIconProps) {
-	const Icon = ICON_MAP[type];
-	if (!Icon) return null;
-	return <Icon {...props} />;
+export function EntryTypeIcon({
+	type,
+	...props
+}: { type: TaleEntry["type"] } & ComponentProps<LucideIcon>) {
+	const Icon = entryTypeIcons[type];
+	return Icon ? <Icon {...props} /> : null;
 }
-const EntryTypeIcon = memo(EntryTypeIconComponent);
-export default EntryTypeIcon;

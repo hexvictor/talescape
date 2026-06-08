@@ -1,7 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { paths, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { PathPermissionType } from "~/server/db/types/tale-reader/path";
+import { users } from "../../users";
+import { paths } from "../layout-structure/paths";
 
 export const pathPermissions = createTable("path_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

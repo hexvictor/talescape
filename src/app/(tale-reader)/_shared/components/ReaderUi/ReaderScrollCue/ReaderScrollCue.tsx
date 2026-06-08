@@ -1,15 +1,28 @@
-import React from "react";
-import { ChevronDownIcon } from "~/lib/utils/icons";
+"use client";
 
-function ReaderScrollCue() {
+import { ArrowDown } from "lucide-react";
+import type { Direction } from "../../../types";
+
+export function ReaderScrollCue({ direction }: { direction: Direction }) {
+	const rotations: Record<Direction, number> = {
+		down: 0,
+		"down-left": 45,
+		"down-right": -45,
+		left: 90,
+		right: -90,
+		up: 180,
+		"up-left": 135,
+		"up-right": -135,
+	};
 	return (
-		<div className="-translate-x-1/2 absolute bottom-12 left-1/2 flex flex-col items-center">
-			<span className="mb-2 text-muted-foreground text-sm uppercase tracking-widest">
-				Scroll to Begin
-			</span>
-			<ChevronDownIcon className="h-6 w-6 animate-bounce text-muted-foreground" />
+		<div className="pointer-events-none absolute inset-x-0 bottom-20 z-50 flex justify-center">
+			<div className="rounded-full border border-[#d9b56f]/35 bg-black/70 p-3 text-[#d9b56f] shadow-2xl backdrop-blur-md">
+				<ArrowDown
+					className="animate-pulse"
+					size={22}
+					style={{ transform: `rotate(${rotations[direction]}deg)` }}
+				/>
+			</div>
 		</div>
 	);
 }
-
-export default ReaderScrollCue;

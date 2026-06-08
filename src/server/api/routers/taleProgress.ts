@@ -6,16 +6,17 @@ export const taleProgressRouter = createTRPCRouter({
 	update: protectedProcedure
 		.input(
 			z.object({
+				blockId: z.string().nullable(),
+				committedFragmentIds: z.array(z.string()),
 				id: z.number(),
+				innerProgress: z.number(),
+				seenBlockIds: z.array(z.string()),
+				seenEntryIds: z.array(z.string()),
+				seenPageIds: z.array(z.string()),
+				seenPartIds: z.array(z.string()),
+				selectedBranchIds: z.array(z.string()),
 				taleId: z.number(),
-				updatedAt: z.date(),
-				seenBlockIds: z.array(z.number()),
-				lastBlockId: z.number().nullable(),
-				maxBlockIdReached: z.number().nullable(),
-				activePathIds: z.array(z.number()),
-				seenPathIds: z.array(z.number()),
-				seenBlockProgress: z.string(),
-				maxReadProgress: z.string(),
+				updatedAt: z.string(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

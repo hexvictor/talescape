@@ -8,8 +8,6 @@ import { clerkAppearance } from "~/features/auth/utils/clerkAppearance";
 import "~/styles/globals.css";
 import { TRPCReactProvider } from "~/trpc/react";
 
-const isDev = process.env.NODE_ENV === "development";
-
 export const metadata: Metadata = {
 	title: "Talescape",
 	description: "The community-driven hub of interactive tales",
@@ -42,16 +40,6 @@ export default function RootLayout({
 							__html: themeScript,
 						}}
 					/>
-					{/* {isDev && (
-						<>
-							<Script
-								src="//unpkg.com/react-grab/dist/index.global.js"
-								crossOrigin="anonymous"
-								strategy="beforeInteractive"
-							/>
-							<Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-						</>
-					)} */}
 				</head>
 				<body className="relative flex flex-col">
 					<NextSSRPlugin

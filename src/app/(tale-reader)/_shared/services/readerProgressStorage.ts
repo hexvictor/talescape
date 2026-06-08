@@ -1,46 +1,54 @@
-import type { Tale } from "~/server/db/data/tale-reader/types/tales";
-import type { ReaderProgressSchema } from "~/server/db/schema";
+import type { SavedReaderProgress, Tale } from "../types";
 
-export function getInitialProgressFromLocalStorage(
-	tale: Tale,
-): ReaderProgressSchema {
-	const defaultProgress = createDefaultProgress(tale);
-
-	if (typeof window === "undefined") {
-		return defaultProgress;
-	}
-
-	const lsProgressKey = `tale_progress_${tale.id}`;
-	const lsProgress = window.localStorage.getItem(lsProgressKey);
-
-	try {
-		const lsParsedProgress = lsProgress ? JSON.parse(lsProgress) : null;
-		if (lsParsedProgress) return lsParsedProgress;
-	} catch {}
-
-	window.localStorage.setItem(lsProgressKey, JSON.stringify(defaultProgress));
-	return defaultProgress;
+function progressStorageKey(taleId: number | string) {
+	return `tale_reader_progress_${taleId}`;
 }
 
-function createDefaultProgress(tale: Tale): ReaderProgressSchema {
-	const { id: taleId } = tale;
-	const { blockIds } = tale.content.order;
-
-	const firstBlockId = blockIds[0] ?? null;
-	const initialProgress =
-		blockIds.length > 0 ? (1 / blockIds.length).toFixed(4) : "0";
-
+/**
+ * Creates a fresh empty progress value with a current timestamp.
+ *
+ * @returns Default reader progress.
+ *
+ * @example
+ * const progress = createDefaultProgress();
+ */
+function createDefaultProgress(): SavedReaderProgress {
 	return {
-		id: -1,
-		userId: "localStorage",
-		taleId,
-		updatedAt: new Date(),
-		seenBlockIds: firstBlockId ? [firstBlockId] : [],
-		lastBlockId: firstBlockId,
-		maxBlockIdReached: firstBlockId,
-		activePathIds: [],
-		seenPathIds: [],
-		seenBlockProgress: initialProgress,
-		maxReadProgress: initialProgress,
+		blockId: null,
+		committedFragmentIds: [],
+		innerProgress: 0,
+		seenBlockIds: [],
+		seenEntryIds: [],
+		seenPageIds: [],
+		seenPartIds: [],
+		selectedBranchIds: [],
+		updatedAt: new Date().toISOString(),
 	};
+}
+
+export function readProgress(tale: Tale): SavedReaderProgress {
+	if (typeof window === "undefined") return createDefaultProgress();
+
+	const stored = window.localStorage.getItem(progressStorageKey(tale.id));
+	if (!stored) return createDefaultProgress();
+
+	try {
+		return {
+			...createDefaultProgress(),
+			...(JSON.parse(stored) as SavedReaderProgress),
+		};
+	} catch {
+		return createDefaultProgress();
+	}
+}
+
+export function writeProgress(
+	taleId: number | string,
+	progress: SavedReaderProgress,
+) {
+	if (typeof window === "undefined") return;
+	window.localStorage.setItem(
+		progressStorageKey(taleId),
+		JSON.stringify(progress),
+	);
 }

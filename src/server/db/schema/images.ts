@@ -1,7 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import { index } from "drizzle-orm/pg-core";
-import { users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
+import { users } from "./users";
 
 export const images = createTable(
 	"image",

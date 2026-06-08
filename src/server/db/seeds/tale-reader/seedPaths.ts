@@ -1,231 +1,121 @@
+import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type PathSchema, branches, paths, tales } from "~/server/db/schema";
-import { isBranchedTaleSlug } from "./branchedTales";
+import { blocks, branches, paths, tales } from "~/server/db/schema";
+import { userId1 } from "../ids";
+import { choicePageOrder } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type PathSeed = Pick<
-	PathSchema,
-	| "taleId"
-	| "fromBranchId"
-	| "toBranchId"
-	| "type"
-	| "label"
-	| "order"
-	| "creatorId"
-	| "isOfficial"
-	| "isVerified"
-	| "editable"
-	| "visibility"
->;
-
-export async function seedPaths() {
-	const allTales = await db
-		.select({
-			id: tales.id,
-			slug: tales.slug,
-			creatorId: tales.creatorId,
-			isOfficial: tales.isOfficial,
-			isVerified: tales.isVerified,
-			editable: tales.editable,
-			visibility: tales.visibility,
-		})
-		.from(tales);
-	const branchedTales = allTales.filter((tale) =>
-		isBranchedTaleSlug(tale.slug),
+/**
+ * Queries actual branch and block rows and inserts choice and return paths.
+ *
+ * @returns Nothing.
+ */
+export async function seedPaths(): Promise<void> {
+	logSeedStart("Paths");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "official-tale-branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
+	const [allBranches, allBlocks] = await Promise.all([
+		db
+			.select({ id: branches.id, name: branches.name })
+			.from(branches)
+			.where(eq(branches.taleId, tale.id)),
+		db
+			.select({
+				branchId: blocks.branchId,
+				id: blocks.id,
+				order: blocks.order,
+			})
+			.from(blocks)
+			.where(eq(blocks.taleId, tale.id)),
+	]);
+	const branchByName = new Map(
+		allBranches.map((branch) => [branch.name, branch]),
 	);
-
-	if (!branchedTales.length) {
-		console.log("⚠️ Branched tales not found, skipping paths.");
-		return;
-	}
-
-	const allBranches = await db
-		.select({
-			id: branches.id,
-			taleId: branches.taleId,
-			name: branches.name,
-			index: branches.index,
-		})
-		.from(branches);
-
-	const branchesByTaleId = new Map<number, typeof allBranches>();
-	for (const branch of allBranches) {
-		const existing = branchesByTaleId.get(branch.taleId) ?? [];
-		existing.push(branch);
-		branchesByTaleId.set(branch.taleId, existing);
-	}
-
-	const seeds: PathSeed[] = [];
-
-	for (const tale of branchedTales) {
-		const taleBranches = branchesByTaleId.get(tale.id) ?? [];
-		const branchByName = new Map(
-			taleBranches.map((branch) => [branch.name, branch.id] as const),
+	const root = branchByName.get("main");
+	const lantern = branchByName.get("lantern");
+	const river = branchByName.get("river");
+	if (!root || !lantern || !river)
+		throw new Error("Reader branches are missing.");
+	const findBlock = (branchId: number, order: number): number => {
+		const block = allBlocks.find(
+			(item) => item.branchId === branchId && item.order === order,
 		);
-
-		const beginning = branchByName.get("Beginning");
-		const first = branchByName.get("First Path");
-		const second = branchByName.get("Second Path");
-		const third = branchByName.get("Third Path");
-		const fourth = branchByName.get("Fourth Path");
-		const choice = branchByName.get("The Choice");
-		const good = branchByName.get("The Good Choice");
-		const bad = branchByName.get("The Bad Choice");
-		const ending = branchByName.get("Ending");
-
-		if (
-			!beginning ||
-			!first ||
-			!second ||
-			!third ||
-			!fourth ||
-			!choice ||
-			!good ||
-			!bad ||
-			!ending
-		) {
-			console.log(`⚠️ Branches not found for ${tale.slug}, skipping paths.`);
-			continue;
+		if (!block) {
+			throw new Error(`Missing block ${order} in branch ${branchId}.`);
 		}
+		return block.id;
+	};
+	const choiceBlockId = findBlock(root.id, choicePageOrder);
+	const firstRouteOrder = choicePageOrder + 1;
 
-		seeds.push(
-			{
-				taleId: tale.id,
-				fromBranchId: beginning,
-				toBranchId: first,
-				type: "choice",
-				label: "First Path",
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: beginning,
-				toBranchId: second,
-				type: "choice",
-				label: "Second Path",
-				order: 1,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: beginning,
-				toBranchId: third,
-				type: "choice",
-				label: "Third Path",
-				order: 2,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: beginning,
-				toBranchId: fourth,
-				type: "choice",
-				label: "Fourth Path",
-				order: 3,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: first,
-				toBranchId: ending,
-				type: "auto",
-				label: null,
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: third,
-				toBranchId: ending,
-				type: "auto",
-				label: null,
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: fourth,
-				toBranchId: choice,
-				type: "auto",
-				label: null,
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: choice,
-				toBranchId: good,
-				type: "choice",
-				label: "The Good Choice",
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: choice,
-				toBranchId: bad,
-				type: "choice",
-				label: "The Bad Choice",
-				order: 1,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-			{
-				taleId: tale.id,
-				fromBranchId: bad,
-				toBranchId: ending,
-				type: "auto",
-				label: null,
-				order: 0,
-				creatorId: tale.creatorId,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-			},
-		);
-	}
-
-	if (!seeds.length) {
-		console.log("⚠️ No branched tale paths generated.");
-		return;
-	}
-
-	await db.insert(paths).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} paths.`);
+	await db.insert(paths).values([
+		{
+			creatorId: userId1,
+			description: "Follow the keeper's lantern into the buried nave.",
+			editable: true,
+			fromBlockId: choiceBlockId,
+			fromBranchId: root.id,
+			isOfficial: true,
+			isVerified: true,
+			label: "Follow the lantern",
+			order: 0,
+			taleId: tale.id,
+			toBlockId: findBlock(lantern.id, firstRouteOrder),
+			toBranchId: lantern.id,
+			type: "choice",
+			visibility: "public",
+		},
+		{
+			creatorId: userId1,
+			description: "Follow the underground river toward the old gate.",
+			editable: true,
+			fromBlockId: choiceBlockId,
+			fromBranchId: root.id,
+			isOfficial: true,
+			isVerified: true,
+			label: "Follow the river",
+			order: 1,
+			taleId: tale.id,
+			toBlockId: findBlock(river.id, firstRouteOrder),
+			toBranchId: river.id,
+			type: "choice",
+			visibility: "public",
+		},
+		{
+			creatorId: userId1,
+			description: "Return to an earlier lantern-route page.",
+			editable: true,
+			fromBlockId: findBlock(lantern.id, choicePageOrder + 9),
+			fromBranchId: lantern.id,
+			isOfficial: true,
+			isVerified: true,
+			label: "Return to the ledger",
+			order: 2,
+			taleId: tale.id,
+			toBlockId: findBlock(lantern.id, choicePageOrder + 3),
+			toBranchId: lantern.id,
+			type: "return",
+			visibility: "public",
+		},
+		{
+			creatorId: userId1,
+			description: "Return to an earlier river-route page.",
+			editable: true,
+			fromBlockId: findBlock(river.id, choicePageOrder + 9),
+			fromBranchId: river.id,
+			isOfficial: true,
+			isVerified: true,
+			label: "Return to the river gate",
+			order: 3,
+			taleId: tale.id,
+			toBlockId: findBlock(river.id, choicePageOrder + 3),
+			toBranchId: river.id,
+			type: "return",
+			visibility: "public",
+		},
+	]);
+	logSeedComplete("Paths");
 }

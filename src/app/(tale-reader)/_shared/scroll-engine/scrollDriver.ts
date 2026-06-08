@@ -1,148 +1,198 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollSmoother } from "gsap/ScrollSmoother";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { RefObject } from "react";
+import { clamp } from "../services/readerMath";
 
-type InitArgs = {
-	wrapper: string;
-	content: string;
-};
+type ScrollMotion = { cancel: () => void };
 
-export type ScrollDriverApi = ReturnType<typeof createScrollDriver>;
+type ScrollDriverUpdateListener = () => void;
 
-export function createScrollDriver(
-	// biome-ignore lint/suspicious/noExplicitAny:
-	smootherRef: RefObject<any>,
-) {
-	const getNativeWindowScroll = () => {
-		const scrollTrigger = ScrollTrigger as typeof ScrollTrigger & {
-			scroll: () => number;
-		};
+export type ReaderScrollDriver = ReturnType<typeof createReaderScrollDriver>;
 
-		return scrollTrigger.scroll();
-	};
+const smoothSettledPx = 0.35;
+const smoothFollowStrength = 0.18;
+const smoothMaxFrameStepPx = 520;
 
-	const setNativeWindowScroll = (value: number) => {
-		const scrollTrigger = ScrollTrigger as typeof ScrollTrigger & {
-			scroll: (value: number) => void;
-		};
+/**
+ * Creates a virtual scroll driver that eases rendered scroll toward a target.
+ *
+ * @returns A reader scroll driver used by the input bindings and camera engine.
+ *
+ * @example
+ * const driver = createReaderScrollDriver();
+ * driver.setUpdateListener(() => renderAt(driver.getScroll()));
+ */
+export function createReaderScrollDriver() {
+	let activeMotion: ScrollMotion | null = null;
+	let currentScroll = window.scrollY;
+	let frameId: number | null = null;
+	let targetScroll = window.scrollY;
+	let updateListener: ScrollDriverUpdateListener | null = null;
 
-		scrollTrigger.scroll(value);
-	};
+	/**
+	 * Reads the maximum scrollable timeline distance from the document spacer.
+	 *
+	 * @returns The maximum scroll value allowed by the current reader layout.
+	 *
+	 * @example
+	 * const max = getMaxScroll();
+	 */
+	const getMaxScroll = (): number =>
+		Math.max(
+			0,
+			document.documentElement.scrollHeight -
+				(window.innerHeight || document.documentElement.clientHeight),
+		);
 
-	const getScroll = () => {
-		const smoother = smootherRef.current;
-		if (smoother && typeof smoother.scrollTop === "function") {
-			return smoother.scrollTop();
-		}
-		return getNativeWindowScroll();
-	};
-
-	const setScroll = (value: number) => {
-		const smoother = smootherRef.current;
-		if (smoother && typeof smoother.scrollTop === "function") {
-			smoother.scrollTop(value);
-			return;
-		}
-		setNativeWindowScroll(value);
-	};
-
-	const scrollTo = (
-		targetScroll: number,
-		opts: {
-			duration: number;
-			ease: gsap.EaseString;
-			onDone?: () => void;
-		},
-	) => {
-		const startScroll = getScroll();
-		const max = ScrollTrigger.maxScroll(window);
-		const clampedTarget = Math.max(0, Math.min(max, targetScroll));
-
-		if (Math.abs(clampedTarget - startScroll) < 2) {
-			opts.onDone?.();
-			return null;
-		}
-
-		const proxy = { value: startScroll };
-
-		return gsap.to(proxy, {
-			value: clampedTarget,
-			duration: opts.duration,
-			ease: opts.ease,
-			overwrite: "auto",
-			onUpdate: () => setScroll(proxy.value),
-			onComplete: opts.onDone,
-		});
-	};
-
-	const init = ({ wrapper, content }: InitArgs) => {
-		const smoother = ScrollSmoother.create({
-			wrapper,
-			content,
-			smooth: 1,
-			smoothTouch: 0.25,
-			effects: false,
-			normalizeScroll: {
-				allowNestedScroll: true,
-				allowClicks: true,
-			},
-		});
-
-		smootherRef.current = smoother;
-	};
-
-	const setPaused = (paused: boolean) => {
-		const smoother = smootherRef.current;
-		if (smoother && typeof smoother.paused === "function") {
-			smoother.paused(paused);
-		}
+	/**
+	 * Notifies the reader engine that the virtual scroll value changed.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * notifyUpdate();
+	 */
+	const notifyUpdate = (): void => {
+		updateListener?.();
 	};
 
 	/**
-	 * Forces ScrollSmoother and ScrollTrigger to agree with the DOM after React
-	 * has mounted/unmounted branches or resized pinned sections.
+	 * Stops the current virtual easing loop.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * stopFrameLoop();
 	 */
-	const syncLayout = () => {
-		const smoother = smootherRef.current;
-		const scroll = getScroll();
-
-		if (smoother && typeof smoother.refresh === "function") {
-			smoother.refresh();
-		} else {
-			ScrollTrigger.refresh();
-		}
-
-		if (smoother && typeof smoother.scrollTop === "function") {
-			smoother.scrollTop(scroll);
-		} else {
-			setNativeWindowScroll(scroll);
-		}
-
-		if (smoother && typeof smoother.render === "function") {
-			smoother.render();
-		}
-
-		ScrollTrigger.update();
+	const stopFrameLoop = (): void => {
+		if (frameId === null) return;
+		window.cancelAnimationFrame(frameId);
+		frameId = null;
 	};
 
-	const cleanup = () => {
-		const smoother = smootherRef.current;
-		if (smoother && typeof smoother.kill === "function") {
-			smoother.kill();
+	/**
+	 * Starts the virtual easing loop when the target differs from current scroll.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * startFrameLoop();
+	 */
+	const startFrameLoop = (): void => {
+		if (frameId !== null) return;
+		const advance = () => {
+			const distance = targetScroll - currentScroll;
+			if (Math.abs(distance) <= smoothSettledPx) {
+				currentScroll = targetScroll;
+				frameId = null;
+				notifyUpdate();
+				return;
+			}
+			const frameStep = clamp(
+				distance * smoothFollowStrength,
+				-smoothMaxFrameStepPx,
+				smoothMaxFrameStepPx,
+			);
+			currentScroll = clamp(currentScroll + frameStep, 0, getMaxScroll());
+			notifyUpdate();
+			frameId = window.requestAnimationFrame(advance);
+		};
+		frameId = window.requestAnimationFrame(advance);
+	};
+
+	/**
+	 * Reads the currently rendered scroll position.
+	 *
+	 * @returns The eased virtual scroll value currently shown by the reader.
+	 *
+	 * @example
+	 * const scroll = driver.getScroll();
+	 */
+	const getScroll = (): number => currentScroll;
+
+	/**
+	 * Immediately moves both target and rendered scroll to a value.
+	 *
+	 * @param value - The scroll value to set.
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * driver.setScroll(1200);
+	 */
+	const setScroll = (value: number): void => {
+		const next = clamp(value, 0, getMaxScroll());
+		stopFrameLoop();
+		currentScroll = next;
+		targetScroll = next;
+		window.scrollTo({ behavior: "auto", top: next });
+		notifyUpdate();
+	};
+
+	/**
+	 * Cancels any currently running virtual movement.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * driver.cancelMotion();
+	 */
+	const cancelMotion = (): void => {
+		activeMotion?.cancel();
+		activeMotion = null;
+		targetScroll = currentScroll;
+		stopFrameLoop();
+	};
+
+	/**
+	 * Moves the target scroll, either instantly or through eased virtual follow.
+	 *
+	 * @param nextTargetScroll - The scroll target requested by input or navigation.
+	 * @param behavior - Whether the movement should be instant or eased.
+	 * @returns A cancelable motion handle, or null when no movement is needed.
+	 *
+	 * @example
+	 * driver.scrollTo(3000, "smooth", { duration: 0.4 });
+	 */
+	const scrollTo = (
+		nextTargetScroll: number,
+		behavior: ScrollBehavior,
+		_options?: { duration?: number },
+	): ScrollMotion | null => {
+		const next = clamp(nextTargetScroll, 0, getMaxScroll());
+		activeMotion?.cancel();
+		if (behavior !== "smooth") {
+			setScroll(next);
+			return null;
 		}
-		smootherRef.current = null;
+		targetScroll = next;
+		if (Math.abs(targetScroll - currentScroll) < 1) return null;
+		const motion = {
+			cancel: () => {
+				targetScroll = currentScroll;
+				stopFrameLoop();
+			},
+		};
+		activeMotion = motion;
+		startFrameLoop();
+		return motion;
 	};
 
 	return {
-		init,
-		cleanup,
+		cancelMotion,
+		cleanup: () => {
+			cancelMotion();
+			updateListener = null;
+		},
+		getMaxScroll,
 		getScroll,
-		setScroll,
 		scrollTo,
-		setPaused,
-		syncLayout,
+		setScroll,
+		setUpdateListener: (listener: ScrollDriverUpdateListener | null) => {
+			updateListener = listener;
+		},
+		syncLayout: () => {
+			targetScroll = clamp(targetScroll, 0, getMaxScroll());
+			currentScroll = clamp(currentScroll, 0, getMaxScroll());
+			notifyUpdate();
+		},
 	};
 }

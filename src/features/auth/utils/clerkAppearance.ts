@@ -1,4 +1,8 @@
-import type { Appearance } from "@clerk/types";
+import type { ClerkProvider } from "@clerk/nextjs";
+
+type Appearance = NonNullable<
+	Parameters<typeof ClerkProvider>[0]["appearance"]
+>;
 
 export const clerkAppearance = {
 	variables: {

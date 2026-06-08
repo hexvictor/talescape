@@ -1,154 +1,79 @@
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type BranchSchema, branches, tales } from "~/server/db/schema";
-import { isBranchedTaleSlug } from "./branchedTales";
+import { branches, tales } from "~/server/db/schema";
+import { userId1 } from "../ids";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type BranchSeed = Pick<
-	BranchSchema,
-	| "taleId"
-	| "creatorId"
-	| "name"
-	| "index"
-	| "isOfficial"
-	| "isVerified"
-	| "editable"
-	| "visibility"
-	| "cloneable"
->;
+const branchDefinitions = [
+	{
+		description: "The shared road through Thornwick before the first choice.",
+		name: "main",
+		order: 0,
+		title: "The Main Route",
+	},
+	{
+		description: "Mara follows the lantern keeper through the buried nave.",
+		name: "lantern",
+		order: 1,
+		title: "The Lantern Route",
+	},
+	{
+		description: "Mara follows the underground river toward the old gate.",
+		name: "river",
+		order: 2,
+		title: "The River Route",
+	},
+] as const;
 
-export async function seedBranches() {
-	const allTales = await db
-		.select({
-			id: tales.id,
-			slug: tales.slug,
-			creatorId: tales.creatorId,
-			isOfficial: tales.isOfficial,
-			isVerified: tales.isVerified,
-			editable: tales.editable,
-			visibility: tales.visibility,
-			cloneable: tales.cloneable,
-		})
-		.from(tales);
+/**
+ * Queries the tale, inserts its branches, and resolves parent links from real rows.
+ *
+ * @returns Nothing.
+ */
+export async function seedBranches(): Promise<void> {
+	logSeedStart("Branches");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "official-tale-branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 
-	const seeds: BranchSeed[] = allTales.flatMap((tale) => {
-		if (isBranchedTaleSlug(tale.slug)) {
-			return [
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Beginning",
-					index: 0,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "First Path",
-					index: 1,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Second Path",
-					index: 2,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Third Path",
-					index: 3,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Fourth Path",
-					index: 4,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Choice",
-					index: 5,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Good Choice",
-					index: 6,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Bad Choice",
-					index: 7,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Ending",
-					index: 8,
-					isOfficial: tale.isOfficial,
-					isVerified: tale.isVerified,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-			];
-		}
+	await db.insert(branches).values(
+		branchDefinitions.map((branch) => ({
+			cloneable: "private" as const,
+			creatorId: userId1,
+			description: branch.description,
+			editable: true,
+			isOfficial: true,
+			isVerified: true,
+			name: branch.name,
+			order: branch.order,
+			parentBranchId: null,
+			taleId: tale.id,
+			title: branch.title,
+			visibility: "public" as const,
+		})),
+	);
+	const allBranches = await db
+		.select({ id: branches.id, name: branches.name })
+		.from(branches)
+		.where(eq(branches.taleId, tale.id));
+	const root = allBranches.find((branch) => branch.name === "main");
+	if (!root) throw new Error("Root branch was not inserted.");
 
-		return [
-			{
-				taleId: tale.id,
-				creatorId: tale.creatorId,
-				name: "Main",
-				index: 0,
-				isOfficial: tale.isOfficial,
-				isVerified: tale.isVerified,
-				editable: tale.editable,
-				visibility: tale.visibility,
-				cloneable: tale.cloneable,
-			},
-		];
-	});
-
-	await db.insert(branches).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} branches.`);
+	await db
+		.update(branches)
+		.set({ parentBranchId: root.id })
+		.where(
+			and(
+				eq(branches.taleId, tale.id),
+				isNull(branches.parentBranchId),
+				ne(branches.id, root.id),
+			),
+		);
+	await db
+		.update(branches)
+		.set({ parentBranchId: null })
+		.where(eq(branches.id, root.id));
+	logSeedComplete("Branches");
 }

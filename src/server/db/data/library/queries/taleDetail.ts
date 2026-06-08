@@ -18,34 +18,26 @@ export async function getLibraryTaleDetail(taleId: number) {
 			creatorById: true,
 			permissions: true,
 			branches: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
-					permissions: true,
-				},
-			},
-			sections: {
-				orderBy: (model, { asc }) => [asc(model.index)],
-				with: {
-					branch: true,
 					permissions: true,
 				},
 			},
 			blocks: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
-					section: {
+					branch: true,
+					page: {
 						with: {
-							branch: true,
+							entry: true,
+							part: true,
 						},
 					},
-					entry: true,
-					part: true,
-					page: true,
 					permissions: true,
 				},
 			},
 			fragments: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
 					block: true,
 					permissions: true,
@@ -60,16 +52,16 @@ export async function getLibraryTaleDetail(taleId: number) {
 				},
 			},
 			parts: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 			},
 			entries: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
 					part: true,
 				},
 			},
 			pages: {
-				orderBy: (model, { asc }) => [asc(model.index)],
+				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
 					part: true,
 					entry: true,
@@ -78,13 +70,12 @@ export async function getLibraryTaleDetail(taleId: number) {
 		},
 	});
 
-	if (!tale || !canViewTale(tale, userId)) {
+	if (!tale || !canViewResource(tale, userId)) {
 		return null;
 	}
 
 	const {
 		branches: branchRecords,
-		sections: sectionRecords,
 		blocks: blockRecords,
 		fragments: fragmentRecords,
 		paths: pathRecords,
@@ -94,17 +85,53 @@ export async function getLibraryTaleDetail(taleId: number) {
 		...taleRecord
 	} = tale;
 
-	const branches = branchRecords.filter((branch) =>
-		canViewAsset(branch, userId),
-	);
-	const sections = sectionRecords.filter((section) =>
-		canViewAsset(section, userId),
-	);
-	const blocks = blockRecords.filter((block) => canViewAsset(block, userId));
-	const fragments = fragmentRecords.filter((fragment) =>
-		canViewAsset(fragment, userId),
-	);
-	const paths = pathRecords.filter((path) => canViewPath(path, userId));
+	const branches = branchRecords
+		.filter((branch) => canViewResource(branch, userId))
+		.map((branch) => ({ ...branch, index: branch.order }));
+	const sections = branches.map((branch) => ({
+		branch,
+		branchId: branch.id,
+		cloneable: branch.cloneable,
+		createdAt: branch.createdAt,
+		creatorId: branch.creatorId,
+		direction: "down" as const,
+		editable: branch.editable,
+		id: branch.id,
+		index: branch.order,
+		inputMode: ["buttons", "keyboard", "touch"] as const,
+		isOfficial: branch.isOfficial,
+		isSnap: false,
+		isVerified: branch.isVerified,
+		orientation: "vertical" as const,
+		taleId: branch.taleId,
+		updatedAt: branch.updatedAt,
+		visibility: branch.visibility,
+	}));
+	const blocks = blockRecords
+		.filter((block) => canViewResource(block, userId))
+		.map((block) => ({
+			...block,
+			index: block.order,
+			page: { ...block.page, index: block.page.order },
+			section: block.branch
+				? sections.find((section) => section.branchId === block.branch.id)
+				: null,
+			sectionId: block.branchId,
+			entry: block.page.entry,
+			entryId: block.page.entryId,
+			part: block.page.part,
+			partId: block.page.partId,
+		}));
+	const fragments = fragmentRecords
+		.filter((fragment) => canViewResource(fragment, userId))
+		.map((fragment) => ({
+			...fragment,
+			block: fragment.block
+				? { ...fragment.block, index: fragment.block.order }
+				: fragment.block,
+			index: fragment.order,
+		}));
+	const paths = pathRecords.filter((path) => canViewResource(path, userId));
 
 	return {
 		tale: {
@@ -126,9 +153,9 @@ export async function getLibraryTaleDetail(taleId: number) {
 		blocks,
 		fragments,
 		paths,
-		parts,
-		entries,
-		pages,
+		parts: parts.map((part) => ({ ...part, index: part.order })),
+		entries: entries.map((entry) => ({ ...entry, index: entry.order })),
+		pages: pages.map((page) => ({ ...page, index: page.order })),
 	};
 }
 
@@ -136,8 +163,15 @@ export type LibraryTaleDetail = NonNullable<
 	Awaited<ReturnType<typeof getLibraryTaleDetail>>
 >;
 
-function canViewTale(
-	tale: {
+/**
+ * Checks shared visibility and permission rules for a library resource.
+ *
+ * @param resource - Tale or reader asset with access metadata.
+ * @param userId - Signed-in user id, when available.
+ * @returns Whether the resource can be shown.
+ */
+function canViewResource(
+	resource: {
 		isOfficial: boolean;
 		visibility: string;
 		creatorId: string;
@@ -146,44 +180,10 @@ function canViewTale(
 	userId: string | null,
 ) {
 	return (
-		tale.isOfficial ||
-		tale.visibility === "public" ||
-		(userId !== null && tale.creatorId === userId) ||
-		(userId !== null && hasReadablePermission(tale.permissions))
-	);
-}
-
-function canViewAsset(
-	asset: {
-		isOfficial: boolean;
-		visibility: string;
-		creatorId: string;
-		permissions: PermissionRecord[];
-	},
-	userId: string | null,
-) {
-	return (
-		asset.isOfficial ||
-		asset.visibility === "public" ||
-		(userId !== null && asset.creatorId === userId) ||
-		(userId !== null && hasReadablePermission(asset.permissions))
-	);
-}
-
-function canViewPath(
-	path: {
-		isOfficial: boolean;
-		visibility: string;
-		creatorId: string;
-		permissions: PermissionRecord[];
-	},
-	userId: string | null,
-) {
-	return (
-		path.isOfficial ||
-		path.visibility === "public" ||
-		(userId !== null && path.creatorId === userId) ||
-		(userId !== null && hasReadablePermission(path.permissions))
+		resource.isOfficial ||
+		resource.visibility === "public" ||
+		(userId !== null && resource.creatorId === userId) ||
+		(userId !== null && hasReadablePermission(resource.permissions))
 	);
 }
 

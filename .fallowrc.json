@@ -1,0 +1,164 @@
+{
+	"$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+	"framework": [
+		{
+			"name": "next-app-router",
+			"detection": { "type": "dependency", "package": "next" },
+			"entryPointRole": "runtime",
+			"entryPoints": [
+				"src/app/**/{page,layout,template,loading,error,not-found,default,route}.{ts,tsx,js,jsx}",
+				"src/pages/**/*.{ts,tsx,js,jsx}",
+				"src/middleware.{ts,js}"
+			],
+			"configPatterns": [
+				"next.config.{js,mjs,cjs,ts}",
+				"postcss.config.{js,mjs,cjs,ts}",
+				"tailwind.config.{js,mjs,cjs,ts}",
+				"sentry.{client,server,edge}.config.{js,ts}",
+				"drizzle.config.{js,ts}"
+			],
+			"toolingDependencies": [
+				"next",
+				"typescript",
+				"tsx",
+				"drizzle-kit",
+				"@biomejs/biome",
+				"fallow",
+				"husky"
+			],
+			"usedExports": [
+				{
+					"pattern": "src/app/**/{page,layout,template,loading,error,not-found,default}.{ts,tsx,js,jsx}",
+					"exports": [
+						"default",
+						"metadata",
+						"viewport",
+						"generateMetadata",
+						"generateViewport",
+						"generateStaticParams",
+						"dynamic",
+						"dynamicParams",
+						"revalidate",
+						"fetchCache",
+						"runtime",
+						"preferredRegion",
+						"maxDuration"
+					]
+				},
+				{
+					"pattern": "src/app/**/route.{ts,js}",
+					"exports": [
+						"GET",
+						"POST",
+						"PUT",
+						"PATCH",
+						"DELETE",
+						"HEAD",
+						"OPTIONS",
+						"dynamic",
+						"revalidate",
+						"runtime",
+						"preferredRegion",
+						"maxDuration"
+					]
+				},
+				{
+					"pattern": "src/middleware.{ts,js}",
+					"exports": ["middleware", "config"]
+				}
+			]
+		},
+		{
+			"name": "future-vitest-tests",
+			"detection": {
+				"type": "any",
+				"conditions": [
+					{ "type": "dependency", "package": "vitest" },
+					{ "type": "fileExists", "pattern": "vitest.config.{ts,js,mts,mjs}" },
+					{ "type": "fileExists", "pattern": "src/**/*.test.{ts,tsx,js,jsx}" },
+					{ "type": "fileExists", "pattern": "src/**/*.spec.{ts,tsx,js,jsx}" }
+				]
+			},
+			"entryPointRole": "test",
+			"entryPoints": [
+				"src/**/*.test.{ts,tsx,js,jsx}",
+				"src/**/*.spec.{ts,tsx,js,jsx}",
+				"src/**/__tests__/**/*.{ts,tsx,js,jsx}",
+				"tests/**/*.{ts,tsx,js,jsx}"
+			],
+			"configPatterns": [
+				"vitest.config.{ts,js,mts,mjs}",
+				"vitest.setup.{ts,js}",
+				"playwright.config.{ts,js,mts,mjs}"
+			],
+			"toolingDependencies": [
+				"vitest",
+				"@vitest/coverage-v8",
+				"@testing-library/react",
+				"@testing-library/jest-dom",
+				"@testing-library/user-event",
+				"jsdom",
+				"playwright",
+				"@playwright/test"
+			]
+		}
+	],
+	"entry": [
+		"src/app/**/{page,layout,template,loading,error,not-found,default,route}.{ts,tsx,js,jsx}",
+		"src/server/api/root.ts",
+		"src/server/db/seeds/index.ts",
+		"src/server/db/scripts/**/*.ts"
+	],
+	"ignorePatterns": ["src/server/db/migrations/**", "src/server/db/schema/**"],
+	"ignoreExports": [
+		{
+			"file": "src/app/(tale-reader)/_shared/types.ts",
+			"exports": ["*"]
+		},
+		{
+			"file": "src/server/db/types/tale-reader/readerConfig.ts",
+			"exports": ["*"]
+		}
+	],
+	"duplicates": {
+		"minOccurrences": 3,
+		"ignore": [
+			"src/app/new-reader/**",
+			"src/**/*.test.{ts,tsx,js,jsx}",
+			"src/**/*.spec.{ts,tsx,js,jsx}",
+			"src/**/__tests__/**",
+			"tests/**",
+			"src/server/db/migrations/**",
+			"src/server/db/seeds/**",
+			"src/server/db/schema/**",
+			"src/server/db/data/library/queries/access.ts"
+		],
+		"mode": "mild"
+	},
+	"health": {
+		"ignore": [
+			"src/**/*.test.{ts,tsx,js,jsx}",
+			"src/**/*.spec.{ts,tsx,js,jsx}",
+			"src/**/__tests__/**",
+			"tests/**",
+			"src/server/db/migrations/**",
+			"src/server/db/seeds/**",
+			"src/server/db/schema/**"
+		],
+		"mode": "mild",
+		"maxCognitive": 18,
+		"maxCyclomatic": 24,
+		"maxCrap": 45
+	},
+	"ignoreDependencies": ["lorem-ipsum", "talescape"],
+	"rules": {
+		"coverage-gaps": "off",
+		"test-only-dependencies": "warn",
+		"type-only-dependencies": "warn",
+		"unused-dependencies": "warn",
+		"unused-dev-dependencies": "warn"
+	},
+	"audit": {
+		"gate": "new-only"
+	}
+}

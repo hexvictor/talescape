@@ -1,21 +1,29 @@
+import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type PartSchema, parts, tales } from "~/server/db/schema";
+import { parts, tales } from "~/server/db/schema";
+import { readerPartTitles } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type PartSeed = Pick<PartSchema, "taleId" | "title" | "index">;
+/**
+ * Queries the seeded tale and inserts its ordered parts using the real tale id.
+ *
+ * @returns Nothing.
+ */
+export async function seedParts(): Promise<void> {
+	logSeedStart("Parts");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "official-tale-branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 
-export async function seedParts() {
-	const allTales = await db.select({ id: tales.id }).from(tales);
-
-	const allParts: PartSeed[] = allTales.flatMap((tale) =>
-		Array.from({ length: 2 }).map(
-			(_, partIndex): PartSeed => ({
-				taleId: tale.id,
-				title: `Part ${partIndex + 1}`,
-				index: partIndex,
-			}),
-		),
+	await db.insert(parts).values(
+		readerPartTitles.map((title, order) => ({
+			description: `${title}, part ${order + 1} of Forked Fates.`,
+			order,
+			taleId: tale.id,
+			title,
+		})),
 	);
-
-	await db.insert(parts).values(allParts);
-	console.log(`✅ Seeded ${allParts.length} parts.`);
+	logSeedComplete("Parts");
 }

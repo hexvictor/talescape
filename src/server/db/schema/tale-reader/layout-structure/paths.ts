@@ -1,8 +1,12 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { branches, pathPermissions, tales, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { AssetVisibility } from "~/server/db/types/tale-builder/asset";
 import type { PathType } from "~/server/db/types/tale-reader/path";
+import { users } from "../../users";
+import { pathPermissions } from "../permissions/pathPermissions";
+import { tales } from "../tales";
+import { blocks } from "./blocks";
+import { branches } from "./branches";
 
 export const paths = createTable("path", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -14,10 +18,12 @@ export const paths = createTable("path", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => branches.id),
+	fromBlockId: d.integer().references(() => blocks.id),
 	toBranchId: d
 		.integer()
 		.notNull()
 		.references(() => branches.id),
+	toBlockId: d.integer().references(() => blocks.id),
 	creatorId: d
 		.text()
 		.notNull()
@@ -28,6 +34,7 @@ export const paths = createTable("path", (d) => ({
 	editable: d.boolean().notNull().default(true),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	label: d.text(),
+	description: d.text(),
 	order: d.integer().notNull(),
 	createdAt: d
 		.timestamp({ withTimezone: true })
@@ -50,6 +57,14 @@ export const pathsRelations = relations(paths, ({ one, many }) => ({
 		fields: [paths.toBranchId],
 		references: [branches.id],
 		relationName: "branch_incoming_paths",
+	}),
+	fromBlock: one(blocks, {
+		fields: [paths.fromBlockId],
+		references: [blocks.id],
+	}),
+	toBlock: one(blocks, {
+		fields: [paths.toBlockId],
+		references: [blocks.id],
 	}),
 	creator: one(users, {
 		fields: [paths.creatorId],

@@ -1,42 +1,26 @@
 "use client";
 
-import { ReaderStoreProvider } from "~/app/(tale-reader)/_shared/contexts/ReaderStoreContext";
-import type { Tale } from "~/server/db/data/tale-reader/types/tales";
-import type { ReaderProgressSchema } from "~/server/db/schema";
-import { ReaderHub, ReaderViewport } from "../ReaderShell";
-import {
-	ContentsNavigator,
-	EntryNavigator,
-	ReaderProgress,
-	ReaderUiToggle,
-	TaleDebug,
-} from "../ReaderUi";
-import LoadingTale from "../TaleFeedback/LoadingTale";
+import type { ReaderMode, SavedReaderProgress, Tale } from "../../types";
+import { ReaderRuntime } from "../ReaderCore/ReaderRuntime";
 
 type TaleReaderProps = {
+	mode?: ReaderMode;
+	progress: SavedReaderProgress | null;
 	tale: Tale;
-	progress: ReaderProgressSchema | null;
 };
 
-export default function TaleReader({ tale, progress }: TaleReaderProps) {
-	return (
-		<ReaderStoreProvider initialTale={tale} initialProgress={progress}>
-			<LoadingTale>
-				<div className="relative flex flex-col">
-					<div className="pointer-events-none fixed top-0 left-0 z-30 h-screen w-screen">
-						<div className="pointer-events-none relative h-full w-full">
-							<TaleDebug />
-							<ContentsNavigator />
-							<ReaderProgress />
-							<EntryNavigator />
-							<ReaderUiToggle />
-						</div>
-					</div>
-
-					<ReaderViewport />
-					<ReaderHub />
-				</div>
-			</LoadingTale>
-		</ReaderStoreProvider>
-	);
+/**
+ * Selects the read or edit composition for a database-loaded tale.
+ *
+ * @param props - Production tale reader props.
+ * @param props.mode - Route-selected reader mode.
+ * @param props.progress - Current user's saved progress, or null for guests.
+ * @param props.tale - Fully formatted tale returned by the database layer.
+ * @returns Read-only or editor reader composition.
+ *
+ * @example
+ * <TaleReader mode="edit" tale={tale} progress={progress} />
+ */
+export function TaleReader({ mode = "read", progress, tale }: TaleReaderProps) {
+	return <ReaderRuntime mode={mode} progress={progress} tale={tale} />;
 }

@@ -1,115 +1,151 @@
 "use client";
 
-export default function ContentsNavigator() {
-	// const { navigateToAnchor } = ();
-	// const currentEntryIndex = useReaderStore((s) => s.currentEntryIndex);
-	// const getCurrentEntry = useReaderStore((s) => s.getCurrentEntry);
-	// const getCurrentEntryId = useReaderStore((s) => s.getCurrentEntryId);
-	// const getChapterIndex = useReaderStore((s) => s.getChapterIndex);
-	// const taleEntries = useReaderStore((s) => s.tale.entries);
-	// const getBlocksByEntryId = useReaderStore((s) => s.getBlocksByEntryId);
-	// const hasEntryLevelBlock = useReaderStore((s) => s.hasEntryLevelBlock);
-	// const uiVisible = useReaderStore((s) => s.uiVisible);
-	// const { triggerScrollActivity } = useAutoScrollDelay();
+import clsx from "clsx";
+import { BookOpen, PanelLeftClose, Pin, PinOff, Route } from "lucide-react";
+import { useState } from "react";
+import { useContentsNavigatorState } from "../../../hooks/store/useReaderNavigationSelectors";
+import { useChooseReaderPath } from "../../../hooks/useChooseReaderPath";
+import { ContentsTree, RoutesPanel } from "./ContentsNavigatorPanels";
 
-	// const currentEntry = getCurrentEntry();
-	// if (!currentEntry) return null;
-	// const entryBlocks = getBlocksByEntryId(currentEntry.id);
-	// // Special logic for single page + entry block
-	// const hasSinglePageAndEntryBlock =
-	//   currentEntry.pages.length === 1 && hasEntryLevelBlock(currentEntryIndex);
+type ContentsTab = "contents" | "routes";
 
-	// const currentEntryIncludesPages = currentEntry.pages.length > 0;
+/**
+ * Renders the route-aware contents drawer and story route overview.
+ *
+ * @returns The contents navigator.
+ *
+ * @example
+ * <ContentsNavigator />
+ */
+export function ContentsNavigator(): React.JSX.Element {
+	const {
+		branches,
+		contents,
+		currentBlockId,
+		currentEntryId,
+		open,
+		paths,
+		scrollApi,
+		selectedBranchIds,
+		toggleContents,
+	} = useContentsNavigatorState();
+	const [hovered, setHovered] = useState(false);
+	const [tab, setTab] = useState<ContentsTab>("contents");
+	const visible = open || hovered;
+	const choosePath = useChooseReaderPath();
+
+	/**
+	 * Navigates to a visible block.
+	 *
+	 * @param blockId - Destination block identifier.
+	 * @returns Nothing.
+	 */
+	const navigate = (blockId: string): void => {
+		scrollApi?.capturePosition();
+		scrollApi?.scrollToBlock(blockId);
+	};
 
 	return (
-		<></>
-		// <div
-		//   className={clsx(
-		//     "pointer-events-auto absolute top-6 right-8 z-100 flex items-center gap-2",
-		//     "transition-opacity duration-300",
-		//     uiVisible ? "opacity-100" : "pointer-events-none opacity-0"
-		//   )}
-		// >
-		//   <DropdownMenu>
-		//     <Tooltip>
-		//       <TooltipTrigger asChild>
-		//         <DropdownMenuTrigger asChild>
-		//           <Button
-		//             variant="secondary"
-		//             size="sm"
-		//             className="flex cursor-pointer items-center gap-1"
-		//           >
-		//             <span className="flex items-center gap-1 text-sm">
-		//               {currentEntry.title}
-		//             </span>
-		//             <ChevronDown className="h-4 w-4" />
-		//           </Button>
-		//         </DropdownMenuTrigger>
-		//       </TooltipTrigger>
-		//       <TooltipContent side="bottom">Contents</TooltipContent>
-		//     </Tooltip>
+		<aside
+			data-reader-ui="true"
+			className="pointer-events-auto absolute top-20 right-4 z-40"
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+		>
+			{visible ? (
+				<div className="flex max-h-[calc(100vh-2rem)] w-[min(28rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-white/12 bg-black/90 shadow-2xl backdrop-blur-md">
+					<header className="flex items-start justify-between border-white/10 border-b px-4 py-3">
+						<div>
+							<h2 className="font-bold text-lg text-white">Contents</h2>
+							<p className="text-white/42 text-xs">
+								Current visible story route
+							</p>
+						</div>
+						<button
+							type="button"
+							aria-label={open ? "Unpin contents" : "Pin contents"}
+							className="grid h-8 w-8 place-items-center rounded text-white/55 hover:bg-white/8 hover:text-white"
+							onClick={toggleContents}
+						>
+							{open ? <Pin size={15} /> : <PinOff size={15} />}
+						</button>
+					</header>
+					<div className="grid grid-cols-2 border-white/10 border-b p-1.5">
+						<TabButton
+							active={tab === "contents"}
+							icon={BookOpen}
+							label="Contents"
+							onClick={() => setTab("contents")}
+						/>
+						<TabButton
+							active={tab === "routes"}
+							icon={Route}
+							label="Routes"
+							onClick={() => setTab("routes")}
+						/>
+					</div>
+					<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
+						{tab === "contents" ? (
+							<ContentsTree
+								contents={contents}
+								currentBlockId={currentBlockId}
+								currentEntryId={currentEntryId}
+								onNavigate={navigate}
+							/>
+						) : (
+							<RoutesPanel
+								branches={branches}
+								onChoosePath={choosePath}
+								paths={paths}
+								selectedBranchIds={selectedBranchIds}
+							/>
+						)}
+					</div>
+				</div>
+			) : (
+				<button
+					type="button"
+					aria-label="Open contents"
+					className="grid h-12 w-12 place-items-center rounded-lg border border-white/12 bg-black/72 text-white/66 shadow-2xl backdrop-blur-md hover:text-white"
+					onClick={toggleContents}
+				>
+					<PanelLeftClose size={18} />
+				</button>
+			)}
+		</aside>
+	);
+}
 
-		//     <DropdownMenuContent align="start" className="z-100 max-h-[500px] w-72">
-		//       <ScrollArea className="h-[200px]">
-		//         <div className="px-1 pb-2">
-		//           <DropdownMenuGroup>
-		//             {taleEntries.map((entry, index) => {
-		//               const isChapter = entry.type === "chapter";
+type TabButtonProps = {
+	active: boolean;
+	icon: typeof BookOpen;
+	label: string;
+	onClick: () => void;
+};
 
-		//               const chapterIndex = isChapter
-		//                 ? getChapterIndex(entry.id)
-		//                 : -1;
-
-		//               return (
-		//                 <DropdownMenuItem
-		//                   key={entry.id}
-		//                   className={clsx(
-		//                     "flex cursor-pointer items-center gap-2",
-		//                     index === currentEntryIndex && "bg-muted font-medium"
-		//                   )}
-		//                   onSelect={(e) => {
-		//                     e.preventDefault();
-		//                     triggerScrollActivity();
-		//                     navigateToAnchor(index, 0);
-		//                   }}
-		//                 >
-		//                   <span className="w-6 text-center text-muted-foreground text-xs">
-		//                     {isChapter && chapterIndex ? (
-		//                       chapterIndex + 1
-		//                     ) : (
-		//                       <EntryTypeIcon
-		//                         type={entry.type}
-		//                         className="h-3 w-3"
-		//                       />
-		//                     )}
-		//                   </span>
-		//                   <span className="truncate">{entry.title}</span>
-		//                 </DropdownMenuItem>
-		//               );
-		//             })}
-		//           </DropdownMenuGroup>
-		//         </div>
-		//       </ScrollArea>
-
-		//       {currentEntryIncludesPages &&
-		//         entryBlocks !== undefined &&
-		//         entryBlocks?.length > 0 && (
-		//           <>
-		//             <DropdownMenuSeparator />
-		//             <DropdownMenuLabel>
-		//               Pages in "{currentEntry.title}"
-		//             </DropdownMenuLabel>
-		//             <DropdownMenuSeparator />
-		//             <EntryPageButtons
-		//               showAllBlocks={
-		//                 hasSinglePageAndEntryBlock && entryBlocks.length === 2
-		//               }
-		//               triggerScrollActivity={triggerScrollActivity}
-		//             />
-		//           </>
-		//         )}
-		//     </DropdownMenuContent>
-		//   </DropdownMenu>
-		// </div>
+/**
+ * Renders a contents drawer tab.
+ *
+ * @param props - Tab state and selection callback.
+ * @returns A contents tab button.
+ */
+function TabButton({
+	active,
+	icon: Icon,
+	label,
+	onClick,
+}: TabButtonProps): React.JSX.Element {
+	return (
+		<button
+			type="button"
+			className={clsx(
+				"flex items-center justify-center gap-2 rounded px-3 py-2 text-xs",
+				active ? "bg-white/10 text-white" : "text-white/42 hover:text-white/72",
+			)}
+			onClick={onClick}
+		>
+			<Icon size={14} />
+			{label}
+		</button>
 	);
 }

@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776971703631,
-      "tag": "0000_breezy_vivisector",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1778431817270,
-      "tag": "0001_famous_tag",
+      "when": 1780913630678,
+      "tag": "0000_tired_ikaris",
       "breakpoints": true
     }
   ]
