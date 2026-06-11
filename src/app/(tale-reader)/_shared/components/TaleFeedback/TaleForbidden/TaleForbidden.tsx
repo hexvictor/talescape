@@ -20,9 +20,13 @@ export default function TaleForbidden({
 	title,
 	type,
 	creator,
-}: TaleForbiddenProps) {
+}: TaleForbiddenProps): React.JSX.Element {
 	return (
-		<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white">
+		<div
+			data-reader-component="TaleForbidden"
+			data-reader-role="feedback-screen"
+			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white"
+		>
 			<h1 className="mb-2 font-bold text-2xl">
 				{action === "edit" ? "Editing unavailable" : "Access forbidden"}
 			</h1>

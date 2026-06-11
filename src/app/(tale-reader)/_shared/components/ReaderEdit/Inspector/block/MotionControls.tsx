@@ -23,7 +23,11 @@ export function FlowSettings({
 }): React.JSX.Element {
 	return (
 		<>
-			<Setting label="Flow mode">
+			<Setting
+				componentName="FlowSettings"
+				label="Flow mode"
+				readerRole="flow-mode-setting"
+			>
 				<select
 					className={settingClassName}
 					value={flow.type}
@@ -112,7 +116,11 @@ export function CameraPathSettings({
 	path: BlockCameraPath;
 }): React.JSX.Element {
 	return (
-		<div className="col-span-2 grid grid-cols-2 gap-2">
+		<div
+			data-reader-component="CameraPathSettings"
+			data-reader-role="camera-path-settings"
+			className="col-span-2 grid grid-cols-2 gap-2"
+		>
 			<Setting label="Camera path">
 				<select
 					className={settingClassName}
@@ -177,7 +185,11 @@ export function MotionNumber({
 	value: number | null;
 }): React.JSX.Element {
 	return (
-		<Setting label={label}>
+		<Setting
+			componentName="MotionNumber"
+			label={label}
+			readerRole="motion-number-setting"
+		>
 			<input
 				className={settingClassName}
 				min="0"

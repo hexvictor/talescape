@@ -25,7 +25,11 @@ export function BlockSizeSettings({
 	size: BlockSize;
 }): React.JSX.Element {
 	return (
-		<DebugCard title="Size and placement">
+		<DebugCard
+			componentName="BlockSizeSettings"
+			readerRole="block-size-settings"
+			title="Size and placement"
+		>
 			<Setting label="Sizing mode">
 				<select
 					className={settingClassName}
@@ -151,7 +155,11 @@ function AlignmentSetting<Value extends string>({
 	value: Value;
 }): React.JSX.Element {
 	return (
-		<Setting label={label}>
+		<Setting
+			componentName="AlignmentSetting"
+			label={label}
+			readerRole="alignment-setting"
+		>
 			<select
 				className={settingClassName}
 				value={value}

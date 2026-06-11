@@ -20,9 +20,13 @@ export default function TaleUnauthorized({
 	title,
 	type,
 	creator,
-}: TaleUnauthorizedProps) {
+}: TaleUnauthorizedProps): React.JSX.Element {
 	return (
-		<div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white">
+		<div
+			data-reader-component="TaleUnauthorized"
+			data-reader-role="feedback-screen"
+			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white"
+		>
 			<h1 className="mb-2 font-bold text-2xl">Sign in to view this tale</h1>
 
 			{title ? (

@@ -31,7 +31,11 @@ export function FragmentPlacementSettings({
 	const placement = fragment.placement;
 	const nodeId = placement.nodeId ?? fragment.nodeId ?? block.rootNodeId;
 	return (
-		<DebugCard title="Placement">
+		<DebugCard
+			componentName="FragmentPlacementSettings"
+			readerRole="fragment-placement-settings"
+			title="Placement"
+		>
 			<Setting label="Position mode">
 				<select
 					className={settingClassName}

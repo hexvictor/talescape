@@ -9,9 +9,12 @@ export function DefaultFragment({
 }: {
 	fragment: ResolvedTaleFragment;
 	index: number;
-}) {
+}): React.JSX.Element {
 	return (
 		<div
+			data-reader-component="DefaultFragment"
+			data-reader-role="text-content"
+			data-reader-fragment-id={fragment.id}
 			className={clsx(
 				"max-w-3xl rounded-lg border p-5 text-base leading-8 shadow-xl backdrop-blur-md md:text-lg",
 				index % 2 === 0 ? "justify-self-start" : "justify-self-end",

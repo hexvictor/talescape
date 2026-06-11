@@ -6,11 +6,40 @@ type ScrollMotion = { cancel: () => void };
 
 type ScrollDriverUpdateListener = () => void;
 
+type TravelEasing = "ease-out" | "linear";
+
 export type ReaderScrollDriver = ReturnType<typeof createReaderScrollDriver>;
 
 const smoothSettledPx = 0.35;
-const smoothFollowStrength = 0.18;
-const smoothMaxFrameStepPx = 520;
+const smoothFollowStrength = 0.15;
+const smoothMaximumFollowStrength = 0.28;
+const smoothBaseMaxFrameStepPx = 360;
+const smoothMaximumFrameStepPx = 1500;
+const backlogAccelerationDistancePx = 7000;
+
+/**
+ * Resolves adaptive virtual-scroll movement from the remaining target backlog.
+ *
+ * @param distance - Signed distance between rendered and requested scroll.
+ * @returns Signed pixels to advance during the next frame.
+ *
+ * @example
+ * const step = getSmoothFrameStep(4200);
+ */
+function getSmoothFrameStep(distance: number): number {
+	const backlogRatio = clamp(
+		Math.abs(distance) / backlogAccelerationDistancePx,
+		0,
+		1,
+	);
+	const followStrength =
+		smoothFollowStrength +
+		(smoothMaximumFollowStrength - smoothFollowStrength) * backlogRatio;
+	const maximumFrameStep =
+		smoothBaseMaxFrameStepPx +
+		(smoothMaximumFrameStepPx - smoothBaseMaxFrameStepPx) * backlogRatio;
+	return clamp(distance * followStrength, -maximumFrameStep, maximumFrameStep);
+}
 
 /**
  * Creates a virtual scroll driver that eases rendered scroll toward a target.
@@ -87,11 +116,7 @@ export function createReaderScrollDriver() {
 				notifyUpdate();
 				return;
 			}
-			const frameStep = clamp(
-				distance * smoothFollowStrength,
-				-smoothMaxFrameStepPx,
-				smoothMaxFrameStepPx,
-			);
+			const frameStep = getSmoothFrameStep(distance);
 			currentScroll = clamp(currentScroll + frameStep, 0, getMaxScroll());
 			notifyUpdate();
 			frameId = window.requestAnimationFrame(advance);
@@ -176,6 +201,71 @@ export function createReaderScrollDriver() {
 		return motion;
 	};
 
+	/**
+	 * Moves the rendered scroll over a fixed duration independently of distance.
+	 *
+	 * @param nextTargetScroll - Timeline position to reach.
+	 * @param durationSeconds - Travel duration in seconds.
+	 * @param onComplete - Callback invoked after reaching the target.
+	 * @param onCancel - Callback invoked when another input interrupts travel.
+	 * @param easing - Progress curve used during fixed-duration travel.
+	 * @returns Cancelable travel motion.
+	 *
+	 * @example
+	 * driver.travelTo(8000, 0.7, startArrival);
+	 */
+	const travelTo = (
+		nextTargetScroll: number,
+		durationSeconds: number,
+		onComplete?: () => void,
+		onCancel?: () => void,
+		easing: TravelEasing = "ease-out",
+	): ScrollMotion => {
+		activeMotion?.cancel();
+		stopFrameLoop();
+		const start = currentScroll;
+		const next = clamp(nextTargetScroll, 0, getMaxScroll());
+		const distance = next - start;
+		const durationMs = Math.max(durationSeconds * 1000, 1);
+		const startedAt = performance.now();
+		let travelFrame: number | null = null;
+		let cancelled = false;
+
+		const motion: ScrollMotion = {
+			cancel: () => {
+				if (cancelled) return;
+				cancelled = true;
+				window.cancelAnimationFrame(travelFrame ?? 0);
+				travelFrame = null;
+				targetScroll = currentScroll;
+				onCancel?.();
+			},
+		};
+		activeMotion = motion;
+		targetScroll = next;
+
+		const advance = (now: number): void => {
+			if (cancelled) return;
+			const progress = clamp((now - startedAt) / durationMs, 0, 1);
+			const eased = easing === "linear" ? progress : 1 - (1 - progress) ** 3;
+			currentScroll = clamp(start + distance * eased, 0, getMaxScroll());
+			notifyUpdate();
+			if (progress < 1) {
+				travelFrame = window.requestAnimationFrame(advance);
+				return;
+			}
+			travelFrame = null;
+			activeMotion = null;
+			currentScroll = next;
+			targetScroll = next;
+			notifyUpdate();
+			onComplete?.();
+		};
+
+		travelFrame = window.requestAnimationFrame(advance);
+		return motion;
+	};
+
 	return {
 		cancelMotion,
 		cleanup: () => {
@@ -194,5 +284,6 @@ export function createReaderScrollDriver() {
 			currentScroll = clamp(currentScroll, 0, getMaxScroll());
 			notifyUpdate();
 		},
+		travelTo,
 	};
 }

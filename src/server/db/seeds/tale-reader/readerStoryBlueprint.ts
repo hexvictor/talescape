@@ -60,7 +60,7 @@ export const readerPageBlueprints: ReaderPageBlueprint[] = createPageBlueprints(
 	readerEntryBlueprints,
 );
 
-export const choiceEntryOrder = 12;
+const choiceEntryOrder = 12;
 
 export const choicePageOrder =
 	readerPageBlueprints

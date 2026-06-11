@@ -7,6 +7,7 @@ import type { CompiledReader, Direction, LayoutPhase, Tale } from "../../types";
 
 type ReaderViewportState = {
 	compiled: CompiledReader | null;
+	hubOpen: boolean;
 	measurementBlockIds: string[];
 	setPhase: TaleReaderState["engine"]["setPhase"];
 	setProgress: TaleReaderState["engine"]["setProgress"];
@@ -24,6 +25,10 @@ type ReaderViewportState = {
 export function useReaderViewportState(): ReaderViewportState {
 	return useReaderStoreShallow((state) => ({
 		compiled: state.reader.compiled,
+		hubOpen:
+			state.hub.open &&
+			(state.ui.visibilityMode === "all" ||
+				state.ui.visibilityMode === "navigation"),
 		measurementBlockIds: state.reader.measurementBlockIds,
 		setPhase: state.engine.setPhase,
 		setProgress: state.engine.setProgress,

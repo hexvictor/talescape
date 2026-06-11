@@ -12,11 +12,13 @@ export function ReaderMeasurementLayer({
 	blockIds: string[];
 	rootRef: RefObject<HTMLDivElement | null>;
 	tale: Tale;
-}) {
+}): React.JSX.Element {
 	return (
 		<div
 			ref={rootRef}
 			aria-hidden="true"
+			data-reader-component="ReaderMeasurementLayer"
+			data-reader-role="measurement-layer"
 			className="pointer-events-none fixed top-0 left-[-100000px] opacity-0"
 		>
 			{blockIds.flatMap((blockId) => {
@@ -26,6 +28,8 @@ export function ReaderMeasurementLayer({
 					<article
 						key={anchor.block.id}
 						data-reader-measure-block={anchor.block.id}
+						data-reader-component="ReaderMeasurementLayer"
+						data-reader-role="measurement-block"
 						className="relative flex w-fit items-center justify-center overflow-visible p-4 md:p-8"
 						style={{ background: anchor.block.resolved.background }}
 					>

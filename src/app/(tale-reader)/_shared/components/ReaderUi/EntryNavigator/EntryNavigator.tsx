@@ -1,29 +1,20 @@
 "use client";
 
 import clsx from "clsx";
-import {
-	ChevronDown,
-	ChevronUp,
-	PanelRightOpen,
-	Pin,
-	PinOff,
-} from "lucide-react";
+import { PanelRightOpen, Pin, PinOff } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEntryNavigatorState } from "../../../hooks/store/useReaderNavigationSelectors";
 import { usePinnedHoverPanel } from "../../../hooks/usePinnedHoverPanel";
-import type { ReaderContentsEntry } from "../../../types";
-import {
-	EntryPageRail,
-	PartSelector,
-	getVisibleEntries,
-} from "./EntryNavigatorParts";
+import { useRecentReaderActivity } from "../../../hooks/useRecentReaderActivity";
+import { getBoundedNavigationIndices } from "../../../services/getBoundedNavigationIndices";
+import { EntryPageFlyout, PartSelector } from "./EntryNavigatorParts";
 import { EntryTypeIcon, getEntryTypeLabel } from "./EntryTypeIcon";
 
 /**
- * Renders the route-aware entry rail with part and page navigation.
+ * Renders the route-aware entry rail with stable browsing and page flyouts.
  *
- * @returns The entry navigator.
+ * @returns Entry navigator or nothing when navigation is unnecessary.
  *
  * @example
  * <EntryNavigator />
@@ -37,184 +28,208 @@ export function EntryNavigator(): React.JSX.Element | null {
 		currentPartId,
 		scrollApi,
 	} = useEntryNavigatorState();
-	const panel = usePinnedHoverPanel(true);
+	const navigatorVisibility = usePinnedHoverPanel(true);
+	const [browseIndex, setBrowseIndex] = useState(0);
 	const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
-	const [suppressedEntryId, setSuppressedEntryId] = useState<string | null>(
-		null,
-	);
 	const [partsOpen, setPartsOpen] = useState(false);
 	const entries = compiled?.entries ?? [];
 	const currentIndex = compiled?.entryIndexById[currentEntryId ?? ""] ?? -1;
+	const recentlyActive = useRecentReaderActivity(currentEntryId);
+
+	useEffect(() => {
+		if (currentIndex >= 0) setBrowseIndex(currentIndex);
+	}, [currentIndex]);
 
 	if (!compiled || entries.length <= 1 || currentIndex < 0) return null;
 
-	/**
-	 * Navigates to a compiled block while preserving the current reader position.
-	 *
-	 * @param blockId - Destination block identifier.
-	 * @returns Nothing.
-	 */
-	const jumpToBlock = (blockId: string): void => {
+	const travelToBlock = (blockId: string): void => {
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToBlock(blockId);
+		scrollApi?.scrollToBlock(blockId, { motion: "travel" });
 	};
-
-	/**
-	 * Opens a multi-page entry or navigates directly to a single-page entry.
-	 *
-	 * @param entry - Destination entry.
-	 * @returns Nothing.
-	 */
-	const selectEntry = (entry: ReaderContentsEntry): void => {
-		if (entry.id === currentEntryId) {
-			if (entry.pages.length > 1) {
-				setSuppressedEntryId((current) =>
-					current === entry.id ? null : entry.id,
-				);
-			}
-			return;
-		}
-		jumpToBlock(entry.firstBlockId);
-	};
-
-	const visibleEntries = getVisibleEntries(entries, currentIndex);
 	const currentPart =
 		contents.find((part) => part.id === currentPartId) ?? contents[0];
+	const navigationIndices = getBoundedNavigationIndices({
+		activeIndex: currentIndex,
+		browseIndex,
+		itemCount: entries.length,
+	});
 
 	return (
 		<nav
 			data-reader-ui="true"
+			data-reader-component="EntryNavigator"
+			data-reader-role="entry-navigation"
 			aria-label="Entry navigation"
-			className="-translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-30 hidden items-center md:flex"
-			onMouseEnter={() => panel.setHovered(true)}
+			className={clsx(
+				"group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 hidden items-center transition-opacity duration-300 md:flex",
+				recentlyActive ||
+					navigatorVisibility.hovered ||
+					partsOpen ||
+					hoveredEntryId !== null
+					? "opacity-100"
+					: "opacity-25 hover:opacity-100",
+			)}
+			onMouseEnter={() => navigatorVisibility.setHovered(true)}
 			onMouseLeave={() => {
-				panel.setHovered(false);
+				navigatorVisibility.setHovered(false);
 				setHoveredEntryId(null);
-				setSuppressedEntryId(null);
+				setPartsOpen(false);
+			}}
+			onWheel={(event) => {
+				event.preventDefault();
+				setBrowseIndex((current) =>
+					Math.max(
+						0,
+						Math.min(entries.length - 1, current + (event.deltaY > 0 ? 1 : -1)),
+					),
+				);
 			}}
 		>
-			<button
-				type="button"
-				aria-label={
-					panel.pinned ? "Unpin entry navigation" : "Pin entry navigation"
-				}
-				className="grid h-12 w-7 place-items-center rounded-l-md border border-white/12 border-r-0 bg-black/78 text-white/45 backdrop-blur-md hover:text-white"
-				onClick={panel.togglePinned}
-			>
-				{panel.expanded ? (
-					panel.pinned ? (
-						<Pin size={13} />
-					) : (
-						<PinOff size={13} />
-					)
-				) : (
-					<PanelRightOpen size={15} />
-				)}
-			</button>
-			<AnimatePresence initial={false}>
-				{panel.expanded ? (
-					<motion.div
-						className="relative flex max-h-[84vh] w-16 flex-col items-center gap-2 rounded-l-lg border border-white/12 border-r-0 bg-black/76 py-3 shadow-2xl backdrop-blur-md"
-						initial={{ opacity: 0, width: 0 }}
-						animate={{ opacity: 1, width: 64 }}
-						exit={{ opacity: 0, width: 0 }}
+			<AnimatePresence>
+				{navigatorVisibility.expanded ? null : (
+					<motion.button
+						data-reader-component="EntryNavigator"
+						data-reader-role="collapsed-handle"
+						type="button"
+						aria-label="Show entry navigation"
+						className="absolute right-0 grid h-12 w-7 place-items-center rounded-l-md border border-white/12 border-r-0 bg-black/78 text-white/45 backdrop-blur-md hover:text-white"
+						initial={{ opacity: 0, x: 24 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: 24 }}
+						transition={{ duration: 0.18 }}
+						onClick={navigatorVisibility.togglePinned}
 					>
-						<PartSelector
-							currentPart={currentPart}
-							open={partsOpen}
-							parts={contents}
-							onOpenChange={setPartsOpen}
-							onSelect={(part) => {
-								jumpToBlock(part.firstBlockId);
-								setPartsOpen(false);
-							}}
-						/>
+						<PanelRightOpen size={15} />
+					</motion.button>
+				)}
+			</AnimatePresence>
+			<AnimatePresence initial={false}>
+				{navigatorVisibility.expanded ? (
+					<motion.div
+						className="relative"
+						initial={{ opacity: 0, x: 24 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: 24 }}
+						transition={{ duration: 0.2 }}
+					>
 						<button
+							data-reader-component="EntryNavigator"
+							data-reader-role="pin-control"
 							type="button"
-							aria-label="Previous entry"
-							disabled={currentIndex === 0}
-							className="grid h-7 w-7 place-items-center rounded-full text-white/65 hover:bg-white/8 disabled:opacity-20"
-							onClick={() => {
-								const entry = entries[currentIndex - 1];
-								if (entry) jumpToBlock(entry.firstBlockId);
-							}}
+							aria-label={
+								navigatorVisibility.pinned
+									? "Unpin entry navigation"
+									: "Pin entry navigation"
+							}
+							className="-translate-x-1/2 -translate-y-1/2 absolute top-0 left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-white/12 bg-black/90 text-white/45 opacity-0 transition-opacity hover:text-white group-hover/entry-nav:opacity-100"
+							onClick={navigatorVisibility.togglePinned}
 						>
-							<ChevronUp size={16} />
+							{navigatorVisibility.pinned ? (
+								<Pin size={11} />
+							) : (
+								<PinOff size={11} />
+							)}
 						</button>
-						<div className="flex min-h-0 flex-col items-center gap-2 overflow-y-auto [scrollbar-width:none]">
-							{visibleEntries.map(({ entry, index, scale }) => {
-								const active = entry.id === currentEntryId;
-								const expanded =
-									entry.id === hoveredEntryId &&
-									entry.id !== suppressedEntryId &&
-									entry.pages.length > 1;
-								return (
-									<div
-										key={entry.id}
-										className="flex flex-col items-center gap-1"
-										onMouseEnter={() => {
-											setHoveredEntryId(entry.id);
-											if (suppressedEntryId !== entry.id) {
-												setSuppressedEntryId(null);
-											}
-										}}
-										onMouseLeave={() => {
-											setHoveredEntryId(null);
-											setSuppressedEntryId(null);
-										}}
-									>
-										<motion.button
-											type="button"
-											title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
-											aria-label={`Go to ${entry.title}`}
-											className={clsx(
-												"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg",
-												active
-													? "border-[#d9b56f] bg-[#d9b56f] text-black"
-													: "border-white/12 bg-white/6 text-white/70 hover:bg-white/12 hover:text-white",
-											)}
-											animate={{ opacity: scale, scale }}
-											onClick={() => selectEntry(entry)}
+						<div
+							data-reader-component="EntryNavigator"
+							data-reader-role="entry-panel"
+							className="flex max-h-[82vh] w-[4.75rem] flex-col items-center gap-2 rounded-l-lg border border-white/12 border-r-0 bg-black/82 px-1.5 py-4 shadow-2xl backdrop-blur-md"
+						>
+							<PartSelector
+								currentPart={currentPart}
+								open={partsOpen}
+								parts={contents}
+								onOpenChange={setPartsOpen}
+								onSelect={(part) => {
+									travelToBlock(part.firstBlockId);
+									setPartsOpen(false);
+								}}
+							/>
+							<div className="flex flex-col items-center justify-center gap-1.5 px-2 py-1">
+								{navigationIndices.map((navigationIndex) => {
+									if (navigationIndex.type === "ellipsis") {
+										return (
+											<button
+												data-reader-component="EntryNavigator"
+												data-reader-role="ellipsis-control"
+												key={navigationIndex.id}
+												type="button"
+												aria-label="Browse more entries"
+												className="grid h-5 w-10 place-items-center rounded-full text-[11px] text-white/32 transition hover:bg-white/8 hover:text-white/70"
+												onClick={() =>
+													setBrowseIndex(navigationIndex.targetIndex)
+												}
+											>
+												•••
+											</button>
+										);
+									}
+
+									const entry = entries[navigationIndex.index];
+									if (!entry) return null;
+
+									return (
+										<div
+											key={entry.id}
+											data-reader-component="EntryNavigator"
+											data-reader-role="entry-item"
+											data-reader-entry-id={entry.id}
+											className="relative flex flex-col items-center"
+											onMouseEnter={() => setHoveredEntryId(entry.id)}
+											onMouseLeave={() => setHoveredEntryId(null)}
 										>
-											{entry.type === "chapter" ? (
-												entry.chapterNumber
-											) : (
-												<EntryTypeIcon type={entry.type} size={16} />
-											)}
-										</motion.button>
-										{expanded ? (
-											<EntryPageRail
-												currentPageId={currentPageId}
-												entry={entry}
-												onNavigate={jumpToBlock}
-											/>
-										) : active && entry.pages.length > 1 ? (
-											<EntryPageRail
-												compact
-												currentPageId={currentPageId}
-												entry={entry}
-												onNavigate={jumpToBlock}
-											/>
-										) : null}
-										{index === currentIndex && entry.pages.length > 1 ? (
-											<span className="h-1 w-1 rounded-full bg-white/45" />
-										) : null}
-									</div>
-								);
-							})}
+											<button
+												data-reader-component="EntryNavigator"
+												data-reader-entry-id={entry.id}
+												data-reader-role="entry-control"
+												type="button"
+												title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
+												aria-label={`Go to ${entry.title}`}
+												className={clsx(
+													"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg transition",
+													entry.id === currentEntryId
+														? "border-[#d9b56f] bg-[#d9b56f] text-black"
+														: navigationIndex.index === browseIndex
+															? "border-white/35 bg-white/12 text-white"
+															: "border-white/12 bg-white/6 text-white/65 hover:bg-white/12 hover:text-white",
+												)}
+												onClick={() => travelToBlock(entry.firstBlockId)}
+											>
+												{entry.type === "chapter" ? (
+													entry.chapterNumber
+												) : (
+													<EntryTypeIcon type={entry.type} size={16} />
+												)}
+											</button>
+											{entry.id === currentEntryId && entry.pages.length > 1 ? (
+												<span className="-bottom-1 -left-1 absolute rounded-full border border-[#d9b56f]/45 bg-black/90 px-1.5 py-0.5 font-semibold text-[#e2c98f] text-[8px]">
+													{entry.pages.find((page) => page.id === currentPageId)
+														?.number ?? "Current"}
+												</span>
+											) : null}
+											<AnimatePresence>
+												{hoveredEntryId === entry.id &&
+												entry.pages.length > 1 ? (
+													<motion.div
+														className="-translate-y-1/2 absolute top-1/2 right-[calc(100%-1px)] z-50 pr-3"
+														initial={{ opacity: 0, x: 8 }}
+														animate={{ opacity: 1, x: 0 }}
+														exit={{ opacity: 0, x: 8 }}
+														transition={{ duration: 0.15 }}
+													>
+														<EntryPageFlyout
+															currentPageId={currentPageId}
+															entry={entry}
+															onNavigate={travelToBlock}
+														/>
+													</motion.div>
+												) : null}
+											</AnimatePresence>
+										</div>
+									);
+								})}
+							</div>
 						</div>
-						<button
-							type="button"
-							aria-label="Next entry"
-							disabled={currentIndex === entries.length - 1}
-							className="grid h-7 w-7 place-items-center rounded-full text-white/65 hover:bg-white/8 disabled:opacity-20"
-							onClick={() => {
-								const entry = entries[currentIndex + 1];
-								if (entry) jumpToBlock(entry.firstBlockId);
-							}}
-						>
-							<ChevronDown size={16} />
-						</button>
 					</motion.div>
 				) : null}
 			</AnimatePresence>

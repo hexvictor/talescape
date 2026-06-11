@@ -53,7 +53,15 @@ export function getEntryTypeLabel(type: TaleEntry["type"]): string {
 export function EntryTypeIcon({
 	type,
 	...props
-}: { type: TaleEntry["type"] } & ComponentProps<LucideIcon>) {
+}: {
+	type: TaleEntry["type"];
+} & ComponentProps<LucideIcon>): React.JSX.Element | null {
 	const Icon = entryTypeIcons[type];
-	return Icon ? <Icon {...props} /> : null;
+	return Icon ? (
+		<Icon
+			data-reader-component="EntryTypeIcon"
+			data-reader-role="entry-type-icon"
+			{...props}
+		/>
+	) : null;
 }

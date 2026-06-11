@@ -24,7 +24,11 @@ export function FragmentMotionSettings({
 	onChange: (update: (item: ResolvedTaleFragment) => TaleFragment) => void;
 }): React.JSX.Element {
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="FragmentMotionSettings"
+			data-reader-role="fragment-motion-settings"
+			className="space-y-3"
+		>
 			<DebugCard title="Playback and visibility">
 				<Setting label="Playback">
 					<select

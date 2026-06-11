@@ -43,7 +43,11 @@ export function AnimationSelectionEditor({
 	};
 
 	return (
-		<DebugCard title={title}>
+		<DebugCard
+			componentName="AnimationSelectionEditor"
+			readerRole="animation-selection"
+			title={title}
+		>
 			<div className="col-span-2 grid grid-cols-[1fr_auto] gap-2">
 				<select
 					aria-label={`${title} official animation`}
@@ -124,7 +128,11 @@ function AnimationTrackFields({
 	track: AnimationTrack;
 }): React.JSX.Element {
 	return (
-		<div className="col-span-2 grid grid-cols-2 gap-2 rounded border border-white/8 bg-white/[0.025] p-2">
+		<div
+			data-reader-component="AnimationTrackEditor"
+			data-reader-role="animation-track-settings"
+			className="col-span-2 grid grid-cols-2 gap-2 rounded border border-white/8 bg-white/[0.025] p-2"
+		>
 			<Setting label="Property">
 				<select
 					className={settingClassName}

@@ -3,17 +3,33 @@
 import clsx from "clsx";
 import {
 	BookMarked,
-	ChevronDown,
 	Image,
+	ListTree,
 	MessageCircle,
+	PanelRightClose,
+	Route,
 	Sparkles,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { useReaderHubState } from "../../../hooks/store/useReaderNavigationSelectors";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { getReaderHubContent } from "../../../services/readerHubContent";
 import type { ReaderHubPanel } from "../../../store/slices/hubSlice";
+import { ReaderHubContents, ReaderHubRoutes } from "./ReaderHubNavigation";
 
-const panels: {
+type ReaderHubView = "context" | "navigation";
+
+const navigationPanels: {
+	icon: typeof MessageCircle;
+	id: ReaderHubPanel;
+	label: string;
+}[] = [
+	{ icon: ListTree, id: "contents", label: "Contents" },
+	{ icon: Route, id: "routes", label: "Routes" },
+];
+
+const contextPanels: {
 	icon: typeof MessageCircle;
 	id: ReaderHubPanel;
 	label: string;
@@ -25,9 +41,9 @@ const panels: {
 ];
 
 /**
- * Renders contextual community and reference information for the current page.
+ * Renders the camera-shifting Reader Hub workspace.
  *
- * @returns The contextual Reader Hub.
+ * @returns Reader Hub launcher and sidebar.
  *
  * @example
  * <ReaderHub />
@@ -35,118 +51,189 @@ const panels: {
 export function ReaderHub(): React.JSX.Element {
 	const { page } = useReaderLocationContext();
 	const { activePanel, open, setActivePanel, toggleOpen } = useReaderHubState();
+	const [activeView, setActiveView] = useState<ReaderHubView>(
+		activePanel === "contents" || activePanel === "routes"
+			? "navigation"
+			: "context",
+	);
 	const pageTitle = page?.title ?? page?.type ?? "Current page";
 	const content = getReaderHubContent(page?.id ?? "unknown", pageTitle);
+	const panels = activeView === "navigation" ? navigationPanels : contextPanels;
+
+	/**
+	 * Switches between navigation and contextual Reader Hub workspaces.
+	 *
+	 * @param view - Workspace to display.
+	 * @returns Nothing.
+	 */
+	const selectView = (view: ReaderHubView): void => {
+		setActiveView(view);
+		setActivePanel(view === "navigation" ? "contents" : "community");
+	};
 
 	return (
-		<aside
-			data-reader-ui="true"
-			className={clsx(
-				"pointer-events-auto absolute top-4 right-4 z-50 overflow-hidden border border-white/12 bg-black/88 shadow-2xl backdrop-blur-md transition",
-				open
-					? "bottom-4 flex w-[min(34rem,calc(100vw-2rem))] flex-col rounded-lg"
-					: "h-12 w-12 rounded-lg",
-			)}
-		>
-			<button
-				type="button"
-				aria-label="Toggle Reader Hub"
-				className="flex h-12 w-full shrink-0 items-center gap-2 border-white/10 border-b px-3 text-left font-semibold text-white/82 text-xs"
-				onClick={toggleOpen}
-			>
-				<BookMarked size={16} />
-				{open ? (
-					<>
-						<span className="min-w-0 flex-1 truncate">
-							Reader Hub · {pageTitle}
-						</span>
-						<ChevronDown size={15} />
-					</>
-				) : null}
-			</button>
-			{open ? (
-				<div className="flex min-h-0 flex-1 flex-col p-3">
-					<div className="mb-3 flex gap-1 overflow-x-auto [scrollbar-width:none]">
-						{panels.map((panel) => {
-							const Icon = panel.icon;
-							return (
-								<button
-									key={panel.id}
-									type="button"
-									className={clsx(
-										"flex items-center gap-1.5 rounded px-2.5 py-1.5 font-semibold text-[11px]",
-										activePanel === panel.id
-											? "bg-[#d9b56f] text-black"
-											: "text-white/52 hover:bg-white/8 hover:text-white",
-									)}
-									onClick={() => setActivePanel(panel.id)}
-								>
-									<Icon size={13} />
-									{panel.label}
-								</button>
-							);
-						})}
-					</div>
-					<div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none]">
-						{activePanel === "community" ? (
-							<div className="space-y-2">
-								{content.comments.map((comment) => (
-									<HubCard key={`${comment.author}-${comment.body}`}>
-										<p className="font-semibold text-[#e2c98f] text-xs">
-											{comment.author}
-										</p>
-										<p className="mt-1 text-white/62 text-xs leading-relaxed">
-											{comment.body}
-										</p>
-									</HubCard>
-								))}
-							</div>
-						) : null}
-						{activePanel === "art" ? (
-							<div className="grid grid-cols-2 gap-2">
-								{content.art.map((art) => (
-									<HubCard key={art.credit}>
-										<div className="mb-2 aspect-video rounded bg-[linear-gradient(135deg,#24211d,#55472f,#171717)]" />
-										<p className="text-white/68 text-xs">{art.caption}</p>
-										<p className="mt-1 text-[10px] text-white/35">
-											{art.credit}
-										</p>
-									</HubCard>
-								))}
-							</div>
-						) : null}
-						{activePanel === "codex" ? (
-							<div className="space-y-2">
-								{content.codex.map((item) => (
-									<HubCard key={item.name}>
-										<p className="text-[10px] text-white/35 uppercase">
-											{item.type}
-										</p>
-										<p className="mt-1 font-semibold text-sm text-white/85">
-											{item.name}
-										</p>
-										<p className="mt-1 text-white/55 text-xs leading-relaxed">
-											{item.description}
-										</p>
-									</HubCard>
-								))}
-							</div>
-						) : null}
-						{activePanel === "trivia" ? (
-							<div className="space-y-2">
-								{content.trivia.map((item) => (
-									<HubCard key={item}>
-										<p className="text-white/62 text-xs leading-relaxed">
-											{item}
-										</p>
-									</HubCard>
-								))}
-							</div>
-						) : null}
-					</div>
-				</div>
+		<>
+			{!open ? (
+				<button
+					data-reader-ui="true"
+					data-reader-component="ReaderHub"
+					data-reader-role="collapsed-handle"
+					type="button"
+					aria-label="Open Reader Hub"
+					className="pointer-events-auto absolute top-4 right-4 z-60 grid h-12 w-12 place-items-center rounded-lg border border-white/12 bg-black/78 text-white/72 opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-white hover:opacity-100"
+					onClick={toggleOpen}
+				>
+					<BookMarked size={18} />
+				</button>
 			) : null}
-		</aside>
+			<AnimatePresence>
+				{open ? (
+					<motion.aside
+						data-reader-ui="true"
+						data-reader-component="ReaderHub"
+						data-reader-role="reader-hub-sidebar"
+						className="pointer-events-auto absolute inset-y-0 right-0 z-60 flex w-[min(28rem,42vw)] flex-col border-white/12 border-l bg-[#090909]/96 shadow-2xl backdrop-blur-xl"
+						initial={{ x: "100%" }}
+						animate={{ x: 0 }}
+						exit={{ x: "100%" }}
+						transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+					>
+						<header className="flex h-16 shrink-0 items-center gap-3 border-white/10 border-b px-4">
+							<BookMarked size={17} className="text-[#d9b56f]" />
+							<div className="min-w-0 flex-1">
+								<p className="font-semibold text-sm text-white/90">
+									Reader Hub
+								</p>
+								<p className="truncate text-[11px] text-white/40">
+									{pageTitle}
+								</p>
+							</div>
+							<button
+								type="button"
+								aria-label="Close Reader Hub"
+								className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/48 hover:bg-white/7 hover:text-white"
+								onClick={toggleOpen}
+							>
+								<PanelRightClose size={16} />
+							</button>
+						</header>
+						<div className="grid shrink-0 grid-cols-2 gap-1 border-white/10 border-b p-2">
+							<button
+								type="button"
+								className={clsx(
+									"rounded px-3 py-2 font-semibold text-xs",
+									activeView === "navigation"
+										? "bg-white/12 text-white"
+										: "text-white/42 hover:bg-white/6 hover:text-white/72",
+								)}
+								onClick={() => selectView("navigation")}
+							>
+								Navigation
+							</button>
+							<button
+								type="button"
+								className={clsx(
+									"rounded px-3 py-2 font-semibold text-xs",
+									activeView === "context"
+										? "bg-white/12 text-white"
+										: "text-white/42 hover:bg-white/6 hover:text-white/72",
+								)}
+								onClick={() => selectView("context")}
+							>
+								Context
+							</button>
+						</div>
+						<nav
+							data-reader-component="ReaderHub"
+							data-reader-role="hub-tab-list"
+							className={clsx(
+								"grid shrink-0 gap-1 border-white/10 border-b p-2",
+								activeView === "navigation" ? "grid-cols-2" : "grid-cols-4",
+							)}
+						>
+							{panels.map((panel) => {
+								const Icon = panel.icon;
+								return (
+									<button
+										key={panel.id}
+										type="button"
+										className={clsx(
+											"flex items-center justify-center gap-1.5 rounded px-2 py-2 font-semibold text-[10px]",
+											activePanel === panel.id
+												? "bg-[#d9b56f] text-black"
+												: "text-white/48 hover:bg-white/7 hover:text-white",
+										)}
+										onClick={() => setActivePanel(panel.id)}
+									>
+										<Icon size={12} />
+										{panel.label}
+									</button>
+								);
+							})}
+						</nav>
+						<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
+							{activePanel === "contents" ? <ReaderHubContents /> : null}
+							{activePanel === "routes" ? <ReaderHubRoutes /> : null}
+							{activePanel === "community" ? (
+								<div className="space-y-2">
+									{content.comments.map((comment) => (
+										<HubCard key={`${comment.author}-${comment.body}`}>
+											<p className="font-semibold text-[#e2c98f] text-xs">
+												{comment.author}
+											</p>
+											<p className="mt-1 text-white/62 text-xs leading-relaxed">
+												{comment.body}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "art" ? (
+								<div className="grid grid-cols-2 gap-2">
+									{content.art.map((art) => (
+										<HubCard key={art.credit}>
+											<div className="mb-2 aspect-video rounded bg-[linear-gradient(135deg,#24211d,#55472f,#171717)]" />
+											<p className="text-white/68 text-xs">{art.caption}</p>
+											<p className="mt-1 text-[10px] text-white/35">
+												{art.credit}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "codex" ? (
+								<div className="space-y-2">
+									{content.codex.map((item) => (
+										<HubCard key={item.name}>
+											<p className="text-[10px] text-white/35 uppercase">
+												{item.type}
+											</p>
+											<p className="mt-1 font-semibold text-sm text-white/85">
+												{item.name}
+											</p>
+											<p className="mt-1 text-white/55 text-xs leading-relaxed">
+												{item.description}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "trivia" ? (
+								<div className="space-y-2">
+									{content.trivia.map((item) => (
+										<HubCard key={item}>
+											<p className="text-white/62 text-xs leading-relaxed">
+												{item}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+						</div>
+					</motion.aside>
+				) : null}
+			</AnimatePresence>
+		</>
 	);
 }
 
@@ -162,7 +249,11 @@ function HubCard({
 	children: React.ReactNode;
 }): React.JSX.Element {
 	return (
-		<div className="rounded-md border border-white/8 bg-white/[0.035] p-3">
+		<div
+			data-reader-component="HubCard"
+			data-reader-role="hub-content-card"
+			className="rounded-md border border-white/8 bg-white/[0.035] p-3"
+		>
 			{children}
 		</div>
 	);

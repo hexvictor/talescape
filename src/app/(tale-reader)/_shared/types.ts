@@ -741,6 +741,7 @@ export type SnapPoint = {
 export type ReaderScrollTargetOptions = {
 	atChoiceEnd?: boolean;
 	duration?: number;
+	motion?: "instant" | "reading" | "travel";
 };
 
 export type CompiledReader = {

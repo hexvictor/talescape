@@ -98,7 +98,11 @@ export function UnitNumberSetting({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+		<div
+			data-reader-component="DimensionSetting"
+			data-reader-role="dimension-input"
+			className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2"
+		>
 			<NumberSetting
 				label={label}
 				step={unit === "px" ? 25 : 0.25}
@@ -146,7 +150,11 @@ export function OptionalUnitNumberSetting({
 }): React.JSX.Element {
 	const resolvedUnit = unit ?? "viewport";
 	return (
-		<div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+		<div
+			data-reader-component="OptionalDimensionSetting"
+			data-reader-role="optional-dimension-input"
+			className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2"
+		>
 			<OptionalNumberSetting
 				label={label}
 				value={value}

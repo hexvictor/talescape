@@ -21,7 +21,10 @@ export function ReaderFragment({
 }) {
 	return (
 		<div
+			data-reader-component="ReaderFragment"
 			data-reader-fragment-id={fragment.id}
+			data-reader-fragment-type={fragment.type}
+			data-reader-role="fragment-container"
 			className="group/fragment relative"
 		>
 			<InspectorButton

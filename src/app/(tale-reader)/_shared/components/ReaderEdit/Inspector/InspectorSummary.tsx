@@ -20,7 +20,11 @@ export function InspectorHeader({
 	title: string;
 }): React.JSX.Element {
 	return (
-		<div className="border-white/10 border-b bg-black/24 px-3 py-3">
+		<div
+			data-reader-component="InspectorHeader"
+			data-reader-role="inspector-summary"
+			className="border-white/10 border-b bg-black/24 px-3 py-3"
+		>
 			<p className="truncate font-black text-[#d9b56f] text-xs uppercase">
 				{title}
 			</p>

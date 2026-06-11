@@ -11,7 +11,7 @@ import { useReaderMotionReadinessState } from "../../../hooks/store/useReaderRun
  * @example
  * <ReaderMotionReadiness />
  */
-export function ReaderMotionReadiness() {
+export function ReaderMotionReadiness(): React.JSX.Element | null {
 	const { phase, setProgress } = useReaderMotionReadinessState();
 
 	if (phase !== "preparing-motion") return null;
@@ -19,6 +19,8 @@ export function ReaderMotionReadiness() {
 	return (
 		<motion.div
 			aria-hidden="true"
+			data-reader-component="ReaderMotionReadiness"
+			data-reader-role="motion-readiness-probe"
 			className="pointer-events-none absolute h-0 w-0"
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}

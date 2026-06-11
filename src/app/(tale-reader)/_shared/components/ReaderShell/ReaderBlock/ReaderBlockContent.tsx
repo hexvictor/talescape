@@ -14,9 +14,21 @@ export function ReaderBlockContent({
 }) {
 	return (
 		<>
-			<div className="absolute inset-0 overflow-hidden">
-				<div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),transparent_42%,rgba(0,0,0,0.42))]" />
-				<div className="relative min-h-full w-full overflow-hidden">
+			<div
+				data-reader-component="ReaderBlockContent"
+				data-reader-role="clipped-content-layer"
+				className="absolute inset-0 overflow-hidden"
+			>
+				<div
+					data-reader-component="ReaderBlockContent"
+					data-reader-role="block-visual-overlay"
+					className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),transparent_42%,rgba(0,0,0,0.42))]"
+				/>
+				<div
+					data-reader-component="ReaderBlockContent"
+					data-reader-role="node-content-layer"
+					className="relative min-h-full w-full overflow-hidden"
+				>
 					<NodeRenderer
 						anchor={anchor}
 						nodeId={anchor.block.rootNodeId}
@@ -54,6 +66,9 @@ function PositionedFragments({
 	return fragments.map((fragment, index) => (
 		<div
 			key={fragment.id}
+			data-reader-component="PositionedFragments"
+			data-reader-fragment-id={fragment.id}
+			data-reader-role="positioned-fragment-frame"
 			className="absolute flex items-center justify-center"
 			style={{
 				fontSize: fragment.style?.fontSize,
@@ -68,7 +83,11 @@ function PositionedFragments({
 				...positionedStyle(fragment.placement),
 			}}
 		>
-			<div className="w-full">
+			<div
+				data-reader-component="PositionedFragments"
+				data-reader-role="positioned-fragment-content"
+				className="w-full"
+			>
 				<ReaderFragment
 					contentSized={anchor.block.size.mode === "content"}
 					fragment={fragment}

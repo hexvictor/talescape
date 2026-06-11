@@ -15,42 +15,82 @@ export function createProgressPainter(
 	progressRoot: HTMLElement | null,
 	compiled: CompiledReader,
 ) {
-	const storyFill = progressRoot?.querySelector<HTMLElement>(
-		"[data-reader-story-progress-fill='true']",
-	);
-	const storyLabel = progressRoot?.querySelector<HTMLElement>(
-		"[data-reader-story-progress='true']",
-	);
-	const innerLabel = progressRoot?.querySelector<HTMLElement>(
-		"[data-reader-inner-progress='true']",
-	);
-	const innerFill = progressRoot?.querySelector<HTMLElement>(
-		"[data-reader-inner-progress-fill='true']",
-	);
+	let storyFill: HTMLElement | null = null;
+	let storyLabel: HTMLElement | null = null;
+	let innerLabel: HTMLElement | null = null;
+	let innerFill: HTMLElement | null = null;
+	let previousStoryLabel = "";
+	let previousInnerLabel = "";
+	let previousStoryScale = "";
+	let previousInnerScale = "";
 
 	return (
 		scroll: number,
 		segment: TimelineSegment,
 		segmentProgress: number,
 	): void => {
+		if (!storyFill?.isConnected) {
+			storyFill =
+				progressRoot?.querySelector<HTMLElement>(
+					"[data-reader-story-progress-fill='true']",
+				) ?? null;
+			previousStoryScale = "";
+		}
+		if (!storyLabel?.isConnected) {
+			storyLabel =
+				progressRoot?.querySelector<HTMLElement>(
+					"[data-reader-story-progress='true']",
+				) ?? null;
+			previousStoryLabel = "";
+		}
+		if (!innerLabel?.isConnected) {
+			innerLabel =
+				progressRoot?.querySelector<HTMLElement>(
+					"[data-reader-inner-progress='true']",
+				) ?? null;
+			previousInnerLabel = "";
+		}
+		if (!innerFill?.isConnected) {
+			innerFill =
+				progressRoot?.querySelector<HTMLElement>(
+					"[data-reader-inner-progress-fill='true']",
+				) ?? null;
+			previousInnerScale = "";
+		}
 		const storyProgress = clamp(scroll / compiled.totalScroll, 0, 1);
-		if (storyFill) storyFill.style.transform = `scaleX(${storyProgress})`;
+		const storyScale = `scaleX(${storyProgress})`;
+		if (storyFill && storyScale !== previousStoryScale) {
+			storyFill.style.transform = storyScale;
+			previousStoryScale = storyScale;
+		}
 		if (storyLabel) {
-			storyLabel.textContent = `Story ${Math.round(storyProgress * 100)}%`;
+			const label = `Story ${Math.round(storyProgress * 100)}%`;
+			if (label !== previousStoryLabel) {
+				storyLabel.textContent = label;
+				previousStoryLabel = label;
+			}
 		}
 		if (!innerLabel) return;
 
+		let label: string;
+		let innerScale: string;
 		if (segment.type === "reading") {
-			innerLabel.textContent = `Page ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
-			if (innerFill) innerFill.style.transform = `scaleX(${segmentProgress})`;
-			return;
+			label = `Page ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
+			innerScale = `scaleX(${segmentProgress})`;
+		} else if (segment.type === "pause") {
+			label = `${segment.pauseType === "start" ? "Enter pause" : "Leave pause"} ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
+			innerScale = `scaleX(${segmentProgress})`;
+		} else {
+			label = `Transition ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
+			innerScale = "scaleX(0)";
 		}
-		if (segment.type === "pause") {
-			innerLabel.textContent = `${segment.pauseType === "start" ? "Enter pause" : "Leave pause"} ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
-			if (innerFill) innerFill.style.transform = `scaleX(${segmentProgress})`;
-			return;
+		if (label !== previousInnerLabel) {
+			innerLabel.textContent = label;
+			previousInnerLabel = label;
 		}
-		innerLabel.textContent = `Transition ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
-		if (innerFill) innerFill.style.transform = "scaleX(0)";
+		if (innerFill && innerScale !== previousInnerScale) {
+			innerFill.style.transform = innerScale;
+			previousInnerScale = innerScale;
+		}
 	};
 }

@@ -1,4 +1,5 @@
 import type { Anchor, CompiledReader } from "../types";
+import type { ReaderDomRegistry } from "./readerDomRegistry";
 
 /**
  * Returns the active anchor and its immediate route neighbors.
@@ -62,54 +63,51 @@ export function getRenderWindowBlockIds(
 }
 
 /**
- * Applies visibility and stacking to currently mounted reader blocks.
+ * Creates a visibility painter that updates mounted blocks only when the
+ * visible set, foreground set, or DOM registry changes.
  *
- * @param stage - Reader stage containing block elements.
- * @param progressRoot - Root containing fixed fragment layers.
- * @param anchors - Blocks that should remain visible.
- * @param foregroundBlockIds - Visible blocks that should paint above neighbors.
- * @returns Nothing.
+ * @param registry - Direct references to mounted reader elements.
+ * @returns Cached visibility painter.
  */
-export function paintVisibleAnchors(
-	stage: HTMLElement,
-	progressRoot: HTMLElement | null,
-	anchors: Anchor[],
-	foregroundBlockIds: Set<string>,
-): void {
-	const visibleIds = new Set(anchors.map((anchor) => anchor.block.id));
-	const mounted = stage.querySelectorAll<HTMLElement>("[data-reader-block-id]");
-	for (const element of mounted) {
-		const blockId = element.dataset.readerBlockId;
-		if (!blockId) continue;
-		const visible = visibleIds.has(blockId);
-		element.style.visibility = visible ? "visible" : "hidden";
-		element.style.pointerEvents = visible ? "auto" : "none";
-		element.style.zIndex = visible
-			? foregroundBlockIds.has(blockId)
-				? "20"
-				: "5"
-			: "0";
-		for (const fixedElement of fixedElements(progressRoot, blockId)) {
-			fixedElement.style.visibility = visible ? "visible" : "hidden";
-			fixedElement.style.pointerEvents = visible ? "auto" : "none";
-		}
-	}
-}
+export function createReaderVisibilityPainter(
+	registry: ReaderDomRegistry,
+): (anchors: Anchor[], foregroundBlockIds: Set<string>) => void {
+	let previousKey = "";
 
-/**
- * Finds fixed fragment layers for one block.
- *
- * @param progressRoot - Reader DOM root.
- * @param blockId - Owning block id.
- * @returns Fixed layer elements.
- */
-function fixedElements(
-	progressRoot: HTMLElement | null,
-	blockId: string,
-): HTMLElement[] {
-	return Array.from(
-		progressRoot?.querySelectorAll<HTMLElement>(
-			`[data-reader-fixed-block-id="${blockId}"]`,
-		) ?? [],
-	);
+	return (anchors, foregroundBlockIds): void => {
+		const visibleIds = new Set(anchors.map((anchor) => anchor.block.id));
+		const visibleKey = anchors.map((anchor) => anchor.block.id).join("|");
+		const foregroundKey = [...foregroundBlockIds].join("|");
+		const key = `${registry.getRevision()}:${visibleKey}:${foregroundKey}`;
+		if (key === previousKey) return;
+		previousKey = key;
+
+		for (const [blockId, element] of registry.blockElementById) {
+			const visible = visibleIds.has(blockId);
+			const visibility = visible ? "visible" : "hidden";
+			const pointerEvents = visible ? "auto" : "none";
+			const zIndex = visible
+				? foregroundBlockIds.has(blockId)
+					? "20"
+					: "5"
+				: "0";
+			if (element.style.visibility !== visibility) {
+				element.style.visibility = visibility;
+			}
+			if (element.style.pointerEvents !== pointerEvents) {
+				element.style.pointerEvents = pointerEvents;
+			}
+			if (element.style.zIndex !== zIndex) element.style.zIndex = zIndex;
+
+			for (const fixedElement of registry.fixedElementsByBlockId.get(blockId) ??
+				[]) {
+				if (fixedElement.style.visibility !== visibility) {
+					fixedElement.style.visibility = visibility;
+				}
+				if (fixedElement.style.pointerEvents !== pointerEvents) {
+					fixedElement.style.pointerEvents = pointerEvents;
+				}
+			}
+		}
+	};
 }

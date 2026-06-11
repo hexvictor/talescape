@@ -9,7 +9,10 @@ import { useViewportSize } from "./useViewportSize";
 
 export function useReaderViewportController() {
 	const state = useReaderViewportState();
-	const viewport = useViewportSize();
+	const viewport = useViewportSize({
+		maximumRightInsetPx: state.hubOpen ? 448 : 0,
+		rightInsetRatio: state.hubOpen ? 0.42 : 0,
+	});
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const choosePath = useChooseReaderPath();

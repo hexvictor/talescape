@@ -22,6 +22,8 @@ export function ReaderBlock({
 	return (
 		<article
 			data-reader-block-id={anchor.block.id}
+			data-reader-component="ReaderBlock"
+			data-reader-role="block-container"
 			className="absolute flex items-center justify-center overflow-visible"
 			style={
 				{

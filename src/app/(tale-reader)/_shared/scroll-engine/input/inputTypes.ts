@@ -7,3 +7,8 @@ export type ReaderInputControllerOptions = {
 	setDirection: (direction: ScrollDirection) => void;
 	totalScroll: number;
 };
+
+export type ReaderKeyboardInputControllerOptions =
+	ReaderInputControllerOptions & {
+		scrollToTimelineEdge: (edge: "end" | "start") => void;
+	};

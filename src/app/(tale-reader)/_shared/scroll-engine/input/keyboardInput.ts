@@ -3,10 +3,10 @@ import { clamp } from "../../services/readerMath";
 import { NEW_READER_INPUT_SETTINGS } from "../readerInputSettings";
 import type { ScrollDirection } from "../scrollSnapModel";
 import { shouldLetElementHandleInput } from "./inputTarget";
-import type { ReaderInputControllerOptions } from "./inputTypes";
+import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
 
 /**
- * Attaches accelerated arrow, page, home, and end keyboard navigation.
+ * Attaches reading input plus accelerated Home and End travel.
  *
  * @param options - Shared input controller dependencies.
  * @returns Listener and timer cleanup.
@@ -18,8 +18,9 @@ export function attachKeyboardInput({
 	driver,
 	scheduleSnap,
 	setDirection,
+	scrollToTimelineEdge,
 	totalScroll,
-}: ReaderInputControllerOptions): () => void {
+}: ReaderKeyboardInputControllerOptions): () => void {
 	let heldDirection: ScrollDirection | null = null;
 	let target: number | null = null;
 	let multiplier = 1;
@@ -112,9 +113,7 @@ export function attachKeyboardInput({
 
 		if (event.key === "Home" || event.key === "End") {
 			event.preventDefault();
-			driver.scrollTo(event.key === "Home" ? 0 : totalScroll, "smooth", {
-				duration: 0.34,
-			});
+			scrollToTimelineEdge(event.key === "Home" ? "start" : "end");
 			return;
 		}
 		if (

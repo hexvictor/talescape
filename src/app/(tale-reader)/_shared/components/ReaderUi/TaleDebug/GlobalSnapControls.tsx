@@ -28,7 +28,11 @@ export function GlobalSnapControls(): React.JSX.Element {
 	};
 
 	return (
-		<div className="flex items-center gap-1 border-white/10 border-b px-3 py-2">
+		<div
+			data-reader-component="GlobalSnapControls"
+			data-reader-role="snap-settings"
+			className="flex items-center gap-1 border-white/10 border-b px-3 py-2"
+		>
 			<span className="mr-auto text-[10px] text-white/42 uppercase">
 				All blocks
 			</span>

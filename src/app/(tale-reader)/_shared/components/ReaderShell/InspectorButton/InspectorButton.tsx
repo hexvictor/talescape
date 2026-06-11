@@ -15,7 +15,7 @@ export function InspectorButton({
 	position?: "block" | "fragment";
 	revealOnHover?: boolean;
 	target: ReaderInspectorTarget;
-}) {
+}): React.JSX.Element | null {
 	const { inspectorControlsOpen, mode, openInspector } =
 		useInspectorButtonState();
 	if (mode !== "edit" || !inspectorControlsOpen) return null;
@@ -23,6 +23,8 @@ export function InspectorButton({
 	return (
 		<button
 			data-reader-ui="true"
+			data-reader-component="InspectorButton"
+			data-reader-role="inspector-control"
 			type="button"
 			aria-label={label}
 			title={label}

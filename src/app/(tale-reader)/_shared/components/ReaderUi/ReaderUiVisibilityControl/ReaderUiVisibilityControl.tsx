@@ -43,7 +43,9 @@ export function ReaderUiVisibilityControl({
 	return (
 		<div
 			data-reader-ui="true"
-			className="pointer-events-auto absolute bottom-4 left-4"
+			data-reader-component="ReaderUiVisibilityControl"
+			data-reader-role="visibility-control"
+			className="pointer-events-auto absolute bottom-1 left-2"
 			onMouseEnter={() => setOpen(true)}
 			onMouseLeave={() => setOpen(false)}
 		>
@@ -55,6 +57,8 @@ export function ReaderUiVisibilityControl({
 							return (
 								<button
 									key={option.mode}
+									data-reader-component="ReaderUiVisibilityControl"
+									data-reader-role="visibility-option"
 									type="button"
 									className={clsx(
 										"flex items-center gap-2 rounded px-2 py-2 text-left text-xs transition",
@@ -77,8 +81,8 @@ export function ReaderUiVisibilityControl({
 				aria-label="Change reader UI visibility"
 				aria-expanded={open}
 				className={clsx(
-					"grid h-10 w-10 place-items-center rounded-lg border border-white/12 bg-black/72 text-white shadow-2xl backdrop-blur-md transition",
-					mode === "hidden" ? "opacity-20 hover:opacity-100" : "opacity-75",
+					"grid h-10 w-10 place-items-center rounded-lg border border-white/12 bg-black/72 text-white opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					mode === "hidden" && "opacity-15",
 				)}
 				onClick={onToggle}
 			>

@@ -34,7 +34,12 @@ export function NodeRenderer({
 	if (!node) return null;
 
 	return (
-		<div data-reader-node-id={node.id} style={getNodeStyle(node)}>
+		<div
+			data-reader-component="NodeRenderer"
+			data-reader-node-id={node.id}
+			data-reader-role="layout-node"
+			style={getNodeStyle(node)}
+		>
 			{node.children.map((child, index) => {
 				if (child.type === "node") {
 					return (
@@ -92,6 +97,9 @@ function FragmentFrame({
 }) {
 	return (
 		<div
+			data-reader-component="FragmentFrame"
+			data-reader-fragment-id={fragment.id}
+			data-reader-role="node-fragment-frame"
 			className="relative min-w-0"
 			style={getNodeFragmentStyle(fragment.style, parentNode)}
 		>

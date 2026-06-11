@@ -6,13 +6,19 @@ import { attachWheelInput } from "./input/wheelInput";
 import type { ReaderScrollDriver } from "./scrollDriver";
 import type { ReaderSnapModel, ScrollDirection } from "./scrollSnapModel";
 
+export type ReaderInputBindings = {
+	cancelPendingSnap: () => void;
+	cleanup: () => void;
+};
+
 /**
  * Attaches all input adapters used by the reader scroll driver.
  *
  * @param totalScroll - Maximum engine scroll position.
  * @param driver - Scroll driver receiving normalized input.
  * @param snapModel - Model used to resolve nearby snap points.
- * @returns Cleanup function for all listeners and timers.
+ * @param scrollToTimelineEdge - Accelerated Home and End navigation.
+ * @returns Input cleanup and pending-snap cancellation controls.
  *
  * @example
  * const cleanup = attachReaderInputBindings(totalScroll, driver, snapModel);
@@ -21,7 +27,8 @@ export function attachReaderInputBindings(
 	totalScroll: number,
 	driver: ReaderScrollDriver,
 	snapModel: ReaderSnapModel,
-): () => void {
+	scrollToTimelineEdge: (edge: "end" | "start") => void,
+): ReaderInputBindings {
 	logReaderDiagnostic("input bindings attached", { totalScroll });
 	let direction: ScrollDirection = 1;
 	const setDirection = (nextDirection: ScrollDirection) => {
@@ -43,6 +50,7 @@ export function attachReaderInputBindings(
 			driver,
 			scheduleSnap: snapController.schedule,
 			setDirection,
+			scrollToTimelineEdge,
 			totalScroll,
 		}),
 		attachTouchInput({
@@ -53,9 +61,12 @@ export function attachReaderInputBindings(
 		}),
 	];
 
-	return () => {
-		logReaderDiagnostic("input bindings removed");
-		for (const cleanup of cleanups) cleanup();
-		snapController.cleanup();
+	return {
+		cancelPendingSnap: snapController.cleanup,
+		cleanup: () => {
+			logReaderDiagnostic("input bindings removed");
+			for (const cleanup of cleanups) cleanup();
+			snapController.cleanup();
+		},
 	};
 }

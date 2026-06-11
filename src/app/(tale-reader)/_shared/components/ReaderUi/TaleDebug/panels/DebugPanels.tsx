@@ -39,7 +39,11 @@ export function SummaryPanel({
 	seenBlocks: number;
 }) {
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="DebugSummaryPanel"
+			data-reader-role="debug-panel"
+			className="space-y-3"
+		>
 			<DebugCard title="Now reading">
 				<DebugField label="Phase" value={phase} />
 				<DebugField label="Block" value={blockTitle} />
@@ -78,7 +82,11 @@ export function NavigationPanel({
 	part: TalePart | null;
 }) {
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="NavigationDebugPanel"
+			data-reader-role="debug-panel"
+			className="space-y-3"
+		>
 			<DebugCard title="Block and branch">
 				<DebugField label="Block id" value={block?.id} />
 				<DebugField label="Title" value={block?.title} />
@@ -107,7 +115,11 @@ export function NavigationPanel({
 export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 	const progress = useReaderStore((state) => state.progress.data);
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="ProgressDebugPanel"
+			data-reader-role="debug-panel"
+			className="space-y-3"
+		>
 			<DebugCard title="Saved position">
 				<DebugField label="Block" value={progress.blockId} />
 				<DebugField
@@ -160,7 +172,11 @@ export function SegmentsPanel({
 	segments: TimelineSegment[];
 }) {
 	return (
-		<div className="space-y-2">
+		<div
+			data-reader-component="SegmentsDebugPanel"
+			data-reader-role="debug-panel"
+			className="space-y-2"
+		>
 			{segments.map((segment) => (
 				<div
 					key={`${segment.index}-${segment.type}`}
@@ -198,7 +214,11 @@ export function AnchorsPanel({
 	anchors: Anchor[];
 }) {
 	return (
-		<div className="space-y-2">
+		<div
+			data-reader-component="AnchorsDebugPanel"
+			data-reader-role="debug-panel"
+			className="space-y-2"
+		>
 			{anchors.map((anchor) => (
 				<div
 					key={anchor.id}

@@ -4,7 +4,18 @@ import { useReaderStore } from "../../../../contexts/ReaderStoreContext";
 import { getBranchColor } from "../../../../services/branchColors";
 import type { ResolvedTaleFragment, TalePath } from "../../../../types";
 
-function customStyle(fragment: ResolvedTaleFragment) {
+/**
+ * Resolves authored visual overrides for a choice button fragment.
+ *
+ * @param fragment - Resolved choice fragment.
+ * @returns Inline style values supported by the choice control.
+ *
+ * @example
+ * const style = getChoiceButtonStyle(fragment);
+ */
+function getChoiceButtonStyle(
+	fragment: ResolvedTaleFragment,
+): React.CSSProperties {
 	return {
 		background: fragment.style?.backgroundCss,
 		border: fragment.style?.border,
@@ -20,7 +31,7 @@ export function ChoiceButtonFragment({
 }: {
 	fragment: ResolvedTaleFragment;
 	onChoosePath: (path: TalePath) => void;
-}) {
+}): React.JSX.Element | null {
 	const tale = useReaderStore((state) => state.tale.data);
 	const path = fragment.pathId
 		? tale.indexMap.pathsById[fragment.pathId]
@@ -32,10 +43,13 @@ export function ChoiceButtonFragment({
 	return (
 		<button
 			data-reader-ui="true"
+			data-reader-component="ChoiceButtonFragment"
+			data-reader-role="choice-control"
+			data-reader-fragment-id={fragment.id}
 			type="button"
 			className="pointer-events-auto w-full rounded-lg border px-4 py-3 text-left shadow-2xl backdrop-blur-md transition hover:scale-[1.02] hover:bg-white/12"
 			style={{
-				...customStyle(fragment),
+				...getChoiceButtonStyle(fragment),
 				backgroundColor: isReturn ? "rgba(255,255,255,0.08)" : `${color}2e`,
 				borderColor: isReturn ? "rgba(255,255,255,0.14)" : `${color}96`,
 				color: isReturn ? undefined : color,

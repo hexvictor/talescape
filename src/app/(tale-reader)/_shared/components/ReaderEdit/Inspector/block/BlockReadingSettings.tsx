@@ -24,7 +24,11 @@ export function BlockReadingSettings({
 	onChange: BlockChangeHandler;
 }): React.JSX.Element {
 	return (
-		<DebugCard title="Reading">
+		<DebugCard
+			componentName="BlockReadingSettings"
+			readerRole="block-reading-settings"
+			title="Reading"
+		>
 			<Setting label="Length mode">
 				<select
 					className="h-9 w-full rounded border border-white/12 bg-black/35 px-2 text-white/82 text-xs"

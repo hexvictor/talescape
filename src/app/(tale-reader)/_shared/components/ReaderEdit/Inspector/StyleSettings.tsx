@@ -32,7 +32,11 @@ export function StyleSettings({
 		onChange({ ...current, [key]: value || undefined });
 	};
 	return (
-		<section className={className}>
+		<section
+			data-reader-component="StyleSettings"
+			data-reader-role="style-settings"
+			className={className}
+		>
 			<DebugCard title={title}>
 				<TextSetting
 					label="Background"

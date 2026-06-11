@@ -16,12 +16,15 @@ export function ImageFragment({
 }: {
 	contentSized: boolean;
 	fragment: ResolvedTaleFragment;
-}) {
+}): React.JSX.Element {
 	const fillsAuthoredFrame =
 		fragment.style?.height !== undefined || fragment.style?.width !== undefined;
 
 	return (
 		<figure
+			data-reader-component="ImageFragment"
+			data-reader-role="image-content"
+			data-reader-fragment-id={fragment.id}
 			className={
 				fillsAuthoredFrame
 					? "h-full w-full overflow-hidden"

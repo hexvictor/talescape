@@ -64,9 +64,11 @@ export function TaleDebug(): React.JSX.Element {
 		return (
 			<button
 				data-reader-ui="true"
+				data-reader-component="TaleDebug"
+				data-reader-role="compact-debug-status"
 				type="button"
 				aria-label="Open reader debug"
-				className="pointer-events-auto absolute top-4 left-4 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-white/12 bg-black/72 px-3 py-2 text-left text-[#d9b56f] shadow-2xl backdrop-blur-md"
+				className="pointer-events-auto absolute top-4 left-4 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-white/12 bg-black/72 px-3 py-2 text-left text-[#d9b56f] opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100"
 				onClick={toggleDebug}
 			>
 				<Bug size={18} />

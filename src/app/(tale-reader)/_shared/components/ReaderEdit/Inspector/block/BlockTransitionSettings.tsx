@@ -37,7 +37,11 @@ export function BlockTransitionSettings({
 	);
 
 	return (
-		<DebugCard title="Transition">
+		<DebugCard
+			componentName="BlockTransitionSettings"
+			readerRole="block-transition-settings"
+			title="Transition"
+		>
 			<div className="col-span-2 grid grid-cols-[1fr_auto] gap-2">
 				<select
 					aria-label="Official transition template"

@@ -22,6 +22,8 @@ export function ReaderEditorOverlay(): React.JSX.Element | null {
 			{inspector ? (
 				<aside
 					data-reader-ui="true"
+					data-reader-component="ReaderEditorOverlay"
+					data-reader-role="editor-inspector"
 					className="pointer-events-auto absolute top-4 bottom-4 left-4 z-70 flex w-[min(38rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-white/12 bg-black/88 shadow-2xl backdrop-blur-md"
 				>
 					<header className="flex items-center justify-between border-white/10 border-b px-4 py-3">

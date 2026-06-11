@@ -22,7 +22,10 @@ export function FixedFragments({
 		anchor.block.fixedFragments.map((fragment, index) => (
 			<div
 				key={fragment.id}
+				data-reader-component="FixedFragments"
 				data-reader-fixed-block-id={anchor.block.id}
+				data-reader-fragment-id={fragment.id}
+				data-reader-role="fixed-fragment-frame"
 				className="pointer-events-auto invisible absolute"
 				style={positionedStyle(fragment.placement)}
 			>

@@ -43,7 +43,11 @@ export function DebugLocationDetails({
 	] as const;
 
 	return (
-		<span className="mt-1 hidden grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] text-white/38 md:grid">
+		<span
+			data-reader-component="DebugLocationDetails"
+			data-reader-role="location-summary"
+			className="mt-1 hidden grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] text-white/38 md:grid"
+		>
 			{items.map(([label, number, id]) => (
 				<span key={label} className="truncate">
 					{label} {number > 0 ? number : "?"} · {id}

@@ -25,7 +25,7 @@ const phaseText: Record<LayoutPhase, string> = {
  * @example
  * <ReaderLoading />
  */
-export function ReaderLoading() {
+export function ReaderLoading(): React.JSX.Element {
 	const { phase, ready, setPhase, setReady, setStatus, targetProgress, title } =
 		useReaderLoadingState();
 	const progress = useSmoothedLoadingProgress(targetProgress);
@@ -43,6 +43,8 @@ export function ReaderLoading() {
 			{visible ? (
 				<motion.div
 					key="reader-loading"
+					data-reader-component="ReaderLoading"
+					data-reader-role="loading-overlay"
 					className="fixed inset-0 z-50 flex items-center justify-center bg-[#0d0b08] text-[#fff8e8]"
 					initial={{ opacity: 1 }}
 					animate={{ opacity: 1 }}

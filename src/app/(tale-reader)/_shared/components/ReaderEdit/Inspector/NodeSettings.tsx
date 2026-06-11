@@ -24,7 +24,11 @@ export function NodeSettings({
 	onChange: (nodes: TaleNode[], rootNodeId: string) => void;
 }): React.JSX.Element {
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="NodeSettings"
+			data-reader-role="node-settings"
+			className="space-y-3"
+		>
 			<DebugCard title="Node tree">
 				<DebugField label="Root" value={block.rootNodeId} />
 				<DebugField label="Nodes" value={String(block.nodes.length)} />
@@ -65,7 +69,11 @@ function NodeEditor({
 	onChange: (node: TaleNode) => void;
 }): React.JSX.Element {
 	return (
-		<section className="rounded-md border border-white/10 bg-white/[0.035] p-3">
+		<section
+			data-reader-component="NodeEditor"
+			data-reader-role="node-settings-card"
+			className="rounded-md border border-white/10 bg-white/[0.035] p-3"
+		>
 			<div className="mb-3 flex items-center justify-between gap-2">
 				<h3 className="truncate font-black text-[#d9b56f] text-[10px] uppercase">
 					{node.id}

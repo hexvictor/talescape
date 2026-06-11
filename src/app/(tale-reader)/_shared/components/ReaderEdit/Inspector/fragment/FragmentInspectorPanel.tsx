@@ -56,7 +56,11 @@ export function FragmentInspectorPanel({
 	};
 
 	return (
-		<div className="-m-3">
+		<div
+			data-reader-component="FragmentInspectorPanel"
+			data-reader-role="fragment-inspector"
+			className="-m-3"
+		>
 			<InspectorHeader subtitle={block.title} title={fragment.id} />
 			<DebugTabs active={activeTab} onChange={setActiveTab} tabs={tabs} />
 			<div className="space-y-3 p-3">

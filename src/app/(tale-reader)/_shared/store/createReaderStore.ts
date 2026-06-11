@@ -59,6 +59,11 @@ export function createReaderStore(
 	});
 
 	return createStore<TaleReaderState>()(
-		devtools(initializer, { name: "TaleReaderStore" }),
+		devtools(initializer, {
+			enabled:
+				process.env.NODE_ENV === "development" &&
+				process.env.NEXT_PUBLIC_READER_STORE_DEVTOOLS === "true",
+			name: "TaleReaderStore",
+		}),
 	);
 }

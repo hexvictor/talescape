@@ -3,15 +3,15 @@ import { writeProgress } from "../../services/readerProgressStorage";
 import type { ReaderLocation, SavedReaderProgress, Tale } from "../../types";
 import type { TaleReaderState } from "../createReaderStore";
 
-function addUnique(items: string[], value: string) {
-	return items.includes(value) ? items : [...items, value];
+function addUniqueValues(items: string[], values: string[]): string[] {
+	return [...new Set([...items, ...values])];
 }
 
 export type ProgressSlice = {
 	progress: {
 		commitFragments: (fragmentIds: string[]) => void;
 		data: SavedReaderProgress;
-		markLocationReached: (location: ReaderLocation) => void;
+		markLocationsReached: (locations: ReaderLocation[]) => void;
 		savePosition: (blockId: string, innerProgress: number) => void;
 		setSelectedBranchIds: (ids: string[]) => void;
 	};
@@ -42,16 +42,31 @@ export const createProgressSlice =
 				set((state) => ({ progress: { ...state.progress, data: next } }));
 			},
 			data: initial,
-			markLocationReached: (location) => {
+			markLocationsReached: (locations) => {
+				if (locations.length === 0) return;
 				const progress = get().progress.data;
+				const latest = locations.at(-1);
+				if (!latest) return;
 				const next = {
 					...progress,
-					blockId: location.blockId,
+					blockId: latest.blockId,
 					innerProgress: 0,
-					seenBlockIds: addUnique(progress.seenBlockIds, location.blockId),
-					seenEntryIds: addUnique(progress.seenEntryIds, location.entryId),
-					seenPageIds: addUnique(progress.seenPageIds, location.pageId),
-					seenPartIds: addUnique(progress.seenPartIds, location.partId),
+					seenBlockIds: addUniqueValues(
+						progress.seenBlockIds,
+						locations.map((location) => location.blockId),
+					),
+					seenEntryIds: addUniqueValues(
+						progress.seenEntryIds,
+						locations.map((location) => location.entryId),
+					),
+					seenPageIds: addUniqueValues(
+						progress.seenPageIds,
+						locations.map((location) => location.pageId),
+					),
+					seenPartIds: addUniqueValues(
+						progress.seenPartIds,
+						locations.map((location) => location.partId),
+					),
 					updatedAt: new Date().toISOString(),
 				};
 				writeProgress(tale.id, next);

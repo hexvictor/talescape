@@ -22,7 +22,11 @@ export function BlockMotionSettings({
 	onChange: BlockChangeHandler;
 }): React.JSX.Element {
 	return (
-		<div className="space-y-3">
+		<div
+			data-reader-component="BlockMotionSettings"
+			data-reader-role="block-motion-settings"
+			className="space-y-3"
+		>
 			<BlockReadingSettings block={block} onChange={onChange} />
 			<BlockTransitionSettings block={block} onChange={onChange} />
 			<BlockAnimationSettings block={block} onChange={onChange} />

@@ -2,10 +2,8 @@
 
 import { useReaderOverlayState } from "../../../hooks/store/useReaderRuntimeSelectors";
 import { ReaderEditorOverlay } from "../../ReaderEdit/ReaderEditorOverlay";
-import { ContentsNavigator } from "../../ReaderUi/ContentsNavigator/ContentsNavigator";
 import { EntryNavigator } from "../../ReaderUi/EntryNavigator/EntryNavigator";
 import { PageNavigator } from "../../ReaderUi/PageNavigator/PageNavigator";
-import { ReaderHub } from "../../ReaderUi/ReaderHub/ReaderHub";
 import { ReaderProgress } from "../../ReaderUi/ReaderProgress/ReaderProgress";
 import { ReaderScrollCue } from "../../ReaderUi/ReaderScrollCue/ReaderScrollCue";
 import { ReaderUiVisibilityControl } from "../../ReaderUi/ReaderUiVisibilityControl/ReaderUiVisibilityControl";
@@ -28,24 +26,26 @@ export function ReaderOverlayUi(): React.JSX.Element {
 	const showTools = visibilityMode === "all";
 
 	return (
-		<div className="pointer-events-none absolute inset-0 z-50">
+		<div
+			data-reader-component="ReaderOverlayUi"
+			data-reader-role="reader-overlay"
+			className="pointer-events-none absolute inset-0 z-50"
+		>
+			<ReaderProgress visible={showProgress} />
 			{showNavigation ? (
 				<>
-					<ContentsNavigator />
 					<EntryNavigator />
 					<PageNavigator />
 				</>
 			) : null}
 			{showProgress ? (
-				<>
-					<ReaderProgress />
-					{scrollCue ? <ReaderScrollCue direction={scrollCue} /> : null}
-				</>
+				scrollCue ? (
+					<ReaderScrollCue direction={scrollCue} />
+				) : null
 			) : null}
 			{showTools ? (
 				<>
 					<TaleDebug />
-					<ReaderHub />
 					<ReaderEditorOverlay />
 				</>
 			) : null}

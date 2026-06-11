@@ -37,6 +37,8 @@ export function ReaderStage({
 		<>
 			<div
 				ref={stageRef}
+				data-reader-component="ReaderStage"
+				data-reader-role="camera-stage"
 				className="absolute inset-0"
 				style={{
 					transform: `translate3d(${viewport.width / 2}px, ${viewport.height / 2}px, 0)`,
@@ -52,7 +54,9 @@ export function ReaderStage({
 				))}
 			</div>
 			<div
+				data-reader-component="ReaderStage"
 				data-reader-fixed-layer="true"
+				data-reader-role="fixed-fragment-layer"
 				className="pointer-events-none absolute inset-0 z-20"
 			/>
 		</>

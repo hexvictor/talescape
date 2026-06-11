@@ -9,7 +9,12 @@ export function QuoteFragment({
 }): React.JSX.Element {
 	const paragraphs = (fragment.text ?? "").split(/\n{2,}/).filter(Boolean);
 	return (
-		<blockquote className="rounded-lg border border-[#d9b56f]/35 bg-[#d9b56f]/14 p-5 font-semibold text-xl leading-8 shadow-xl backdrop-blur-md">
+		<blockquote
+			data-reader-component="QuoteFragment"
+			data-reader-role="quote-content"
+			data-reader-fragment-id={fragment.id}
+			className="rounded-lg border border-[#d9b56f]/35 bg-[#d9b56f]/14 p-5 font-semibold text-xl leading-8 shadow-xl backdrop-blur-md"
+		>
 			<div className="space-y-6">
 				{paragraphs.map((paragraph, index) => (
 					<p key={`${fragment.id}-${index}`}>{paragraph}</p>

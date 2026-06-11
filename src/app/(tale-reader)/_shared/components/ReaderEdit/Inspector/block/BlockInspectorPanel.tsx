@@ -48,7 +48,11 @@ export function BlockInspectorPanel({ blockId }: { blockId: string }) {
 	};
 
 	return (
-		<div className="-m-3">
+		<div
+			data-reader-component="BlockInspectorPanel"
+			data-reader-role="block-inspector"
+			className="-m-3"
+		>
 			<InspectorHeader subtitle={block.id} title={block.title} />
 			<DebugTabs active={activeTab} onChange={setActiveTab} tabs={tabs} />
 			<div className="space-y-3 p-3">
