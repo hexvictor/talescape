@@ -2,6 +2,11 @@
 
 import type { CSSProperties } from "react";
 import type { ReaderStyle, TaleNode } from "../../../types";
+import {
+	getReaderDisplayStyle,
+	getReaderLayoutItemStyle,
+	getSharedReaderStyle,
+} from "./readerStyleProperties";
 
 type FlexNode = Extract<TaleNode, { mode: "flex" }>;
 type GridNode = Extract<TaleNode, { mode: "grid" }>;
@@ -10,14 +15,25 @@ type GridNode = Extract<TaleNode, { mode: "grid" }>;
  * Converts node style config into DOM CSS for the node container.
  *
  * @param node - The node being rendered.
+ * @param measurement - Whether intrinsic block size is being measured.
  * @returns CSS properties for the node wrapper.
  *
  * @example
  * const style = getNodeStyle(node);
  */
-export function getNodeStyle(node: TaleNode): CSSProperties {
+export function getNodeStyle(
+	node: TaleNode,
+	measurement = false,
+): CSSProperties {
 	const style = node.style;
 	const base = getBaseNodeStyle(node, style);
+	if (
+		measurement &&
+		typeof base.height === "string" &&
+		base.height.trim().endsWith("%")
+	) {
+		base.height = "auto";
+	}
 
 	if (node.mode === "grid") {
 		return getGridNodeStyle(node, style, base);
@@ -30,7 +46,7 @@ export function getNodeStyle(node: TaleNode): CSSProperties {
 	if (node.mode === "free") {
 		return {
 			...base,
-			height: "100%",
+			height: measurement ? "auto" : "100%",
 			position: "relative",
 			width: "100%",
 		};
@@ -61,32 +77,9 @@ export function getNodeFragmentStyle(
 ): CSSProperties {
 	const parentIsGrid = parentNode.mode === "grid";
 	return {
-		background: style?.background ?? style?.backgroundCss,
-		backgroundImage: style?.backgroundImage
-			? `url(${style.backgroundImage})`
-			: undefined,
-		border: style?.border,
-		borderRadius: style?.borderRadius,
-		boxShadow: style?.boxShadow,
-		color: style?.color,
-		fontSize: style?.fontSize,
-		fontWeight: style?.fontWeight,
-		height: style?.height,
-		gridArea: parentIsGrid ? style?.gridArea : undefined,
-		gridColumn: parentIsGrid ? style?.gridColumn : undefined,
-		gridRow: parentIsGrid ? style?.gridRow : undefined,
-		margin: style?.margin,
-		lineHeight: style?.lineHeight,
-		maxHeight: style?.maxHeight,
-		maxWidth: style?.maxWidth,
-		minHeight: style?.minHeight,
-		minWidth: style?.minWidth,
-		opacity: style?.opacity,
-		overflow: style?.overflow,
-		padding: style?.padding,
-		textAlign: style?.textAlign,
-		width: style?.width,
-		zIndex: style?.zIndex,
+		...getSharedReaderStyle(style),
+		...getReaderLayoutItemStyle(style, parentIsGrid),
+		...getReaderDisplayStyle(style),
 	} satisfies CSSProperties;
 }
 
@@ -105,33 +98,10 @@ function getBaseNodeStyle(
 	style: ReaderStyle | undefined,
 ): CSSProperties {
 	return {
-		background: style?.background ?? style?.backgroundCss,
-		backgroundImage: style?.backgroundImage
-			? `url(${style.backgroundImage})`
-			: undefined,
-		border: style?.border,
-		borderRadius: style?.borderRadius,
-		boxShadow: style?.boxShadow,
-		color: style?.color,
-		fontSize: style?.fontSize,
-		fontWeight: style?.fontWeight,
-		height: style?.height,
-		gridArea: style?.gridArea,
-		gridColumn: style?.gridColumn,
-		gridRow: style?.gridRow,
-		margin: style?.margin,
-		lineHeight: style?.lineHeight,
-		maxHeight: style?.maxHeight,
-		maxWidth: style?.maxWidth,
-		minHeight: style?.minHeight,
-		minWidth: style?.minWidth,
-		opacity: style?.opacity,
+		...getSharedReaderStyle(style),
+		...getReaderLayoutItemStyle(style),
 		overflow:
 			node.overflow === "clip" ? "hidden" : (style?.overflow ?? "visible"),
-		padding: style?.padding,
-		textAlign: style?.textAlign,
-		width: style?.width,
-		zIndex: style?.zIndex,
 	};
 }
 
@@ -154,14 +124,25 @@ function getGridNodeStyle(
 	return {
 		...base,
 		display: "grid",
+		alignContent: style?.alignContent,
+		alignItems: style?.alignItems,
+		columnGap: style?.columnGap,
 		gap: node.gap ?? style?.gap,
+		gridAutoColumns: style?.gridAutoColumns,
+		gridAutoFlow: style?.gridAutoFlow,
+		gridAutoRows: style?.gridAutoRows,
 		gridTemplateAreas: style?.gridTemplateAreas,
 		gridTemplateColumns:
 			style?.gridTemplateColumns ??
-			(node.columns ? `repeat(${node.columns}, minmax(0, 1fr))` : undefined),
+			(node.columns
+				? `repeat(${node.columns}, minmax(0, 1fr))`
+				: "minmax(0, 1fr)"),
 		gridTemplateRows:
 			style?.gridTemplateRows ??
-			(node.rows ? `repeat(${node.rows}, minmax(0, 1fr))` : undefined),
+			(node.rows ? `repeat(${node.rows}, minmax(0, 1fr))` : "auto"),
+		justifyContent: style?.justifyContent,
+		justifyItems: style?.justifyItems,
+		rowGap: style?.rowGap,
 	};
 }
 
@@ -184,10 +165,13 @@ function getFlexNodeStyle(
 	return {
 		...base,
 		alignItems: node.align ?? style?.alignItems,
+		alignContent: style?.alignContent,
+		columnGap: style?.columnGap,
 		display: "flex",
 		flexDirection: style?.flexDirection ?? node.direction ?? "row",
 		flexWrap: style?.flexWrap ?? (node.wrap ? "wrap" : "nowrap"),
 		gap: node.gap ?? style?.gap,
 		justifyContent: node.justify ?? style?.justifyContent,
+		rowGap: style?.rowGap,
 	};
 }

@@ -1,9 +1,15 @@
 "use client";
 
 import clsx from "clsx";
-import { PanelRightOpen, Pin, PinOff } from "lucide-react";
+import {
+	ChevronDown,
+	ChevronUp,
+	PanelRightOpen,
+	Pin,
+	PinOff,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEntryNavigatorState } from "../../../hooks/store/useReaderNavigationSelectors";
 import { usePinnedHoverPanel } from "../../../hooks/usePinnedHoverPanel";
 import { useRecentReaderActivity } from "../../../hooks/useRecentReaderActivity";
@@ -21,35 +27,69 @@ import { EntryTypeIcon, getEntryTypeLabel } from "./EntryTypeIcon";
  */
 export function EntryNavigator(): React.JSX.Element | null {
 	const {
+		activityFadeDelaySeconds,
 		compiled,
 		contents,
 		currentEntryId,
 		currentPageId,
 		currentPartId,
+		navigationPinsVisible,
+		navigationUsesSelectedPart,
+		reduceInactiveUiOpacity,
 		scrollApi,
 	} = useEntryNavigatorState();
 	const navigatorVisibility = usePinnedHoverPanel(true);
-	const [browseIndex, setBrowseIndex] = useState(0);
+	const [manualBrowseIndex, setManualBrowseIndex] = useState<number | null>(
+		null,
+	);
 	const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
 	const [partsOpen, setPartsOpen] = useState(false);
-	const entries = compiled?.entries ?? [];
+	const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
+	const touchPreviewEntryIdRef = useRef<string | null>(null);
+	const touchPreviewTriggeredRef = useRef(false);
+	const touchPreviewTimerRef = useRef<number | null>(null);
+	const allEntries = compiled?.entries ?? [];
+	const selectedPart =
+		contents.find((part) => part.id === selectedPartId) ?? null;
+	const entries =
+		navigationUsesSelectedPart && selectedPart
+			? selectedPart.entries
+			: allEntries;
 	const currentIndex = compiled?.entryIndexById[currentEntryId ?? ""] ?? -1;
-	const recentlyActive = useRecentReaderActivity(currentEntryId);
+	const visibleCurrentIndex = entries.findIndex(
+		(entry) => entry.id === currentEntryId,
+	);
+	const recentlyActive = useRecentReaderActivity(
+		currentEntryId,
+		activityFadeDelaySeconds * 1000,
+	);
 
+	useEffect(
+		() => () => window.clearTimeout(touchPreviewTimerRef.current ?? undefined),
+		[],
+	);
 	useEffect(() => {
-		if (currentIndex >= 0) setBrowseIndex(currentIndex);
-	}, [currentIndex]);
+		if (!navigationUsesSelectedPart || !currentPartId) return;
+		setSelectedPartId(currentPartId);
+		setManualBrowseIndex(null);
+	}, [currentPartId, navigationUsesSelectedPart]);
 
-	if (!compiled || entries.length <= 1 || currentIndex < 0) return null;
+	if (!compiled || allEntries.length <= 1 || currentIndex < 0) return null;
+	const activeIndex = visibleCurrentIndex >= 0 ? visibleCurrentIndex : 0;
+	const browseIndex = manualBrowseIndex ?? activeIndex;
 
 	const travelToBlock = (blockId: string): void => {
 		scrollApi?.capturePosition();
 		scrollApi?.scrollToBlock(blockId, { motion: "travel" });
 	};
+	const clearTouchPreview = (): void => {
+		window.clearTimeout(touchPreviewTimerRef.current ?? undefined);
+		touchPreviewTimerRef.current = null;
+	};
 	const currentPart =
 		contents.find((part) => part.id === currentPartId) ?? contents[0];
 	const navigationIndices = getBoundedNavigationIndices({
-		activeIndex: currentIndex,
+		activeIndex,
 		browseIndex,
 		itemCount: entries.length,
 	});
@@ -61,8 +101,9 @@ export function EntryNavigator(): React.JSX.Element | null {
 			data-reader-role="entry-navigation"
 			aria-label="Entry navigation"
 			className={clsx(
-				"group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 hidden items-center transition-opacity duration-300 md:flex",
-				recentlyActive ||
+				"group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 flex items-center transition-opacity duration-300 ",
+				!reduceInactiveUiOpacity ||
+					recentlyActive ||
 					navigatorVisibility.hovered ||
 					partsOpen ||
 					hoveredEntryId !== null
@@ -77,10 +118,13 @@ export function EntryNavigator(): React.JSX.Element | null {
 			}}
 			onWheel={(event) => {
 				event.preventDefault();
-				setBrowseIndex((current) =>
+				setManualBrowseIndex((current) =>
 					Math.max(
 						0,
-						Math.min(entries.length - 1, current + (event.deltaY > 0 ? 1 : -1)),
+						Math.min(
+							entries.length - 1,
+							(current ?? activeIndex) + (event.deltaY > 0 ? 1 : -1),
+						),
 					),
 				);
 			}}
@@ -112,24 +156,26 @@ export function EntryNavigator(): React.JSX.Element | null {
 						exit={{ opacity: 0, x: 24 }}
 						transition={{ duration: 0.2 }}
 					>
-						<button
-							data-reader-component="EntryNavigator"
-							data-reader-role="pin-control"
-							type="button"
-							aria-label={
-								navigatorVisibility.pinned
-									? "Unpin entry navigation"
-									: "Pin entry navigation"
-							}
-							className="-translate-x-1/2 -translate-y-1/2 absolute top-0 left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-white/12 bg-black/90 text-white/45 opacity-0 transition-opacity hover:text-white group-hover/entry-nav:opacity-100"
-							onClick={navigatorVisibility.togglePinned}
-						>
-							{navigatorVisibility.pinned ? (
-								<Pin size={11} />
-							) : (
-								<PinOff size={11} />
-							)}
-						</button>
+						{navigationPinsVisible ? (
+							<button
+								data-reader-component="EntryNavigator"
+								data-reader-role="pin-control"
+								type="button"
+								aria-label={
+									navigatorVisibility.pinned
+										? "Unpin entry navigation"
+										: "Pin entry navigation"
+								}
+								className="-translate-x-1/2 -translate-y-1/2 -top-3 absolute left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-white/12 bg-black/90 text-white/45 opacity-0 transition-opacity hover:text-white group-hover/entry-nav:opacity-100"
+								onClick={navigatorVisibility.togglePinned}
+							>
+								{navigatorVisibility.pinned ? (
+									<Pin size={11} />
+								) : (
+									<PinOff size={11} />
+								)}
+							</button>
+						) : null}
 						<div
 							data-reader-component="EntryNavigator"
 							data-reader-role="entry-panel"
@@ -141,10 +187,23 @@ export function EntryNavigator(): React.JSX.Element | null {
 								parts={contents}
 								onOpenChange={setPartsOpen}
 								onSelect={(part) => {
+									setSelectedPartId(part.id);
 									travelToBlock(part.firstBlockId);
 									setPartsOpen(false);
 								}}
 							/>
+							<button
+								type="button"
+								aria-label="Previous entry"
+								disabled={currentIndex <= 0}
+								className="grid h-6 w-10 place-items-center rounded-full text-white/42 hover:bg-white/8 hover:text-white disabled:opacity-20"
+								onClick={() => {
+									const previousEntry = allEntries[currentIndex - 1];
+									if (previousEntry) travelToBlock(previousEntry.firstBlockId);
+								}}
+							>
+								<ChevronUp size={13} />
+							</button>
 							<div className="flex flex-col items-center justify-center gap-1.5 px-2 py-1">
 								{navigationIndices.map((navigationIndex) => {
 									if (navigationIndex.type === "ellipsis") {
@@ -157,7 +216,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 												aria-label="Browse more entries"
 												className="grid h-5 w-10 place-items-center rounded-full text-[11px] text-white/32 transition hover:bg-white/8 hover:text-white/70"
 												onClick={() =>
-													setBrowseIndex(navigationIndex.targetIndex)
+													setManualBrowseIndex(navigationIndex.targetIndex)
 												}
 											>
 												•••
@@ -167,6 +226,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 
 									const entry = entries[navigationIndex.index];
 									if (!entry) return null;
+									const showFlyout =
+										hoveredEntryId === entry.id && entry.pages.length > 1;
 
 									return (
 										<div
@@ -189,11 +250,44 @@ export function EntryNavigator(): React.JSX.Element | null {
 													"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg transition",
 													entry.id === currentEntryId
 														? "border-[#d9b56f] bg-[#d9b56f] text-black"
-														: navigationIndex.index === browseIndex
-															? "border-white/35 bg-white/12 text-white"
-															: "border-white/12 bg-white/6 text-white/65 hover:bg-white/12 hover:text-white",
+														: entry.hasChoiceBlock
+															? "border-[#8bcf90]/45 bg-[#8bcf90]/10 text-[#d8f5da] hover:border-[#8bcf90]/75 hover:bg-[#8bcf90]/18 hover:text-white"
+															: navigationIndex.index === browseIndex
+																? "border-white/35 bg-white/12 text-white"
+																: "border-white/12 bg-white/6 text-white/65 hover:bg-white/12 hover:text-white",
 												)}
-												onClick={() => travelToBlock(entry.firstBlockId)}
+												onPointerDown={(event) => {
+													if (
+														event.pointerType !== "touch" ||
+														entry.pages.length <= 1
+													) {
+														return;
+													}
+													touchPreviewEntryIdRef.current = entry.id;
+													touchPreviewTriggeredRef.current = false;
+													clearTouchPreview();
+													touchPreviewTimerRef.current = window.setTimeout(
+														() => {
+															touchPreviewTriggeredRef.current = true;
+															setHoveredEntryId(entry.id);
+														},
+														380,
+													);
+												}}
+												onPointerUp={clearTouchPreview}
+												onPointerCancel={clearTouchPreview}
+												onClick={(event) => {
+													if (
+														touchPreviewTriggeredRef.current &&
+														touchPreviewEntryIdRef.current === entry.id
+													) {
+														event.preventDefault();
+														event.stopPropagation();
+														touchPreviewTriggeredRef.current = false;
+														return;
+													}
+													travelToBlock(entry.firstBlockId);
+												}}
 											>
 												{entry.type === "chapter" ? (
 													entry.chapterNumber
@@ -208,8 +302,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 												</span>
 											) : null}
 											<AnimatePresence>
-												{hoveredEntryId === entry.id &&
-												entry.pages.length > 1 ? (
+												{showFlyout ? (
 													<motion.div
 														className="-translate-y-1/2 absolute top-1/2 right-[calc(100%-1px)] z-50 pr-3"
 														initial={{ opacity: 0, x: 8 }}
@@ -229,6 +322,18 @@ export function EntryNavigator(): React.JSX.Element | null {
 									);
 								})}
 							</div>
+							<button
+								type="button"
+								aria-label="Next entry"
+								disabled={currentIndex >= allEntries.length - 1}
+								className="grid h-6 w-10 place-items-center rounded-full text-white/42 hover:bg-white/8 hover:text-white disabled:opacity-20"
+								onClick={() => {
+									const nextEntry = allEntries[currentIndex + 1];
+									if (nextEntry) travelToBlock(nextEntry.firstBlockId);
+								}}
+							>
+								<ChevronDown size={13} />
+							</button>
 						</div>
 					</motion.div>
 				) : null}

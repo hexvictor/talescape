@@ -1,7 +1,10 @@
 "use client";
 
+import { ReaderStoreProvider } from "../../contexts/ReaderStoreContext";
+import { usePersistReaderProgress } from "../../hooks/usePersistReaderProgress";
+import { readProgress } from "../../services/readerProgressStorage";
 import type { ReaderMode, SavedReaderProgress, Tale } from "../../types";
-import { ReaderRuntime } from "../ReaderCore/ReaderRuntime";
+import { ReaderViewport } from "../ReaderShell/ReaderViewport/ReaderViewport";
 
 type TaleReaderProps = {
 	mode?: ReaderMode;
@@ -21,6 +24,32 @@ type TaleReaderProps = {
  * @example
  * <TaleReader mode="edit" tale={tale} progress={progress} />
  */
-export function TaleReader({ mode = "read", progress, tale }: TaleReaderProps) {
-	return <ReaderRuntime mode={mode} progress={progress} tale={tale} />;
+export function TaleReader({
+	mode = "read",
+	progress,
+	tale,
+}: TaleReaderProps): React.JSX.Element {
+	return (
+		<ReaderStoreProvider
+			mode={mode}
+			progress={progress ?? readProgress(tale)}
+			tale={tale}
+		>
+			<ReaderProgressPersistence />
+			<ReaderViewport />
+		</ReaderStoreProvider>
+	);
+}
+
+/**
+ * Persists reader progress from inside the active reader store provider.
+ *
+ * @returns Null because this component owns only persistence effects.
+ *
+ * @example
+ * <ReaderProgressPersistence />
+ */
+function ReaderProgressPersistence(): null {
+	usePersistReaderProgress();
+	return null;
 }

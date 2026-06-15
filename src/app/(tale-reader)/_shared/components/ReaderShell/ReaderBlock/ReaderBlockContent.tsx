@@ -5,13 +5,42 @@ import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
 import { NodeRenderer } from "./NodeRenderer";
 import { positionedStyle } from "./positionedStyle";
 
+/**
+ * Renders the shared block content structure for the live reader or the
+ * offscreen intrinsic-size measurement pass.
+ *
+ * @param props - Block content properties.
+ * @param props.anchor - Block anchor and resolved content.
+ * @param props.mode - Live rendering or intrinsic measurement mode.
+ * @param props.onChoosePath - Choice path callback.
+ * @returns Block content layers.
+ */
 export function ReaderBlockContent({
 	anchor,
+	mode = "render",
 	onChoosePath,
 }: {
 	anchor: Anchor;
+	mode?: "measure" | "render";
 	onChoosePath: (path: TalePath) => void;
-}) {
+}): React.JSX.Element {
+	if (mode === "measure") {
+		return (
+			<div
+				data-reader-component="ReaderBlockContent"
+				data-reader-role="measurement-content-layer"
+				className="relative w-full overflow-visible"
+			>
+				<NodeRenderer
+					measurement
+					anchor={anchor}
+					nodeId={anchor.block.rootNodeId}
+					onChoosePath={onChoosePath}
+				/>
+			</div>
+		);
+	}
+
 	return (
 		<>
 			<div
@@ -27,7 +56,7 @@ export function ReaderBlockContent({
 				<div
 					data-reader-component="ReaderBlockContent"
 					data-reader-role="node-content-layer"
-					className="relative min-h-full w-full overflow-hidden"
+					className="relative h-full w-full overflow-hidden"
 				>
 					<NodeRenderer
 						anchor={anchor}
@@ -54,6 +83,15 @@ export function ReaderBlockContent({
 	);
 }
 
+/**
+ * Renders absolute fragments in either the clipped or overflowing block layer.
+ *
+ * @param props - Positioned fragment properties.
+ * @param props.anchor - Owning block anchor.
+ * @param props.fragments - Positioned fragments to render.
+ * @param props.onChoosePath - Choice path callback.
+ * @returns Positioned fragment elements.
+ */
 function PositionedFragments({
 	anchor,
 	fragments,
@@ -62,7 +100,7 @@ function PositionedFragments({
 	anchor: Anchor;
 	fragments: ResolvedTaleFragment[];
 	onChoosePath: (path: TalePath) => void;
-}) {
+}): React.JSX.Element[] {
 	return fragments.map((fragment, index) => (
 		<div
 			key={fragment.id}

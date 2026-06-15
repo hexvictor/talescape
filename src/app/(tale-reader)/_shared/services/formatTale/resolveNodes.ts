@@ -61,6 +61,7 @@ export function resolveBlockNodes(
 	const hasPlaced = buckets.placedFragments.length > 0;
 	const root: TaleNode = {
 		align: "center",
+		animations: emptyNodeAnimations(),
 		children: hasPlaced
 			? [{ nodeId: "flow", type: "node" }]
 			: groupChildren(buckets.flowFragments.map((item) => item.id)),
@@ -75,6 +76,7 @@ export function resolveBlockNodes(
 	if (hasPlaced) {
 		nodes.push({
 			align: "center",
+			animations: emptyNodeAnimations(),
 			children: groupChildren(buckets.flowFragments.map((item) => item.id)),
 			gap: 16,
 			id: "flow",
@@ -86,6 +88,20 @@ export function resolveBlockNodes(
 		});
 	}
 	return { nodes, rootNodeId: "root" };
+}
+
+/**
+ * Creates empty animation selections for generated fallback nodes.
+ *
+ * @returns Empty node animation configuration.
+ */
+function emptyNodeAnimations(): TaleNode["animations"] {
+	return {
+		ambient: { animations: [] },
+		entering: { animations: [] },
+		leaving: { animations: [] },
+		scrolling: { animations: [] },
+	};
 }
 
 function groupChildren(fragmentIds: string[]) {

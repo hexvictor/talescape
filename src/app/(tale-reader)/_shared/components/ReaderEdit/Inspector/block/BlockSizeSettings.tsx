@@ -27,109 +27,141 @@ export function BlockSizeSettings({
 	return (
 		<DebugCard
 			componentName="BlockSizeSettings"
+			contentClassName="grid-cols-1"
 			readerRole="block-size-settings"
 			title="Size and placement"
 		>
-			<Setting label="Sizing mode">
-				<select
-					className={settingClassName}
-					value={size.mode}
-					onChange={(event) =>
-						onChange(
-							event.target.value === "manual"
-								? {
-										height: 1,
-										heightUnit: "viewport",
-										horizontalAlignment: size.horizontalAlignment,
-										mode: "manual",
-										verticalAlignment: size.verticalAlignment,
-										width: 1,
-										widthUnit: "viewport",
-									}
-								: {
-										horizontalAlignment: size.horizontalAlignment,
-										mode: "content",
-										verticalAlignment: size.verticalAlignment,
-									},
-						)
+			<div className="rounded border border-white/8 bg-black/15 p-3">
+				<Setting label="Sizing mode">
+					<select
+						className={settingClassName}
+						value={size.mode}
+						onChange={(event) =>
+							onChange(
+								event.target.value === "manual"
+									? {
+											height: 1,
+											heightUnit: "viewport",
+											horizontalAlignment: size.horizontalAlignment,
+											mode: "manual",
+											verticalAlignment: size.verticalAlignment,
+											width: 1,
+											widthUnit: "viewport",
+										}
+									: {
+											horizontalAlignment: size.horizontalAlignment,
+											mode: "content",
+											verticalAlignment: size.verticalAlignment,
+										},
+							)
+						}
+					>
+						<option value="content">Content responsive</option>
+						<option value="manual">Explicit dimensions</option>
+					</select>
+				</Setting>
+			</div>
+			<SizeSettingsSection title="Dimensions">
+				{size.mode === "manual" ? (
+					<>
+						<UnitNumberSetting
+							label="Width"
+							unit={size.widthUnit}
+							value={size.width}
+							onChange={(width, widthUnit) =>
+								onChange({ ...size, width, widthUnit })
+							}
+						/>
+						<UnitNumberSetting
+							label="Height"
+							unit={size.heightUnit}
+							value={size.height}
+							onChange={(height, heightUnit) =>
+								onChange({ ...size, height, heightUnit })
+							}
+						/>
+					</>
+				) : (
+					<>
+						<OptionalUnitNumberSetting
+							label="Minimum width"
+							unit={size.minWidthUnit}
+							value={size.minWidth}
+							onChange={(minWidth, minWidthUnit) =>
+								onChange({ ...size, minWidth, minWidthUnit })
+							}
+						/>
+						<OptionalUnitNumberSetting
+							label="Minimum height"
+							unit={size.minHeightUnit}
+							value={size.minHeight}
+							onChange={(minHeight, minHeightUnit) =>
+								onChange({ ...size, minHeight, minHeightUnit })
+							}
+						/>
+						<OptionalUnitNumberSetting
+							label="Maximum width"
+							unit={size.maxWidthUnit}
+							value={size.maxWidth}
+							onChange={(maxWidth, maxWidthUnit) =>
+								onChange({ ...size, maxWidth, maxWidthUnit })
+							}
+						/>
+						<OptionalUnitNumberSetting
+							label="Maximum height"
+							unit={size.maxHeightUnit}
+							value={size.maxHeight}
+							onChange={(maxHeight, maxHeightUnit) =>
+								onChange({ ...size, maxHeight, maxHeightUnit })
+							}
+						/>
+					</>
+				)}
+			</SizeSettingsSection>
+			<SizeSettingsSection title="Viewport placement">
+				<AlignmentSetting
+					label="Horizontal"
+					options={["left", "center", "right"]}
+					value={size.horizontalAlignment}
+					onChange={(horizontalAlignment) =>
+						onChange({ ...size, horizontalAlignment })
 					}
-				>
-					<option value="content">Content responsive</option>
-					<option value="manual">Explicit dimensions</option>
-				</select>
-			</Setting>
-			{size.mode === "manual" ? (
-				<>
-					<UnitNumberSetting
-						label="Width"
-						unit={size.widthUnit}
-						value={size.width}
-						onChange={(width, widthUnit) =>
-							onChange({ ...size, width, widthUnit })
-						}
-					/>
-					<UnitNumberSetting
-						label="Height"
-						unit={size.heightUnit}
-						value={size.height}
-						onChange={(height, heightUnit) =>
-							onChange({ ...size, height, heightUnit })
-						}
-					/>
-				</>
-			) : (
-				<>
-					<OptionalUnitNumberSetting
-						label="Minimum width"
-						unit={size.minWidthUnit}
-						value={size.minWidth}
-						onChange={(minWidth, minWidthUnit) =>
-							onChange({ ...size, minWidth, minWidthUnit })
-						}
-					/>
-					<OptionalUnitNumberSetting
-						label="Minimum height"
-						unit={size.minHeightUnit}
-						value={size.minHeight}
-						onChange={(minHeight, minHeightUnit) =>
-							onChange({ ...size, minHeight, minHeightUnit })
-						}
-					/>
-					<OptionalUnitNumberSetting
-						label="Maximum width"
-						unit={size.maxWidthUnit}
-						value={size.maxWidth}
-						onChange={(maxWidth, maxWidthUnit) =>
-							onChange({ ...size, maxWidth, maxWidthUnit })
-						}
-					/>
-					<OptionalUnitNumberSetting
-						label="Maximum height"
-						unit={size.maxHeightUnit}
-						value={size.maxHeight}
-						onChange={(maxHeight, maxHeightUnit) =>
-							onChange({ ...size, maxHeight, maxHeightUnit })
-						}
-					/>
-				</>
-			)}
-			<AlignmentSetting
-				label="Horizontal placement"
-				options={["left", "center", "right"]}
-				value={size.horizontalAlignment}
-				onChange={(horizontalAlignment) =>
-					onChange({ ...size, horizontalAlignment })
-				}
-			/>
-			<AlignmentSetting
-				label="Vertical placement"
-				options={["top", "center", "bottom"]}
-				value={size.verticalAlignment}
-				onChange={(verticalAlignment) =>
-					onChange({ ...size, verticalAlignment })
-				}
-			/>
+				/>
+				<AlignmentSetting
+					label="Vertical"
+					options={["top", "center", "bottom"]}
+					value={size.verticalAlignment}
+					onChange={(verticalAlignment) =>
+						onChange({ ...size, verticalAlignment })
+					}
+				/>
+			</SizeSettingsSection>
 		</DebugCard>
+	);
+}
+
+/**
+ * Groups related block size controls into a responsive inspector section.
+ *
+ * @param props - Section props.
+ * @param props.children - Size controls rendered in the section.
+ * @param props.title - Section heading.
+ * @returns Grouped size settings.
+ */
+function SizeSettingsSection({
+	children,
+	title,
+}: {
+	children: React.ReactNode;
+	title: string;
+}): React.JSX.Element {
+	return (
+		<section className="rounded border border-white/8 bg-black/15 p-3">
+			<h4 className="mb-2 font-bold text-[10px] text-white/42 uppercase">
+				{title}
+			</h4>
+			<div className="grid grid-cols-1 gap-3 xl:grid-cols-2">{children}</div>
+		</section>
 	);
 }
 

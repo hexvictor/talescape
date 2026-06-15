@@ -21,8 +21,8 @@ export function getReadingCamera(
 		anchor.readingPathPoints,
 	);
 	return {
-		x: anchor.point.x + offset.x,
-		y: anchor.point.y + offset.y,
+		x: anchor.cameraPoint.x + offset.x,
+		y: anchor.cameraPoint.y + offset.y,
 	};
 }
 
@@ -35,49 +35,41 @@ export function getNextPoint(
 	current: Point,
 	viewport: ViewportSize,
 ): Point {
-	const flow = previous.block.resolved.flow;
+	const flow = nextBlock.transition.flow;
+	const exitCamera = getReadingCamera(previous, 1, viewport);
+	const entryOffset = getReadingCameraOffset(
+		nextSize,
+		nextBlock,
+		0,
+		viewport,
+		nextReadingPathPoints,
+	);
 	if (flow.type === "stack") {
-		const exitOffset = getReadingCameraOffset(
-			{ height: previous.height, width: previous.width },
-			previous.block,
-			1,
-			viewport,
-			previous.readingPathPoints,
-		);
-		const entryOffset = getReadingCameraOffset(
-			nextSize,
-			nextBlock,
-			0,
-			viewport,
-			nextReadingPathPoints,
-		);
 		return {
-			x:
-				current.x +
-				previous.viewportOffset.x -
-				nextViewportOffset.x +
-				exitOffset.x -
-				entryOffset.x,
-			y:
-				current.y +
-				previous.viewportOffset.y -
-				nextViewportOffset.y +
-				exitOffset.y -
-				entryOffset.y,
+			x: exitCamera.x - entryOffset.x,
+			y: exitCamera.y - entryOffset.y,
 		};
 	}
 
 	const vector = directionVector(flow.direction);
 	const spacing = resolveSpacing(flow.spacing, viewport);
-	const horizontalDistance =
-		(previous.width + nextSize.width) / 2 + Math.abs(vector.x) * spacing.x;
-	const verticalDistance =
-		(previous.height + nextSize.height) / 2 + Math.abs(vector.y) * spacing.y;
+	if (flow.placement === "cameraEdge") {
+		return getCameraEdgePoint({
+			entryOffset,
+			exitCamera,
+			spacing,
+			vector,
+			viewport,
+		});
+	}
 	const previousCenter = {
 		x: current.x + previous.viewportOffset.x,
 		y: current.y + previous.viewportOffset.y,
 	};
-
+	const horizontalDistance =
+		(previous.width + nextSize.width) / 2 + Math.abs(vector.x) * spacing.x;
+	const verticalDistance =
+		(previous.height + nextSize.height) / 2 + Math.abs(vector.y) * spacing.y;
 	const point = {
 		x:
 			previousCenter.x +
@@ -88,28 +80,43 @@ export function getNextPoint(
 			Math.sign(vector.y) * verticalDistance -
 			nextViewportOffset.y,
 	};
-	const exitOffset = getReadingCameraOffset(
-		{ height: previous.height, width: previous.width },
-		previous.block,
-		1,
-		viewport,
-		previous.readingPathPoints,
-	);
-	const entryOffset = getReadingCameraOffset(
-		nextSize,
-		nextBlock,
-		0,
-		viewport,
-		nextReadingPathPoints,
-	);
-
 	if (vector.x !== 0 && vector.y === 0) {
-		point.y += exitOffset.y - entryOffset.y;
+		point.y = exitCamera.y - entryOffset.y;
 	}
 	if (vector.y !== 0 && vector.x === 0) {
-		point.x += exitOffset.x - entryOffset.x;
+		point.x = exitCamera.x - entryOffset.x;
 	}
 	return point;
+}
+
+/**
+ * Places a destination block beside the camera's reading endpoint.
+ *
+ * @param options - Geometry values for the previous and destination blocks.
+ * @returns Destination block center in reader world coordinates.
+ *
+ * @example
+ * const point = getCameraEdgePoint(options);
+ */
+function getCameraEdgePoint({
+	entryOffset,
+	exitCamera,
+	spacing,
+	vector,
+	viewport,
+}: {
+	entryOffset: Point;
+	exitCamera: Point;
+	spacing: Point;
+	vector: Point;
+	viewport: ViewportSize;
+}): Point {
+	const horizontalDistance = viewport.width + Math.abs(vector.x) * spacing.x;
+	const verticalDistance = viewport.height + Math.abs(vector.y) * spacing.y;
+	return {
+		x: exitCamera.x + Math.sign(vector.x) * horizontalDistance - entryOffset.x,
+		y: exitCamera.y + Math.sign(vector.y) * verticalDistance - entryOffset.y,
+	};
 }
 
 /**
@@ -275,7 +282,7 @@ function pointAlongPath(points: Point[], progress: number) {
 	);
 }
 
-function directionVector(direction: Direction) {
+export function directionVector(direction: Direction) {
 	const vectors: Record<Direction, { x: number; y: number }> = {
 		down: { x: 0, y: 1 },
 		"down-left": { x: -0.82, y: 0.82 },

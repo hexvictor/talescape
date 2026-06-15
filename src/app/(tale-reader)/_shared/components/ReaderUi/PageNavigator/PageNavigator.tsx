@@ -19,11 +19,21 @@ import { PageNavigatorGrid } from "./PageNavigatorGrid";
  * <PageNavigator />
  */
 export function PageNavigator(): React.JSX.Element | null {
-	const { compiled, location, scrollApi } = usePageNavigatorState();
+	const {
+		activityFadeDelaySeconds,
+		compiled,
+		location,
+		navigationPinsVisible,
+		reduceInactiveUiOpacity,
+		scrollApi,
+	} = usePageNavigatorState();
 	const [open, setOpen] = useState(false);
 	const pendingPageIndexRef = useRef<number | null>(null);
 	const navigatorVisibility = usePinnedHoverPanel(true);
-	const recentlyActive = useRecentReaderActivity(location?.pageId ?? null);
+	const recentlyActive = useRecentReaderActivity(
+		location?.pageId ?? null,
+		activityFadeDelaySeconds * 1000,
+	);
 	const currentPageId = location?.pageId ?? null;
 	const compiledPages = compiled?.pages;
 
@@ -90,7 +100,10 @@ export function PageNavigator(): React.JSX.Element | null {
 			aria-label="Reader page navigation"
 			className={clsx(
 				"group/page-nav -translate-x-1/2 pointer-events-auto absolute bottom-0 left-1/2 z-40 max-w-[calc(100vw-2rem)] transition-opacity duration-300",
-				recentlyActive || navigatorVisibility.hovered || open
+				!reduceInactiveUiOpacity ||
+					recentlyActive ||
+					navigatorVisibility.hovered ||
+					open
 					? "opacity-100"
 					: "opacity-25 hover:opacity-100",
 			)}
@@ -147,27 +160,29 @@ export function PageNavigator(): React.JSX.Element | null {
 						exit={{ opacity: 0, y: 8 }}
 						transition={{ duration: 0.18 }}
 					>
-						<button
-							data-reader-component="PageNavigator"
-							data-reader-role="pin-control"
-							type="button"
-							aria-label={
-								navigatorVisibility.pinned
-									? "Unpin page navigation"
-									: "Pin page navigation"
-							}
-							className="-translate-x-1/2 -translate-y-1/2 absolute top-0 left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-white/12 bg-black/90 text-white/40 opacity-0 transition-opacity hover:text-white group-hover/page-nav:opacity-100"
-							onClick={() => {
-								navigatorVisibility.togglePinned();
-								if (navigatorVisibility.pinned) setOpen(false);
-							}}
-						>
-							{navigatorVisibility.pinned ? (
-								<Pin size={11} />
-							) : (
-								<PinOff size={11} />
-							)}
-						</button>
+						{navigationPinsVisible && !open ? (
+							<button
+								data-reader-component="PageNavigator"
+								data-reader-role="pin-control"
+								type="button"
+								aria-label={
+									navigatorVisibility.pinned
+										? "Unpin page navigation"
+										: "Pin page navigation"
+								}
+								className="-translate-x-1/2 -translate-y-1/2 -top-3 absolute left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-white/12 bg-black/90 text-white/40 opacity-0 transition-opacity hover:text-white group-hover/page-nav:opacity-100"
+								onClick={() => {
+									navigatorVisibility.togglePinned();
+									if (navigatorVisibility.pinned) setOpen(false);
+								}}
+							>
+								{navigatorVisibility.pinned ? (
+									<Pin size={11} />
+								) : (
+									<PinOff size={11} />
+								)}
+							</button>
+						) : null}
 						<div
 							data-reader-component="PageNavigator"
 							data-reader-role="page-controls"

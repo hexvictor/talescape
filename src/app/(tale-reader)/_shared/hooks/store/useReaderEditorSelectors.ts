@@ -6,8 +6,10 @@ import type { ReaderInspectorTarget, ReaderMode, Tale } from "../../types";
 
 type ReaderEditorOverlayState = {
 	closeInspector: TaleReaderState["editor"]["closeInspector"];
+	closeSecondaryInspector: TaleReaderState["editor"]["closeSecondaryInspector"];
 	inspector: ReaderInspectorTarget | null;
 	mode: ReaderMode;
+	secondaryInspector: ReaderInspectorTarget | null;
 };
 
 /**
@@ -21,8 +23,10 @@ type ReaderEditorOverlayState = {
 export function useReaderEditorOverlayState(): ReaderEditorOverlayState {
 	return useReaderStoreShallow((state) => ({
 		closeInspector: state.editor.closeInspector,
+		closeSecondaryInspector: state.editor.closeSecondaryInspector,
 		inspector: state.editor.inspector,
 		mode: state.editor.mode,
+		secondaryInspector: state.editor.secondaryInspector,
 	}));
 }
 
@@ -30,6 +34,7 @@ type InspectorButtonState = {
 	inspectorControlsOpen: boolean;
 	mode: ReaderMode;
 	openInspector: TaleReaderState["editor"]["openInspector"];
+	openSecondaryInspector: TaleReaderState["editor"]["openSecondaryInspector"];
 };
 
 /**
@@ -45,6 +50,7 @@ export function useInspectorButtonState(): InspectorButtonState {
 		inspectorControlsOpen: state.editor.inspectorControlsOpen,
 		mode: state.editor.mode,
 		openInspector: state.editor.openInspector,
+		openSecondaryInspector: state.editor.openSecondaryInspector,
 	}));
 }
 

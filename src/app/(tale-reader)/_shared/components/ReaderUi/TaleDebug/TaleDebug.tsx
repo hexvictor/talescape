@@ -1,6 +1,6 @@
 "use client";
 
-import { Bug, Settings2, X } from "lucide-react";
+import { Bug, ScanSearch, Settings2, X } from "lucide-react";
 import { useState } from "react";
 import { useReaderStoreShallow } from "../../../contexts/ReaderStoreContext";
 import { useTaleDebugState } from "../../../hooks/store/useReaderDebugSelectors";
@@ -43,6 +43,7 @@ export function TaleDebug(): React.JSX.Element {
 		inspectorControlsOpen,
 		mode,
 		open,
+		openInspector,
 		phase,
 		seenBlocks,
 		taleTitle,
@@ -106,21 +107,38 @@ export function TaleDebug(): React.JSX.Element {
 				</div>
 				<div className="flex items-center gap-1">
 					{mode === "edit" ? (
-						<button
-							type="button"
-							aria-label={
-								inspectorControlsOpen
-									? "Hide inspector buttons"
-									: "Show inspector buttons"
-							}
-							className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white"
-							onClick={toggleInspectorControls}
-						>
-							<Settings2
-								className={inspectorControlsOpen ? "text-[#d9b56f]" : undefined}
-								size={16}
-							/>
-						</button>
+						<>
+							<button
+								type="button"
+								aria-label="Inspect current block"
+								disabled={!location?.blockId}
+								className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white disabled:opacity-25"
+								onClick={() => {
+									if (location?.blockId) {
+										openInspector({ id: location.blockId, type: "block" });
+									}
+								}}
+							>
+								<ScanSearch size={16} />
+							</button>
+							<button
+								type="button"
+								aria-label={
+									inspectorControlsOpen
+										? "Hide inspector buttons"
+										: "Show inspector buttons"
+								}
+								className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white"
+								onClick={toggleInspectorControls}
+							>
+								<Settings2
+									className={
+										inspectorControlsOpen ? "text-[#d9b56f]" : undefined
+									}
+									size={16}
+								/>
+							</button>
+						</>
 					) : null}
 					<button
 						type="button"
@@ -138,6 +156,9 @@ export function TaleDebug(): React.JSX.Element {
 				{activeTab === "summary" ? (
 					<SummaryPanel
 						anchors={compiled?.anchors ?? []}
+						blockType={
+							block ? (block.isChoiceBlock ? "choice" : "standard") : undefined
+						}
 						blockTitle={block?.title}
 						branchTitle={branch?.title}
 						entryTitle={entry?.title}

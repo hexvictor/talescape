@@ -40,6 +40,7 @@ export function ChoiceButtonFragment({
 
 	const color = getBranchColor(tale, path.toBranchId);
 	const isReturn = path.type === "return";
+	const isTeleport = path.type === "teleport";
 	return (
 		<button
 			data-reader-ui="true"
@@ -50,9 +51,11 @@ export function ChoiceButtonFragment({
 			className="pointer-events-auto w-full rounded-lg border px-4 py-3 text-left shadow-2xl backdrop-blur-md transition hover:scale-[1.02] hover:bg-white/12"
 			style={{
 				...getChoiceButtonStyle(fragment),
-				backgroundColor: isReturn ? "rgba(255,255,255,0.08)" : `${color}2e`,
-				borderColor: isReturn ? "rgba(255,255,255,0.14)" : `${color}96`,
-				color: isReturn ? undefined : color,
+				backgroundColor:
+					isReturn || isTeleport ? "rgba(255,255,255,0.08)" : `${color}2e`,
+				borderColor:
+					isReturn || isTeleport ? "rgba(255,255,255,0.14)" : `${color}96`,
+				color: isReturn || isTeleport ? undefined : color,
 			}}
 			onClick={() => onChoosePath(path)}
 		>

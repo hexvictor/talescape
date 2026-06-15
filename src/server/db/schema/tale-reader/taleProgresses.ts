@@ -26,7 +26,7 @@ export const taleProgresses = createTable("tale_progress", (d) => ({
 	activePathIds: d.integer().array().notNull().default([]),
 	selectedBranchIds: d.integer().array().notNull().default([]),
 	seenPathIds: d.integer().array().notNull().default([]),
-	committedFragmentIds: d.integer().array().notNull().default([]),
+	committedAnimationIds: d.text().array().notNull().default([]),
 	seenBlockProgress: d
 		.numeric({ precision: 5, scale: 4 })
 		.notNull()

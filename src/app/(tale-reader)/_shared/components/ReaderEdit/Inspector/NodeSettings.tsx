@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ResolvedTaleBlock, TaleNode } from "../../../types";
 import {
 	DebugCard,
@@ -6,6 +7,9 @@ import {
 	settingClassName,
 } from "../../ReaderUi/TaleDebug/DebugPrimitives";
 import { NumberSetting } from "./InspectorValueFields";
+import { AnimationSelectionEditor } from "./AnimationSelectionEditor";
+import { LoopingAnimationEditor } from "./LoopingAnimationEditor";
+import { NodeHierarchyTree } from "./NodeHierarchyTree";
 import { StyleSettings } from "./StyleSettings";
 
 /**
@@ -23,29 +27,85 @@ export function NodeSettings({
 	block: ResolvedTaleBlock;
 	onChange: (nodes: TaleNode[], rootNodeId: string) => void;
 }): React.JSX.Element {
+	const rootNode = block.nodesById[block.rootNodeId] ?? block.nodes[0];
+	const firstEditableNode = rootNode?.children.find(
+		(child) => child.type === "node",
+	);
+	const [selectedNodeId, setSelectedNodeId] = useState(
+		firstEditableNode?.type === "node"
+			? firstEditableNode.nodeId
+			: block.rootNodeId,
+	);
+	const selectedNode =
+		block.nodesById[selectedNodeId] ??
+		block.nodesById[block.rootNodeId] ??
+		block.nodes[0];
+
+	const updateNode = (nextNode: TaleNode): void => {
+		onChange(
+			block.nodes.map((node) => (node.id === nextNode.id ? nextNode : node)),
+			block.rootNodeId,
+		);
+	};
+	const moveNode = (nodeId: string, parentNodeId: string | null): void => {
+		const movedNodes = block.nodes.map((node) => ({
+			...node,
+			children: node.children.filter(
+				(child) => child.type !== "node" || child.nodeId !== nodeId,
+			),
+			parentNodeId: node.id === nodeId ? parentNodeId : node.parentNodeId,
+		})) as TaleNode[];
+		if (parentNodeId) {
+			const parentIndex = movedNodes.findIndex(
+				(node) => node.id === parentNodeId,
+			);
+			const parent = movedNodes[parentIndex];
+			if (parent) {
+				movedNodes[parentIndex] = {
+					...parent,
+					children: [...parent.children, { nodeId, type: "node" }],
+				} as TaleNode;
+			}
+		}
+		onChange(movedNodes, block.rootNodeId);
+	};
+
 	return (
 		<div
 			data-reader-component="NodeSettings"
 			data-reader-role="node-settings"
 			className="space-y-3"
 		>
-			<DebugCard title="Node tree">
-				<DebugField label="Root" value={block.rootNodeId} />
+			<DebugCard title="Root layout">
 				<DebugField label="Nodes" value={String(block.nodes.length)} />
 			</DebugCard>
-			{block.nodes.map((node) => (
+			{rootNode ? (
 				<NodeEditor
-					key={node.id}
-					node={node}
+					key={rootNode.id}
+					node={rootNode}
 					nodes={block.nodes}
-					onChange={(next) =>
-						onChange(
-							block.nodes.map((item) => (item.id === node.id ? next : item)),
-							block.rootNodeId,
-						)
+					rootNodeId={block.rootNodeId}
+					onChange={updateNode}
+					onParentChange={() => undefined}
+				/>
+			) : null}
+			<NodeHierarchyTree
+				block={block}
+				selectedNodeId={selectedNode?.id ?? block.rootNodeId}
+				onSelectNode={setSelectedNodeId}
+			/>
+			{selectedNode && selectedNode.id !== block.rootNodeId ? (
+				<NodeEditor
+					key={selectedNode.id}
+					node={selectedNode}
+					nodes={block.nodes}
+					rootNodeId={block.rootNodeId}
+					onChange={updateNode}
+					onParentChange={(parentNodeId) =>
+						moveNode(selectedNode.id, parentNodeId)
 					}
 				/>
-			))}
+			) : null}
 		</div>
 	);
 }
@@ -63,11 +123,16 @@ function NodeEditor({
 	node,
 	nodes,
 	onChange,
+	onParentChange,
+	rootNodeId,
 }: {
 	node: TaleNode;
 	nodes: TaleNode[];
 	onChange: (node: TaleNode) => void;
+	onParentChange: (parentNodeId: string | null) => void;
+	rootNodeId: string;
 }): React.JSX.Element {
+	const descendantNodeIds = collectDescendantNodeIds(nodes, node.id);
 	return (
 		<section
 			data-reader-component="NodeEditor"
@@ -102,17 +167,16 @@ function NodeEditor({
 				<Setting label="Parent node">
 					<select
 						className={settingClassName}
+						disabled={node.id === rootNodeId}
 						value={node.parentNodeId ?? ""}
-						onChange={(event) =>
-							onChange({
-								...node,
-								parentNodeId: event.target.value || null,
-							} as TaleNode)
-						}
+						onChange={(event) => onParentChange(event.target.value || null)}
 					>
 						<option value="">None</option>
 						{nodes
-							.filter((item) => item.id !== node.id)
+							.filter(
+								(item) =>
+									item.id !== node.id && !descendantNodeIds.has(item.id),
+							)
 							.map((item) => (
 								<option key={item.id} value={item.id}>
 									{item.id}
@@ -143,10 +207,52 @@ function NodeEditor({
 			</div>
 			<StyleSettings
 				className="mt-3"
+				layoutMode={node.mode}
 				style={node.style}
 				title="Node style"
 				onChange={(style) => onChange({ ...node, style } as TaleNode)}
 			/>
+			<div className="mt-3 space-y-3">
+				<AnimationSelectionEditor
+					title="Entering"
+					selection={node.animations.entering}
+					onChange={(entering) =>
+						onChange({
+							...node,
+							animations: { ...node.animations, entering },
+						} as TaleNode)
+					}
+				/>
+				<AnimationSelectionEditor
+					title="Scrolling"
+					selection={node.animations.scrolling}
+					onChange={(scrolling) =>
+						onChange({
+							...node,
+							animations: { ...node.animations, scrolling },
+						} as TaleNode)
+					}
+				/>
+				<AnimationSelectionEditor
+					title="Leaving"
+					selection={node.animations.leaving}
+					onChange={(leaving) =>
+						onChange({
+							...node,
+							animations: { ...node.animations, leaving },
+						} as TaleNode)
+					}
+				/>
+				<LoopingAnimationEditor
+					selection={node.animations.ambient}
+					onChange={(ambient) =>
+						onChange({
+							...node,
+							animations: { ...node.animations, ambient },
+						} as TaleNode)
+					}
+				/>
+			</div>
 		</section>
 	);
 }
@@ -160,6 +266,7 @@ function NodeEditor({
  */
 function changeNodeMode(node: TaleNode, mode: TaleNode["mode"]): TaleNode {
 	const base = {
+		animations: node.animations,
 		children: node.children,
 		id: node.id,
 		overflow: node.overflow,
@@ -170,4 +277,31 @@ function changeNodeMode(node: TaleNode, mode: TaleNode["mode"]): TaleNode {
 	if (mode === "grid") return { ...base, columns: 2, gap: 16, mode };
 	if (mode === "free") return { ...base, mode };
 	return { ...base, align: "center", gap: 16, justify: "center", mode };
+}
+
+/**
+ * Collects node descendants that cannot become the node's parent.
+ *
+ * @param nodes - Nodes in the current block.
+ * @param nodeId - Node whose descendants are collected.
+ * @returns Descendant node ids.
+ *
+ * @example
+ * const descendants = collectDescendantNodeIds(nodes, node.id);
+ */
+function collectDescendantNodeIds(
+	nodes: TaleNode[],
+	nodeId: string,
+): Set<string> {
+	const nodesById = new Map(nodes.map((node) => [node.id, node]));
+	const descendants = new Set<string>();
+	const visit = (currentNodeId: string): void => {
+		for (const child of nodesById.get(currentNodeId)?.children ?? []) {
+			if (child.type !== "node" || descendants.has(child.nodeId)) continue;
+			descendants.add(child.nodeId);
+			visit(child.nodeId);
+		}
+	};
+	visit(nodeId);
+	return descendants;
 }

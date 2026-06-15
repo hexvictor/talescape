@@ -1,5 +1,13 @@
-import type { ReaderStyle, TaleNode } from "~/app/(tale-reader)/_shared/types";
-import type { NodeConfig } from "~/server/db/types/tale-reader/readerConfig";
+import type {
+	FragmentAnimationConfig,
+	ReaderStyle,
+	TaleNode,
+} from "~/app/(tale-reader)/_shared/types";
+import type {
+	NodeAnimationConfig,
+	NodeConfig,
+} from "~/server/db/types/tale-reader/readerConfig";
+import { formatAnimationSelection } from "./formatAnimationSelection";
 
 /**
  * Formats database node rows into the reader node model.
@@ -13,6 +21,7 @@ import type { NodeConfig } from "~/server/db/types/tale-reader/readerConfig";
 export function formatNodes(rows: unknown[]): TaleNode[] {
 	const rawNodes = rows.map((row) => {
 		const item = row as {
+			animationConfig?: NodeAnimationConfig;
 			config?: NodeConfig;
 			id: number;
 			parentNodeId?: number | null;
@@ -28,6 +37,7 @@ export function formatNodes(rows: unknown[]): TaleNode[] {
 		};
 		return {
 			...config,
+			animations: formatNodeAnimations(item.animationConfig),
 			id: String(item.id),
 			stableId: item.stableId ?? String(item.id),
 			parentNodeId:
@@ -55,4 +65,25 @@ export function formatNodes(rows: unknown[]): TaleNode[] {
 			),
 		};
 	}) as TaleNode[];
+}
+
+/**
+ * Formats persisted node animation selections into the reader animation model.
+ *
+ * @param config - Persisted node animation configuration.
+ * @returns Node animation selections with normalized defaults.
+ */
+function formatNodeAnimations(
+	config?: NodeAnimationConfig,
+): FragmentAnimationConfig {
+	return {
+		ambient: {
+			...formatAnimationSelection(config?.ambient),
+			cycleDurationMs: config?.ambient?.cycleDurationMs ?? 2400,
+			playback: config?.ambient?.playback ?? "alternate",
+		},
+		entering: formatAnimationSelection(config?.entering),
+		leaving: formatAnimationSelection(config?.leaving),
+		scrolling: formatAnimationSelection(config?.scrolling),
+	};
 }

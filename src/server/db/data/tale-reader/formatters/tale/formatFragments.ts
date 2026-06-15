@@ -4,6 +4,7 @@ import type {
 	TaleFragment,
 } from "~/app/(tale-reader)/_shared/types";
 import type { AnimationSelection as DbAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
+import type { AmbientAnimationSelection as DbAmbientAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
 import { formatAnimationSelection } from "./formatAnimationSelection";
 
 /**
@@ -19,6 +20,7 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 	return rows.map((row) => {
 		const item = row as {
 			animationConfig?: {
+				ambient?: DbAmbientAnimationSelection;
 				entering?: DbAnimationSelection;
 				leaving?: DbAnimationSelection;
 				scrolling?: DbAnimationSelection;
@@ -29,7 +31,6 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 			id: number;
 			nodeId?: number | null;
 			placementConfig?: FragmentPlacement;
-			scrollAnimationPlayback?: TaleFragment["scrollAnimationPlayback"];
 			order?: number;
 			styleConfig?: ReaderStyle | null;
 			type: string;
@@ -40,6 +41,12 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 		return {
 			alt: getString(content.alt),
 			animations: {
+				ambient: {
+					...formatAnimationSelection(item.animationConfig?.ambient),
+					cycleDurationMs:
+						item.animationConfig?.ambient?.cycleDurationMs ?? 2400,
+					playback: item.animationConfig?.ambient?.playback ?? "alternate",
+				},
 				entering: formatAnimationSelection(item.animationConfig?.entering),
 				leaving: formatAnimationSelection(item.animationConfig?.leaving),
 				scrolling: formatAnimationSelection(item.animationConfig?.scrolling),
@@ -62,7 +69,6 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 				item.nodeId,
 			),
 			prompt: getString(content.prompt),
-			scrollAnimationPlayback: item.scrollAnimationPlayback,
 			src: getString(content.src) ?? getString(content.url) ?? null,
 			style: item.styleConfig ?? undefined,
 			text: getString(content.text) ?? getString(content.content),

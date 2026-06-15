@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useReaderStore } from "../../../contexts/ReaderStoreContext";
 
 type ReaderProgressProps = {
+	statusVisible: boolean;
 	visible: boolean;
 };
 
@@ -17,6 +18,7 @@ type ReaderProgressProps = {
  * <ReaderProgress visible />
  */
 export function ReaderProgress({
+	statusVisible,
 	visible,
 }: ReaderProgressProps): React.JSX.Element | null {
 	const compiled = useReaderStore((state) => state.reader.compiled);
@@ -32,7 +34,10 @@ export function ReaderProgress({
 			<div
 				data-reader-component="ReaderProgress"
 				data-reader-role="compact-progress-status"
-				className="pointer-events-auto absolute right-2 bottom-1 rounded border border-white/10 bg-black/64 px-2.5 py-1.5 font-medium text-[10px] text-white/54 uppercase opacity-25 backdrop-blur-md transition-opacity duration-200 hover:opacity-100"
+				className={clsx(
+					"pointer-events-auto absolute right-2 bottom-1 rounded border border-white/10 bg-black/64 px-2.5 py-1.5 font-medium text-[10px] text-white/54 uppercase opacity-25 backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					!statusVisible && "hidden",
+				)}
 			>
 				<span data-reader-story-progress="true">Story 0%</span>
 				<span className="mx-2 text-white/20">/</span>

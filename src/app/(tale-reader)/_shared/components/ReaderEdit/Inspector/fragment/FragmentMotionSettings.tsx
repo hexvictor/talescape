@@ -7,6 +7,7 @@ import {
 	settingClassName,
 } from "../../../ReaderUi/TaleDebug/DebugPrimitives";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
+import { LoopingAnimationEditor } from "../LoopingAnimationEditor";
 
 /**
  * Edits fragment visibility, playback behavior, and entity-owned animation tracks.
@@ -29,23 +30,17 @@ export function FragmentMotionSettings({
 			data-reader-role="fragment-motion-settings"
 			className="space-y-3"
 		>
-			<DebugCard title="Playback and visibility">
-				<Setting label="Playback">
-					<select
-						className={settingClassName}
-						value={fragment.scrollAnimationPlayback ?? "scrub"}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								scrollAnimationPlayback: event.target
-									.value as TaleFragment["scrollAnimationPlayback"],
-							}))
-						}
-					>
-						<option value="scrub">Follow scroll</option>
-						<option value="commitOnComplete">Keep completed state</option>
-					</select>
-				</Setting>
+			<DebugCard title="Overall visibility">
+				<RangeField
+					label="Base opacity"
+					value={fragment.style?.opacity ?? 1}
+					onChange={(opacity) =>
+						onChange((item) => ({
+							...item,
+							style: { ...item.style, opacity },
+						}))
+					}
+				/>
 				<RangeField
 					label="Visible from"
 					value={fragment.visibleRange?.start ?? 0}
@@ -100,6 +95,15 @@ export function FragmentMotionSettings({
 					onChange((item) => ({
 						...item,
 						animations: { ...item.animations, leaving },
+					}))
+				}
+			/>
+			<LoopingAnimationEditor
+				selection={fragment.animations.ambient}
+				onChange={(ambient) =>
+					onChange((item) => ({
+						...item,
+						animations: { ...item.animations, ambient },
 					}))
 				}
 			/>

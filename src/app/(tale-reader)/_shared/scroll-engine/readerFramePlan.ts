@@ -1,5 +1,5 @@
 import type { Anchor, CompiledReader } from "../types";
-import { getAdjacentAnchors, getUniqueAnchors } from "./readerVisibility";
+import { getUniqueAnchors } from "./readerVisibility";
 
 export type ReaderFramePlan = {
 	activeAnchorIndex: number | undefined;
@@ -30,7 +30,7 @@ export function compileReaderFramePlans(
 		const visibleAnchors =
 			segment.type === "transition"
 				? getUniqueAnchors([segment.from, segment.to])
-				: getAdjacentAnchors(compiled, segment.anchor);
+				: [segment.anchor];
 		const foregroundBlockIds =
 			segment.type === "transition"
 				? new Set([segment.from.block.id, segment.to.block.id])

@@ -40,11 +40,13 @@ export function DebugTabs<T extends string>({
 export function DebugCard({
 	children,
 	componentName = "DebugCard",
+	contentClassName,
 	readerRole = "debug-section",
 	title,
 }: {
 	children: ReactNode;
 	componentName?: string;
+	contentClassName?: string;
 	readerRole?: string;
 	title: string;
 }) {
@@ -57,7 +59,9 @@ export function DebugCard({
 			<h3 className="mb-2 font-black text-[#d9b56f] text-[10px] uppercase tracking-[0.17em]">
 				{title}
 			</h3>
-			<div className="grid grid-cols-2 gap-2">{children}</div>
+			<div className={clsx("grid grid-cols-2 gap-2", contentClassName)}>
+				{children}
+			</div>
 		</section>
 	);
 }

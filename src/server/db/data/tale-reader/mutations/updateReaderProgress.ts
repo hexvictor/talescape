@@ -42,7 +42,7 @@ export async function updateReaderProgress(
 	const [progress] = await db
 		.update(taleProgresses)
 		.set({
-			committedFragmentIds: toNumericIds(input.committedFragmentIds),
+			committedAnimationIds: input.committedAnimationIds,
 			lastBlockId: Number.isFinite(lastBlockId) ? lastBlockId : null,
 			lastBlockInnerProgress: input.innerProgress.toFixed(4),
 			maxBlockIdReached: Number.isFinite(lastBlockId) ? lastBlockId : null,

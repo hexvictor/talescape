@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { blocks, nodes, tales } from "~/server/db/schema";
 import type {
+	NodeAnimationConfig,
 	NodeConfig,
 	ReaderStyleConfig,
 } from "~/server/db/types/tale-reader/readerConfig";
@@ -10,6 +11,7 @@ import { readerPageBlueprints } from "./readerStoryBlueprint";
 import { logSeedComplete, logSeedStart } from "./seedLogs";
 
 type NodeSeed = {
+	animationConfig: NodeAnimationConfig;
 	blockId: number;
 	config: NodeConfig;
 	isRoot: boolean;
@@ -22,7 +24,7 @@ type NodeSeed = {
 };
 
 /**
- * Queries real blocks and inserts root and nested layout nodes for every page.
+ * Inserts a flex root and flex content node for every seeded block.
  *
  * @returns Nothing.
  */
@@ -40,44 +42,35 @@ export async function seedNodes(): Promise<void> {
 	const pageByOrder = new Map(
 		readerPageBlueprints.map((page) => [page.order, page]),
 	);
+
 	const rootSeeds = allBlocks.map((block): NodeSeed => {
 		const page = pageByOrder.get(block.order);
 		if (!page) throw new Error(`Missing page blueprint ${block.order}.`);
 		const rootStableId = stableNodeId(block.id, "root");
 		const contentStableId = stableNodeId(block.id, "content");
-		const mediaStableId = stableNodeId(block.id, "media");
-		const hasMediaNode = page.type === "chapter" && page.order % 3 === 0;
-		const rootStyle = rootNodeStyle(page.type === "chapter", hasMediaNode);
+		const style = rootNodeStyle(page.layout);
 		return {
+			animationConfig: emptyNodeAnimations(),
 			blockId: block.id,
 			config: {
-				children: [
-					{ nodeId: contentStableId, type: "node" },
-					...(hasMediaNode
-						? [{ nodeId: mediaStableId, type: "node" as const }]
-						: []),
-				],
+				align: "stretch",
+				children: [{ nodeId: contentStableId, type: "node" }],
+				direction: "column",
+				gap: 0,
 				id: rootStableId,
-				mode: hasMediaNode ? "grid" : "flex",
+				justify: "center",
+				mode: "flex",
 				overflow: "visible",
 				parentNodeId: null,
-				style: rootStyle,
-				...(hasMediaNode
-					? { columns: 2, gap: 32, rows: 1 }
-					: {
-							align: "center" as const,
-							direction: "column" as const,
-							gap: 24,
-							justify: "center" as const,
-							wrap: false,
-						}),
-			} as NodeConfig,
+				style,
+				wrap: false,
+			},
 			isRoot: true,
 			name: "root",
 			order: 0,
 			parentNodeId: null,
 			stableId: rootStableId,
-			styleConfig: rootStyle,
+			styleConfig: style,
 			taleId: tale.id,
 		};
 	});
@@ -88,81 +81,65 @@ export async function seedNodes(): Promise<void> {
 	const rootIdByBlockId = new Map(
 		createdRoots.map((node) => [node.blockId, node.id]),
 	);
-	const childSeeds = allBlocks.flatMap((block): NodeSeed[] => {
+
+	const contentSeeds = allBlocks.map((block): NodeSeed => {
 		const page = pageByOrder.get(block.order);
 		const rootId = rootIdByBlockId.get(block.id);
 		if (!page || !rootId) throw new Error(`Missing root node for ${block.id}.`);
-		const hasMediaNode = page.type === "chapter" && page.order % 3 === 0;
-		const contentStyle = contentNodeStyle(
-			page.type === "chapter",
-			hasMediaNode,
-		);
-		const children: NodeSeed[] = [
-			{
-				blockId: block.id,
-				config: {
-					align: "stretch",
-					children: [],
-					direction: "column",
-					gap: 24,
-					id: stableNodeId(block.id, "content"),
-					justify: "center",
-					mode: "flex",
-					overflow: "visible",
-					parentNodeId: stableNodeId(block.id, "root"),
-					style: contentStyle,
-					wrap: false,
-				},
-				isRoot: false,
-				name: "content",
-				order: 1,
-				parentNodeId: rootId,
-				stableId: stableNodeId(block.id, "content"),
-				styleConfig: contentStyle,
-				taleId: tale.id,
+		const style = contentNodeStyle(page);
+		return {
+			animationConfig: emptyNodeAnimations(),
+			blockId: block.id,
+			config: {
+				align: "center",
+				children: [],
+				direction:
+					page.readingDirection === "right"
+						? "row-reverse"
+						: page.readingDirection === "left"
+							? "row"
+							: page.readingDirection === "up"
+								? "column-reverse"
+								: "column",
+				gap: page.layout === "fullscreen" ? 20 : 40,
+				id: stableNodeId(block.id, "content"),
+				justify: "center",
+				mode: "flex",
+				overflow: "visible",
+				parentNodeId: stableNodeId(block.id, "root"),
+				style,
+				wrap: false,
 			},
-		];
-		if (hasMediaNode) {
-			const mediaStyle: ReaderStyleConfig = {
-				alignItems: "center",
-				display: "flex",
-				justifyContent: "center",
-				minHeight: "22rem",
-				overflow: "hidden",
-			};
-			children.push({
-				blockId: block.id,
-				config: {
-					align: "center",
-					children: [],
-					direction: "column",
-					gap: 12,
-					id: stableNodeId(block.id, "media"),
-					justify: "center",
-					mode: "flex",
-					overflow: "clip",
-					parentNodeId: stableNodeId(block.id, "root"),
-					style: mediaStyle,
-					wrap: false,
-				},
-				isRoot: false,
-				name: "media",
-				order: 2,
-				parentNodeId: rootId,
-				stableId: stableNodeId(block.id, "media"),
-				styleConfig: mediaStyle,
-				taleId: tale.id,
-			});
-		}
-		return children;
+			isRoot: false,
+			name: "content",
+			order: 1,
+			parentNodeId: rootId,
+			stableId: stableNodeId(block.id, "content"),
+			styleConfig: style,
+			taleId: tale.id,
+		};
 	});
 
-	await db.insert(nodes).values(childSeeds.map(toNodeInsert));
+	await db.insert(nodes).values(contentSeeds.map(toNodeInsert));
 	logSeedComplete("Nodes");
 }
 
 /**
- * Converts an internal node seed into a schema insert object.
+ * Creates empty animation selections for a seeded node.
+ *
+ * @returns Empty node animation configuration.
+ */
+function emptyNodeAnimations(): NodeAnimationConfig {
+	return {
+		ambient: { tracks: [] },
+		entering: { tracks: [] },
+		leaving: { tracks: [] },
+		scrolling: { tracks: [] },
+	};
+}
+
+/**
+ * Converts an internal node seed into schema insert values.
  *
  * @param seed - Node seed using actual database parent ids.
  * @returns Node insert values.
@@ -170,17 +147,17 @@ export async function seedNodes(): Promise<void> {
 function toNodeInsert(seed: NodeSeed): typeof nodes.$inferInsert {
 	return {
 		...seed,
-		cloneable: "private" as const,
+		cloneable: "private",
 		creatorId: userId1,
 		editable: true,
 		isOfficial: true,
 		isVerified: true,
-		visibility: "public" as const,
+		visibility: "public",
 	};
 }
 
 /**
- * Creates a stable node identifier derived from an actual database block id.
+ * Creates a stable node identifier from an actual block id.
  *
  * @param blockId - Database block id.
  * @param role - Node role within the block.
@@ -191,53 +168,56 @@ function stableNodeId(blockId: number, role: string): string {
 }
 
 /**
- * Creates root layout styling for a page.
+ * Creates root flex styling for a page layout.
  *
- * @param isChapter - Whether this is a chapter page.
- * @param hasMediaNode - Whether the page uses a two-column media layout.
+ * @param page - Authored page definition.
  * @returns Root node style.
  */
 function rootNodeStyle(
-	isChapter: boolean,
-	hasMediaNode: boolean,
+	layout: (typeof readerPageBlueprints)[number]["layout"],
 ): ReaderStyleConfig {
 	return {
-		alignItems: "center",
-		display: hasMediaNode ? "grid" : "flex",
+		alignItems: "stretch",
+		display: "flex",
 		flexDirection: "column",
-		gap: 32,
-		gridTemplateColumns: hasMediaNode
-			? "minmax(0, 1fr) minmax(18rem, 1fr)"
-			: undefined,
 		justifyContent: "center",
-		minHeight: "100%",
-		padding: isChapter ? "clamp(3rem, 8vh, 8rem) clamp(1.5rem, 7vw, 8rem)" : 0,
+		height: "100%",
+		overflow: "visible",
 		width: "100%",
 	};
 }
 
 /**
- * Creates content-column styling for a page.
+ * Creates content flex styling for a page layout.
  *
- * @param isChapter - Whether this is a chapter page.
- * @param hasMediaNode - Whether the page has a sibling media column.
+ * @param layout - Authored page layout.
  * @returns Content node style.
  */
 function contentNodeStyle(
-	isChapter: boolean,
-	hasMediaNode: boolean,
+	page: (typeof readerPageBlueprints)[number],
 ): ReaderStyleConfig {
+	if (page.layout === "horizontal") {
+		return {
+			alignItems: "center",
+			display: "flex",
+			flexDirection: page.readingDirection === "right" ? "row" : "row-reverse",
+			gap: 48,
+			justifyItems: "center",
+			height: "100%",
+			padding: "4rem",
+			width: "100%",
+		};
+	}
 	return {
-		alignItems: hasMediaNode ? "start" : "center",
+		alignItems: "center",
 		display: "flex",
-		flexDirection: "column",
-		gap: 24,
-		justifyContent: "center",
-		margin: hasMediaNode ? 0 : "0 auto",
-		maxWidth: isChapter ? "64rem" : "52rem",
-		minWidth: 0,
-		padding: isChapter ? "clamp(1rem, 3vw, 3rem)" : "clamp(2rem, 8vw, 8rem)",
-		textAlign: hasMediaNode ? "left" : "center",
+		flexDirection: page.readingDirection === "up" ? "column-reverse" : "column",
+		gap: 28,
+		justifyItems: "center",
+		margin: "0 auto",
+		height: "100%",
+		padding: page.layout === "fullscreen" ? "2rem" : "4rem 2rem",
+		textAlign: "center",
 		width: "100%",
 	};
 }

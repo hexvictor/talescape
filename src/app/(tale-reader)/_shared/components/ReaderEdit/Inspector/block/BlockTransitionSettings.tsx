@@ -26,12 +26,19 @@ export function BlockTransitionSettings({
 	block: ResolvedTaleBlock;
 	onChange: BlockChangeHandler;
 }): React.JSX.Element {
-	const { animationPresetsById, transitionPresets } = useReaderStoreShallow(
-		(state) => ({
-			animationPresetsById: state.tale.data.indexMap.animationPresetsById,
-			transitionPresets: state.tale.data.structure.transitionPresets,
-		}),
-	);
+	const {
+		animationPresetsById,
+		setTale,
+		tale,
+		transitionFirstBlock,
+		transitionPresets,
+	} = useReaderStoreShallow((state) => ({
+		animationPresetsById: state.tale.data.indexMap.animationPresetsById,
+		setTale: state.tale.setData,
+		tale: state.tale.data,
+		transitionFirstBlock: state.tale.data.transitionFirstBlock,
+		transitionPresets: state.tale.data.structure.transitionPresets,
+	}));
 	const [transitionPresetId, setTransitionPresetId] = useState(
 		transitionPresets[0]?.id ?? "",
 	);
@@ -97,28 +104,28 @@ export function BlockTransitionSettings({
 				}
 			/>
 			<MotionNumber
-				label="Entering length"
+				label="Entering length (auto if empty)"
 				value={block.transition.enteringLength}
 				onChange={(enteringLength) =>
 					onChange((item) => ({
 						...item,
 						transition: {
 							...item.transition,
-							enteringLength: enteringLength ?? 0,
+							enteringLength,
 						},
 					}))
 				}
 			/>
 			<MotionNumber
-				label="Leaving length"
+				label="Leaving length (auto if empty)"
 				value={block.transition.leavingLength}
 				onChange={(leavingLength) =>
 					onChange((item) => ({
 						...item,
 						transition: {
 							...item.transition,
-							leavingLength: leavingLength ?? 0,
-							scrollLength: leavingLength ?? 0,
+							leavingLength,
+							scrollLength: null,
 						},
 					}))
 				}
@@ -133,6 +140,21 @@ export function BlockTransitionSettings({
 					}
 				/>
 			</Setting>
+			{block.position.isFirst ? (
+				<Setting label="Transition first block">
+					<input
+						className="h-9 w-5 accent-[#d9b56f]"
+						type="checkbox"
+						checked={transitionFirstBlock}
+						onChange={(event) =>
+							setTale({
+								...tale,
+								transitionFirstBlock: event.target.checked,
+							})
+						}
+					/>
+				</Setting>
+			) : null}
 		</DebugCard>
 	);
 }

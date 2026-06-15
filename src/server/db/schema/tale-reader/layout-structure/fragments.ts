@@ -12,7 +12,6 @@ import type {
 	FragmentAnimationConfig,
 	FragmentPlacementConfig,
 	ReaderStyleConfig,
-	ScrollAnimationPlayback,
 	TimelineRange,
 } from "~/server/db/types/tale-reader/readerConfig";
 import { users } from "../../users";
@@ -56,16 +55,12 @@ export const fragments = createTable("fragment", (d) => ({
 		.default({ mode: "normal" }),
 	styleConfig: d.json().$type<ReaderStyleConfig>(),
 	visibleRange: d.json().$type<TimelineRange>(),
-	scrollAnimationPlayback: d
-		.text()
-		.notNull()
-		.$type<ScrollAnimationPlayback>()
-		.default("scrub"),
 	animationConfig: d
 		.json()
 		.notNull()
 		.$type<FragmentAnimationConfig>()
 		.default({
+			ambient: { tracks: [] },
 			entering: { tracks: [] },
 			leaving: { tracks: [] },
 			scrolling: { tracks: [] },

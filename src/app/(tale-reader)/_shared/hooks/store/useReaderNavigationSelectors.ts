@@ -15,8 +15,10 @@ type ReaderScrollApi = TaleReaderState["scroll"]["api"];
 
 type ContentsNavigatorState = {
 	branches: Tale["structure"]["branches"];
+	compiled: CompiledReader | null;
 	contents: ReaderContentsPart[];
 	currentBlockId: string | null;
+	currentBranchId: string | null;
 	currentEntryId: string | null;
 	open: boolean;
 	paths: Tale["structure"]["paths"];
@@ -36,8 +38,10 @@ type ContentsNavigatorState = {
 export function useContentsNavigatorState(): ContentsNavigatorState {
 	return useReaderStoreShallow((state) => ({
 		branches: state.tale.data.structure.branches,
+		compiled: state.reader.compiled,
 		contents: state.reader.compiled?.contents ?? EMPTY_READER_CONTENTS,
 		currentBlockId: state.navigation.current?.blockId ?? null,
+		currentBranchId: state.navigation.current?.branchId ?? null,
 		currentEntryId: state.navigation.current?.entryId ?? null,
 		open: state.ui.contentsOpen,
 		paths: state.tale.data.structure.paths,
@@ -48,11 +52,15 @@ export function useContentsNavigatorState(): ContentsNavigatorState {
 }
 
 type EntryNavigatorState = {
+	activityFadeDelaySeconds: number;
 	compiled: CompiledReader | null;
 	contents: ReaderContentsPart[];
 	currentEntryId: string | null;
 	currentPageId: string | null;
 	currentPartId: string | null;
+	navigationPinsVisible: boolean;
+	navigationUsesSelectedPart: boolean;
+	reduceInactiveUiOpacity: boolean;
 	scrollApi: ReaderScrollApi;
 };
 
@@ -66,18 +74,25 @@ type EntryNavigatorState = {
  */
 export function useEntryNavigatorState(): EntryNavigatorState {
 	return useReaderStoreShallow((state) => ({
+		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
 		compiled: state.reader.compiled,
 		contents: state.reader.compiled?.contents ?? EMPTY_READER_CONTENTS,
 		currentEntryId: state.navigation.current?.entryId ?? null,
 		currentPageId: state.navigation.current?.pageId ?? null,
 		currentPartId: state.navigation.current?.partId ?? null,
+		navigationPinsVisible: state.ui.navigationPinsVisible,
+		navigationUsesSelectedPart: state.ui.navigationUsesSelectedPart,
+		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 		scrollApi: state.scroll.api,
 	}));
 }
 
 type PageNavigatorState = {
+	activityFadeDelaySeconds: number;
 	compiled: CompiledReader | null;
 	location: ReaderLocation | null;
+	navigationPinsVisible: boolean;
+	reduceInactiveUiOpacity: boolean;
 	scrollApi: ReaderScrollApi;
 };
 
@@ -91,8 +106,11 @@ type PageNavigatorState = {
  */
 export function usePageNavigatorState(): PageNavigatorState {
 	return useReaderStoreShallow((state) => ({
+		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
 		compiled: state.reader.compiled,
 		location: state.navigation.current,
+		navigationPinsVisible: state.ui.navigationPinsVisible,
+		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 		scrollApi: state.scroll.api,
 	}));
 }
@@ -118,5 +136,46 @@ export function useReaderHubState(): ReaderHubState {
 		open: state.hub.open,
 		setActivePanel: state.hub.setActivePanel,
 		toggleOpen: state.hub.toggleOpen,
+	}));
+}
+
+export type ReaderHubSettingsState = Pick<
+	TaleReaderState["ui"],
+	| "activityFadeDelaySeconds"
+	| "debugVisible"
+	| "navigationPinsVisible"
+	| "navigationUsesSelectedPart"
+	| "readerStatusVisible"
+	| "reduceInactiveUiOpacity"
+	| "setActivityFadeDelaySeconds"
+	| "setDebugVisible"
+	| "setNavigationPinsVisible"
+	| "setNavigationUsesSelectedPart"
+	| "setReaderStatusVisible"
+	| "setReduceInactiveUiOpacity"
+>;
+
+/**
+ * Selects the reader preferences displayed by the Reader Hub settings panel.
+ *
+ * @returns Stable flat settings values and update actions.
+ *
+ * @example
+ * const { debugVisible, setDebugVisible } = useReaderHubSettingsState();
+ */
+export function useReaderHubSettingsState(): ReaderHubSettingsState {
+	return useReaderStoreShallow((state) => ({
+		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
+		debugVisible: state.ui.debugVisible,
+		navigationPinsVisible: state.ui.navigationPinsVisible,
+		navigationUsesSelectedPart: state.ui.navigationUsesSelectedPart,
+		readerStatusVisible: state.ui.readerStatusVisible,
+		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
+		setActivityFadeDelaySeconds: state.ui.setActivityFadeDelaySeconds,
+		setDebugVisible: state.ui.setDebugVisible,
+		setNavigationPinsVisible: state.ui.setNavigationPinsVisible,
+		setNavigationUsesSelectedPart: state.ui.setNavigationUsesSelectedPart,
+		setReaderStatusVisible: state.ui.setReaderStatusVisible,
+		setReduceInactiveUiOpacity: state.ui.setReduceInactiveUiOpacity,
 	}));
 }

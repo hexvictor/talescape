@@ -1,47 +1,7 @@
-import {
-	BookA,
-	BookMarked,
-	BookOpen,
-	Brain,
-	CircleHelp,
-	Drama,
-	Hourglass,
-	ListEnd,
-	ListStart,
-	type LucideIcon,
-	Mail,
-	Map as MapIcon,
-	MoonStar,
-	NotepadText,
-	Paperclip,
-	Quote,
-	ScrollText,
-	TableOfContents,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import type { TaleEntry } from "../../../types";
-
-const entryTypeIcons: Record<TaleEntry["type"], LucideIcon | null> = {
-	appendix: Paperclip,
-	chapter: null,
-	codex: BookMarked,
-	cover: BookOpen,
-	dream: MoonStar,
-	ending: ListEnd,
-	epilogue: ListEnd,
-	flashback: Brain,
-	interlude: Drama,
-	letter: Mail,
-	map: MapIcon,
-	note: NotepadText,
-	poem: ScrollText,
-	prologue: ListStart,
-	quote: Quote,
-	table_of_contents: TableOfContents,
-	timeline: Hourglass,
-	unknown: CircleHelp,
-	vocabulary: BookA,
-};
+import { ReaderTypeIcon } from "./ReaderTypeIcon";
 
 export function getEntryTypeLabel(type: TaleEntry["type"]): string {
 	return type
@@ -56,12 +16,5 @@ export function EntryTypeIcon({
 }: {
 	type: TaleEntry["type"];
 } & ComponentProps<LucideIcon>): React.JSX.Element | null {
-	const Icon = entryTypeIcons[type];
-	return Icon ? (
-		<Icon
-			data-reader-component="EntryTypeIcon"
-			data-reader-role="entry-type-icon"
-			{...props}
-		/>
-	) : null;
+	return <ReaderTypeIcon type={type} {...props} />;
 }

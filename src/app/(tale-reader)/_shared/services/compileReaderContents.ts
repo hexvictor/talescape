@@ -95,6 +95,9 @@ export function compileReaderContents(
 					}),
 					chapterNumber: derivedChapterNumber,
 					firstBlockId: entryAnchors[0]?.block.id ?? "",
+					hasChoiceBlock: entryAnchors.some(
+						(anchor) => anchor.block.isChoiceBlock,
+					),
 					id: entry.id,
 					pages: entryPages,
 					title: entry.title,
@@ -167,6 +170,7 @@ function compileEntryPages(
 			entryId,
 			firstBlockId: firstAnchor.block.id,
 			globalIndex: firstAnchor.page.position.globalPageNumber,
+			hasChoiceBlock: pageAnchors.some((anchor) => anchor.block.isChoiceBlock),
 			id: firstAnchor.page.id,
 			isPaginated: firstAnchor.page.isPaginated,
 			label: getReaderPageLabel(firstAnchor.page, number),

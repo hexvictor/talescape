@@ -33,7 +33,7 @@ export function attachKeyboardInput({
 	const animateBy = (amount: number) => {
 		setDirection(amount >= 0 ? 1 : -1);
 		driver.scrollTo(
-			clamp(driver.getScroll() + amount, 0, totalScroll),
+			clamp(driver.getTargetScroll() + amount, 0, totalScroll),
 			"smooth",
 			{ duration: NEW_READER_INPUT_SETTINGS.keyboardDuration },
 		);
@@ -139,7 +139,7 @@ export function attachKeyboardInput({
 			? getHeldStep()
 			: getTapStep(direction, performance.now());
 		setDirection(direction);
-		const from = target ?? driver.getScroll();
+		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + direction * step, 0, totalScroll);
 		driver.scrollTo(target, "smooth", {
 			duration: NEW_READER_INPUT_SETTINGS.keyboardDuration,

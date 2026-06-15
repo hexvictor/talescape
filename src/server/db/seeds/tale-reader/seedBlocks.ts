@@ -3,11 +3,11 @@ import { db } from "~/server/db";
 import { blocks, branches, pages, tales } from "~/server/db/schema";
 import { userId1 } from "../ids";
 import { createReaderBlockSeedConfig } from "./readerBlockSeedConfig";
-import { choicePageOrder, readerPageBlueprints } from "./readerStoryBlueprint";
+import { readerPageBlueprints } from "./readerStoryBlueprint";
 import { logSeedComplete, logSeedStart } from "./seedLogs";
 
 /**
- * Queries real pages and branches and inserts route-aware reader blocks.
+ * Inserts route-aware blocks using actual page and branch database ids.
  *
  * @returns Nothing.
  */
@@ -18,6 +18,7 @@ export async function seedBlocks(): Promise<void> {
 		.from(tales)
 		.where(eq(tales.slug, "official-tale-branched"));
 	if (!tale) throw new Error("Seeded reader tale was not found.");
+
 	const [allPages, allBranches] = await Promise.all([
 		db
 			.select({
@@ -30,51 +31,40 @@ export async function seedBlocks(): Promise<void> {
 			.from(pages)
 			.where(eq(pages.taleId, tale.id)),
 		db
-			.select({
-				id: branches.id,
-				name: branches.name,
-				order: branches.order,
-			})
+			.select({ id: branches.id, name: branches.name })
 			.from(branches)
 			.where(eq(branches.taleId, tale.id)),
 	]);
 	const pageBlueprintByOrder = new Map(
 		readerPageBlueprints.map((page) => [page.order, page]),
 	);
-	const rootBranch = allBranches.find((branch) => branch.name === "main");
-	const routeBranches = allBranches.filter((branch) => branch.name !== "main");
-	if (!rootBranch || routeBranches.length !== 2) {
-		throw new Error("Expected one root branch and two choice branches.");
-	}
-
+	const branchByName = new Map(
+		allBranches.map((branch) => [branch.name, branch]),
+	);
 	const values = allPages.flatMap((page) => {
-		const pageBlueprint = pageBlueprintByOrder.get(page.order);
-		if (!pageBlueprint)
-			throw new Error(`Missing page blueprint ${page.order}.`);
-		const targetBranches =
-			page.order <= choicePageOrder ? [rootBranch] : routeBranches;
-		return targetBranches.map((branch) => {
-			const config = createReaderBlockSeedConfig(pageBlueprint, branch.name);
+		const blueprint = pageBlueprintByOrder.get(page.order);
+		if (!blueprint) throw new Error(`Missing page blueprint ${page.order}.`);
+		return blueprint.branchNames.map((branchName) => {
+			const branch = branchByName.get(branchName);
+			if (!branch) throw new Error(`Missing branch ${branchName}.`);
+			const config = createReaderBlockSeedConfig(blueprint, branchName);
 			return {
 				branchId: branch.id,
 				cloneable: "private" as const,
 				creatorId: userId1,
-				description: `${page.title ?? "Story page"} on ${branch.name}.`,
+				description: `${page.title ?? "Story page"} on ${branchName}.`,
 				editable: true,
 				entryId: page.entryId,
-				isChoiceBlock: page.order === choicePageOrder,
+				isChoiceBlock: blueprint.isChoice,
 				isOfficial: true,
-				isSnap: page.order % 4 === 0,
+				isSnap: blueprint.layout === "fullscreen",
 				isVerified: true,
 				order: page.order,
 				pageId: page.id,
-				pageOrder: 0,
+				pageOrder: blueprint.localOrder,
 				partId: page.partId,
 				taleId: tale.id,
-				title:
-					branch.name === "main"
-						? (page.title ?? `Page ${page.order + 1}`)
-						: `${page.title ?? `Page ${page.order + 1}`} · ${branch.name}`,
+				title: page.title ?? `Page ${page.order + 1}`,
 				visibility: "public" as const,
 				...config,
 			};

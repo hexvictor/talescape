@@ -15,7 +15,7 @@ function progressStorageKey(taleId: number | string) {
 function createDefaultProgress(): SavedReaderProgress {
 	return {
 		blockId: null,
-		committedFragmentIds: [],
+		committedAnimationIds: [],
 		innerProgress: 0,
 		seenBlockIds: [],
 		seenEntryIds: [],

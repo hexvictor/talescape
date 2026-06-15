@@ -6,6 +6,9 @@ import {
 	createAnimationValues,
 	evaluateBlockAnimation,
 	evaluateFragmentAnimation,
+	evaluateNodeAnimation,
+	getCompletedAnimationIds,
+	hasAmbientAnimations,
 	writeAnimationValues,
 } from "../services/readerAnimations";
 import {
@@ -27,19 +30,19 @@ import type {
 	TimelineSegment,
 	ViewportSize,
 } from "../types";
-import { getFragmentCommitThreshold } from "./fragmentCommitment";
 import { attachReaderInputBindings } from "./inputBindings";
 import { createReaderNavigationMotion } from "./navigationMotion";
 import { createProgressPainter } from "./progressPainter";
 import { getSavedInnerProgress } from "./progressPersistence";
+import { createReaderAnimationFramePolicy } from "./readerAnimationFramePolicy";
+import { createReaderAnimationMonitor } from "./readerAnimationMonitor";
 import { createReaderDebugPublisher } from "./readerDebugPublisher";
 import { createReaderDomRegistry } from "./readerDomRegistry";
+import { createReaderFixedFragmentPainter } from "./readerFixedFragments";
 import { compileReaderFramePlans } from "./readerFramePlan";
 import { createReaderStatePublisher } from "./readerStatePublisher";
-import {
-	createReaderVisibilityPainter,
-	getRenderWindowBlockIds,
-} from "./readerVisibility";
+import { createReaderViewportVisibilityResolver } from "./readerViewportVisibility";
+import { createReaderVisibilityPainter } from "./readerVisibility";
 import type { ReaderScrollDriver } from "./scrollDriver";
 import { createReaderSnapModel } from "./scrollSnapModel";
 import { createSettledProgressSaver } from "./settledProgressSaver";
@@ -53,9 +56,6 @@ type ReaderScrollEngineOptions = {
 	store: StoreApi<TaleReaderState>;
 	viewport: ViewportSize;
 };
-
-const renderOverscanBlocks = 2;
-const travelRenderOverscanBlocks = 4;
 
 export function createReaderScrollEngine({
 	compiled,
@@ -78,33 +78,41 @@ export function createReaderScrollEngine({
 	let previousCameraTransform = "";
 	let lightweightTravelActive = false;
 	let cancelPendingSnap = (): void => undefined;
-	const committedFragmentIds = new Set(progress.committedFragmentIds);
+	const committedAnimationIds = new Set(progress.committedAnimationIds);
 	const snapModel = createReaderSnapModel(compiled.snapPoints);
 	const progressRoot =
 		stage.closest<HTMLElement>("[data-reader-runtime-root='true']") ??
 		stage.parentElement;
 	const paintProgress = createProgressPainter(progressRoot, compiled);
 	const domRegistry = createReaderDomRegistry(progressRoot ?? stage);
-	const paintVisibility = createReaderVisibilityPainter(domRegistry);
-	const animationPlan = compileReaderAnimationPlan(compiled);
+	const paintFixedFragments = createReaderFixedFragmentPainter(
+		domRegistry,
+		viewport,
+	);
+	const paintVisibility = createReaderVisibilityPainter(
+		domRegistry,
+		compiled.anchorIndexByBlockId,
+	);
+	const animationPlan = compileReaderAnimationPlan(compiled, viewport);
+	const animationFramePolicy = createReaderAnimationFramePolicy(viewport);
+	const animationMonitor = createReaderAnimationMonitor(
+		domRegistry,
+		animationPlan,
+	);
 	const framePlans = compileReaderFramePlans(compiled);
+	const viewportVisibility = createReaderViewportVisibilityResolver(
+		compiled,
+		viewport,
+	);
 	const debugPublisher = createReaderDebugPublisher(store, 100);
 	const statePublisher = createReaderStatePublisher(compiled, store, 80, 180);
 	const blockAnimationValues = createAnimationValues();
 	const fragmentAnimationValues = createAnimationValues();
+	const nodeAnimationValues = createAnimationValues();
 	const restingStateByBlockId = new Map<
 		string,
 		{ progress: 0 | 1; revision: number }
 	>();
-	const commitmentFragmentsByBlockId = new Map(
-		compiled.anchors.map((anchor) => [
-			anchor.block.id,
-			anchor.block.fragments.filter(
-				(fragment) =>
-					fragment.resolvedScrollAnimationPlayback === "commitOnComplete",
-			),
-		]),
-	);
 	const settledProgressSaver = createSettledProgressSaver(
 		({ blockId, innerProgress }) => {
 			store.getState().progress.savePosition(blockId, innerProgress);
@@ -112,22 +120,13 @@ export function createReaderScrollEngine({
 		280,
 	);
 	const ensureNearbyBlocksRendered = (anchors: Anchor[]) => {
-		const currentBlockIds = new Set(
-			renderedBlockIdsKey ? renderedBlockIdsKey.split("|") : [],
-		);
-		if (
-			currentBlockIds.size > 0 &&
-			anchors.every((anchor) => currentBlockIds.has(anchor.block.id))
-		) {
-			return;
-		}
-		const blockIds = getRenderWindowBlockIds(
-			compiled,
-			anchors,
-			lightweightTravelActive
-				? travelRenderOverscanBlocks
-				: renderOverscanBlocks,
-		);
+		const blockIds = anchors
+			.map((anchor) => anchor.block.id)
+			.sort(
+				(first, second) =>
+					(compiled.anchorIndexByBlockId[first] ?? 0) -
+					(compiled.anchorIndexByBlockId[second] ?? 0),
+			);
 		const key = blockIds.join("|");
 		if (key === renderedBlockIdsKey) return;
 		renderedBlockIdsKey = key;
@@ -189,43 +188,45 @@ export function createReaderScrollEngine({
 	};
 
 	/**
-	 * Marks one-way fragments as committed and persists newly committed ids.
+	 * Marks one-way animation tracks as committed and persists new ids.
 	 *
-	 * @param fragmentIds - The fragment ids that reached their commit threshold.
+	 * @param animationIds - Animation track ids that reached their commit threshold.
 	 * @returns Nothing.
 	 *
 	 * @example
-	 * commitFragments(["fragment-1"]);
+	 * commitAnimations(["fragment:1:scrolling:opacity-0"]);
 	 */
-	const commitFragments = (fragmentIds: string[]): void => {
-		const nextIds = fragmentIds.filter((id) => !committedFragmentIds.has(id));
+	const commitAnimations = (animationIds: string[]): void => {
+		const nextIds = animationIds.filter((id) => !committedAnimationIds.has(id));
 		if (nextIds.length === 0) return;
 		for (const id of nextIds) {
-			committedFragmentIds.add(id);
+			committedAnimationIds.add(id);
 		}
-		store.getState().progress.commitFragments(nextIds);
+		store.getState().progress.commitAnimations(nextIds);
 	};
 
 	/**
-	 * Restores committed fragments that can be derived from saved block progress.
+	 * Restores committed tracks that can be derived from saved block progress.
 	 *
 	 * @returns Nothing.
 	 *
 	 * @example
-	 * restoreDerivedCommittedFragments();
+	 * restoreDerivedCommittedAnimations();
 	 */
-	const restoreDerivedCommittedFragments = (): void => {
+	const restoreDerivedCommittedAnimations = (): void => {
 		if (!progress.blockId) return;
 		const anchor = compiled.anchorsByBlockId[progress.blockId];
 		if (!anchor) return;
-		commitFragments(
-			anchor.block.fragments
-				.filter(
-					(fragment) =>
-						fragment.resolvedScrollAnimationPlayback === "commitOnComplete" &&
-						progress.innerProgress >= getFragmentCommitThreshold(fragment),
-				)
-				.map((fragment) => fragment.id),
+		const segmentIndex = compiled.segmentIndexByBlockId[anchor.block.id];
+		const segment = compiled.segments[segmentIndex ?? -1];
+		if (!segment) return;
+		commitAnimations(
+			getCompletedAnimationIds(
+				animationPlan,
+				anchor.block.id,
+				segment,
+				progress.innerProgress,
+			),
 		);
 	};
 
@@ -233,7 +234,8 @@ export function createReaderScrollEngine({
 		anchor: Anchor,
 		segment: TimelineSegment,
 		segmentProgress: number,
-		allowFragmentCommit = true,
+		frameTimeMs: number,
+		animationDetail: "blocks-only" | "full",
 	) => {
 		restingStateByBlockId.delete(anchor.block.id);
 		const element = domRegistry.blockElementById.get(anchor.block.id);
@@ -244,35 +246,24 @@ export function createReaderScrollEngine({
 				anchor.block.id,
 				segment,
 				segmentProgress,
+				committedAnimationIds,
+				frameTimeMs,
 				blockAnimationValues,
 			)
 		) {
 			writeAnimationValues(element, blockAnimationValues);
 		}
 
-		if (allowFragmentCommit) {
-			const newlyCommittedFragmentIds: string[] = [];
-			for (const fragment of commitmentFragmentsByBlockId.get(
-				anchor.block.id,
-			) ?? []) {
-				if (
-					!committedFragmentIds.has(fragment.id) &&
-					((segment.type === "reading" &&
-						segment.anchor.block.id === anchor.block.id &&
-						segmentProgress >= getFragmentCommitThreshold(fragment)) ||
-						(segment.type === "pause" &&
-							segment.anchor.block.id === anchor.block.id &&
-							segment.pauseType === "end") ||
-						(segment.type === "transition" &&
-							segment.from.block.id === anchor.block.id))
-				) {
-					committedFragmentIds.add(fragment.id);
-					newlyCommittedFragmentIds.push(fragment.id);
-				}
-			}
-			if (newlyCommittedFragmentIds.length > 0) {
-				store.getState().progress.commitFragments(newlyCommittedFragmentIds);
-			}
+		if (animationDetail === "blocks-only") return;
+		if (animationDetail === "full") {
+			commitAnimations(
+				getCompletedAnimationIds(
+					animationPlan,
+					anchor.block.id,
+					segment,
+					segmentProgress,
+				),
+			);
 		}
 
 		for (const fragmentId of animationPlan.animatedFragmentIdsByBlockId.get(
@@ -287,11 +278,32 @@ export function createReaderScrollEngine({
 					segment,
 					anchor.block.id,
 					segmentProgress,
-					committedFragmentIds.has(fragmentId),
+					committedAnimationIds,
+					frameTimeMs,
 					fragmentAnimationValues,
 				)
 			) {
 				writeAnimationValues(fragmentElement, fragmentAnimationValues);
+			}
+		}
+		for (const nodeId of animationPlan.animatedNodeIdsByBlockId.get(
+			anchor.block.id,
+		) ?? []) {
+			const nodeElement = domRegistry.nodeElementById.get(nodeId);
+			if (
+				nodeElement &&
+				evaluateNodeAnimation(
+					animationPlan,
+					nodeId,
+					segment,
+					anchor.block.id,
+					segmentProgress,
+					committedAnimationIds,
+					frameTimeMs,
+					nodeAnimationValues,
+				)
+			) {
+				writeAnimationValues(nodeElement, nodeAnimationValues);
 			}
 		}
 	};
@@ -299,7 +311,8 @@ export function createReaderScrollEngine({
 	const paintRestingAnchor = (
 		anchor: Anchor,
 		progress: 0 | 1,
-		allowFragmentCommit = true,
+		frameTimeMs: number,
+		animationDetail: "blocks-only" | "full",
 	) => {
 		const segmentIndex =
 			progress === 1
@@ -310,9 +323,13 @@ export function createReaderScrollEngine({
 		if (!segment || segment.type !== "transition") return;
 		const revision = domRegistry.getRevision();
 		const previous = restingStateByBlockId.get(anchor.block.id);
-		if (previous?.progress === progress && previous.revision === revision)
+		if (
+			!animationPlan.ambientBlockIds.has(anchor.block.id) &&
+			previous?.progress === progress &&
+			previous.revision === revision
+		)
 			return;
-		paintAnchorFrame(anchor, segment, progress, allowFragmentCommit);
+		paintAnchorFrame(anchor, segment, progress, frameTimeMs, animationDetail);
 		restingStateByBlockId.set(anchor.block.id, { progress, revision });
 	};
 
@@ -331,7 +348,7 @@ export function createReaderScrollEngine({
 		statePublisher.publish(anchor, segmentIndex);
 	};
 
-	const renderReaderAtScroll = (scroll: number) => {
+	const renderReaderAtScroll = (scroll: number, frameTimeMs: number) => {
 		countReaderDiagnostic("renderReaderAtScroll()", {
 			currentBlockId: store.getState().navigation.current?.blockId ?? null,
 			scroll: Math.round(scroll),
@@ -355,15 +372,45 @@ export function createReaderScrollEngine({
 
 		const framePlan = framePlans[index];
 		if (!framePlan) return;
-		ensureNearbyBlocksRendered(framePlan.visibleAnchors);
-		paintVisibility(framePlan.visibleAnchors, framePlan.foregroundBlockIds);
-		for (const anchor of framePlan.visibleAnchors) {
+		const initialTransitionActive =
+			compiled.startsWithTransition &&
+			segment.type === "transition" &&
+			segment.index === 0;
+		const visibleAnchors = initialTransitionActive
+			? framePlan.visibleAnchors
+			: viewportVisibility.getVisibleAnchors(camera, framePlan.visibleAnchors);
+		const nearbyAnchors = initialTransitionActive
+			? visibleAnchors
+			: viewportVisibility.getNearbyAnchors(
+					camera,
+					framePlan.visibleAnchors,
+					lightweightTravelActive ? 1.25 : 0.5,
+				);
+		ensureNearbyBlocksRendered(nearbyAnchors);
+		paintVisibility(
+			visibleAnchors,
+			framePlan.foregroundBlockIds,
+			framePlan.activeAnchorIndex,
+		);
+		const reducedAnimations =
+			lightweightTravelActive ||
+			animationFramePolicy.isReduced(scroll, frameTimeMs);
+		const animationDetail = reducedAnimations ? "blocks-only" : "full";
+		animationMonitor.update(
+			visibleAnchors,
+			reducedAnimations,
+			reducedAnimations ? "fast-scroll" : "full",
+		);
+		const activeAnchor = getSegmentAnchor(segment, segmentProgress);
+		for (const anchor of visibleAnchors) {
+			paintFixedFragments(anchor, activeAnchor, segment, segmentProgress);
 			if (framePlan.paintedBlockIds.has(anchor.block.id)) {
 				paintAnchorFrame(
 					anchor,
 					segment,
 					segmentProgress,
-					!lightweightTravelActive,
+					frameTimeMs,
+					animationDetail,
 				);
 				continue;
 			}
@@ -375,11 +422,11 @@ export function createReaderScrollEngine({
 					anchorIndex < framePlan.activeAnchorIndex
 					? 1
 					: 0,
-				!lightweightTravelActive,
+				frameTimeMs,
+				animationDetail,
 			);
 		}
 		if (lightweightTravelActive) {
-			const activeAnchor = getSegmentAnchor(segment, segmentProgress);
 			publishLocation(activeAnchor, index);
 			debugPublisher.publish(index);
 			previousScroll = scroll;
@@ -387,30 +434,55 @@ export function createReaderScrollEngine({
 		}
 
 		debugPublisher.publish(index);
-		const activeAnchor = getSegmentAnchor(segment, segmentProgress);
 		publishLocation(activeAnchor, index);
 		saveSettledPosition(activeAnchor, segment, segmentProgress);
 		previousScroll = scroll;
+		if (reducedAnimations) requestPaint();
+		else scheduleAmbientFrame(visibleAnchors);
+	};
+
+	const scheduleAmbientFrame = (visibleAnchors: readonly Anchor[]): void => {
+		if (
+			hasAmbientAnimations(
+				animationPlan,
+				visibleAnchors.map((anchor) => anchor.block.id),
+			)
+		) {
+			requestPaint();
+		}
 	};
 
 	const requestPaint = () => {
 		countReaderDiagnostic("requestPaint()");
 		if (animationFrame !== null) return;
-		animationFrame = window.requestAnimationFrame(() => {
+		animationFrame = window.requestAnimationFrame((frameTimeMs) => {
 			animationFrame = null;
-			renderReaderAtScroll(driver.getScroll());
+			renderReaderAtScroll(driver.getScroll(), frameTimeMs);
 		});
 	};
 
 	const getRestoreTarget = () => {
-		const anchor = progress.blockId
-			? compiled.anchorsByBlockId[progress.blockId]
-			: compiled.anchors[0];
+		const pendingRestoreBlockId = store.getState().scroll.pendingRestoreBlockId;
+		if (
+			!pendingRestoreBlockId &&
+			!progress.blockId &&
+			compiled.startsWithTransition
+		) {
+			return 0;
+		}
+		const anchor = pendingRestoreBlockId
+			? compiled.anchorsByBlockId[pendingRestoreBlockId]
+			: progress.blockId
+				? compiled.anchorsByBlockId[progress.blockId]
+				: compiled.anchors[0];
+		if (pendingRestoreBlockId && anchor) {
+			store.getState().scroll.setPendingRestoreBlockId(null);
+		}
 		if (!anchor) return 0;
-		return (
-			getReadingStart(anchor) +
-			getReadingLength(anchor, viewport) * progress.innerProgress
-		);
+		return pendingRestoreBlockId
+			? getReadingStart(anchor)
+			: getReadingStart(anchor) +
+					getReadingLength(anchor, viewport) * progress.innerProgress;
 	};
 
 	const capturePosition = () => {
@@ -433,11 +505,11 @@ export function createReaderScrollEngine({
 
 	const start = () => {
 		const target = getRestoreTarget();
-		restoreDerivedCommittedFragments();
+		restoreDerivedCommittedAnimations();
 		driver.setScroll(target);
 		previousScroll = target;
 		currentIndex = compiled.segmentIndexByBlockId[progress.blockId ?? ""] ?? 0;
-		renderReaderAtScroll(target);
+		renderReaderAtScroll(target, performance.now());
 		driver.setUpdateListener(requestPaint);
 		window.addEventListener("scroll", requestPaint, { passive: true });
 		logReaderDiagnostic("native scroll listener attached");

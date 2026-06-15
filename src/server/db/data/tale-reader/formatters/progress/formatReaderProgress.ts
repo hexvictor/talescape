@@ -16,7 +16,7 @@ export function formatReaderProgress(
 	return {
 		blockId:
 			progress.lastBlockId === null ? null : String(progress.lastBlockId),
-		committedFragmentIds: progress.committedFragmentIds.map(String),
+		committedAnimationIds: progress.committedAnimationIds,
 		id: progress.id,
 		innerProgress: Number(progress.lastBlockInnerProgress),
 		seenBlockIds: progress.seenBlockIds.map(String),

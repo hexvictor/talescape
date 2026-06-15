@@ -98,29 +98,33 @@ export function UnitNumberSetting({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<div
-			data-reader-component="DimensionSetting"
-			data-reader-role="dimension-input"
-			className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2"
+		<Setting
+			componentName="DimensionSetting"
+			label={label}
+			readerRole="dimension-input"
 		>
-			<NumberSetting
-				label={label}
-				step={unit === "px" ? 25 : 0.25}
-				value={value}
-				onChange={(next) => onChange(next, unit)}
-			/>
-			<select
-				aria-label={`${label} unit`}
-				className={settingClassName}
-				value={unit}
-				onChange={(event) =>
-					onChange(value, event.target.value as "px" | "viewport")
-				}
-			>
-				<option value="viewport">Viewport</option>
-				<option value="px">Pixels</option>
-			</select>
-		</div>
+			<div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+				<input
+					className={settingClassName}
+					min={0}
+					step={unit === "px" ? 25 : 0.25}
+					type="number"
+					value={value}
+					onChange={(event) => onChange(Number(event.target.value), unit)}
+				/>
+				<select
+					aria-label={`${label} unit`}
+					className={settingClassName}
+					value={unit}
+					onChange={(event) =>
+						onChange(value, event.target.value as "px" | "viewport")
+					}
+				>
+					<option value="viewport">Viewport</option>
+					<option value="px">Pixels</option>
+				</select>
+			</div>
+		</Setting>
 	);
 }
 
@@ -150,31 +154,40 @@ export function OptionalUnitNumberSetting({
 }): React.JSX.Element {
 	const resolvedUnit = unit ?? "viewport";
 	return (
-		<div
-			data-reader-component="OptionalDimensionSetting"
-			data-reader-role="optional-dimension-input"
-			className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2"
+		<Setting
+			componentName="OptionalDimensionSetting"
+			label={label}
+			readerRole="optional-dimension-input"
 		>
-			<OptionalNumberSetting
-				label={label}
-				value={value}
-				onChange={(next) =>
-					onChange(next, next === undefined ? undefined : resolvedUnit)
-				}
-			/>
-			<select
-				aria-label={`${label} unit`}
-				className={settingClassName}
-				disabled={value === undefined}
-				value={resolvedUnit}
-				onChange={(event) =>
-					onChange(value, event.target.value as "px" | "viewport")
-				}
-			>
-				<option value="viewport">Viewport</option>
-				<option value="px">Pixels</option>
-			</select>
-		</div>
+			<div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+				<input
+					className={settingClassName}
+					placeholder="No limit"
+					step={resolvedUnit === "px" ? 25 : 0.25}
+					type="number"
+					value={value ?? ""}
+					onChange={(event) => {
+						const next =
+							event.target.value === ""
+								? undefined
+								: Number(event.target.value);
+						onChange(next, next === undefined ? undefined : resolvedUnit);
+					}}
+				/>
+				<select
+					aria-label={`${label} unit`}
+					className={settingClassName}
+					disabled={value === undefined}
+					value={resolvedUnit}
+					onChange={(event) =>
+						onChange(value, event.target.value as "px" | "viewport")
+					}
+				>
+					<option value="viewport">Viewport</option>
+					<option value="px">Pixels</option>
+				</select>
+			</div>
+		</Setting>
 	);
 }
 
@@ -190,16 +203,19 @@ export function OptionalUnitNumberSetting({
 export function TextSetting({
 	label,
 	onChange,
+	placeholder,
 	value,
 }: {
 	label: string;
 	onChange: (value: string) => void;
+	placeholder?: string;
 	value: string;
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
 			<input
 				className={settingClassName}
+				placeholder={placeholder}
 				type="text"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}

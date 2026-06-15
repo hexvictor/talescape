@@ -10,6 +10,7 @@ type TaleDebugState = {
 	inspectorControlsOpen: boolean;
 	mode: TaleReaderState["editor"]["mode"];
 	open: boolean;
+	openInspector: TaleReaderState["editor"]["openInspector"];
 	phase: LayoutPhase;
 	seenBlocks: number;
 	taleTitle: string | undefined;
@@ -32,6 +33,7 @@ export function useTaleDebugState(): TaleDebugState {
 		inspectorControlsOpen: state.editor.inspectorControlsOpen,
 		mode: state.editor.mode,
 		open: state.debug.open,
+		openInspector: state.editor.openInspector,
 		phase: state.engine.phase,
 		seenBlocks: state.progress.data.seenBlockIds.length,
 		taleTitle: state.tale.data.title,

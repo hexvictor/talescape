@@ -4,14 +4,17 @@ import { useCallback, useEffect, useRef } from "react";
 import { useReaderViewportState } from "./store/useReaderRuntimeSelectors";
 import { useChooseReaderPath } from "./useChooseReaderPath";
 import { usePrepareReaderLayout } from "./usePrepareReaderLayout";
+import { useReaderHubLayout } from "./useReaderHubLayout";
 import { useReaderScrollEngine } from "./useReaderScrollEngine";
 import { useViewportSize } from "./useViewportSize";
 
 export function useReaderViewportController() {
 	const state = useReaderViewportState();
+	const hubLayout = useReaderHubLayout();
+	const hubDocked = state.hubOpen && hubLayout === "desktop";
 	const viewport = useViewportSize({
-		maximumRightInsetPx: state.hubOpen ? 448 : 0,
-		rightInsetRatio: state.hubOpen ? 0.42 : 0,
+		maximumRightInsetPx: hubDocked ? 448 : 0,
+		rightInsetRatio: hubDocked ? 0.42 : 0,
 	});
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -43,6 +46,7 @@ export function useReaderViewportController() {
 	return {
 		choosePath,
 		compiled: state.compiled,
+		hubDocked,
 		measurementBlockIds: state.measurementBlockIds,
 		measurementRef,
 		stageRef,

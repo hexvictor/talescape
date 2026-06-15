@@ -59,12 +59,14 @@ export function resolveFragment(
 			isLastInBlock: blockLinks.index === structure.siblingIds.length - 1,
 		},
 		resolvedAnimations: {
+			ambient: resolveAnimations(fragment.animations.ambient),
+			ambientCycleDurationMs:
+				fragment.animations.ambient.cycleDurationMs ?? 2400,
+			ambientPlayback: fragment.animations.ambient.playback ?? "alternate",
 			entering: resolveAnimations(fragment.animations.entering),
 			leaving: resolveAnimations(fragment.animations.leaving),
 			scrolling: resolveAnimations(fragment.animations.scrolling),
 		},
-		resolvedScrollAnimationPlayback:
-			fragment.scrollAnimationPlayback ?? "scrub",
 		resolvedVisibleRange: fragment.visibleRange ?? { end: 1, start: 0 },
 	};
 }

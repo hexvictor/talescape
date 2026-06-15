@@ -4,6 +4,7 @@ import type {
 	TaleBlock,
 } from "~/app/(tale-reader)/_shared/types";
 import type {
+	AmbientAnimationSelection as DbAmbientAnimationSelection,
 	AnimationSelection as DbAnimationSelection,
 	ReaderSizeConfig,
 	ReaderSizeMode,
@@ -26,7 +27,8 @@ type RawBlockRow = {
 	pageId?: number | null;
 	partId?: number | null;
 	readingConfig?: {
-		animationConfig?: TransitionConfig["animationConfig"] & {
+		animationConfig?: {
+			ambient?: DbAmbientAnimationSelection;
 			scrolling?: DbAnimationSelection;
 		};
 		cameraPath?: TaleBlock["reading"]["cameraPath"];
@@ -155,12 +157,17 @@ function getBlockFragmentIds(block: RawBlockRow): string[] {
 function formatReadingConfig(block: RawBlockRow): TaleBlock["reading"] {
 	return {
 		animations: {
-			entering: formatAnimationSelection(
-				block.readingConfig?.animationConfig?.entering,
-			),
-			leaving: formatAnimationSelection(
-				block.readingConfig?.animationConfig?.leaving,
-			),
+			ambient: {
+				...formatAnimationSelection(
+					block.readingConfig?.animationConfig?.ambient,
+				),
+				cycleDurationMs:
+					block.readingConfig?.animationConfig?.ambient?.cycleDurationMs ??
+					2400,
+				playback:
+					block.readingConfig?.animationConfig?.ambient?.playback ??
+					"alternate",
+			},
 			scrolling: formatAnimationSelection(
 				block.readingConfig?.animationConfig?.scrolling,
 			),
@@ -191,10 +198,10 @@ function formatTransitionConfig(
 			entering: formatAnimationSelection(transition?.animationConfig.entering),
 			leaving: formatAnimationSelection(transition?.animationConfig.leaving),
 		},
-		enteringLength: transition?.enteringLength ?? 700,
+		enteringLength: transition?.enteringLength ?? null,
 		flow: normalizeFlow(transition?.flow),
-		leavingLength: transition?.leavingLength ?? 700,
-		scrollLength: transition?.leavingLength ?? 700,
+		leavingLength: transition?.leavingLength ?? null,
+		scrollLength: null,
 	};
 }
 
@@ -214,6 +221,7 @@ function normalizeFlow(
 		? flow
 		: {
 				direction: flow?.direction ?? "down",
+				placement: flow?.placement,
 				spacing: flow?.spacing,
 				type: "linear",
 			};

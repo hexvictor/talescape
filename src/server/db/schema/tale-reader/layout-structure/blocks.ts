@@ -68,8 +68,7 @@ export const blocks = createTable("block", (d) => ({
 		.$type<ReadingConfig>()
 		.default({
 			animationConfig: {
-				entering: { tracks: [] },
-				leaving: { tracks: [] },
+				ambient: { tracks: [] },
 				scrolling: { tracks: [] },
 			},
 			readingLength: null,
@@ -84,9 +83,9 @@ export const blocks = createTable("block", (d) => ({
 				entering: { tracks: [] },
 				leaving: { tracks: [] },
 			},
-			enteringLength: 700,
+			enteringLength: null,
 			flow: { direction: "down", type: "linear" },
-			leavingLength: 700,
+			leavingLength: null,
 		}),
 	styleConfig: d.json().$type<ReaderStyleConfig>(),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),

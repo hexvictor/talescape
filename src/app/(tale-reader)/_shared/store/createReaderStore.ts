@@ -55,7 +55,7 @@ export function createReaderStore(
 		...createProgressSlice(tale, progress)(set, get, api),
 		...createReaderSlice(set, get, api),
 		...createScrollSlice(set, get, api),
-		...createUiSlice(set, get, api),
+		...createUiSlice(mode)(set, get, api),
 	});
 
 	return createStore<TaleReaderState>()(

@@ -26,6 +26,7 @@ export function ReaderViewport(): React.JSX.Element {
 	const {
 		choosePath,
 		compiled,
+		hubDocked,
 		measurementBlockIds,
 		measurementRef,
 		stageRef,
@@ -40,6 +41,7 @@ export function ReaderViewport(): React.JSX.Element {
 					blockIds={measurementBlockIds}
 					rootRef={measurementRef}
 					tale={tale}
+					viewport={viewport}
 				/>
 			) : null}
 			<main
@@ -53,7 +55,7 @@ export function ReaderViewport(): React.JSX.Element {
 					data-reader-role="camera-viewport"
 					className="absolute inset-y-0 left-0 overflow-hidden transition-[right] duration-300 ease-out"
 					style={{
-						right: readerHubOpen ? "min(28rem, 42vw)" : 0,
+						right: readerHubOpen && hubDocked ? "min(28rem, 42vw)" : 0,
 					}}
 				>
 					<div className="absolute inset-0">

@@ -67,12 +67,19 @@ export function createReaderNavigationMotion(
 		targetScroll: number,
 		durationSeconds: number,
 		revision: number,
+		onComplete?: () => void,
 	): void => {
 		if (revision !== navigationRevision) return;
 		lifecycle.onTravelEnd();
-		driver.scrollTo(targetScroll, "smooth", {
-			duration: durationSeconds,
-		});
+		driver.travelTo(
+			targetScroll,
+			durationSeconds,
+			() => {
+				if (revision !== navigationRevision) return;
+				onComplete?.();
+			},
+			undefined,
+		);
 	};
 
 	const getTravelDuration = (distance: number, duration?: number): number => {
@@ -107,12 +114,15 @@ export function createReaderNavigationMotion(
 
 		if (motion === "instant") {
 			driver.setScroll(target.targetScroll);
+			options?.onComplete?.();
 			return;
 		}
 		if (motion === "reading") {
-			driver.scrollTo(target.targetScroll, "smooth", {
-				duration: options?.duration ?? defaultArrivalDurationSeconds,
-			});
+			driver.travelTo(
+				target.targetScroll,
+				options?.duration ?? defaultArrivalDurationSeconds,
+				options?.onComplete,
+			);
 			return;
 		}
 
@@ -121,6 +131,7 @@ export function createReaderNavigationMotion(
 			const distance = Math.abs(target.targetScroll - currentScroll);
 			if (distance < 1) {
 				driver.setScroll(target.targetScroll);
+				options?.onComplete?.();
 				return;
 			}
 			lifecycle.onTravelStart(target.targetAnchor);
@@ -128,7 +139,9 @@ export function createReaderNavigationMotion(
 				target.targetScroll,
 				getTravelDuration(distance, options?.duration),
 				() => {
-					if (revision === navigationRevision) lifecycle.onTravelEnd();
+					if (revision !== navigationRevision) return;
+					lifecycle.onTravelEnd();
+					options?.onComplete?.();
 				},
 				() => {
 					if (revision === navigationRevision) lifecycle.onTravelEnd();
@@ -143,6 +156,7 @@ export function createReaderNavigationMotion(
 				target.targetScroll,
 				options?.duration ?? defaultArrivalDurationSeconds,
 				revision,
+				options?.onComplete,
 			);
 			return;
 		}
@@ -156,6 +170,7 @@ export function createReaderNavigationMotion(
 					target.targetScroll,
 					defaultArrivalDurationSeconds,
 					revision,
+					options?.onComplete,
 				),
 			() => {
 				if (revision === navigationRevision) lifecycle.onTravelEnd();
@@ -174,22 +189,30 @@ export function createReaderNavigationMotion(
 			options?.atChoiceEnd && anchor.block.isChoiceBlock
 				? getReadingSegmentEnd(compiled, blockId, anchor.scroll)
 				: anchor.scroll;
+		const currentScroll = driver.getScroll();
+		const direction = targetScroll >= currentScroll ? 1 : -1;
 		const transitionIndex = compiled.transitionIntoByBlockId[blockId];
 		const transition =
 			transitionIndex === undefined ? null : compiled.segments[transitionIndex];
-		const approachScroll =
+		const candidateApproachScroll =
 			!options?.atChoiceEnd &&
 			transition?.type === "transition" &&
-			transition.start < targetScroll
+			transition.start < targetScroll &&
+			direction === 1
 				? transition.start
 				: compiled.anchorIndexByBlockId[blockId] === 0
 					? null
 					: getFallbackApproach(
 							targetScroll,
-							driver.getScroll(),
+							direction,
 							compiled.totalScroll,
 							viewportSpan,
 						);
+		const approachScroll =
+			candidateApproachScroll !== null &&
+			isBetween(currentScroll, candidateApproachScroll, targetScroll)
+				? null
+				: candidateApproachScroll;
 		navigateToTarget(
 			{ approachScroll, targetAnchor: anchor, targetScroll },
 			options,
@@ -218,6 +241,18 @@ export function createReaderNavigationMotion(
 		scrollToBlock,
 		scrollToTimelineEdge,
 	};
+}
+
+/**
+ * Checks whether a value is already inside an approach-to-target interval.
+ *
+ * @param value - Current timeline position.
+ * @param first - First interval edge.
+ * @param second - Second interval edge.
+ * @returns True when the current position is between both edges.
+ */
+function isBetween(value: number, first: number, second: number): boolean {
+	return value >= Math.min(first, second) && value <= Math.max(first, second);
 }
 
 /**
@@ -250,11 +285,10 @@ function getReadingSegmentEnd(
  */
 function getFallbackApproach(
 	targetScroll: number,
-	currentScroll: number,
+	direction: number,
 	totalScroll: number,
 	viewportSpan: number,
 ): number | null {
-	const direction = targetScroll >= currentScroll ? 1 : -1;
 	const approach = clamp(
 		targetScroll - direction * viewportSpan * fallbackArrivalViewportSpans,
 		0,

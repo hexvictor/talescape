@@ -23,13 +23,15 @@ import { getNodeFragmentStyle, getNodeStyle } from "./nodeStyles";
  */
 export function NodeRenderer({
 	anchor,
+	measurement = false,
 	nodeId,
 	onChoosePath,
 }: {
 	anchor: Anchor;
+	measurement?: boolean;
 	nodeId: string;
 	onChoosePath: (path: TalePath) => void;
-}) {
+}): React.JSX.Element | null {
 	const node = anchor.block.nodesById[nodeId];
 	if (!node) return null;
 
@@ -38,7 +40,7 @@ export function NodeRenderer({
 			data-reader-component="NodeRenderer"
 			data-reader-node-id={node.id}
 			data-reader-role="layout-node"
-			style={getNodeStyle(node)}
+			style={getNodeStyle(node, measurement)}
 		>
 			{node.children.map((child, index) => {
 				if (child.type === "node") {
@@ -46,6 +48,7 @@ export function NodeRenderer({
 						<NodeRenderer
 							key={child.nodeId}
 							anchor={anchor}
+							measurement={measurement}
 							nodeId={child.nodeId}
 							onChoosePath={onChoosePath}
 						/>

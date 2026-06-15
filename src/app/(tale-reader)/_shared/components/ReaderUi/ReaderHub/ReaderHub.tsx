@@ -4,40 +4,31 @@ import clsx from "clsx";
 import {
 	BookMarked,
 	Image,
-	ListTree,
 	MessageCircle,
 	PanelRightClose,
-	Route,
+	Settings,
 	Sparkles,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
 import { useReaderHubState } from "../../../hooks/store/useReaderNavigationSelectors";
+import { useReaderHubLayout } from "../../../hooks/useReaderHubLayout";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { getReaderHubContent } from "../../../services/readerHubContent";
 import type { ReaderHubPanel } from "../../../store/slices/hubSlice";
-import { ReaderHubContents, ReaderHubRoutes } from "./ReaderHubNavigation";
+import { ReaderHubSettings } from "./ReaderHubSettings";
 
-type ReaderHubView = "context" | "navigation";
-
-const navigationPanels: {
+type HubPanelOption = {
 	icon: typeof MessageCircle;
 	id: ReaderHubPanel;
 	label: string;
-}[] = [
-	{ icon: ListTree, id: "contents", label: "Contents" },
-	{ icon: Route, id: "routes", label: "Routes" },
-];
+};
 
-const contextPanels: {
-	icon: typeof MessageCircle;
-	id: ReaderHubPanel;
-	label: string;
-}[] = [
+const contextPanels: HubPanelOption[] = [
 	{ icon: MessageCircle, id: "community", label: "Community" },
 	{ icon: Image, id: "art", label: "Art" },
 	{ icon: BookMarked, id: "codex", label: "Codex" },
 	{ icon: Sparkles, id: "trivia", label: "Trivia" },
+	{ icon: Settings, id: "settings", label: "Settings" },
 ];
 
 /**
@@ -51,25 +42,11 @@ const contextPanels: {
 export function ReaderHub(): React.JSX.Element {
 	const { page } = useReaderLocationContext();
 	const { activePanel, open, setActivePanel, toggleOpen } = useReaderHubState();
-	const [activeView, setActiveView] = useState<ReaderHubView>(
-		activePanel === "contents" || activePanel === "routes"
-			? "navigation"
-			: "context",
-	);
+	const layout = useReaderHubLayout();
 	const pageTitle = page?.title ?? page?.type ?? "Current page";
 	const content = getReaderHubContent(page?.id ?? "unknown", pageTitle);
-	const panels = activeView === "navigation" ? navigationPanels : contextPanels;
-
-	/**
-	 * Switches between navigation and contextual Reader Hub workspaces.
-	 *
-	 * @param view - Workspace to display.
-	 * @returns Nothing.
-	 */
-	const selectView = (view: ReaderHubView): void => {
-		setActiveView(view);
-		setActivePanel(view === "navigation" ? "contents" : "community");
-	};
+	const mobilePortrait = layout === "mobile-portrait";
+	const mobileLandscape = layout === "mobile-landscape";
 
 	return (
 		<>
@@ -80,7 +57,7 @@ export function ReaderHub(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open Reader Hub"
-					className="pointer-events-auto absolute top-4 right-4 z-60 grid h-12 w-12 place-items-center rounded-lg border border-white/12 bg-black/78 text-white/72 opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-white hover:opacity-100"
+					className="pointer-events-auto absolute top-4 right-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-white/12 bg-black/78 text-white/72 opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-white hover:opacity-100"
 					onClick={toggleOpen}
 				>
 					<BookMarked size={18} />
@@ -92,10 +69,16 @@ export function ReaderHub(): React.JSX.Element {
 						data-reader-ui="true"
 						data-reader-component="ReaderHub"
 						data-reader-role="reader-hub-sidebar"
-						className="pointer-events-auto absolute inset-y-0 right-0 z-60 flex w-[min(28rem,42vw)] flex-col border-white/12 border-l bg-[#090909]/96 shadow-2xl backdrop-blur-xl"
-						initial={{ x: "100%" }}
-						animate={{ x: 0 }}
-						exit={{ x: "100%" }}
+						className={clsx(
+							"pointer-events-auto absolute z-80 flex flex-col border-white/12 bg-[#090909]/96 shadow-2xl backdrop-blur-xl",
+							mobilePortrait
+								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
+								: "inset-y-0 right-0 w-[min(28rem,42vw)] border-l",
+							!mobileLandscape && !mobilePortrait && "w-[min(28rem,42vw)]",
+						)}
+						initial={mobilePortrait ? { y: "100%" } : { x: "100%" }}
+						animate={mobilePortrait ? { y: 0 } : { x: 0 }}
+						exit={mobilePortrait ? { y: "100%" } : { x: "100%" }}
 						transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
 					>
 						<header className="flex h-16 shrink-0 items-center gap-3 border-white/10 border-b px-4">
@@ -117,63 +100,12 @@ export function ReaderHub(): React.JSX.Element {
 								<PanelRightClose size={16} />
 							</button>
 						</header>
-						<div className="grid shrink-0 grid-cols-2 gap-1 border-white/10 border-b p-2">
-							<button
-								type="button"
-								className={clsx(
-									"rounded px-3 py-2 font-semibold text-xs",
-									activeView === "navigation"
-										? "bg-white/12 text-white"
-										: "text-white/42 hover:bg-white/6 hover:text-white/72",
-								)}
-								onClick={() => selectView("navigation")}
-							>
-								Navigation
-							</button>
-							<button
-								type="button"
-								className={clsx(
-									"rounded px-3 py-2 font-semibold text-xs",
-									activeView === "context"
-										? "bg-white/12 text-white"
-										: "text-white/42 hover:bg-white/6 hover:text-white/72",
-								)}
-								onClick={() => selectView("context")}
-							>
-								Context
-							</button>
-						</div>
-						<nav
-							data-reader-component="ReaderHub"
-							data-reader-role="hub-tab-list"
-							className={clsx(
-								"grid shrink-0 gap-1 border-white/10 border-b p-2",
-								activeView === "navigation" ? "grid-cols-2" : "grid-cols-4",
-							)}
-						>
-							{panels.map((panel) => {
-								const Icon = panel.icon;
-								return (
-									<button
-										key={panel.id}
-										type="button"
-										className={clsx(
-											"flex items-center justify-center gap-1.5 rounded px-2 py-2 font-semibold text-[10px]",
-											activePanel === panel.id
-												? "bg-[#d9b56f] text-black"
-												: "text-white/48 hover:bg-white/7 hover:text-white",
-										)}
-										onClick={() => setActivePanel(panel.id)}
-									>
-										<Icon size={12} />
-										{panel.label}
-									</button>
-								);
-							})}
-						</nav>
+						<HubPanelSelector
+							activePanel={activePanel}
+							contextPanels={contextPanels}
+							onSelect={setActivePanel}
+						/>
 						<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
-							{activePanel === "contents" ? <ReaderHubContents /> : null}
-							{activePanel === "routes" ? <ReaderHubRoutes /> : null}
 							{activePanel === "community" ? (
 								<div className="space-y-2">
 									{content.comments.map((comment) => (
@@ -229,11 +161,89 @@ export function ReaderHub(): React.JSX.Element {
 									))}
 								</div>
 							) : null}
+							{activePanel === "settings" ? <ReaderHubSettings /> : null}
 						</div>
 					</motion.aside>
 				) : null}
 			</AnimatePresence>
 		</>
+	);
+}
+
+/**
+ * Renders compact grouped Reader Hub destinations without nested tab bars.
+ *
+ * @param props - Panel groups, active panel, and selection callback.
+ * @returns Grouped panel selector.
+ */
+function HubPanelSelector({
+	activePanel,
+	contextPanels,
+	onSelect,
+}: {
+	activePanel: ReaderHubPanel;
+	contextPanels: HubPanelOption[];
+	onSelect: (panel: ReaderHubPanel) => void;
+}): React.JSX.Element {
+	return (
+		<nav
+			data-reader-component="ReaderHub"
+			data-reader-role="hub-panel-selector"
+			className="flex shrink-0 items-center gap-3 overflow-x-auto border-white/10 border-b px-3 py-2 [scrollbar-width:none]"
+		>
+			<HubPanelGroup
+				activePanel={activePanel}
+				label="Explore"
+				onSelect={onSelect}
+				panels={contextPanels}
+			/>
+		</nav>
+	);
+}
+
+/**
+ * Renders one labeled group of Reader Hub destinations.
+ *
+ * @param props - Panel group configuration.
+ * @returns Compact panel controls.
+ */
+function HubPanelGroup({
+	activePanel,
+	label,
+	onSelect,
+	panels,
+}: {
+	activePanel: ReaderHubPanel;
+	label: string;
+	onSelect: (panel: ReaderHubPanel) => void;
+	panels: HubPanelOption[];
+}): React.JSX.Element {
+	return (
+		<div className="flex shrink-0 items-center gap-1">
+			<span className="mr-1 hidden text-[9px] text-white/28 uppercase sm:inline">
+				{label}
+			</span>
+			{panels.map((panel) => {
+				const Icon = panel.icon;
+				return (
+					<button
+						key={panel.id}
+						type="button"
+						title={panel.label}
+						aria-label={panel.label}
+						className={clsx(
+							"grid h-8 w-8 place-items-center rounded",
+							activePanel === panel.id
+								? "bg-[#d9b56f] text-black"
+								: "text-white/48 hover:bg-white/7 hover:text-white",
+						)}
+						onClick={() => onSelect(panel.id)}
+					>
+						<Icon size={13} />
+					</button>
+				);
+			})}
+		</div>
 	);
 }
 

@@ -60,7 +60,7 @@ export function FragmentPlacementSettings({
 				>
 					<option value="normal">Normal flow</option>
 					<option value="absolute">Absolute in node</option>
-					<option value="fixed">Fixed to viewport</option>
+					<option value="fixed">Fixed within block viewport</option>
 				</select>
 			</Setting>
 			<Setting label="Parent node">
@@ -95,6 +95,38 @@ export function FragmentPlacementSettings({
 			</Setting>
 			{placement.mode === "absolute" || placement.mode === "fixed" ? (
 				<>
+					<Setting label="Horizontal anchor">
+						<select
+							className={settingClassName}
+							value={placement.horizontal}
+							onChange={(event) =>
+								onChange({
+									...placement,
+									horizontal: event.target.value as "center" | "left" | "right",
+								})
+							}
+						>
+							<option value="left">Left</option>
+							<option value="center">Center</option>
+							<option value="right">Right</option>
+						</select>
+					</Setting>
+					<Setting label="Vertical anchor">
+						<select
+							className={settingClassName}
+							value={placement.vertical}
+							onChange={(event) =>
+								onChange({
+									...placement,
+									vertical: event.target.value as "bottom" | "center" | "top",
+								})
+							}
+						>
+							<option value="top">Top</option>
+							<option value="center">Center</option>
+							<option value="bottom">Bottom</option>
+						</select>
+					</Setting>
 					<Setting label="Unit">
 						<select
 							className={settingClassName}
@@ -110,20 +142,24 @@ export function FragmentPlacementSettings({
 							<option value="px">Pixels</option>
 						</select>
 					</Setting>
-					<NumberSetting
-						label="X"
-						min={-10000}
-						step={placement.unit === "px" ? 10 : 0.05}
-						value={placement.x}
-						onChange={(x) => onChange({ ...placement, x })}
-					/>
-					<NumberSetting
-						label="Y"
-						min={-10000}
-						step={placement.unit === "px" ? 10 : 0.05}
-						value={placement.y}
-						onChange={(y) => onChange({ ...placement, y })}
-					/>
+					{placement.horizontal === "center" ? null : (
+						<NumberSetting
+							label="X"
+							min={-10000}
+							step={placement.unit === "px" ? 10 : 0.05}
+							value={placement.x}
+							onChange={(x) => onChange({ ...placement, x })}
+						/>
+					)}
+					{placement.vertical === "center" ? null : (
+						<NumberSetting
+							label="Y"
+							min={-10000}
+							step={placement.unit === "px" ? 10 : 0.05}
+							value={placement.y}
+							onChange={(y) => onChange({ ...placement, y })}
+						/>
+					)}
 					<OptionalNumberSetting
 						label="Width"
 						value={placement.width}

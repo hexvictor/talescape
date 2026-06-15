@@ -1,10 +1,11 @@
-import type { ReaderStyle } from "../../../types";
+import type { ReaderStyle, TaleNode } from "../../../types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "../../ReaderUi/TaleDebug/DebugPrimitives";
 import { NumberSetting, TextSetting } from "./InspectorValueFields";
+import { StyleLayoutSettings } from "./StyleLayoutSettings";
 
 /**
  * Edits common safe style properties with advanced layout fields in a disclosure.
@@ -18,11 +19,13 @@ import { NumberSetting, TextSetting } from "./InspectorValueFields";
  */
 export function StyleSettings({
 	className,
+	layoutMode,
 	onChange,
 	style,
 	title,
 }: {
 	className?: string;
+	layoutMode?: TaleNode["mode"];
 	onChange: (style: ReaderStyle) => void;
 	style?: ReaderStyle;
 	title: string;
@@ -64,9 +67,16 @@ export function StyleSettings({
 					onChange={(borderRadius) => onChange({ ...current, borderRadius })}
 				/>
 				<TextSetting
-					label="Padding"
-					value={String(current.padding ?? "")}
-					onChange={(value) => setText("padding", value)}
+					label="Vertical padding"
+					placeholder="24px, 2rem, 6vh"
+					value={String(current.paddingBlock ?? "")}
+					onChange={(value) => setText("paddingBlock", value)}
+				/>
+				<TextSetting
+					label="Horizontal padding"
+					placeholder="24px, 2rem, 6vw"
+					value={String(current.paddingInline ?? "")}
+					onChange={(value) => setText("paddingInline", value)}
 				/>
 				<Setting label="Text alignment">
 					<select
@@ -90,6 +100,31 @@ export function StyleSettings({
 						Advanced layout and CSS
 					</summary>
 					<div className="mt-3 grid grid-cols-2 gap-2">
+						{layoutMode ? null : (
+							<Setting label="Display">
+								<select
+									className={settingClassName}
+									value={current.display ?? "block"}
+									onChange={(event) =>
+										onChange({
+											...current,
+											display: event.target.value as ReaderStyle["display"],
+										})
+									}
+								>
+									<option value="block">Block</option>
+									<option value="inline-block">Inline block</option>
+									<option value="flex">Flex</option>
+									<option value="grid">Grid</option>
+								</select>
+							</Setting>
+						)}
+						<TextSetting
+							label="Padding shorthand"
+							placeholder="24px 32px"
+							value={String(current.padding ?? "")}
+							onChange={(value) => setText("padding", value)}
+						/>
 						<TextSetting
 							label="Width"
 							value={String(current.width ?? "")}
@@ -130,20 +165,10 @@ export function StyleSettings({
 							value={current.boxShadow ?? ""}
 							onChange={(value) => setText("boxShadow", value)}
 						/>
-						<TextSetting
-							label="Grid area"
-							value={current.gridArea ?? ""}
-							onChange={(value) => setText("gridArea", value)}
-						/>
-						<TextSetting
-							label="Grid column"
-							value={current.gridColumn ?? ""}
-							onChange={(value) => setText("gridColumn", value)}
-						/>
-						<TextSetting
-							label="Grid row"
-							value={current.gridRow ?? ""}
-							onChange={(value) => setText("gridRow", value)}
+						<StyleLayoutSettings
+							layoutMode={layoutMode ?? current.display}
+							style={current}
+							onChange={onChange}
 						/>
 						<TextSetting
 							label="Custom CSS"

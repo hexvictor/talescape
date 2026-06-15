@@ -2,6 +2,7 @@
 
 import { useReaderOverlayState } from "../../../hooks/store/useReaderRuntimeSelectors";
 import { ReaderEditorOverlay } from "../../ReaderEdit/ReaderEditorOverlay";
+import { ReaderNavigationModal } from "../../ReaderUi/ContentsNavigator/ReaderNavigationModal";
 import { EntryNavigator } from "../../ReaderUi/EntryNavigator/EntryNavigator";
 import { PageNavigator } from "../../ReaderUi/PageNavigator/PageNavigator";
 import { ReaderProgress } from "../../ReaderUi/ReaderProgress/ReaderProgress";
@@ -18,8 +19,14 @@ import { TaleDebug } from "../../ReaderUi/TaleDebug/TaleDebug";
  * <ReaderOverlayUi />
  */
 export function ReaderOverlayUi(): React.JSX.Element {
-	const { scrollCue, setVisibilityMode, toggleReaderUi, visibilityMode } =
-		useReaderOverlayState();
+	const {
+		debugVisible,
+		readerStatusVisible,
+		scrollCue,
+		setVisibilityMode,
+		toggleReaderUi,
+		visibilityMode,
+	} = useReaderOverlayState();
 	const showNavigation =
 		visibilityMode === "all" || visibilityMode === "navigation";
 	const showProgress = visibilityMode !== "hidden";
@@ -31,9 +38,13 @@ export function ReaderOverlayUi(): React.JSX.Element {
 			data-reader-role="reader-overlay"
 			className="pointer-events-none absolute inset-0 z-50"
 		>
-			<ReaderProgress visible={showProgress} />
+			<ReaderProgress
+				statusVisible={readerStatusVisible}
+				visible={showProgress}
+			/>
 			{showNavigation ? (
 				<>
+					<ReaderNavigationModal />
 					<EntryNavigator />
 					<PageNavigator />
 				</>
@@ -45,7 +56,7 @@ export function ReaderOverlayUi(): React.JSX.Element {
 			) : null}
 			{showTools ? (
 				<>
-					<TaleDebug />
+					{debugVisible ? <TaleDebug /> : null}
 					<ReaderEditorOverlay />
 				</>
 			) : null}

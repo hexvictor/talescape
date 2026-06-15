@@ -21,6 +21,7 @@ import { DebugCard, DebugField } from "../DebugPrimitives";
  */
 export function SummaryPanel({
 	anchors,
+	blockType,
 	blockTitle,
 	branchTitle,
 	entryTitle,
@@ -30,6 +31,7 @@ export function SummaryPanel({
 	seenBlocks,
 }: {
 	anchors: Anchor[];
+	blockType?: string;
 	blockTitle?: string;
 	branchTitle?: string;
 	entryTitle?: string;
@@ -47,6 +49,7 @@ export function SummaryPanel({
 			<DebugCard title="Now reading">
 				<DebugField label="Phase" value={phase} />
 				<DebugField label="Block" value={blockTitle} />
+				<DebugField label="Block type" value={blockType} />
 				<DebugField label="Branch" value={branchTitle} />
 				<DebugField label="Page" value={pageLabel} />
 				<DebugField label="Entry" value={entryTitle} />
@@ -96,6 +99,11 @@ export function NavigationPanel({
 			<DebugCard title="Narrative hierarchy">
 				<DebugField label="Page" value={pageLabel} />
 				<DebugField label="Page id" value={page?.id} />
+				<DebugField label="Page type" value={page?.type} />
+				<DebugField
+					label="Page is paginated"
+					value={String(page?.isPaginated)}
+				/>
 				<DebugField label="Entry" value={entry?.title} />
 				<DebugField label="Entry type" value={entry?.type} />
 				<DebugField label="Part" value={part?.title} />
@@ -144,7 +152,7 @@ export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 				/>
 				<DebugField
 					label="Committed fragments"
-					value={String(progress.committedFragmentIds.length)}
+					value={String(progress.committedAnimationIds.length)}
 				/>
 			</DebugCard>
 			<DebugCard title="Selected route">

@@ -34,31 +34,23 @@ export function ReaderStage({
 	}, [renderRevision, scrollApi]);
 
 	return (
-		<>
-			<div
-				ref={stageRef}
-				data-reader-component="ReaderStage"
-				data-reader-role="camera-stage"
-				className="absolute inset-0"
-				style={{
-					transform: `translate3d(${viewport.width / 2}px, ${viewport.height / 2}px, 0)`,
-					willChange: "transform",
-				}}
-			>
-				{renderedAnchors.map((anchor) => (
-					<ReaderBlock
-						key={anchor.block.id}
-						anchor={anchor}
-						onChoosePath={onChoosePath}
-					/>
-				))}
-			</div>
-			<div
-				data-reader-component="ReaderStage"
-				data-reader-fixed-layer="true"
-				data-reader-role="fixed-fragment-layer"
-				className="pointer-events-none absolute inset-0 z-20"
-			/>
-		</>
+		<div
+			ref={stageRef}
+			data-reader-component="ReaderStage"
+			data-reader-role="camera-stage"
+			className="absolute inset-0"
+			style={{
+				transform: `translate3d(${viewport.width / 2}px, ${viewport.height / 2}px, 0)`,
+				willChange: "transform",
+			}}
+		>
+			{renderedAnchors.map((anchor) => (
+				<ReaderBlock
+					key={anchor.block.id}
+					anchor={anchor}
+					onChoosePath={onChoosePath}
+				/>
+			))}
+		</div>
 	);
 }

@@ -20,52 +20,91 @@ export function attachWheelInput({
 	setDirection,
 	totalScroll,
 }: ReaderInputControllerOptions): () => void {
-	let burstCount = 0;
+	let accumulatedDelta = 0;
+	let burstEnergy = 0;
 	let direction: ScrollDirection | null = null;
+	let frameId: number | null = null;
+	let lastEventAt = 0;
 	let resetTimer: number | null = null;
 	let target: number | null = null;
 
-	const onWheel = (event: WheelEvent) => {
-		if (shouldLetElementHandleInput(event.target)) return;
-		if (event.ctrlKey || event.metaKey || Math.abs(event.deltaY) < 1) return;
-		event.preventDefault();
-		countReaderDiagnostic("wheel input");
-		const nextDirection: ScrollDirection = event.deltaY >= 0 ? 1 : -1;
+	const applyAccumulatedWheelInput = (): void => {
+		frameId = null;
+		if (Math.abs(accumulatedDelta) < 0.01) return;
+		const settings = NEW_READER_INPUT_SETTINGS;
+		const now = performance.now();
+		const nextDirection: ScrollDirection = accumulatedDelta >= 0 ? 1 : -1;
 		if (direction !== nextDirection) {
 			direction = nextDirection;
-			burstCount = 0;
+			burstEnergy = 0;
 			target = null;
 		}
-		setDirection(nextDirection);
-		burstCount += 1;
-		const settings = NEW_READER_INPUT_SETTINGS;
-		const physicalDelta = Math.min(
-			settings.wheelAccelerationPx,
-			Math.abs(event.deltaY) * settings.wheelDeltaRatio,
+		const elapsed = lastEventAt === 0 ? 0 : now - lastEventAt;
+		const retainedEnergy =
+			elapsed >= settings.wheelBurstDecayMs
+				? 0
+				: burstEnergy * (1 - elapsed / settings.wheelBurstDecayMs);
+		const normalizedMagnitude = Math.min(Math.abs(accumulatedDelta), 160);
+		burstEnergy = Math.min(
+			settings.wheelBurstEnergyLimit,
+			retainedEnergy + normalizedMagnitude,
 		);
-		const burstStep =
-			settings.wheelBaseStepPx +
-			physicalDelta +
-			Math.max(0, burstCount - 1) * settings.wheelAccelerationPx;
+		accumulatedDelta = 0;
+		lastEventAt = now;
+		setDirection(nextDirection);
 		const amount = Math.min(
 			settings.wheelMaxStepPx,
-			burstStep * settings.wheelRepeatMultiplier ** Math.max(0, burstCount - 1),
+			settings.wheelBaseStepPx +
+				normalizedMagnitude * settings.wheelDeltaRatio +
+				Math.sqrt(burstEnergy) * settings.wheelAccelerationPx,
 		);
-		const from = target ?? driver.getScroll();
+		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + nextDirection * amount, 0, totalScroll);
 		driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
 		window.clearTimeout(resetTimer ?? undefined);
 		resetTimer = window.setTimeout(() => {
-			burstCount = 0;
+			burstEnergy = 0;
 			direction = null;
+			lastEventAt = 0;
 			target = null;
 		}, settings.wheelResetDelayMs);
 		scheduleSnap();
 	};
 
+	const onWheel = (event: WheelEvent): void => {
+		if (shouldLetElementHandleInput(event.target)) return;
+		if (event.ctrlKey || event.metaKey) return;
+		const delta = normalizeWheelDelta(event);
+		if (Math.abs(delta) < 0.1) return;
+		event.preventDefault();
+		countReaderDiagnostic("wheel input");
+		accumulatedDelta += delta;
+		if (frameId === null) {
+			frameId = window.requestAnimationFrame(applyAccumulatedWheelInput);
+		}
+	};
+
 	window.addEventListener("wheel", onWheel, { passive: false });
 	return () => {
 		window.removeEventListener("wheel", onWheel);
+		window.cancelAnimationFrame(frameId ?? 0);
 		window.clearTimeout(resetTimer ?? undefined);
 	};
+}
+
+/**
+ * Converts browser-specific wheel units into approximate CSS pixels.
+ *
+ * @param event - Native wheel event.
+ * @returns Signed wheel distance in CSS pixels.
+ *
+ * @example
+ * const pixels = normalizeWheelDelta(event);
+ */
+function normalizeWheelDelta(event: WheelEvent): number {
+	if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return event.deltaY * 16;
+	if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+		return event.deltaY * window.innerHeight;
+	}
+	return event.deltaY;
 }

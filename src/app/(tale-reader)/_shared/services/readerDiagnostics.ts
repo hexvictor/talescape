@@ -1,4 +1,3 @@
-const diagnosticsEnabled = false;
 const reportIntervalMs = 1000;
 
 type Counter = {
@@ -8,9 +7,27 @@ type Counter = {
 };
 
 const counters = new Map<string, Counter>();
+let diagnosticsEnabled: boolean | null = null;
+
+/**
+ * Returns whether detailed reader diagnostics were enabled before page load.
+ *
+ * Enable diagnostics with:
+ * localStorage.setItem("talescape:reader-diagnostics", "true")
+ *
+ * @returns Whether reader diagnostic logging is enabled.
+ */
+export function areReaderDiagnosticsEnabled(): boolean {
+	if (typeof window === "undefined") return false;
+	if (diagnosticsEnabled === null) {
+		diagnosticsEnabled =
+			window.localStorage.getItem("talescape:reader-diagnostics") === "true";
+	}
+	return diagnosticsEnabled;
+}
 
 export function logReaderDiagnostic(label: string, details?: unknown) {
-	if (!diagnosticsEnabled) return;
+	if (!areReaderDiagnosticsEnabled()) return;
 	console.log(`[tale-reader] ${label}`, details ?? "");
 }
 
@@ -19,7 +36,7 @@ export function logReaderDiagnostic(label: string, details?: unknown) {
  * scroll frame, which would make the diagnostic itself expensive.
  */
 export function countReaderDiagnostic(label: string, details?: unknown) {
-	if (!diagnosticsEnabled) return;
+	if (!areReaderDiagnosticsEnabled()) return;
 	const now = performance.now();
 	const counter = counters.get(label) ?? {
 		count: 0,

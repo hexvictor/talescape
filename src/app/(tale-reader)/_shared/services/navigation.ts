@@ -5,6 +5,7 @@ export function getNextSelectedBranchIds(
 	branchIds: string[],
 	path: TalePath,
 ) {
+	if (path.type === "teleport") return branchIds;
 	const rootBranchId = tale.bounds.rootBranchId;
 	if (path.type === "return") {
 		if (path.toBranchId === rootBranchId) return [];

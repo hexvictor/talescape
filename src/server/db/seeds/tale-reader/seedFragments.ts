@@ -12,12 +12,11 @@ import {
 } from "~/server/db/schema";
 import type { FragmentAnimationConfig } from "~/server/db/types/tale-reader/readerConfig";
 import { userId1 } from "../ids";
-import { isContentSizedPage } from "./readerBlockSeedConfig";
-import { choicePageOrder, readerPageBlueprints } from "./readerStoryBlueprint";
+import { readerPageBlueprints } from "./readerStoryBlueprint";
 import { createReaderStoryText } from "./readerStoryText";
 import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-const imageSources = [
+const localImages = [
 	"/reader-demo/thornwick-town.svg",
 	"/reader-demo/thornwick-market.svg",
 	"/reader-demo/thornwick-church.svg",
@@ -25,10 +24,18 @@ const imageSources = [
 	"/reader-demo/thornwick-woods.svg",
 ] as const;
 
+const externalImages = [
+	"https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
+] as const;
+
 type FragmentSeed = typeof fragments.$inferInsert;
 
 /**
- * Queries real blocks, nodes, and paths and inserts page fragments.
+ * Inserts text, quote, image, choice, and return fragments for every block.
  *
  * @returns Nothing.
  */
@@ -39,6 +46,7 @@ export async function seedFragments(): Promise<void> {
 		.from(tales)
 		.where(eq(tales.slug, "official-tale-branched"));
 	if (!tale) throw new Error("Seeded reader tale was not found.");
+
 	const [allBlocks, allBranches, allEntries, allPages, allNodes, allPaths] =
 		await Promise.all([
 			db
@@ -48,7 +56,6 @@ export async function seedFragments(): Promise<void> {
 					isChoiceBlock: blocks.isChoiceBlock,
 					order: blocks.order,
 					pageId: blocks.pageId,
-					title: blocks.title,
 				})
 				.from(blocks)
 				.where(eq(blocks.taleId, tale.id)),
@@ -66,7 +73,6 @@ export async function seedFragments(): Promise<void> {
 					id: pages.id,
 					order: pages.order,
 					title: pages.title,
-					type: pages.type,
 				})
 				.from(pages)
 				.where(eq(pages.taleId, tale.id)),
@@ -102,28 +108,25 @@ export async function seedFragments(): Promise<void> {
 		allPaths.filter((path) => path.fromBlockId !== null),
 		(path) => path.fromBlockId as number,
 	);
+
 	const values = allBlocks.flatMap((block) => {
 		const page = pageById.get(block.pageId);
-		const pageBlueprint = page && pageBlueprintByOrder.get(page.order);
+		const blueprint = page && pageBlueprintByOrder.get(page.order);
 		const entry = page && entryById.get(page.entryId);
-		const blockNodes = nodesByBlockId.get(block.id) ?? [];
-		const contentNode = blockNodes.find((node) => node.name === "content");
-		const mediaNode = blockNodes.find((node) => node.name === "media");
-		const rootNode = blockNodes.find((node) => node.name === "root");
-		if (!page || !pageBlueprint || !entry || !contentNode || !rootNode) {
+		const contentNode = nodesByBlockId
+			.get(block.id)
+			?.find((node) => node.name === "content");
+		if (!page || !blueprint || !entry || !contentNode) {
 			throw new Error(`Incomplete fragment parents for block ${block.id}.`);
 		}
-		const branchName = branchNameById.get(block.branchId) ?? "main";
 		return createBlockFragments({
 			block,
-			branchName,
+			branchName: branchNameById.get(block.branchId) ?? "main",
 			contentNodeId: contentNode.id,
 			entry,
-			mediaNodeId: mediaNode?.id,
 			page,
-			pageBlueprint,
+			pageBlueprint: blueprint,
 			paths: pathsByBlockId.get(block.id) ?? [],
-			rootNodeId: rootNode.id,
 			taleId: tale.id,
 		});
 	});
@@ -163,21 +166,18 @@ type CreateBlockFragmentsInput = {
 		id: number;
 		isChoiceBlock: boolean;
 		order: number;
-		title: string | null;
 	};
 	branchName: string;
 	contentNodeId: number;
-	entry: { id: number; title: string; type: string };
-	mediaNodeId?: number;
-	page: { id: number; order: number; title: string | null; type: string };
+	entry: { title: string; type: string };
+	page: { order: number; title: string | null };
 	pageBlueprint: (typeof readerPageBlueprints)[number];
 	paths: { id: number; label: string | null; type: string }[];
-	rootNodeId: number;
 	taleId: number;
 };
 
 /**
- * Creates direct fragment rows for one block.
+ * Creates fragments appropriate for one fullscreen, chapter, or choice block.
  *
  * @param input - Actual parent rows and authored page metadata.
  * @returns Fragment insert values.
@@ -190,275 +190,210 @@ function createBlockFragments(
 		branchName,
 		contentNodeId,
 		entry,
-		mediaNodeId,
 		page,
 		pageBlueprint,
 		paths: blockPaths,
-		rootNodeId,
 		taleId,
 	} = input;
 	const base = fragmentBase(block.id, taleId);
-	const values: FragmentSeed[] = [];
-	if (entry.type === "cover") {
-		values.push(
-			{
-				...base,
-				content: {
-					alt: "Thornwick beneath a storm-dark sky",
-					fallbackUrl: imageSources[0],
-					url: imageSources[0],
-				},
-				data: { alt: "Thornwick", url: imageSources[0] },
-				nodeId: rootNodeId,
-				order: 0,
-				placementConfig: {
-					horizontal: "left",
-					mode: "absolute",
-					nodeId: String(rootNodeId),
-					overflow: "clip",
-					unit: "viewport",
-					vertical: "top",
-					width: 1,
-					x: 0,
-					y: 0,
-					zIndex: 0,
-				},
-				styleConfig: {
-					height: "100%",
-					objectFit: "cover",
-					width: "100%",
-				},
-				type: "image",
-			},
-			{
-				...base,
-				animationConfig: {
-					entering: {
-						tracks: [
-							{
-								end: 0.7,
-								from: 0,
-								property: "opacity",
-								start: 0.15,
-								to: 1,
-							},
-							{
-								axis: "y",
-								end: 0.8,
-								from: 80,
-								property: "translate",
-								start: 0.15,
-								to: 0,
-							},
-						],
-					},
-					leaving: { tracks: [] },
-					scrolling: { tracks: [] },
-				},
-				content: { content: "Forked Fates" },
-				data: { content: "Forked Fates" },
-				nodeId: rootNodeId,
-				order: 1,
-				placementConfig: {
-					horizontal: "left",
-					mode: "absolute",
-					nodeId: String(rootNodeId),
-					overflow: "visible",
-					unit: "viewport",
-					vertical: "top",
-					width: 0.8,
-					x: 0.1,
-					y: 0.42,
-					zIndex: 2,
-				},
-				styleConfig: {
-					color: "#fff7e6",
-					fontSize: "clamp(3rem, 9vw, 8rem)",
-					fontWeight: 800,
-					textAlign: "center",
-					width: "100%",
-				},
-				type: "text",
-				visibleRange: { end: 1, start: 0.12 },
-			},
-		);
-		return values;
+	const title = page.title ?? entry.title;
+	if (block.isChoiceBlock) {
+		if (blockPaths.length === 0) {
+			throw new Error(`Choice block ${block.id} has no outgoing paths.`);
+		}
+		return [
+			textFragment(base, contentNodeId, title, 0, true),
+			...blockPaths.map((path, index) =>
+				choiceFragment(base, contentNodeId, path, index + 1),
+			),
+		];
+	}
+	if (entry.type !== "chapter") {
+		return [
+			imageFragment(base, contentNodeId, title, page.order, 0, false),
+			textFragment(base, contentNodeId, title, 1, true),
+			...blockPaths.map((path, index) =>
+				choiceFragment(base, contentNodeId, path, index + 2),
+			),
+		];
 	}
 
-	values.push({
+	const horizontal = pageBlueprint.layout === "horizontal";
+	return [
+		textFragment(base, contentNodeId, title, 0, false),
+		quoteFragment(
+			base,
+			contentNodeId,
+			createReaderStoryText(title, branchName, true),
+			1,
+			horizontal,
+		),
+		imageFragment(base, contentNodeId, title, page.order, 2, horizontal),
+		...blockPaths.map((path, index) =>
+			choiceFragment(base, contentNodeId, path, index + 3),
+		),
+	];
+}
+
+/**
+ * Creates a normal text fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Fragment text.
+ * @param order - Fragment order.
+ * @param centered - Whether text should be centered.
+ * @returns Text fragment seed.
+ */
+function textFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	centered: boolean,
+): FragmentSeed {
+	return {
 		...base,
-		content: { content: entry.title },
-		data: { content: entry.title },
-		nodeId: contentNodeId,
-		order: 0,
-		placementConfig: { mode: "normal", nodeId: String(contentNodeId) },
+		content: { content: text },
+		data: { content: text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
 		styleConfig: {
 			fontSize: "clamp(2rem, 5vw, 4.5rem)",
 			fontWeight: 800,
 			lineHeight: 1.05,
-			textAlign: mediaNodeId ? "left" : "center",
+			maxWidth: "52rem",
+			textAlign: centered ? "center" : "left",
 		},
 		type: "text",
-	});
-	values.push({
+	};
+}
+
+/**
+ * Creates a chapter quote fragment with connected enter and scroll scales.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Story text.
+ * @param order - Fragment order.
+ * @param horizontal - Whether the page scrolls horizontally.
+ * @returns Quote fragment seed.
+ */
+function quoteFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	horizontal: boolean,
+): FragmentSeed {
+	return {
 		...base,
 		animationConfig: {
-			entering: { tracks: [] },
+			ambient: { cycleDurationMs: 2400, tracks: [] },
+			entering: {
+				tracks: [{ end: 1, from: 1, property: "scale", start: 0, to: 0.94 }],
+			},
 			leaving: { tracks: [] },
 			scrolling: {
-				tracks:
-					page.order % 4 === 0
-						? [
-								{
-									end: 0.5,
-									from: 0,
-									property: "opacity",
-									start: 0.05,
-									to: 1,
-								},
-								{
-									axis: "y",
-									end: 0.65,
-									from: 36,
-									property: "translate",
-									start: 0.05,
-									to: 0,
-								},
-							]
-						: [],
+				tracks: [{ end: 0.7, from: 0.94, property: "scale", start: 0, to: 1 }],
 			},
 		},
-		content: {
-			attribution: branchName === "main" ? "The Thornwick Ledger" : branchName,
-			text: createReaderStoryText(
-				page.title ?? entry.title,
-				branchName,
-				isContentSizedPage(pageBlueprint),
-			),
-		},
-		data: {
-			attribution: "The Thornwick Ledger",
-			text: createReaderStoryText(
-				page.title ?? entry.title,
-				branchName,
-				isContentSizedPage(pageBlueprint),
-			),
-		},
-		nodeId: contentNodeId,
-		order: 1,
-		placementConfig: { mode: "normal", nodeId: String(contentNodeId) },
-		scrollAnimationPlayback: "commitOnComplete",
+		content: { attribution: "The Thornwick Ledger", text },
+		data: { attribution: "The Thornwick Ledger", text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
 		styleConfig: {
 			fontSize: "clamp(1rem, 1.5vw, 1.3rem)",
 			lineHeight: 1.8,
-			maxWidth: "58rem",
+			width: "100%",
+			maxWidth: "70vw",
 		},
 		type: "quote",
 		visibleRange: { end: 1, start: 0 },
-	});
-	if (mediaNodeId) {
-		values.push({
-			...base,
-			content: {
-				alt: `Illustration for ${page.title ?? entry.title}`,
-				fallbackUrl: imageSource(page.order),
-				url: imageSource(page.order),
-			},
-			data: {
-				alt: `Illustration for ${page.title ?? entry.title}`,
-				url: imageSource(page.order),
-			},
-			nodeId: mediaNodeId,
-			order: 2,
-			placementConfig: { mode: "normal", nodeId: String(mediaNodeId) },
-			styleConfig: {
-				height: "min(64dvh, 46rem)",
-				objectFit: "cover",
-				width: "100%",
-			},
-			type: "image",
-		});
-	}
-	if (block.order % 8 === 0) {
-		values.push({
-			...base,
-			animationConfig: {
-				entering: { tracks: [] },
-				leaving: { tracks: [] },
-				scrolling: {
-					tracks: [
-						{
-							end: 0.75,
-							from: 0,
-							property: "opacity",
-							start: 0.35,
-							to: 0.82,
-						},
-						{
-							end: 0.9,
-							from: -8,
-							property: "rotate",
-							start: 0.35,
-							to: 8,
-						},
-					],
-				},
-			},
-			content: {
-				alt: "A small Thornwick illustration",
-				fallbackUrl: imageSource(page.order + 2),
-				url: imageSource(page.order + 2),
-			},
-			data: {
-				alt: "A small Thornwick illustration",
-				url: imageSource(page.order + 2),
-			},
-			nodeId: rootNodeId,
-			order: 3,
-			placementConfig: {
-				horizontal: page.order % 2 === 0 ? "right" : "left",
-				mode: "absolute",
-				nodeId: String(rootNodeId),
-				overflow: "visible",
-				unit: "viewport",
-				vertical: "bottom",
-				width: 0.18,
-				x: 0.04,
-				y: 0.04,
-				zIndex: 3,
-			},
-			styleConfig: { objectFit: "contain", width: "100%" },
-			type: "image",
-			visibleRange: { end: 1, start: 0.3 },
-		});
-	}
-	for (const [pathIndex, path] of blockPaths.entries()) {
-		values.push({
-			...base,
-			content: {
-				description:
-					path.type === "return"
-						? "Return to an earlier moment on this route."
-						: "Choose how Mara continues through Thornwick.",
-				label: path.label ?? "Continue",
-				pathId: String(path.id),
-			},
-			data: {
-				label: path.label ?? "Continue",
-				pathId: String(path.id),
-			},
-			nodeId: contentNodeId,
-			order: 10 + pathIndex,
-			placementConfig: { mode: "normal", nodeId: String(contentNodeId) },
-			styleConfig: { maxWidth: "34rem", width: "100%" },
-			type: "choiceButton",
-			visibleRange: { end: 1, start: block.isChoiceBlock ? 0.55 : 0 },
-		});
-	}
-	if (block.order === choicePageOrder && blockPaths.length === 0) {
-		throw new Error("Choice block has no outgoing path fragments.");
-	}
-	return values;
+	};
+}
+
+/**
+ * Creates a deterministic external image fragment with a local fallback.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param title - Image alternative text context.
+ * @param pageOrder - Tale-wide page order.
+ * @param order - Fragment order.
+ * @param horizontal - Whether the page scrolls horizontally.
+ * @returns Image fragment seed.
+ */
+function imageFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	title: string,
+	pageOrder: number,
+	order: number,
+	horizontal: boolean,
+): FragmentSeed {
+	const source =
+		externalImages[pageOrder % externalImages.length] ?? externalImages[0];
+	const fallback =
+		localImages[pageOrder % localImages.length] ?? localImages[0];
+	return {
+		...base,
+		content: {
+			alt: `Illustration for ${title}`,
+			fallbackUrl: fallback,
+			url: source,
+		},
+		data: { alt: `Illustration for ${title}`, url: source },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			flexShrink: 0,
+			height: horizontal ? "72vh" : "min(52vh, 34rem)",
+			maxWidth: horizontal ? "65vw" : "48rem",
+			objectFit: "cover",
+			width: horizontal ? "65vw" : "100%",
+		},
+		type: "image",
+	};
+}
+
+/**
+ * Creates an unanimated choice or return button fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param path - Persisted path row.
+ * @param order - Fragment order.
+ * @returns Choice button fragment seed.
+ */
+function choiceFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	path: { id: number; label: string | null; type: string },
+	order: number,
+): FragmentSeed {
+	return {
+		...base,
+		content: {
+			description:
+				path.type === "return"
+					? "Return to a previously visited choice."
+					: path.type === "teleport"
+						? "Revisit a prior block without changing the selected route."
+						: "Choose the next route through Thornwick.",
+			label: path.label ?? "Continue",
+			pathId: String(path.id),
+		},
+		data: { label: path.label ?? "Continue", pathId: String(path.id) },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: { maxWidth: "34rem", width: "100%" },
+		type: "choiceButton",
+	};
 }
 
 /**
@@ -480,7 +415,6 @@ function fragmentBase(
 	| "editable"
 	| "isOfficial"
 	| "isVerified"
-	| "scrollAnimationPlayback"
 	| "taleId"
 	| "visibility"
 > {
@@ -492,7 +426,6 @@ function fragmentBase(
 		editable: true,
 		isOfficial: true,
 		isVerified: true,
-		scrollAnimationPlayback: "scrub",
 		taleId,
 		visibility: "public",
 	};
@@ -505,6 +438,7 @@ function fragmentBase(
  */
 function emptyAnimationConfig(): FragmentAnimationConfig {
 	return {
+		ambient: { cycleDurationMs: 2400, tracks: [] },
 		entering: { tracks: [] },
 		leaving: { tracks: [] },
 		scrolling: { tracks: [] },
@@ -512,7 +446,7 @@ function emptyAnimationConfig(): FragmentAnimationConfig {
 }
 
 /**
- * Groups rows by a derived key without requiring newer JavaScript collection APIs.
+ * Groups rows by a derived key.
  *
  * @param rows - Rows to group.
  * @param getKey - Returns the grouping key for one row.
@@ -528,14 +462,4 @@ function groupBy<Row, Key>(
 		groups.set(key, [...(groups.get(key) ?? []), row]);
 	}
 	return groups;
-}
-
-/**
- * Returns a deterministic local illustration source.
- *
- * @param order - Page or fragment order.
- * @returns Local public image path.
- */
-function imageSource(order: number): string {
-	return imageSources[order % imageSources.length] ?? imageSources[0];
 }

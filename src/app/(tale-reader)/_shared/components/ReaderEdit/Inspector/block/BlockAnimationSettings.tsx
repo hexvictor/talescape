@@ -2,6 +2,7 @@
 
 import type { ResolvedTaleBlock } from "../../../../types";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
+import { LoopingAnimationEditor } from "../LoopingAnimationEditor";
 import type { BlockChangeHandler } from "./blockMotionTypes";
 
 /**
@@ -22,20 +23,7 @@ export function BlockAnimationSettings({
 	return (
 		<>
 			<AnimationSelectionEditor
-				title="Reading entering"
-				selection={block.reading.animations.entering}
-				onChange={(entering) =>
-					onChange((item) => ({
-						...item,
-						reading: {
-							...item.reading,
-							animations: { ...item.reading.animations, entering },
-						},
-					}))
-				}
-			/>
-			<AnimationSelectionEditor
-				title="Reading scrolling"
+				title="Transition scrolling"
 				selection={block.reading.animations.scrolling}
 				onChange={(scrolling) =>
 					onChange((item) => ({
@@ -47,15 +35,14 @@ export function BlockAnimationSettings({
 					}))
 				}
 			/>
-			<AnimationSelectionEditor
-				title="Reading leaving"
-				selection={block.reading.animations.leaving}
-				onChange={(leaving) =>
+			<LoopingAnimationEditor
+				selection={block.reading.animations.ambient}
+				onChange={(ambient) =>
 					onChange((item) => ({
 						...item,
 						reading: {
 							...item.reading,
-							animations: { ...item.reading.animations, leaving },
+							animations: { ...item.reading.animations, ambient },
 						},
 					}))
 				}

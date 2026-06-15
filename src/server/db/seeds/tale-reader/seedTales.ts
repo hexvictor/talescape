@@ -25,6 +25,7 @@ export async function seedTales(): Promise<void> {
 			slug: "official-tale-branched",
 			status: "published",
 			title: "Forked Fates",
+			transitionFirstBlock: false,
 			type: "story",
 			visibility: "public",
 		},

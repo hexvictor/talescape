@@ -1,11 +1,12 @@
 "use client";
 
 import clsx from "clsx";
-import { BookOpen } from "lucide-react";
 import { useState } from "react";
+import { useHorizontalDragNavigation } from "../../../hooks/useHorizontalDragNavigation";
 import { getBoundedNavigationIndices } from "../../../services/getBoundedNavigationIndices";
 import type { ReaderContentsEntry, ReaderContentsPage } from "../../../types";
 import { EntryTypeIcon } from "../EntryNavigator/EntryTypeIcon";
+import { ReaderTypeIcon } from "../EntryNavigator/ReaderTypeIcon";
 
 type PageNavigatorGridProps = {
 	currentPageId: string;
@@ -40,21 +41,26 @@ export function PageNavigatorGrid({
 		browseIndex,
 		itemCount: pages.length,
 	});
+	const moveBrowseIndex = (direction: -1 | 1): void => {
+		setBrowseIndex((index) =>
+			Math.max(0, Math.min(pages.length - 1, index + direction)),
+		);
+	};
+	const dragNavigation = useHorizontalDragNavigation({
+		onStep: moveBrowseIndex,
+	});
 
 	return (
 		<div
 			data-reader-component="PageNavigatorGrid"
 			data-reader-role="page-window"
 			className="flex items-center justify-center gap-1.5 p-3"
+			{...dragNavigation}
+			style={{ touchAction: "pan-y" }}
 			onWheel={(event) => {
 				event.preventDefault();
 				event.stopPropagation();
-				setBrowseIndex((index) =>
-					Math.max(
-						0,
-						Math.min(pages.length - 1, index + (event.deltaY > 0 ? 1 : -1)),
-					),
-				);
+				moveBrowseIndex(event.deltaY > 0 ? 1 : -1);
 			}}
 		>
 			{navigationIndices.map((navigationIndex) => {
@@ -90,17 +96,23 @@ export function PageNavigatorGrid({
 							"relative grid h-8 w-8 shrink-0 place-items-center rounded-full border font-bold text-[9px] transition",
 							active
 								? "border-[#d9b56f] bg-[#d9b56f] text-black shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
-								: "border-white/12 bg-white/[0.035] text-white/62 hover:border-white/30 hover:bg-white/10 hover:text-white",
+								: page.hasChoiceBlock
+									? "border-[#8bcf90]/50 bg-[#8bcf90]/12 text-[#d8f5da] hover:border-[#8bcf90]/75 hover:bg-[#8bcf90]/18 hover:text-white"
+									: "border-white/12 bg-white/[0.035] text-white/62 hover:border-white/30 hover:bg-white/10 hover:text-white",
 						)}
-						onClick={() => onNavigate(page)}
+						onClick={() => {
+							onNavigate(page);
+						}}
 					>
-						{page.number ?? <BookOpen size={12} />}
+						{page.number ?? <ReaderTypeIcon type={page.type} size={12} />}
 						<span
 							className={clsx(
 								"-top-1 -right-1 absolute grid h-4 w-4 place-items-center rounded-full border text-[7px]",
 								active
 									? "border-black/15 bg-black text-white"
-									: "border-white/12 bg-black text-white/55",
+									: page.hasChoiceBlock
+										? "border-[#8bcf90]/35 bg-[#112117] text-[#d8f5da]"
+										: "border-white/12 bg-black text-white/55",
 							)}
 						>
 							{entry?.type === "chapter" ? (

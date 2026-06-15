@@ -5,8 +5,7 @@ export type ReaderHubPanel =
 	| "art"
 	| "codex"
 	| "community"
-	| "contents"
-	| "routes"
+	| "settings"
 	| "trivia";
 
 export type HubSlice = {
@@ -31,7 +30,7 @@ export const createHubSlice: StateCreator<TaleReaderState, [], [], HubSlice> = (
 	set,
 ) => ({
 	hub: {
-		activePanel: "contents",
+		activePanel: "community",
 		open: false,
 		setActivePanel: (activePanel) =>
 			set((state) => ({ hub: { ...state.hub, activePanel } })),

@@ -16,6 +16,7 @@ export type Direction =
 export type BlockFlow =
 	| {
 			direction: Direction;
+			placement?: "blockEdge" | "cameraEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -34,43 +35,86 @@ export type BlockCameraPath =
 	| { direction: Direction; mode: "straight" }
 	| { mode: "custom"; points: CameraPathPoint[] };
 
-export type AnimationTrack =
-	| {
-			end: number;
-			from: number;
-			property: "opacity";
-			start: number;
-			to: number;
-	  }
-	| {
-			end: number;
-			from: number;
-			property: "rotate" | "scale";
-			start: number;
-			to: number;
-	  }
-	| {
-			axis: "x" | "y";
-			end: number;
-			from: number;
-			property: "translate";
-			start: number;
-			to: number;
-	  }
-	| {
-			end: number;
-			property: "blur" | "glitch";
-			start: number;
-			strength: number;
-	  };
+export type AnimationEasing =
+	| "back.out"
+	| "bounce.out"
+	| "elastic.out"
+	| "linear"
+	| "power1.in"
+	| "power1.inOut"
+	| "power1.out"
+	| "power2.in"
+	| "power2.inOut"
+	| "power2.out"
+	| "power3.in"
+	| "power3.inOut"
+	| "power3.out";
+
+type AnimationTrackTiming = {
+	easing?: AnimationEasing;
+	end: number;
+	id?: string;
+	loopDurationSeconds?: number;
+	loopPlayback?: "alternate" | "restart";
+	playback?: ScrollAnimationPlayback;
+	start: number;
+	visibleRange?: TimelineRange;
+};
+
+export type AnimationTrack = AnimationTrackTiming &
+	(
+		| {
+				from: number;
+				property: "opacity";
+				to: number;
+		  }
+		| {
+				from: number;
+				property: "rotate" | "scale";
+				to: number;
+		  }
+		| {
+				axis: "x" | "xy" | "xyz" | "y";
+				from: number;
+				fromY?: number;
+				fromZ?: number;
+				property: "translate";
+				to: number;
+				toY?: number;
+				toZ?: number;
+				unit?: "px" | "viewport";
+		  }
+		| {
+				property: "blur";
+				strength: number;
+		  }
+		| {
+				from: number;
+				path: string;
+				property: "motionPath";
+				to: number;
+		  }
+	);
 
 export type AnimationSelection = {
 	animations: AnimationTrack[];
 };
 
+export type AmbientAnimationSelection = AnimationSelection & {
+	cycleDurationMs?: number;
+	playback?: "alternate" | "restart";
+};
+
 export type ScrollAnimationPlayback = "commitOnComplete" | "scrub";
 
 export type TimelineRange = { end: number; start: number };
+
+export type FragmentAnimationConfig = {
+	ambient: AmbientAnimationSelection;
+	entering: AnimationSelection;
+	leaving: AnimationSelection;
+	scrolling: AnimationSelection;
+};
 
 export type EntityBounds = {
 	firstBlockId: string | null;
@@ -112,7 +156,16 @@ export type NodeChild =
 	| { nodeId: string; type: "node" };
 
 export type ReaderStyle = {
+	alignContent?:
+		| "center"
+		| "end"
+		| "space-around"
+		| "space-between"
+		| "space-evenly"
+		| "start"
+		| "stretch";
 	alignItems?: "center" | "end" | "start" | "stretch";
+	alignSelf?: "auto" | "center" | "end" | "start" | "stretch";
 	background?: string;
 	backgroundCss?: string;
 	backgroundImage?: string;
@@ -120,13 +173,20 @@ export type ReaderStyle = {
 	borderRadius?: number;
 	boxShadow?: string;
 	color?: string;
+	columnGap?: number | string;
 	cssText?: string;
 	display?: "block" | "flex" | "grid" | "inline-block";
-	flexDirection?: "column" | "row";
-	flexWrap?: "nowrap" | "wrap";
+	flexBasis?: number | string;
+	flexDirection?: "column" | "column-reverse" | "row" | "row-reverse";
+	flexGrow?: number;
+	flexShrink?: number;
+	flexWrap?: "nowrap" | "wrap" | "wrap-reverse";
 	fontSize?: number | string;
 	fontWeight?: number | string;
 	gap?: number;
+	gridAutoColumns?: string;
+	gridAutoFlow?: "column" | "column dense" | "dense" | "row" | "row dense";
+	gridAutoRows?: string;
 	gridArea?: string;
 	gridColumn?: string;
 	gridRow?: string;
@@ -134,6 +194,8 @@ export type ReaderStyle = {
 	gridTemplateColumns?: string;
 	gridTemplateRows?: string;
 	height?: number | string;
+	justifyItems?: "center" | "end" | "start" | "stretch";
+	justifySelf?: "auto" | "center" | "end" | "start" | "stretch";
 	justifyContent?:
 		| "center"
 		| "end"
@@ -150,8 +212,12 @@ export type ReaderStyle = {
 	objectFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
 	objectPosition?: string;
 	opacity?: number;
+	order?: number;
 	overflow?: "clip" | "hidden" | "visible";
 	padding?: number | string;
+	paddingBlock?: number | string;
+	paddingInline?: number | string;
+	rowGap?: number | string;
 	textAlign?: "center" | "end" | "justify" | "left" | "right" | "start";
 	width?: number | string;
 	zIndex?: number;
@@ -159,6 +225,7 @@ export type ReaderStyle = {
 
 export type TaleNode =
 	| {
+			animations: FragmentAnimationConfig;
 			align?: "center" | "end" | "start" | "stretch";
 			children: NodeChild[];
 			gap?: number;
@@ -170,9 +237,10 @@ export type TaleNode =
 			style?: ReaderStyle;
 	  }
 	| {
+			animations: FragmentAnimationConfig;
 			align?: "center" | "end" | "start" | "stretch";
 			children: NodeChild[];
-			direction?: "column" | "row";
+			direction?: "column" | "column-reverse" | "row" | "row-reverse";
 			gap?: number;
 			id: string;
 			justify?: "center" | "end" | "space-between" | "start";
@@ -183,6 +251,7 @@ export type TaleNode =
 			wrap?: boolean;
 	  }
 	| {
+			animations: FragmentAnimationConfig;
 			children: NodeChild[];
 			columns?: number;
 			gap?: number;
@@ -194,6 +263,7 @@ export type TaleNode =
 			style?: ReaderStyle;
 	  }
 	| {
+			animations: FragmentAnimationConfig;
 			children: NodeChild[];
 			id: string;
 			mode: "free";
@@ -205,12 +275,12 @@ export type TaleNode =
 export type FragmentPlacement =
 	| { mode: "normal"; nodeId?: string; overflow?: "clip" | "visible" }
 	| {
-			horizontal: "left" | "right";
+			horizontal: "center" | "left" | "right";
 			mode: "absolute" | "fixed";
 			nodeId?: string;
 			overflow?: "clip" | "visible";
 			unit: "px" | "viewport";
-			vertical: "top" | "bottom";
+			vertical: "bottom" | "center" | "top";
 			width?: number;
 			x: number;
 			y: number;
@@ -252,6 +322,7 @@ export type BlockStylePreset = {
 export type TaleFragment = {
 	alt?: string;
 	animations: {
+		ambient: AmbientAnimationSelection;
 		entering: AnimationSelection;
 		leaving: AnimationSelection;
 		scrolling: AnimationSelection;
@@ -270,7 +341,6 @@ export type TaleFragment = {
 	prompt?: string;
 	src?: string | null;
 	style?: ReaderStyle;
-	scrollAnimationPlayback?: ScrollAnimationPlayback;
 	text?: string;
 	type: "choiceButton" | "image" | "quote" | "soundCue" | "text";
 	visibleRange?: TimelineRange;
@@ -293,11 +363,13 @@ export type ResolvedTaleFragment = TaleFragment & {
 		isLastInBlock: boolean;
 	};
 	resolvedAnimations: {
+		ambient: AnimationTrack[];
+		ambientCycleDurationMs: number;
+		ambientPlayback: "alternate" | "restart";
 		entering: AnimationTrack[];
 		leaving: AnimationTrack[];
 		scrolling: AnimationTrack[];
 	};
-	resolvedScrollAnimationPlayback: ScrollAnimationPlayback;
 	resolvedVisibleRange: TimelineRange;
 };
 
@@ -318,8 +390,7 @@ export type TaleBlock = {
 	partId: string;
 	reading: {
 		animations: {
-			entering: AnimationSelection;
-			leaving: AnimationSelection;
+			ambient: AmbientAnimationSelection;
 			scrolling: AnimationSelection;
 		};
 		cameraPath?: BlockCameraPath;
@@ -339,10 +410,10 @@ export type TaleBlock = {
 			entering: AnimationSelection;
 			leaving: AnimationSelection;
 		};
-		enteringLength: number;
+		enteringLength: number | null;
 		flow: BlockFlow;
-		leavingLength: number;
-		scrollLength: number;
+		leavingLength: number | null;
+		scrollLength: number | null;
 	};
 };
 
@@ -392,8 +463,9 @@ export type ResolvedTaleBlock = TaleBlock & {
 		flow: BlockFlow;
 		hasImage: boolean;
 		readingAnimations: {
-			entering: AnimationTrack[];
-			leaving: AnimationTrack[];
+			ambient: AnimationTrack[];
+			ambientCycleDurationMs: number;
+			ambientPlayback: "alternate" | "restart";
 			scrolling: AnimationTrack[];
 		};
 		style: ReaderStyle;
@@ -558,7 +630,7 @@ export type TalePath = {
 	order: number;
 	toBlockId: string;
 	toBranchId: string;
-	type: "choice" | "convergence" | "ending" | "return";
+	type: "choice" | "convergence" | "ending" | "return" | "teleport";
 };
 
 export type ResolvedTalePath = TalePath & {
@@ -573,6 +645,7 @@ export type Point = { x: number; y: number };
 export type Anchor = {
 	block: ResolvedTaleBlock;
 	branch: ResolvedTaleBranch;
+	cameraPoint: Point;
 	entry: ResolvedTaleEntry;
 	height: number;
 	id: string;
@@ -687,6 +760,7 @@ export type RawTaleRecord = {
 	slug: string;
 	synopsis: string;
 	title: string;
+	transitionFirstBlock: boolean;
 	transitionPresets: TransitionPreset[];
 	visibilityPresets: VisibilityPreset[];
 };
@@ -742,6 +816,7 @@ export type ReaderScrollTargetOptions = {
 	atChoiceEnd?: boolean;
 	duration?: number;
 	motion?: "instant" | "reading" | "travel";
+	onComplete?: () => void;
 };
 
 export type CompiledReader = {
@@ -757,6 +832,7 @@ export type CompiledReader = {
 	segments: TimelineSegment[];
 	segmentStarts: number[];
 	snapPoints: SnapPoint[];
+	startsWithTransition: boolean;
 	totalScroll: number;
 	transitionIntoByBlockId: Record<string, number>;
 	transitionOutOfByBlockId: Record<string, number>;
@@ -778,6 +854,7 @@ export type ReaderContentsEntry = {
 	blocks: ReaderContentsBlock[];
 	chapterNumber: number | null;
 	firstBlockId: string;
+	hasChoiceBlock: boolean;
 	id: string;
 	pages: ReaderContentsPage[];
 	title: string;
@@ -789,6 +866,7 @@ export type ReaderContentsPage = {
 	entryId: string;
 	firstBlockId: string;
 	globalIndex: number;
+	hasChoiceBlock: boolean;
 	id: string;
 	isPaginated: boolean;
 	label: string;
@@ -823,7 +901,7 @@ export type ReaderInspectorTarget =
 
 export type SavedReaderProgress = {
 	blockId: string | null;
-	committedFragmentIds: string[];
+	committedAnimationIds: string[];
 	id?: number;
 	innerProgress: number;
 	selectedBranchIds: string[];
@@ -834,5 +912,10 @@ export type SavedReaderProgress = {
 	taleId?: number;
 	updatedAt: string;
 };
+
+export type ReaderViewportLayout =
+	| "desktop"
+	| "mobile-landscape"
+	| "mobile-portrait";
 
 export type ViewportSize = { height: number; width: number };

@@ -37,6 +37,8 @@ export function useReaderViewportState(): ReaderViewportState {
 }
 
 type ReaderOverlayState = {
+	debugVisible: boolean;
+	readerStatusVisible: boolean;
 	scrollCue: Direction | null;
 	setVisibilityMode: (mode: ReaderUiVisibilityMode) => void;
 	toggleReaderUi: TaleReaderState["ui"]["toggleReaderUi"];
@@ -53,6 +55,8 @@ type ReaderOverlayState = {
  */
 export function useReaderOverlayState(): ReaderOverlayState {
 	return useReaderStoreShallow((state) => ({
+		debugVisible: state.ui.debugVisible,
+		readerStatusVisible: state.ui.readerStatusVisible,
 		scrollCue: state.scroll.cue,
 		setVisibilityMode: state.ui.setVisibilityMode,
 		toggleReaderUi: state.ui.toggleReaderUi,

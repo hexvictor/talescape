@@ -2,6 +2,7 @@ type ReaderDomRegistry = {
 	blockElementById: Map<string, HTMLElement>;
 	fixedElementsByBlockId: Map<string, Set<HTMLElement>>;
 	fragmentElementById: Map<string, HTMLElement>;
+	nodeElementById: Map<string, HTMLElement>;
 	getRevision: () => number;
 	disconnect: () => void;
 };
@@ -21,6 +22,7 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 	const blockElementById = new Map<string, HTMLElement>();
 	const fixedElementsByBlockId = new Map<string, Set<HTMLElement>>();
 	const fragmentElementById = new Map<string, HTMLElement>();
+	const nodeElementById = new Map<string, HTMLElement>();
 	let revision = 0;
 
 	const visitElements = (
@@ -31,14 +33,14 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 		let found = false;
 		if (
 			node.matches(
-				"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id]",
+				"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]",
 			)
 		) {
 			visit(node);
 			found = true;
 		}
 		for (const element of node.querySelectorAll<HTMLElement>(
-			"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id]",
+			"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]",
 		)) {
 			visit(element);
 			found = true;
@@ -52,6 +54,8 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 
 		const fragmentId = element.dataset.readerFragmentId;
 		if (fragmentId) fragmentElementById.set(fragmentId, element);
+		const nodeId = element.dataset.readerNodeId;
+		if (nodeId) nodeElementById.set(nodeId, element);
 
 		const fixedBlockId = element.dataset.readerFixedBlockId;
 		if (fixedBlockId) {
@@ -71,6 +75,10 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 		const fragmentId = element.dataset.readerFragmentId;
 		if (fragmentId && fragmentElementById.get(fragmentId) === element) {
 			fragmentElementById.delete(fragmentId);
+		}
+		const nodeId = element.dataset.readerNodeId;
+		if (nodeId && nodeElementById.get(nodeId) === element) {
+			nodeElementById.delete(nodeId);
 		}
 
 		const fixedBlockId = element.dataset.readerFixedBlockId;
@@ -102,6 +110,7 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 		disconnect: () => observer.disconnect(),
 		fixedElementsByBlockId,
 		fragmentElementById,
+		nodeElementById,
 		getRevision: () => revision,
 	};
 }

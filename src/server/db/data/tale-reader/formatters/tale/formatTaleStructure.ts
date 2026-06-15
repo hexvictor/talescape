@@ -69,6 +69,7 @@ export function formatTaleStructure(
 		slug: record.slug,
 		synopsis: record.description ?? "",
 		title: record.title,
+		transitionFirstBlock: record.transitionFirstBlock ?? false,
 		transitionPresets: formatTransitionPresets(
 			officialPresets.transitionPresets ?? [],
 			"official",

@@ -1,8 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { BookOpen } from "lucide-react";
 import type { ReaderContentsEntry } from "../../../types";
+import { ReaderTypeIcon } from "../EntryNavigator/ReaderTypeIcon";
 
 /**
  * Renders the route-visible pages belonging to a contents entry.
@@ -43,11 +43,13 @@ export function EntryPagesGrid({
 						"group/page grid h-9 w-9 place-items-center rounded-full border font-bold text-[10px] transition",
 						page.blockIds.includes(currentBlockId ?? "")
 							? "border-[#d9b56f] bg-[#d9b56f] text-black shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
-							: "border-white/12 bg-white/[0.035] text-white/62 hover:border-white/30 hover:bg-white/10 hover:text-white",
+							: page.hasChoiceBlock
+								? "border-[#8bcf90]/50 bg-[#8bcf90]/12 text-[#d8f5da] hover:border-[#8bcf90]/75 hover:bg-[#8bcf90]/18 hover:text-white"
+								: "border-white/12 bg-white/[0.035] text-white/62 hover:border-white/30 hover:bg-white/10 hover:text-white",
 					)}
 					onClick={() => onNavigate(page.firstBlockId)}
 				>
-					{page.number ?? <BookOpen size={12} />}
+					{page.number ?? <ReaderTypeIcon type={page.type} size={12} />}
 				</button>
 			))}
 		</div>

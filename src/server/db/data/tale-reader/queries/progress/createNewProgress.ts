@@ -30,7 +30,7 @@ export async function createNewProgress(
 		lastBlockId: firstBlockId ?? null,
 		maxBlockIdReached: firstBlockId ?? null,
 		activePathIds: [],
-		committedFragmentIds: [],
+		committedAnimationIds: [],
 		lastBlockInnerProgress: "0",
 		selectedBranchIds: [],
 		seenPathIds: [],

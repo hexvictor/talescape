@@ -25,7 +25,7 @@ export function ReaderFragment({
 			data-reader-fragment-id={fragment.id}
 			data-reader-fragment-type={fragment.type}
 			data-reader-role="fragment-container"
-			className="group/fragment relative"
+			className="group/fragment relative h-full w-full"
 		>
 			<InspectorButton
 				label={`Edit fragment ${fragment.id}`}

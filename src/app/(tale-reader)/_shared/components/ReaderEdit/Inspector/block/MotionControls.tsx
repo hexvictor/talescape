@@ -7,7 +7,7 @@ import {
 } from "../../../ReaderUi/TaleDebug/DebugPrimitives";
 
 /**
- * Edits linear flow direction and spacing or switches to stacked flow.
+ * Edits directional block arrangement or switches to layered overlap.
  *
  * @param props - Component props.
  * @param props.flow - Current block flow.
@@ -45,7 +45,7 @@ export function FlowSettings({
 			</Setting>
 			{flow.type === "linear" ? (
 				<>
-					<Setting label="Direction">
+					<Setting label="Transition direction">
 						<select
 							className={settingClassName}
 							value={flow.direction}
@@ -61,6 +61,21 @@ export function FlowSettings({
 									{direction}
 								</option>
 							))}
+						</select>
+					</Setting>
+					<Setting label="Transition placement">
+						<select
+							className={settingClassName}
+							value={flow.placement ?? "blockEdge"}
+							onChange={(event) =>
+								onChange({
+									...flow,
+									placement: event.target.value as "blockEdge" | "cameraEdge",
+								})
+							}
+						>
+							<option value="blockEdge">Block edge</option>
+							<option value="cameraEdge">Camera endpoint</option>
 						</select>
 					</Setting>
 					<MotionNumber

@@ -12,10 +12,12 @@ export type ScrollSlice = {
 	scroll: {
 		api: ReaderScrollApi | null;
 		cue: Direction | null;
+		pendingRestoreBlockId: string | null;
 		renderRevision: number;
 		renderedBlockIds: string[];
 		setApi: (api: ReaderScrollApi | null) => void;
 		setCue: (direction: Direction | null) => void;
+		setPendingRestoreBlockId: (blockId: string | null) => void;
 		setRenderedBlockIds: (blockIds: string[]) => void;
 	};
 };
@@ -29,10 +31,15 @@ export const createScrollSlice: StateCreator<
 	scroll: {
 		api: null,
 		cue: null,
+		pendingRestoreBlockId: null,
 		renderRevision: 0,
 		renderedBlockIds: [],
 		setApi: (api) => set((state) => ({ scroll: { ...state.scroll, api } })),
 		setCue: (cue) => set((state) => ({ scroll: { ...state.scroll, cue } })),
+		setPendingRestoreBlockId: (pendingRestoreBlockId) =>
+			set((state) => ({
+				scroll: { ...state.scroll, pendingRestoreBlockId },
+			})),
 		setRenderedBlockIds: (renderedBlockIds) =>
 			set((state) => ({
 				scroll: {

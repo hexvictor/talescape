@@ -112,8 +112,11 @@ export function resolveBlock(
 			flow: block.transition.flow,
 			hasImage: fragments.some((fragment) => fragment.type === "image"),
 			readingAnimations: {
-				entering: resolveAnimations(block.reading.animations.entering),
-				leaving: resolveAnimations(block.reading.animations.leaving),
+				ambient: resolveAnimations(block.reading.animations.ambient),
+				ambientCycleDurationMs:
+					block.reading.animations.ambient.cycleDurationMs ?? 2400,
+				ambientPlayback:
+					block.reading.animations.ambient.playback ?? "alternate",
 				scrolling: resolveAnimations(block.reading.animations.scrolling),
 			},
 			style: block.style ?? {},

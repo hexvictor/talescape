@@ -6,6 +6,7 @@ import type {
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
 import type {
+	NodeAnimationConfig,
 	NodeConfig,
 	ReaderStyleConfig,
 } from "~/server/db/types/tale-reader/readerConfig";
@@ -34,6 +35,16 @@ export const nodes = createTable("node", (d) => ({
 	isRoot: d.boolean().notNull().default(false),
 	order: d.integer().notNull(),
 	config: d.json().notNull().$type<NodeConfig>(),
+	animationConfig: d
+		.json()
+		.notNull()
+		.$type<NodeAnimationConfig>()
+		.default({
+			ambient: { tracks: [] },
+			entering: { tracks: [] },
+			leaving: { tracks: [] },
+			scrolling: { tracks: [] },
+		}),
 	styleConfig: d.json().$type<ReaderStyleConfig>(),
 	isOfficial: d.boolean().notNull().default(false),
 	isVerified: d.boolean().notNull().default(false),

@@ -14,8 +14,8 @@ const smoothSettledPx = 0.35;
 const smoothFollowStrength = 0.15;
 const smoothMaximumFollowStrength = 0.28;
 const smoothBaseMaxFrameStepPx = 360;
-const smoothMaximumFrameStepPx = 1500;
-const backlogAccelerationDistancePx = 7000;
+const smoothMaximumFrameStepPx = 3000;
+const backlogAccelerationDistancePx = 14000;
 
 /**
  * Resolves adaptive virtual-scroll movement from the remaining target backlog.
@@ -133,6 +133,16 @@ export function createReaderScrollDriver() {
 	 * const scroll = driver.getScroll();
 	 */
 	const getScroll = (): number => currentScroll;
+
+	/**
+	 * Reads the requested scroll target, including queued smooth movement.
+	 *
+	 * @returns The target position currently pursued by the driver.
+	 *
+	 * @example
+	 * const target = driver.getTargetScroll();
+	 */
+	const getTargetScroll = (): number => targetScroll;
 
 	/**
 	 * Immediately moves both target and rendered scroll to a value.
@@ -274,6 +284,7 @@ export function createReaderScrollDriver() {
 		},
 		getMaxScroll,
 		getScroll,
+		getTargetScroll,
 		scrollTo,
 		setScroll,
 		setUpdateListener: (listener: ScrollDriverUpdateListener | null) => {

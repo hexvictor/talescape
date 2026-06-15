@@ -1,13 +1,21 @@
 "use client";
 
+import { LoremIpsum } from "lorem-ipsum";
+import { useMemo } from "react";
 import type { ResolvedTaleFragment } from "../../../../types";
+
+const lorem = new LoremIpsum({
+	sentencesPerParagraph: { max: 5, min: 3 },
+	wordsPerSentence: { max: 12, min: 8 },
+});
 
 export function QuoteFragment({
 	fragment,
 }: {
 	fragment: ResolvedTaleFragment;
 }): React.JSX.Element {
-	const paragraphs = (fragment.text ?? "").split(/\n{2,}/).filter(Boolean);
+	const paragraphs = useMemo(() => lorem.generateParagraphs(3).split("\n"), []);
+
 	return (
 		<blockquote
 			data-reader-component="QuoteFragment"
@@ -17,11 +25,12 @@ export function QuoteFragment({
 		>
 			<div className="space-y-6">
 				{paragraphs.map((paragraph, index) => (
-					<p key={`${fragment.id}-${index}`}>{paragraph}</p>
+					<p key={`${fragment.id}-paragraph-${index}`}>{paragraph}</p>
 				))}
 			</div>
+
 			{fragment.attribution ? (
-				<cite className="mt-3 block font-black text-[#d9b56f] text-xs uppercase not-italic tracking-[0.18em]">
+				<cite className="mt-6 block font-black text-[#d9b56f] text-xs uppercase not-italic tracking-[0.18em]">
 					{fragment.attribution}
 				</cite>
 			) : null}

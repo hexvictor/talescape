@@ -36,6 +36,7 @@ export const tales = createTable("tale", (d) => ({
 	status: d.text().notNull().$type<AssetStatus>().default("draft"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	type: d.text().notNull().$type<TaleType>(),
+	transitionFirstBlock: d.boolean().notNull().default(false),
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

@@ -9,9 +9,14 @@ import type {
 	ViewportSize,
 } from "../types";
 import { compileReaderContents } from "./compileReaderContents";
+import {
+	resolveBlockCameraPoint,
+	resolveNonOverlappingBlockPoint,
+} from "./readerBlockLayout";
 import { countReaderDiagnostic } from "./readerDiagnostics";
 import {
 	compileReadingPathPoints,
+	directionVector,
 	flowDirection,
 	getNextPoint,
 	getReadingCamera,
@@ -69,11 +74,31 @@ export function compileReader(
 				previous.point,
 				viewport,
 			);
+			const flow = block.transition.flow;
+			if (flow.type === "linear" && flow.placement !== "cameraEdge") {
+				point = resolveNonOverlappingBlockPoint(
+					point,
+					viewportOffset,
+					size,
+					flow.direction,
+					anchors,
+				);
+			}
 		}
+		const cameraPoint = resolveBlockCameraPoint(
+			previous,
+			block,
+			point,
+			viewportOffset,
+			size,
+			readingPathPoints,
+			viewport,
+		);
 
 		const anchor: Anchor = {
 			block,
 			branch,
+			cameraPoint,
 			entry,
 			height: size.height,
 			id: block.id,
@@ -95,6 +120,26 @@ export function compileReader(
 	const transitionIntoByBlockId: Record<string, number> = {};
 	const transitionOutOfByBlockId: Record<string, number> = {};
 	let scroll = 0;
+
+	const firstAnchor = anchors[0];
+	if (Boolean(tale.transitionFirstBlock) && firstAnchor) {
+		const initialLength = Math.max(
+			firstAnchor.block.transition.enteringLength ?? viewport.height,
+			1,
+		);
+		const transitionIndex = segments.length;
+		segments.push({
+			end: initialLength,
+			from: createInitialTransitionAnchor(firstAnchor, viewport),
+			index: transitionIndex,
+			length: initialLength,
+			start: 0,
+			to: firstAnchor,
+			type: "transition",
+		});
+		transitionIntoByBlockId[firstAnchor.block.id] = transitionIndex;
+		scroll = initialLength;
+	}
 
 	for (let index = 0; index < anchors.length; index++) {
 		const anchor = anchors[index];
@@ -159,10 +204,16 @@ export function compileReader(
 		}
 
 		if (!next) continue;
+		const effectiveTransition = next.block.transition;
+		const automaticTransitionLength = getAutomaticTransitionLength(
+			anchor,
+			next,
+			viewport,
+		);
 		const transitionLength = Math.max(
-			anchor.block.transition.leavingLength,
-			next.block.transition.enteringLength,
-			anchor.block.transition.scrollLength,
+			effectiveTransition.leavingLength ?? automaticTransitionLength,
+			effectiveTransition.enteringLength ?? automaticTransitionLength,
+			effectiveTransition.scrollLength ?? automaticTransitionLength,
 			1,
 		);
 		const transitionIndex = segments.length;
@@ -198,10 +249,59 @@ export function compileReader(
 		segments,
 		segmentStarts: segments.map((segment) => segment.start),
 		snapPoints,
+		startsWithTransition: Boolean(tale.transitionFirstBlock),
 		totalScroll: Math.max(scroll, 1),
 		transitionIntoByBlockId,
 		transitionOutOfByBlockId,
 	};
+}
+
+/**
+ * Creates an off-screen source anchor for the optional first-block transition.
+ *
+ * @param anchor - First visible block anchor.
+ * @param viewport - Active reader viewport.
+ * @returns Virtual source anchor used by the initial transition.
+ */
+function createInitialTransitionAnchor(
+	anchor: Anchor,
+	viewport: ViewportSize,
+): Anchor {
+	const direction = flowDirection(anchor.block.transition.flow) ?? "down";
+	const vector = directionVector(direction);
+	return {
+		...anchor,
+		cameraPoint: {
+			x: anchor.cameraPoint.x - vector.x * viewport.width,
+			y: anchor.cameraPoint.y - vector.y * viewport.height,
+		},
+		id: `${anchor.id}-initial-transition`,
+		point: {
+			x: anchor.point.x - vector.x * viewport.width,
+			y: anchor.point.y - vector.y * viewport.height,
+		},
+	};
+}
+
+/**
+ * Derives transition scroll length from the camera distance between blocks.
+ *
+ * @param from - Source block anchor.
+ * @param to - Destination block anchor.
+ * @param viewport - Active reader viewport.
+ * @returns Camera travel distance in pixels.
+ */
+function getAutomaticTransitionLength(
+	from: Anchor,
+	to: Anchor,
+	viewport: ViewportSize,
+): number {
+	const start = getReadingCamera(from, 1, viewport);
+	const end = getReadingCamera(to, 0, viewport);
+	return Math.max(
+		Math.hypot(end.x - start.x, end.y - start.y),
+		Math.min(viewport.width, viewport.height) * 0.65,
+	);
 }
 
 /**

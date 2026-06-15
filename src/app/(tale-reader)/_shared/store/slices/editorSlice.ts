@@ -7,8 +7,11 @@ export type EditorSlice = {
 		inspector: ReaderInspectorTarget | null;
 		inspectorControlsOpen: boolean;
 		mode: ReaderMode;
+		secondaryInspector: ReaderInspectorTarget | null;
 		closeInspector: () => void;
+		closeSecondaryInspector: () => void;
 		openInspector: (target: ReaderInspectorTarget) => void;
+		openSecondaryInspector: (target: ReaderInspectorTarget) => void;
 		toggleInspectorControls: () => void;
 	};
 };
@@ -27,15 +30,28 @@ export const createEditorSlice =
 	(set) => ({
 		editor: {
 			inspector: null,
-			inspectorControlsOpen: false,
+			inspectorControlsOpen: mode === "edit",
 			mode,
+			secondaryInspector: null,
 			closeInspector: () =>
 				set((state) => ({
-					editor: { ...state.editor, inspector: null },
+					editor: {
+						...state.editor,
+						inspector: null,
+						secondaryInspector: null,
+					},
 				})),
 			openInspector: (inspector) =>
 				set((state) => ({
-					editor: { ...state.editor, inspector },
+					editor: { ...state.editor, inspector, secondaryInspector: null },
+				})),
+			closeSecondaryInspector: () =>
+				set((state) => ({
+					editor: { ...state.editor, secondaryInspector: null },
+				})),
+			openSecondaryInspector: (secondaryInspector) =>
+				set((state) => ({
+					editor: { ...state.editor, secondaryInspector },
 				})),
 			toggleInspectorControls: () =>
 				set((state) => ({

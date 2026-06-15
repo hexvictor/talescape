@@ -50,7 +50,7 @@ export function DebugLocationDetails({
 		>
 			{items.map(([label, number, id]) => (
 				<span key={label} className="truncate">
-					{label} {number > 0 ? number : "?"} · {id}
+					{label} {number > 0 ? number : "?"} · #{id}
 				</span>
 			))}
 		</span>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useReaderStoreShallow } from "../contexts/ReaderStoreContext";
+import {
+	useReaderStoreInstance,
+	useReaderStoreShallow,
+} from "../contexts/ReaderStoreContext";
 import { getNextSelectedBranchIds } from "../services/navigation";
 import { flowDirection } from "../services/readerGeometry";
 import type { TalePath } from "../types";
@@ -16,11 +19,14 @@ import type { TalePath } from "../types";
  */
 export function useChooseReaderPath(): (path: TalePath) => void {
 	const cueTimerRef = useRef<number | null>(null);
+	const store = useReaderStoreInstance();
 	const state = useReaderStoreShallow((readerState) => ({
+		savePosition: readerState.progress.savePosition,
 		saveSelectedBranchIds: readerState.progress.setSelectedBranchIds,
 		scrollApi: readerState.scroll.api,
 		selectedBranchIds: readerState.navigation.selectedBranchIds,
 		setScrollCue: readerState.scroll.setCue,
+		setPendingRestoreBlockId: readerState.scroll.setPendingRestoreBlockId,
 		setSelectedBranchIds: readerState.navigation.setSelectedBranchIds,
 		tale: readerState.tale.data,
 	}));
@@ -33,15 +39,22 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 	return useCallback(
 		(path: TalePath): void => {
 			state.scrollApi?.capturePosition();
+			if (path.type === "teleport") {
+				state.scrollApi?.scrollToBlock(path.toBlockId, { motion: "travel" });
+				return;
+			}
 			const nextBranchIds = getNextSelectedBranchIds(
 				state.tale,
 				state.selectedBranchIds,
 				path,
 			);
 			const source = state.tale.indexMap.blocksById[path.fromBlockId];
-			const direction = source
-				? (flowDirection(source.resolved.flow) ?? "down")
-				: "down";
+			const destination = state.tale.indexMap.blocksById[path.toBlockId];
+			const direction =
+				flowDirection(
+					destination?.transition.flow ??
+						source?.resolved.flow ?? { direction: "down", type: "linear" },
+				) ?? "down";
 
 			state.setScrollCue(direction);
 			window.clearTimeout(cueTimerRef.current ?? undefined);
@@ -49,12 +62,22 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 				() => state.setScrollCue(null),
 				1500,
 			);
+			if (path.type === "return") {
+				state.scrollApi?.scrollToBlock(path.toBlockId, {
+					motion: "travel",
+					onComplete: () => {
+						const current = store.getState();
+						current.scroll.setPendingRestoreBlockId(path.toBlockId);
+						current.progress.savePosition(path.toBlockId, 0);
+						current.navigation.setSelectedBranchIds(nextBranchIds);
+						current.progress.setSelectedBranchIds(nextBranchIds);
+					},
+				});
+				return;
+			}
 			state.setSelectedBranchIds(nextBranchIds);
 			state.saveSelectedBranchIds(nextBranchIds);
-			if (path.type === "return") {
-				state.scrollApi?.scrollToBlock(path.toBlockId);
-			}
 		},
-		[state],
+		[state, store],
 	);
 }

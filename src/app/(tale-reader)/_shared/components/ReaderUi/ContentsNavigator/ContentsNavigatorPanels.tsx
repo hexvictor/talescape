@@ -1,7 +1,14 @@
 "use client";
 
 import clsx from "clsx";
-import { Braces, ChevronDown, ChevronRight, Layers3 } from "lucide-react";
+import {
+	Braces,
+	ChevronDown,
+	ChevronRight,
+	Layers3,
+	LocateFixed,
+	MousePointerClick,
+} from "lucide-react";
 import { useState } from "react";
 import type {
 	ReaderContentsEntry,
@@ -14,6 +21,7 @@ import {
 	getEntryTypeLabel,
 } from "../EntryNavigator/EntryTypeIcon";
 import { EntryPagesGrid } from "./EntryPagesGrid";
+import { RouteGraphSection } from "./RouteGraphSection";
 
 type ContentsTreeProps = {
 	contents: ReaderContentsPart[];
@@ -149,7 +157,9 @@ export function ContentsTree({
 													"flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs",
 													active
 														? "bg-white/10 text-white"
-														: "text-white/58 hover:bg-white/6 hover:text-white/84",
+														: entry.hasChoiceBlock
+															? "text-[#d8f5da] hover:bg-[#8bcf90]/10 hover:text-white"
+															: "text-white/58 hover:bg-white/6 hover:text-white/84",
 												)}
 											>
 												{entry.pages.length > 1 ? (
@@ -191,6 +201,11 @@ export function ContentsTree({
 													<span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] text-white/42 uppercase">
 														{getEntryTypeLabel(entry.type)}
 													</span>
+													{entry.hasChoiceBlock ? (
+														<span className="rounded border border-[#8bcf90]/35 bg-[#8bcf90]/10 px-1.5 py-0.5 text-[#d8f5da] text-[9px] uppercase">
+															Choice
+														</span>
+													) : null}
 													<span className="text-white/35">
 														{entry.pages.length > 1 ? entry.pages.length : null}
 													</span>
@@ -217,8 +232,12 @@ export function ContentsTree({
 
 type RoutesPanelProps = {
 	branches: ResolvedTaleBranch[];
+	currentBranchId: string | null;
 	onChoosePath: (path: ResolvedTalePath) => void;
+	onTravelToBlock: (blockId: string) => void;
 	paths: ResolvedTalePath[];
+	reachableBlockIds: Set<string>;
+	reachableBranchIds: Set<string>;
 	selectedBranchIds: string[];
 };
 
@@ -230,8 +249,12 @@ type RoutesPanelProps = {
  */
 export function RoutesPanel({
 	branches,
+	currentBranchId,
 	onChoosePath,
+	onTravelToBlock,
 	paths,
+	reachableBlockIds,
+	reachableBranchIds,
 	selectedBranchIds,
 }: RoutesPanelProps): React.JSX.Element {
 	return (
@@ -240,12 +263,22 @@ export function RoutesPanel({
 			data-reader-role="route-list"
 			className="space-y-3"
 		>
+			<RouteGraphSection
+				branches={branches}
+				currentBranchId={currentBranchId}
+				onChoosePath={onChoosePath}
+				onTravelToBlock={onTravelToBlock}
+				paths={paths}
+				reachableBlockIds={reachableBlockIds}
+				reachableBranchIds={reachableBranchIds}
+				selectedBranchIds={selectedBranchIds}
+			/>
 			{branches.map((branch) => {
 				const selected =
 					branch.position.isRootBranch || selectedBranchIds.includes(branch.id);
+				const reachable = reachableBranchIds.has(branch.id);
 				const branchPaths = paths.filter(
-					(path) =>
-						path.fromBranchId === branch.id || path.toBranchId === branch.id,
+					(path) => path.fromBranchId === branch.id,
 				);
 				return (
 					<section
@@ -257,6 +290,7 @@ export function RoutesPanel({
 							selected
 								? "border-[#d9b56f]/60 bg-[#d9b56f]/8"
 								: "border-white/10 bg-white/[0.025]",
+							reachable ? "opacity-100" : "opacity-35",
 						)}
 					>
 						<div className="flex items-center gap-2">
@@ -276,16 +310,47 @@ export function RoutesPanel({
 						</div>
 						{branchPaths.length > 0 ? (
 							<div className="mt-2 space-y-1 border-white/8 border-l pl-3">
-								{branchPaths.map((path) => (
-									<button
-										key={path.id}
-										type="button"
-										className="block w-full rounded px-1 py-0.5 text-left text-[11px] text-white/45 hover:bg-white/6 hover:text-white/75"
-										onClick={() => onChoosePath(path)}
-									>
-										{path.label}
-									</button>
-								))}
+								{branchPaths.map((path) => {
+									const pathReachable = reachableBlockIds.has(path.fromBlockId);
+									const currentOption =
+										path.fromBranchId === currentBranchId && pathReachable;
+									return (
+										<div
+											key={path.id}
+											className={clsx(
+												"flex items-center gap-1 rounded px-1 py-1 text-[11px]",
+												currentOption
+													? "bg-sky-300/8 text-sky-100/75"
+													: "text-white/45 hover:bg-white/6",
+												pathReachable ? "opacity-100" : "opacity-30",
+											)}
+										>
+											<span className="min-w-0 flex-1 truncate">
+												{path.label}
+											</span>
+											<button
+												type="button"
+												title="Apply this path"
+												aria-label={`Apply ${path.label}`}
+												disabled={!pathReachable}
+												className="grid h-7 w-7 shrink-0 place-items-center rounded text-white/48 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:hover:bg-transparent"
+												onClick={() => onChoosePath(path)}
+											>
+												<MousePointerClick size={12} />
+											</button>
+											<button
+												type="button"
+												title="Travel to this choice"
+												aria-label={`Travel to ${path.label} choice`}
+												disabled={!pathReachable}
+												className="grid h-7 w-7 shrink-0 place-items-center rounded text-white/48 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:hover:bg-transparent"
+												onClick={() => onTravelToBlock(path.fromBlockId)}
+											>
+												<LocateFixed size={12} />
+											</button>
+										</div>
+									);
+								})}
 							</div>
 						) : null}
 					</section>
