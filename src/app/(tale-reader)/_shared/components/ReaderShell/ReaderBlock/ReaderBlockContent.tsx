@@ -47,6 +47,7 @@ export function ReaderBlockContent({
 				data-reader-component="ReaderBlockContent"
 				data-reader-role="clipped-content-layer"
 				className="absolute inset-0 overflow-hidden"
+				style={{ clipPath: anchor.block.style?.clipPath }}
 			>
 				<div
 					data-reader-component="ReaderBlockContent"

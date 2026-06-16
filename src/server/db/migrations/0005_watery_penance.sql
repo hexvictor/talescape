@@ -1,0 +1,1 @@
+ALTER TABLE "talescape_tale" ADD COLUMN "firstBlockTransitionMode" text DEFAULT 'fromPlacement' NOT NULL;

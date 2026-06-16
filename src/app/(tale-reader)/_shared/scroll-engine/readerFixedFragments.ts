@@ -34,10 +34,8 @@ export function createReaderFixedFragmentPainter(
 			segmentProgress,
 		);
 		const camera = getReadingCamera(anchor, readingProgress, viewport);
-		const blockLeft =
-			anchor.point.x + anchor.viewportOffset.x - anchor.width / 2;
-		const blockTop =
-			anchor.point.y + anchor.viewportOffset.y - anchor.height / 2;
+		const blockLeft = anchor.point.x - anchor.width / 2;
+		const blockTop = anchor.point.y - anchor.height / 2;
 		const x = camera.x - viewport.width / 2 - blockLeft;
 		const y = camera.y - viewport.height / 2 - blockTop;
 		const transform = `translate3d(${x}px, ${y}px, 0)`;

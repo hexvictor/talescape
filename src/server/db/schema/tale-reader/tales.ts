@@ -1,4 +1,5 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import type { FirstBlockTransitionMode } from "~/app/(tale-reader)/_shared/types";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
@@ -37,6 +38,11 @@ export const tales = createTable("tale", (d) => ({
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	type: d.text().notNull().$type<TaleType>(),
 	transitionFirstBlock: d.boolean().notNull().default(false),
+	firstBlockTransitionMode: d
+		.text()
+		.notNull()
+		.$type<FirstBlockTransitionMode>()
+		.default("fromPlacement"),
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

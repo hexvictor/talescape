@@ -62,23 +62,18 @@ export function compileReader(
 		const part = block && tale.indexMap.partsById[block.partId];
 		if (!block || !size || !branch || !page || !entry || !part) continue;
 		const readingPathPoints = compileReadingPathPoints(size, block, viewport);
-		const viewportOffset = getViewportOffset(block.size, size, viewport);
+		const cameraFramingOffset = getCameraFramingOffset(
+			block.size,
+			size,
+			viewport,
+		);
 
 		if (previous) {
-			point = getNextPoint(
-				previous,
-				block,
-				size,
-				readingPathPoints,
-				viewportOffset,
-				previous.point,
-				viewport,
-			);
+			point = getNextPoint(previous, block, size, viewport);
 			const flow = block.transition.flow;
 			if (flow.type === "linear" && flow.placement !== "cameraEdge") {
 				point = resolveNonOverlappingBlockPoint(
 					point,
-					viewportOffset,
 					size,
 					flow.direction,
 					anchors,
@@ -89,7 +84,7 @@ export function compileReader(
 			previous,
 			block,
 			point,
-			viewportOffset,
+			cameraFramingOffset,
 			size,
 			readingPathPoints,
 			viewport,
@@ -98,6 +93,7 @@ export function compileReader(
 		const anchor: Anchor = {
 			block,
 			branch,
+			cameraFramingOffset,
 			cameraPoint,
 			entry,
 			height: size.height,
@@ -107,7 +103,6 @@ export function compileReader(
 			point,
 			readingPathPoints,
 			scroll: 0,
-			viewportOffset,
 			width: size.width,
 		};
 		anchors.push(anchor);
@@ -130,7 +125,11 @@ export function compileReader(
 		const transitionIndex = segments.length;
 		segments.push({
 			end: initialLength,
-			from: createInitialTransitionAnchor(firstAnchor, viewport),
+			from: createInitialTransitionAnchor(
+				firstAnchor,
+				viewport,
+				tale.firstBlockTransitionMode,
+			),
 			index: transitionIndex,
 			length: initialLength,
 			start: 0,
@@ -266,7 +265,14 @@ export function compileReader(
 function createInitialTransitionAnchor(
 	anchor: Anchor,
 	viewport: ViewportSize,
+	mode: Tale["firstBlockTransitionMode"],
 ): Anchor {
+	if (mode === "inPlace") {
+		return {
+			...anchor,
+			id: `${anchor.id}-initial-transition`,
+		};
+	}
 	const direction = flowDirection(anchor.block.transition.flow) ?? "down";
 	const vector = directionVector(direction);
 	return {
@@ -276,10 +282,6 @@ function createInitialTransitionAnchor(
 			y: anchor.cameraPoint.y - vector.y * viewport.height,
 		},
 		id: `${anchor.id}-initial-transition`,
-		point: {
-			x: anchor.point.x - vector.x * viewport.width,
-			y: anchor.point.y - vector.y * viewport.height,
-		},
 	};
 }
 
@@ -313,7 +315,7 @@ function getAutomaticTransitionLength(
  * @param viewport - Current viewport dimensions.
  * @returns Pixel offset from the centered anchor position.
  */
-function getViewportOffset(
+function getCameraFramingOffset(
 	sizeConfig: Tale["structure"]["blocks"][number]["size"],
 	size: ResolvedBlockSize,
 	viewport: ViewportSize,

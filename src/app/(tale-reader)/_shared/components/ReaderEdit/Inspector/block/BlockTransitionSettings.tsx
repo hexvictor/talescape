@@ -28,14 +28,18 @@ export function BlockTransitionSettings({
 }): React.JSX.Element {
 	const {
 		animationPresetsById,
+		requestRecompile,
 		setTale,
 		tale,
+		firstBlockTransitionMode,
 		transitionFirstBlock,
 		transitionPresets,
 	} = useReaderStoreShallow((state) => ({
 		animationPresetsById: state.tale.data.indexMap.animationPresetsById,
+		requestRecompile: state.engine.requestRecompile,
 		setTale: state.tale.setData,
 		tale: state.tale.data,
+		firstBlockTransitionMode: state.tale.data.firstBlockTransitionMode,
 		transitionFirstBlock: state.tale.data.transitionFirstBlock,
 		transitionPresets: state.tale.data.structure.transitionPresets,
 	}));
@@ -146,13 +150,34 @@ export function BlockTransitionSettings({
 						className="h-9 w-5 accent-[#d9b56f]"
 						type="checkbox"
 						checked={transitionFirstBlock}
-						onChange={(event) =>
+						onChange={(event) => {
 							setTale({
 								...tale,
 								transitionFirstBlock: event.target.checked,
-							})
-						}
+							});
+							requestRecompile("first-block-transition-toggle");
+						}}
 					/>
+				</Setting>
+			) : null}
+			{block.position.isFirst && transitionFirstBlock ? (
+				<Setting label="First block entrance">
+					<select
+						className={settingClassName}
+						value={firstBlockTransitionMode}
+						onChange={(event) => {
+							setTale({
+								...tale,
+								firstBlockTransitionMode: event.target.value as
+									| "fromPlacement"
+									| "inPlace",
+							});
+							requestRecompile("first-block-transition-mode");
+						}}
+					>
+						<option value="fromPlacement">Move from placement direction</option>
+						<option value="inPlace">Animate in place</option>
+					</select>
 				</Setting>
 			) : null}
 		</DebugCard>

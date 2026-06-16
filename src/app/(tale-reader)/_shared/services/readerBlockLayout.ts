@@ -19,18 +19,16 @@ type BlockBounds = {
  * Prevents a block-edge destination from intersecting earlier route geometry.
  *
  * @param point - Candidate visual anchor point.
- * @param viewportOffset - Destination placement offset.
  * @param size - Destination block dimensions.
  * @param direction - Direction from which the destination is presented.
  * @param existingAnchors - Previously compiled route anchors.
  * @returns Visual anchor point shifted to the nearest unoccupied position.
  *
  * @example
- * const point = resolveNonOverlappingBlockPoint(candidate, offset, size, "down", anchors);
+ * const point = resolveNonOverlappingBlockPoint(candidate, size, "down", anchors);
  */
 export function resolveNonOverlappingBlockPoint(
 	point: Point,
-	viewportOffset: Point,
 	size: ResolvedBlockSize,
 	direction: Direction,
 	existingAnchors: readonly Anchor[],
@@ -41,7 +39,7 @@ export function resolveNonOverlappingBlockPoint(
 	const resolved = { ...point };
 
 	for (let pass = 0; pass <= existingAnchors.length; pass++) {
-		const candidate = getBlockBounds(resolved, viewportOffset, size);
+		const candidate = getBlockBounds(resolved, size);
 		let shift = 0;
 		for (const anchor of existingAnchors) {
 			const existing = getAnchorBounds(anchor);
@@ -93,66 +91,104 @@ export function resolveNonOverlappingBlockPoint(
  * @param previous - Previous compiled route anchor.
  * @param block - Destination block.
  * @param point - Destination visual anchor point.
- * @param viewportOffset - Destination viewport placement offset.
+ * @param cameraFramingOffset - Camera offset used to frame a small block.
  * @param size - Destination block dimensions.
  * @param readingPathPoints - Compiled camera offsets for destination reading.
  * @param viewport - Active reader viewport.
  * @returns Camera base point used by reading and transition segments.
  *
  * @example
- * const cameraPoint = resolveBlockCameraPoint(previous, block, point, offset, size, path, viewport);
+ * const cameraPoint = resolveBlockCameraPoint(previous, block, point, framing, size, path, viewport);
  */
 export function resolveBlockCameraPoint(
 	previous: Anchor | null,
 	block: ResolvedTaleBlock,
 	point: Point,
-	viewportOffset: Point,
+	cameraFramingOffset: Point,
 	size: ResolvedBlockSize,
 	readingPathPoints: Point[],
 	viewport: ViewportSize,
 ): Point {
-	if (!previous) return point;
 	const flow = block.transition.flow;
 	const entryOffset = readingPathPoints[0] ?? { x: 0, y: 0 };
-	if (flow.type === "stack" || flow.placement === "cameraEdge") return point;
-
-	const previousCamera = getReadingCamera(previous, 1, viewport);
-	const bounds = getBlockBounds(point, viewportOffset, size);
+	const previousCamera = previous
+		? getReadingCamera(previous, 1, viewport)
+		: point;
+	const bounds = getBlockBounds(point, size);
 	const authoredEntryCamera = {
 		x: point.x + entryOffset.x,
 		y: point.y + entryOffset.y,
 	};
 	const target = {
-		x:
-			block.size.horizontalAlignment === "center"
-				? resolveContainedCameraAxis(
-						previousCamera.x,
-						bounds.left,
-						bounds.right,
-						viewport.width,
-						authoredEntryCamera.x,
-					)
-				: authoredEntryCamera.x,
-		y:
-			block.size.verticalAlignment === "center"
-				? resolveContainedCameraAxis(
-						previousCamera.y,
-						bounds.top,
-						bounds.bottom,
-						viewport.height,
-						authoredEntryCamera.y,
-					)
-				: authoredEntryCamera.y,
+		x: resolveFramedCameraAxis({
+			alignment: block.size.horizontalAlignment,
+			authoredTarget: authoredEntryCamera.x,
+			end: bounds.right,
+			framingOffset: cameraFramingOffset.x,
+			previousCamera: previousCamera.x,
+			start: bounds.left,
+			viewportLength: viewport.width,
+		}),
+		y: resolveFramedCameraAxis({
+			alignment: block.size.verticalAlignment,
+			authoredTarget: authoredEntryCamera.y,
+			end: bounds.bottom,
+			framingOffset: cameraFramingOffset.y,
+			previousCamera: previousCamera.y,
+			start: bounds.top,
+			viewportLength: viewport.height,
+		}),
 	};
-	const directionalTarget = constrainCameraToTransitionDirection(
-		target,
-		previousCamera,
-		flow.direction,
-	);
+	const directionalTarget =
+		previous && flow.type === "linear"
+			? constrainCameraToTransitionDirection(
+					target,
+					previousCamera,
+					flow.direction,
+				)
+			: target;
 	return {
 		x: directionalTarget.x - entryOffset.x,
 		y: directionalTarget.y - entryOffset.y,
 	};
+}
+
+/**
+ * Resolves one camera axis from automatic framing or an authored viewport edge.
+ *
+ * @param options - Block bounds, camera history, and framing preference.
+ * @returns Camera coordinate for the block's reading entry.
+ *
+ * @example
+ * const x = resolveFramedCameraAxis(options);
+ */
+function resolveFramedCameraAxis({
+	alignment,
+	authoredTarget,
+	end,
+	framingOffset,
+	previousCamera,
+	start,
+	viewportLength,
+}: {
+	alignment: "auto" | "bottom" | "center" | "left" | "right" | "top";
+	authoredTarget: number;
+	end: number;
+	framingOffset: number;
+	previousCamera: number;
+	start: number;
+	viewportLength: number;
+}): number {
+	if (alignment === "auto") {
+		return resolveContainedCameraAxis(
+			previousCamera,
+			start,
+			end,
+			viewportLength,
+			authoredTarget,
+		);
+	}
+	return authoredTarget - framingOffset;
 }
 
 /**
@@ -196,22 +232,18 @@ function constrainCameraToTransitionDirection(
  * Returns world bounds for a positioned block.
  *
  * @param point - Visual anchor point.
- * @param viewportOffset - Authored viewport placement offset.
  * @param size - Block dimensions.
  * @returns Axis-aligned world bounds.
  */
 function getBlockBounds(
 	point: Point,
-	viewportOffset: Point,
 	size: { height: number; width: number },
 ): BlockBounds {
-	const centerX = point.x + viewportOffset.x;
-	const centerY = point.y + viewportOffset.y;
 	return {
-		bottom: centerY + size.height / 2,
-		left: centerX - size.width / 2,
-		right: centerX + size.width / 2,
-		top: centerY - size.height / 2,
+		bottom: point.y + size.height / 2,
+		left: point.x - size.width / 2,
+		right: point.x + size.width / 2,
+		top: point.y - size.height / 2,
 	};
 }
 
@@ -222,7 +254,7 @@ function getBlockBounds(
  * @returns Axis-aligned world bounds.
  */
 function getAnchorBounds(anchor: Anchor): BlockBounds {
-	return getBlockBounds(anchor.point, anchor.viewportOffset, {
+	return getBlockBounds(anchor.point, {
 		height: anchor.height,
 		width: anchor.width,
 	});

@@ -43,8 +43,8 @@ export function createReaderViewportVisibilityResolver(
 	for (let index = 0; index < compiled.anchors.length; index++) {
 		const anchor = compiled.anchors[index];
 		if (!anchor) continue;
-		const centerX = anchor.point.x + anchor.viewportOffset.x;
-		const centerY = anchor.point.y + anchor.viewportOffset.y;
+		const centerX = anchor.point.x;
+		const centerY = anchor.point.y;
 		const bounds: AnchorBounds = {
 			anchor,
 			bottom: centerY + anchor.height / 2,
@@ -134,10 +134,10 @@ export function createReaderViewportVisibilityResolver(
 			const bounds = boundsByBlockId.get(anchor.block.id);
 			if (
 				!bounds ||
-				bounds.right < left ||
-				bounds.left > right ||
-				bounds.bottom < top ||
-				bounds.top > bottom
+				bounds.right <= left ||
+				bounds.left >= right ||
+				bounds.bottom <= top ||
+				bounds.top >= bottom
 			) {
 				continue;
 			}

@@ -10,8 +10,9 @@ export type Direction =
 
 export type BlockFlow =
 	| {
+			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "cameraEdge";
+			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -118,6 +119,7 @@ export type ReaderStyleConfig = {
 	border?: string;
 	borderRadius?: number;
 	boxShadow?: string;
+	clipPath?: string;
 	color?: string;
 	columnGap?: number | string;
 	cssText?: string;
@@ -177,12 +179,12 @@ export type ReaderSizeUnit = "px" | "viewport";
 
 export type ReaderSizeConfig = {
 	height?: { unit: ReaderSizeUnit; value: number };
-	horizontalAlignment?: "center" | "left" | "right";
+	horizontalAlignment?: "auto" | "center" | "left" | "right";
 	maxHeight?: { unit: ReaderSizeUnit; value: number };
 	maxWidth?: { unit: ReaderSizeUnit; value: number };
 	minHeight?: { unit: ReaderSizeUnit; value: number };
 	minWidth?: { unit: ReaderSizeUnit; value: number };
-	verticalAlignment?: "bottom" | "center" | "top";
+	verticalAlignment?: "auto" | "bottom" | "center" | "top";
 	width?: { unit: ReaderSizeUnit; value: number };
 };
 

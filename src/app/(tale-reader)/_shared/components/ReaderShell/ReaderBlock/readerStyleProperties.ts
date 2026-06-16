@@ -21,6 +21,7 @@ export function getSharedReaderStyle(
 		border: style?.border,
 		borderRadius: style?.borderRadius,
 		boxShadow: style?.boxShadow,
+		clipPath: style?.clipPath,
 		color: style?.color,
 		fontSize: style?.fontSize,
 		fontWeight: style?.fontWeight,

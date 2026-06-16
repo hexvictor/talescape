@@ -10,7 +10,7 @@ import {
 } from "../InspectorValueFields";
 
 /**
- * Edits block sizing and viewport placement.
+ * Edits block sizing and camera framing.
  *
  * @param props - Component props.
  * @param props.onChange - Receives the next size configuration.
@@ -36,25 +36,10 @@ export function BlockSizeSettings({
 					<select
 						className={settingClassName}
 						value={size.mode}
-						onChange={(event) =>
-							onChange(
-								event.target.value === "manual"
-									? {
-											height: 1,
-											heightUnit: "viewport",
-											horizontalAlignment: size.horizontalAlignment,
-											mode: "manual",
-											verticalAlignment: size.verticalAlignment,
-											width: 1,
-											widthUnit: "viewport",
-										}
-									: {
-											horizontalAlignment: size.horizontalAlignment,
-											mode: "content",
-											verticalAlignment: size.verticalAlignment,
-										},
-							)
-						}
+						onChange={(event) => {
+							const mode = event.target.value as BlockSize["mode"];
+							onChange(createSizeForMode(mode, size));
+						}}
 					>
 						<option value="content">Content responsive</option>
 						<option value="manual">Explicit dimensions</option>
@@ -118,10 +103,10 @@ export function BlockSizeSettings({
 					</>
 				)}
 			</SizeSettingsSection>
-			<SizeSettingsSection title="Viewport placement">
+			<SizeSettingsSection title="Camera framing">
 				<AlignmentSetting
 					label="Horizontal"
-					options={["left", "center", "right"]}
+					options={["auto", "left", "center", "right"]}
 					value={size.horizontalAlignment}
 					onChange={(horizontalAlignment) =>
 						onChange({ ...size, horizontalAlignment })
@@ -129,7 +114,7 @@ export function BlockSizeSettings({
 				/>
 				<AlignmentSetting
 					label="Vertical"
-					options={["top", "center", "bottom"]}
+					options={["auto", "top", "center", "bottom"]}
 					value={size.verticalAlignment}
 					onChange={(verticalAlignment) =>
 						onChange({ ...size, verticalAlignment })
@@ -138,6 +123,38 @@ export function BlockSizeSettings({
 			</SizeSettingsSection>
 		</DebugCard>
 	);
+}
+
+/**
+ * Creates a size config when switching between sizing modes.
+ *
+ * @param mode - Target sizing mode.
+ * @param previous - Previous size config used to preserve camera framing.
+ * @returns New size config for the target mode.
+ *
+ * @example
+ * const size = createSizeForMode("manual", previous);
+ */
+function createSizeForMode(
+	mode: BlockSize["mode"],
+	previous: BlockSize,
+): BlockSize {
+	if (mode === "manual") {
+		return {
+			height: "height" in previous ? previous.height : 1,
+			heightUnit: "heightUnit" in previous ? previous.heightUnit : "viewport",
+			horizontalAlignment: previous.horizontalAlignment,
+			mode,
+			verticalAlignment: previous.verticalAlignment,
+			width: "width" in previous ? previous.width : 1,
+			widthUnit: "widthUnit" in previous ? previous.widthUnit : "viewport",
+		};
+	}
+	return {
+		horizontalAlignment: previous.horizontalAlignment,
+		mode,
+		verticalAlignment: previous.verticalAlignment,
+	};
 }
 
 /**

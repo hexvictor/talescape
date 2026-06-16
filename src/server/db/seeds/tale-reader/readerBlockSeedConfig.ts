@@ -81,8 +81,9 @@ export function createReaderBlockSeedConfig(
 			flow: stack
 				? { type: "stack" }
 				: {
+						alignment: "start",
 						direction: page.readingDirection,
-						placement: "blockEdge",
+						placement: "blockEdgeWithViewportAlignment",
 						spacing: { unit: "px", value: 0 },
 						type: "linear",
 					},
@@ -150,9 +151,30 @@ function styleForPage(
 			: `linear-gradient(145deg, ${color}, #090b10)`;
 	return {
 		backgroundCss,
+		clipPath: getBlockClipPath(page),
 		color: branchName === "main" ? "#f5f1e8" : "#fff8e8",
 		minHeight: "100%",
 		overflow: "visible",
 		width: "100%",
 	};
+}
+
+/**
+ * Creates a repeatable comic-panel shape for selected seeded pages.
+ *
+ * @param page - Authored page definition.
+ * @returns CSS clip-path polygon or undefined for rectangular blocks.
+ *
+ * @example
+ * const clipPath = getBlockClipPath(page);
+ */
+function getBlockClipPath(page: ReaderPageBlueprint): string | undefined {
+	if (page.layout !== "fullscreen") return undefined;
+	const shapes = [
+		undefined,
+		"polygon(0 0, 100% 0, 94% 100%, 0 100%)",
+		"polygon(6% 0, 100% 0, 100% 92%, 0 100%)",
+		"polygon(0 8%, 100% 0, 96% 100%, 4% 100%)",
+	] as const;
+	return shapes[page.order % shapes.length];
 }

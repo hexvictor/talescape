@@ -13,110 +13,225 @@ export function getReadingCamera(
 	progress: number,
 	viewport: ViewportSize,
 ) {
-	const offset = getReadingCameraOffset(
-		{ height: anchor.height, width: anchor.width },
-		anchor.block,
-		progress,
-		viewport,
-		anchor.readingPathPoints,
-	);
+	const offset = getReadingContentOffset(anchor, progress, viewport);
 	return {
 		x: anchor.cameraPoint.x + offset.x,
 		y: anchor.cameraPoint.y + offset.y,
 	};
 }
 
+/**
+ * Resolves the physical world position of the next block.
+ *
+ * @param previous - Previous compiled block anchor.
+ * @param nextBlock - Destination block configuration.
+ * @param nextSize - Destination block dimensions.
+ * @param viewport - Active camera viewport dimensions.
+ * @returns Destination block center in world coordinates.
+ *
+ * @example
+ * const point = getNextPoint(previous, block, size, viewport);
+ */
 export function getNextPoint(
 	previous: Anchor,
 	nextBlock: ResolvedTaleBlock,
 	nextSize: { height: number; width: number },
-	nextReadingPathPoints: Point[],
-	nextViewportOffset: Point,
-	current: Point,
 	viewport: ViewportSize,
 ): Point {
 	const flow = nextBlock.transition.flow;
 	const exitCamera = getReadingCamera(previous, 1, viewport);
-	const entryOffset = getReadingCameraOffset(
-		nextSize,
-		nextBlock,
-		0,
-		viewport,
-		nextReadingPathPoints,
-	);
 	if (flow.type === "stack") {
-		return {
-			x: exitCamera.x - entryOffset.x,
-			y: exitCamera.y - entryOffset.y,
-		};
+		return { ...previous.point };
 	}
 
-	const vector = directionVector(flow.direction);
 	const spacing = resolveSpacing(flow.spacing, viewport);
 	if (flow.placement === "cameraEdge") {
-		return getCameraEdgePoint({
-			entryOffset,
+		return getCameraViewportEdgePoint(
 			exitCamera,
-			spacing,
-			vector,
 			viewport,
-		});
+			nextSize,
+			flow.direction,
+			spacing,
+			flow.alignment,
+		);
 	}
-	const previousCenter = {
-		x: current.x + previous.viewportOffset.x,
-		y: current.y + previous.viewportOffset.y,
+	if (flow.placement === "blockEdgeWithViewportAlignment") {
+		return getBlockEdgeWithViewportAlignmentPoint(
+			previous,
+			exitCamera,
+			viewport,
+			nextSize,
+			flow.direction,
+			spacing,
+			flow.alignment,
+		);
+	}
+	return getAdjacentBlockPoint(
+		previous.point,
+		{ height: previous.height, width: previous.width },
+		nextSize,
+		flow.direction,
+		spacing,
+		flow.alignment,
+	);
+}
+
+/**
+ * Uses the previous block edge for travel distance and the previous camera
+ * viewport for perpendicular alignment.
+ *
+ * @param previous - Previous block anchor and physical dimensions.
+ * @param cameraPoint - Previous camera center at the end of reading.
+ * @param viewport - Previous camera viewport dimensions.
+ * @param nextSize - Destination block dimensions.
+ * @param direction - Placement direction from the previous block.
+ * @param spacing - Pixel spacing resolved for each axis.
+ * @param alignment - Start, center, or end viewport alignment.
+ * @returns Destination block center in world coordinates.
+ *
+ * @example
+ * const point = getBlockEdgeWithViewportAlignmentPoint(previous, camera, viewport, size, "right", spacing, "start");
+ */
+export function getBlockEdgeWithViewportAlignmentPoint(
+	previous: Pick<Anchor, "height" | "point" | "width">,
+	cameraPoint: Point,
+	viewport: ViewportSize,
+	nextSize: { height: number; width: number },
+	direction: Direction,
+	spacing: Point,
+	alignment: "center" | "end" | "start" = "center",
+): Point {
+	const blockEdgePoint = getAdjacentBlockPoint(
+		previous.point,
+		{ height: previous.height, width: previous.width },
+		nextSize,
+		direction,
+		spacing,
+		alignment,
+	);
+	const viewportAlignedPoint = getCameraViewportEdgePoint(
+		cameraPoint,
+		viewport,
+		nextSize,
+		direction,
+		spacing,
+		alignment,
+	);
+	const vector = directionVector(direction);
+	return {
+		x: vector.x === 0 ? viewportAlignedPoint.x : blockEdgePoint.x,
+		y: vector.y === 0 ? viewportAlignedPoint.y : blockEdgePoint.y,
 	};
+}
+
+/**
+ * Places a destination block directly beside the previous block.
+ *
+ * @param previousPoint - Previous block center in world coordinates.
+ * @param previousSize - Previous block dimensions.
+ * @param nextSize - Destination block dimensions.
+ * @param direction - Placement direction from previous to destination.
+ * @param spacing - Pixel spacing resolved for each axis.
+ * @param alignment - Cross-axis edge alignment.
+ * @returns Destination block center in world coordinates.
+ *
+ * @example
+ * const point = getAdjacentBlockPoint(previous, previousSize, nextSize, "right", spacing, "start");
+ */
+export function getAdjacentBlockPoint(
+	previousPoint: Point,
+	previousSize: { height: number; width: number },
+	nextSize: { height: number; width: number },
+	direction: Direction,
+	spacing: Point,
+	alignment: "center" | "end" | "start" = "center",
+): Point {
+	const vector = directionVector(direction);
 	const horizontalDistance =
-		(previous.width + nextSize.width) / 2 + Math.abs(vector.x) * spacing.x;
+		(previousSize.width + nextSize.width) / 2 + Math.abs(vector.x) * spacing.x;
 	const verticalDistance =
-		(previous.height + nextSize.height) / 2 + Math.abs(vector.y) * spacing.y;
+		(previousSize.height + nextSize.height) / 2 +
+		Math.abs(vector.y) * spacing.y;
 	const point = {
-		x:
-			previousCenter.x +
-			Math.sign(vector.x) * horizontalDistance -
-			nextViewportOffset.x,
-		y:
-			previousCenter.y +
-			Math.sign(vector.y) * verticalDistance -
-			nextViewportOffset.y,
+		x: previousPoint.x + Math.sign(vector.x) * horizontalDistance,
+		y: previousPoint.y + Math.sign(vector.y) * verticalDistance,
 	};
 	if (vector.x !== 0 && vector.y === 0) {
-		point.y = exitCamera.y - entryOffset.y;
+		point.y = alignCrossAxis(
+			previousPoint.y,
+			previousSize.height,
+			nextSize.height,
+			alignment,
+		);
 	}
 	if (vector.y !== 0 && vector.x === 0) {
-		point.x = exitCamera.x - entryOffset.x;
+		point.x = alignCrossAxis(
+			previousPoint.x,
+			previousSize.width,
+			nextSize.width,
+			alignment,
+		);
 	}
 	return point;
 }
 
 /**
- * Places a destination block beside the camera's reading endpoint.
+ * Aligns a destination block along the axis perpendicular to its placement.
  *
- * @param options - Geometry values for the previous and destination blocks.
+ * @param previousCenter - Previous block center on the cross axis.
+ * @param previousSize - Previous block size on the cross axis.
+ * @param nextSize - Destination block size on the cross axis.
+ * @param alignment - Start, center, or end edge alignment.
+ * @returns Destination center on the cross axis.
+ *
+ * @example
+ * const y = alignCrossAxis(500, 400, 200, "start");
+ */
+function alignCrossAxis(
+	previousCenter: number,
+	previousSize: number,
+	nextSize: number,
+	alignment: "center" | "end" | "start" = "center",
+): number {
+	if (alignment === "start") {
+		return previousCenter - previousSize / 2 + nextSize / 2;
+	}
+	if (alignment === "end") {
+		return previousCenter + previousSize / 2 - nextSize / 2;
+	}
+	return previousCenter;
+}
+
+/**
+ * Places a destination block directly beside the previous camera viewport.
+ *
+ * @param cameraPoint - Previous camera center at the end of reading.
+ * @param viewport - Previous camera viewport dimensions.
+ * @param nextSize - Destination block dimensions.
+ * @param direction - Placement direction from the camera viewport.
+ * @param spacing - Pixel spacing resolved for each axis.
+ * @param alignment - Cross-axis viewport edge alignment.
  * @returns Destination block center in reader world coordinates.
  *
  * @example
- * const point = getCameraEdgePoint(options);
+ * const point = getCameraViewportEdgePoint(camera, viewport, size, "right", spacing, "start");
  */
-function getCameraEdgePoint({
-	entryOffset,
-	exitCamera,
-	spacing,
-	vector,
-	viewport,
-}: {
-	entryOffset: Point;
-	exitCamera: Point;
-	spacing: Point;
-	vector: Point;
-	viewport: ViewportSize;
-}): Point {
-	const horizontalDistance = viewport.width + Math.abs(vector.x) * spacing.x;
-	const verticalDistance = viewport.height + Math.abs(vector.y) * spacing.y;
-	return {
-		x: exitCamera.x + Math.sign(vector.x) * horizontalDistance - entryOffset.x,
-		y: exitCamera.y + Math.sign(vector.y) * verticalDistance - entryOffset.y,
-	};
+export function getCameraViewportEdgePoint(
+	cameraPoint: Point,
+	viewport: ViewportSize,
+	nextSize: { height: number; width: number },
+	direction: Direction,
+	spacing: Point,
+	alignment: "center" | "end" | "start" = "center",
+): Point {
+	return getAdjacentBlockPoint(
+		cameraPoint,
+		{ height: viewport.height, width: viewport.width },
+		nextSize,
+		direction,
+		spacing,
+		alignment,
+	);
 }
 
 /**
@@ -173,6 +288,31 @@ function getReadingCameraOffset(
 		x: -extraX / 2 + extraX * xProgress,
 		y: -extraY / 2 + extraY * yProgress,
 	};
+}
+
+/**
+ * Resolves the content movement offset along a block reading path.
+ *
+ * @param anchor - Compiled block anchor.
+ * @param progress - Reading progress from 0 to 1.
+ * @param viewport - Current reader viewport dimensions.
+ * @returns Content offset in world pixels.
+ *
+ * @example
+ * const offset = getReadingContentOffset(anchor, 0.5, viewport);
+ */
+function getReadingContentOffset(
+	anchor: Anchor,
+	progress: number,
+	viewport: ViewportSize,
+): Point {
+	return getReadingCameraOffset(
+		{ height: anchor.height, width: anchor.width },
+		anchor.block,
+		progress,
+		viewport,
+		anchor.readingPathPoints,
+	);
 }
 
 /**

@@ -220,6 +220,7 @@ function normalizeFlow(
 	return flow?.type === "stack"
 		? flow
 		: {
+				alignment: flow?.alignment,
 				direction: flow?.direction ?? "down",
 				placement: flow?.placement,
 				spacing: flow?.spacing,

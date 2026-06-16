@@ -21,6 +21,7 @@ export type DbTaleRecord = {
 	paths?: unknown[];
 	slug: string;
 	title: string;
+	firstBlockTransitionMode?: Tale["firstBlockTransitionMode"];
 	transitionFirstBlock?: boolean;
 };
 

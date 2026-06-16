@@ -14,6 +14,13 @@
 		"lint": "biome lint .",
 		"lint:changed": "biome lint --changed --since=HEAD",
 		"lint:fix": "biome lint --write .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:performance": "playwright test tests/performance",
+		"test:performance:headed": "playwright test tests/performance --headed",
 		"db:generate": "drizzle-kit generate",
 		"db:generate:dev": "DOTENV_CONFIG_PATH=.env.local drizzle-kit generate",
 		"db:generate:preview": "DOTENV_CONFIG_PATH=.env.preview.local drizzle-kit generate",
@@ -88,18 +95,21 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@playwright/test": "^1.61.0",
 		"@tailwindcss/postcss": "^4.0.15",
 		"@types/locomotive-scroll": "^4.1.4",
 		"@types/node": "^20.14.10",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
+		"@vitest/coverage-v8": "^4.1.9",
 		"drizzle-kit": "^0.30.5",
 		"fallow": "^2.88.3",
 		"husky": "^9.1.7",
 		"postcss": "^8.5.3",
 		"tailwindcss": "^4.0.15",
 		"tsx": "^4.20.3",
-		"typescript": "^5.8.2"
+		"typescript": "^5.8.2",
+		"vitest": "^4.1.9"
 	},
 	"ct3aMetadata": {
 		"initVersion": "7.39.0"

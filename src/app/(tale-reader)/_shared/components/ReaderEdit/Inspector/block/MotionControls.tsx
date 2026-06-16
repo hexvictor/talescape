@@ -7,7 +7,7 @@ import {
 } from "../../../ReaderUi/TaleDebug/DebugPrimitives";
 
 /**
- * Edits directional block arrangement or switches to layered overlap.
+ * Edits physical block placement independently from camera framing.
  *
  * @param props - Component props.
  * @param props.flow - Current block flow.
@@ -25,7 +25,7 @@ export function FlowSettings({
 		<>
 			<Setting
 				componentName="FlowSettings"
-				label="Flow mode"
+				label="Block placement"
 				readerRole="flow-mode-setting"
 			>
 				<select
@@ -35,17 +35,21 @@ export function FlowSettings({
 						onChange(
 							event.target.value === "stack"
 								? { type: "stack" }
-								: { direction: "right", type: "linear" },
+								: {
+										alignment: "center",
+										direction: "right",
+										type: "linear",
+									},
 						)
 					}
 				>
-					<option value="linear">Linear</option>
-					<option value="stack">Stack</option>
+					<option value="linear">Adjacent</option>
+					<option value="stack">Stacked</option>
 				</select>
 			</Setting>
 			{flow.type === "linear" ? (
 				<>
-					<Setting label="Transition direction">
+					<Setting label="Placement direction">
 						<select
 							className={settingClassName}
 							value={flow.direction}
@@ -63,19 +67,41 @@ export function FlowSettings({
 							))}
 						</select>
 					</Setting>
-					<Setting label="Transition placement">
+					<Setting label="Cross-axis alignment">
+						<select
+							className={settingClassName}
+							value={flow.alignment ?? "center"}
+							onChange={(event) =>
+								onChange({
+									...flow,
+									alignment: event.target.value as "center" | "end" | "start",
+								})
+							}
+						>
+							<option value="start">Start edge</option>
+							<option value="center">Center</option>
+							<option value="end">End edge</option>
+						</select>
+					</Setting>
+					<Setting label="Placement reference">
 						<select
 							className={settingClassName}
 							value={flow.placement ?? "blockEdge"}
 							onChange={(event) =>
 								onChange({
 									...flow,
-									placement: event.target.value as "blockEdge" | "cameraEdge",
+									placement: event.target.value as
+										| "blockEdge"
+										| "blockEdgeWithViewportAlignment"
+										| "cameraEdge",
 								})
 							}
 						>
-							<option value="blockEdge">Block edge</option>
-							<option value="cameraEdge">Camera endpoint</option>
+							<option value="blockEdge">Previous block edge</option>
+							<option value="blockEdgeWithViewportAlignment">
+								Block edge + camera alignment
+							</option>
+							<option value="cameraEdge">Previous camera viewport</option>
 						</select>
 					</Setting>
 					<MotionNumber

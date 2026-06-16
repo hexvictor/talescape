@@ -7,6 +7,9 @@ type ReaderDomRegistry = {
 	disconnect: () => void;
 };
 
+const readerDomSelector =
+	"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]";
+
 /**
  * Indexes mounted reader elements and keeps the indexes synchronized as React
  * mounts and unmounts the render window.
@@ -31,16 +34,12 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 	): boolean => {
 		if (!(node instanceof HTMLElement)) return false;
 		let found = false;
-		if (
-			node.matches(
-				"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]",
-			)
-		) {
+		if (node.matches(readerDomSelector)) {
 			visit(node);
 			found = true;
 		}
 		for (const element of node.querySelectorAll<HTMLElement>(
-			"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]",
+			readerDomSelector,
 		)) {
 			visit(element);
 			found = true;

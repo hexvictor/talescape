@@ -14,6 +14,7 @@ import {
 	waitForReaderAssets,
 } from "../services/readerMeasurement";
 import type {
+	CompiledReader,
 	ResolvedBlockSize,
 	ResolvedTaleBlock,
 	ViewportSize,
@@ -34,12 +35,37 @@ function getMeasurementCacheKey(
 	].join("|");
 }
 
+/**
+ * Creates a stable key for one compiled route layout.
+ *
+ * @param viewport - Effective reader viewport dimensions.
+ * @param revision - Tale edit revision.
+ * @param selectedBranchIds - Currently chosen branch ids.
+ * @returns Route compilation cache key.
+ *
+ * @example
+ * const key = getCompiledRouteCacheKey(viewport, revision, ["branch-1"]);
+ */
+function getCompiledRouteCacheKey(
+	viewport: ViewportSize,
+	revision: number,
+	selectedBranchIds: string[],
+): string {
+	return [
+		revision,
+		viewport.width,
+		viewport.height,
+		selectedBranchIds.join(">"),
+	].join("|");
+}
+
 export function usePrepareReaderLayout(
 	measurementRef: RefObject<HTMLDivElement | null>,
 	viewport: ViewportSize,
 ) {
 	const store = useReaderStoreInstance();
 	const measurementCacheRef = useRef<Record<string, ResolvedBlockSize>>({});
+	const compiledCacheRef = useRef<Record<string, CompiledReader>>({});
 	const {
 		revision,
 		selectedBranchIds,
@@ -59,21 +85,22 @@ export function usePrepareReaderLayout(
 			const tale = currentState.tale.data;
 			if (!currentState.reader.compiled) setReady(false);
 			setStatus("measuring");
-			const blockIds = getCompiledBlockIds(tale, selectedBranchIds);
+			const routeBlockIds = getCompiledBlockIds(tale, selectedBranchIds);
+			const allBlockIds = tale.structure.blocks.map((block) => block.id);
 			countReaderDiagnostic("layout preparation started", {
-				blockCount: blockIds.length,
+				blockCount: routeBlockIds.length,
 				revision,
 			});
 			logReaderDiagnostic("layout preparation", {
-				blockCount: blockIds.length,
+				blockCount: routeBlockIds.length,
 				revision,
 				selectedBranchIds,
 				viewport,
 			});
-			const contentBlockIds = blockIds.filter(
+			const contentBlockIds = allBlockIds.filter(
 				(blockId) => tale.indexMap.blocksById[blockId]?.size.mode === "content",
 			);
-			const manualBlockIds = blockIds.filter(
+			const manualBlockIds = allBlockIds.filter(
 				(blockId) => tale.indexMap.blocksById[blockId]?.size.mode !== "content",
 			);
 			const missingContentBlockIds = contentBlockIds.filter((blockId) => {
@@ -132,7 +159,15 @@ export function usePrepareReaderLayout(
 			setPhase("compiling-reader");
 			setProgress(82);
 			setStatus("compiling");
-			const compiled = compileReader(tale, selectedBranchIds, sizes, viewport);
+			const compiledCacheKey = getCompiledRouteCacheKey(
+				viewport,
+				revision,
+				selectedBranchIds,
+			);
+			const compiled =
+				compiledCacheRef.current[compiledCacheKey] ??
+				compileReader(tale, selectedBranchIds, sizes, viewport);
+			compiledCacheRef.current[compiledCacheKey] = compiled;
 			store.getState().tale.setData(setResolvedAnchors(tale, compiled.anchors));
 			setCompiled(compiled);
 			setPhase("restoring-progress");

@@ -22,15 +22,15 @@ export function formatSize(
 		return {
 			height: config?.height?.value ?? 1,
 			heightUnit: config?.height?.unit ?? "viewport",
-			horizontalAlignment: config?.horizontalAlignment ?? "center",
+			horizontalAlignment: config?.horizontalAlignment ?? "auto",
 			mode: "manual",
-			verticalAlignment: config?.verticalAlignment ?? "center",
+			verticalAlignment: config?.verticalAlignment ?? "auto",
 			width: config?.width?.value ?? 1,
 			widthUnit: config?.width?.unit ?? "viewport",
 		};
 	}
 	return {
-		horizontalAlignment: config?.horizontalAlignment ?? "center",
+		horizontalAlignment: config?.horizontalAlignment ?? "auto",
 		maxHeight: config?.maxHeight?.value,
 		maxHeightUnit: config?.maxHeight?.unit,
 		maxWidth: config?.maxWidth?.value,
@@ -40,6 +40,6 @@ export function formatSize(
 		minWidth: config?.minWidth?.value,
 		minWidthUnit: config?.minWidth?.unit,
 		mode: "content",
-		verticalAlignment: config?.verticalAlignment ?? "center",
+		verticalAlignment: config?.verticalAlignment ?? "auto",
 	};
 }

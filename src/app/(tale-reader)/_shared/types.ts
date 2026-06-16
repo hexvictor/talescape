@@ -15,12 +15,19 @@ export type Direction =
 
 export type BlockFlow =
 	| {
+			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "cameraEdge";
+			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
 	| { type: "stack" };
+
+export type FirstBlockTransitionMode = "fromPlacement" | "inPlace";
+
+export type HorizontalCameraFraming = "auto" | "center" | "left" | "right";
+
+export type VerticalCameraFraming = "auto" | "bottom" | "center" | "top";
 
 export type ReaderSpacing = {
 	unit: "px" | "viewport";
@@ -129,16 +136,16 @@ export type StructurePosition = {
 
 export type BlockSize =
 	| {
-			horizontalAlignment: "center" | "left" | "right";
+			horizontalAlignment: HorizontalCameraFraming;
 			height: number;
 			heightUnit: "px" | "viewport";
 			mode: "manual";
 			width: number;
 			widthUnit: "px" | "viewport";
-			verticalAlignment: "bottom" | "center" | "top";
+			verticalAlignment: VerticalCameraFraming;
 	  }
 	| {
-			horizontalAlignment: "center" | "left" | "right";
+			horizontalAlignment: HorizontalCameraFraming;
 			maxHeight?: number;
 			maxHeightUnit?: "px" | "viewport";
 			maxWidth?: number;
@@ -148,7 +155,7 @@ export type BlockSize =
 			minWidth?: number;
 			minWidthUnit?: "px" | "viewport";
 			mode: "content";
-			verticalAlignment: "bottom" | "center" | "top";
+			verticalAlignment: VerticalCameraFraming;
 	  };
 
 export type NodeChild =
@@ -172,6 +179,7 @@ export type ReaderStyle = {
 	border?: string;
 	borderRadius?: number;
 	boxShadow?: string;
+	clipPath?: string;
 	color?: string;
 	columnGap?: number | string;
 	cssText?: string;
@@ -645,6 +653,7 @@ export type Point = { x: number; y: number };
 export type Anchor = {
 	block: ResolvedTaleBlock;
 	branch: ResolvedTaleBranch;
+	cameraFramingOffset: Point;
 	cameraPoint: Point;
 	entry: ResolvedTaleEntry;
 	height: number;
@@ -654,7 +663,6 @@ export type Anchor = {
 	point: Point;
 	readingPathPoints: Point[];
 	scroll: number;
-	viewportOffset: Point;
 	width: number;
 };
 
@@ -760,6 +768,7 @@ export type RawTaleRecord = {
 	slug: string;
 	synopsis: string;
 	title: string;
+	firstBlockTransitionMode: FirstBlockTransitionMode;
 	transitionFirstBlock: boolean;
 	transitionPresets: TransitionPreset[];
 	visibilityPresets: VisibilityPreset[];
@@ -775,7 +784,10 @@ export type LayoutPhase =
 	| "preparing-motion"
 	| "ready";
 
-export type ResolvedBlockSize = { height: number; width: number };
+export type ResolvedBlockSize = {
+	height: number;
+	width: number;
+};
 
 export type TimelineSegment =
 	| {

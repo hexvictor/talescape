@@ -40,6 +40,7 @@ import { createReaderDebugPublisher } from "./readerDebugPublisher";
 import { createReaderDomRegistry } from "./readerDomRegistry";
 import { createReaderFixedFragmentPainter } from "./readerFixedFragments";
 import { compileReaderFramePlans } from "./readerFramePlan";
+import { getInitialTransitionVisibleAnchors } from "./readerInitialTransitionVisibility";
 import { createReaderStatePublisher } from "./readerStatePublisher";
 import { createReaderViewportVisibilityResolver } from "./readerViewportVisibility";
 import { createReaderVisibilityPainter } from "./readerVisibility";
@@ -56,6 +57,28 @@ type ReaderScrollEngineOptions = {
 	store: StoreApi<TaleReaderState>;
 	viewport: ViewportSize;
 };
+
+/**
+ * Keeps the first block mounted for entrance painting while deduplicating
+ * spatially nearby blocks.
+ *
+ * @param nearbyAnchors - Blocks near the current camera.
+ * @param firstAnchor - First route block required by the entrance transition.
+ * @returns Mounted anchors in stable insertion order.
+ *
+ * @example
+ * const mounted = getInitialTransitionMountedAnchors(nearby, first);
+ */
+function getInitialTransitionMountedAnchors(
+	nearbyAnchors: readonly Anchor[],
+	firstAnchor?: Anchor,
+): Anchor[] {
+	const anchorsByBlockId = new Map(
+		nearbyAnchors.map((anchor) => [anchor.block.id, anchor]),
+	);
+	if (firstAnchor) anchorsByBlockId.set(firstAnchor.block.id, firstAnchor);
+	return [...anchorsByBlockId.values()];
+}
 
 export function createReaderScrollEngine({
 	compiled,
@@ -377,10 +400,16 @@ export function createReaderScrollEngine({
 			segment.type === "transition" &&
 			segment.index === 0;
 		const visibleAnchors = initialTransitionActive
-			? framePlan.visibleAnchors
+			? getInitialTransitionVisibleAnchors(
+					compiled,
+					viewportVisibility.getVisibleAnchors(camera, []),
+				)
 			: viewportVisibility.getVisibleAnchors(camera, framePlan.visibleAnchors);
 		const nearbyAnchors = initialTransitionActive
-			? visibleAnchors
+			? getInitialTransitionMountedAnchors(
+					viewportVisibility.getNearbyAnchors(camera, [], 0.5),
+					compiled.anchors[0],
+				)
 			: viewportVisibility.getNearbyAnchors(
 					camera,
 					framePlan.visibleAnchors,

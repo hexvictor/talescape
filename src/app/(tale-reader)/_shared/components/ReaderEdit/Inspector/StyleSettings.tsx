@@ -61,6 +61,12 @@ export function StyleSettings({
 					value={current.border ?? ""}
 					onChange={(value) => setText("border", value)}
 				/>
+				<TextSetting
+					label="Clip path"
+					placeholder="polygon(0 0, 100% 0, 92% 100%, 0 100%)"
+					value={current.clipPath ?? ""}
+					onChange={(value) => setText("clipPath", value)}
+				/>
 				<NumberSetting
 					label="Border radius"
 					value={current.borderRadius ?? 0}

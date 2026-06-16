@@ -49,6 +49,7 @@ export function ReaderMeasurementLayer({
 							border: anchor.block.style?.border,
 							borderRadius: anchor.block.style?.borderRadius,
 							boxShadow: anchor.block.style?.boxShadow,
+							clipPath: anchor.block.style?.clipPath,
 							color: anchor.block.style?.color,
 							...getMeasurementBlockStyle(anchor.block.size, viewport),
 						}}
@@ -82,6 +83,7 @@ function getMeasurementAnchor(tale: Tale, blockId: string): Anchor | null {
 	return {
 		block,
 		branch,
+		cameraFramingOffset: { x: 0, y: 0 },
 		cameraPoint: { x: 0, y: 0 },
 		entry,
 		height: 0,
@@ -91,7 +93,6 @@ function getMeasurementAnchor(tale: Tale, blockId: string): Anchor | null {
 		point: { x: 0, y: 0 },
 		readingPathPoints: [],
 		scroll: 0,
-		viewportOffset: { x: 0, y: 0 },
 		width: 0,
 	};
 }
