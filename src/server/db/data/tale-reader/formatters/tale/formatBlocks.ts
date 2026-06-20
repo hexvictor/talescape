@@ -2,7 +2,7 @@ import type {
 	RawTaleRecord,
 	ReaderStyle,
 	TaleBlock,
-} from "~/app/(tale-reader)/_shared/types";
+} from "~/app/(tale-app)/_shared/types";
 import type {
 	AmbientAnimationSelection as DbAmbientAnimationSelection,
 	AnimationSelection as DbAnimationSelection,

@@ -29,7 +29,8 @@ try {
 
 export default function RootLayout({
 	children,
-}: Readonly<{ children: React.ReactNode }>) {
+	auth,
+}: Readonly<{ auth: React.ReactNode; children: React.ReactNode }>) {
 	return (
 		<ClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
 			<html lang="en" className={geist.variable} suppressHydrationWarning>
@@ -51,7 +52,11 @@ export default function RootLayout({
 						 */
 						routerConfig={extractRouterConfig(ourFileRouter)}
 					/>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
+					<TRPCReactProvider>
+						{children}
+						<div id="modal-root" />
+						{auth}
+					</TRPCReactProvider>
 				</body>
 			</html>
 		</ClerkProvider>

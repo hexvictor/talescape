@@ -1,4 +1,4 @@
-import type { Tale } from "~/app/(tale-reader)/_shared/types";
+import type { Tale } from "~/app/(tale-app)/_shared/types";
 
 /**
  * Formats database entry rows into the reader entry model.

@@ -2,7 +2,7 @@ import type {
 	FragmentPlacement,
 	ReaderStyle,
 	TaleFragment,
-} from "~/app/(tale-reader)/_shared/types";
+} from "~/app/(tale-app)/_shared/types";
 import type { AnimationSelection as DbAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
 import type { AmbientAnimationSelection as DbAmbientAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
 import { formatAnimationSelection } from "./formatAnimationSelection";

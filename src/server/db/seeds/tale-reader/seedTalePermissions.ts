@@ -14,7 +14,7 @@ export async function seedTalePermissions(): Promise<void> {
 	const [tale] = await db
 		.select({ id: tales.id })
 		.from(tales)
-		.where(eq(tales.slug, "official-tale-branched"));
+		.where(eq(tales.slug, "branched"));
 	if (!tale) throw new Error("Seeded reader tale was not found.");
 
 	await db.insert(talePermissions).values({

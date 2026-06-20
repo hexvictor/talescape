@@ -5,7 +5,7 @@ import type {
 	ReaderStyle,
 	TransitionPreset,
 	VisibilityPreset,
-} from "~/app/(tale-reader)/_shared/types";
+} from "~/app/(tale-app)/_shared/types";
 import type { BlockFlow } from "~/server/db/types/tale-reader/readerConfig";
 import { type PresetSource, presetKey } from "./presetKeys";
 

@@ -2,7 +2,7 @@ import type {
 	FragmentAnimationConfig,
 	ReaderStyle,
 	TaleNode,
-} from "~/app/(tale-reader)/_shared/types";
+} from "~/app/(tale-app)/_shared/types";
 import type {
 	NodeAnimationConfig,
 	NodeConfig,

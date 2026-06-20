@@ -22,7 +22,7 @@ export async function seedTales(): Promise<void> {
 			editable: true,
 			isOfficial: true,
 			isVerified: true,
-			slug: "official-tale-branched",
+			slug: "branched",
 			status: "published",
 			title: "Forked Fates",
 			firstBlockTransitionMode: "fromPlacement",

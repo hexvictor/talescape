@@ -1,4 +1,4 @@
-import type { TaleBranch } from "~/app/(tale-reader)/_shared/types";
+import type { TaleBranch } from "~/app/(tale-app)/_shared/types";
 
 /**
  * Formats database branch rows into the reader branch model.

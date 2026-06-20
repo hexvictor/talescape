@@ -1,4 +1,4 @@
-import type { AnimationSelection } from "~/app/(tale-reader)/_shared/types";
+import type { AnimationSelection } from "~/app/(tale-app)/_shared/types";
 import type { AnimationSelection as DbAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
 
 /**

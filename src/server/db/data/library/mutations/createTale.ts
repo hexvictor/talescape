@@ -1,20 +1,22 @@
 import "server-only";
 
+import { and, eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
 	blocks,
 	branches,
 	entries,
 	fragments,
+	nodes,
 	pages,
 	parts,
-	paths,
 	talePermissions,
 	tales,
 } from "~/server/db/schema";
 
 const taleTypes = ["story", "codex", "timeline"] as const;
 const visibilityTypes = ["public", "private", "restricted"] as const;
+const cloneableTypes = ["private", "public", "shared"] as const;
 const statusTypes = [
 	"draft",
 	"review",
@@ -23,8 +25,17 @@ const statusTypes = [
 	"published",
 	"archived",
 ] as const;
-const branchModes = ["linear", "branching"] as const;
 
+/**
+ * Creates a minimal editable tale and starter reader structure from form metadata.
+ *
+ * @param userId - Clerk user id creating the tale.
+ * @param formData - Tale metadata submitted by the library form.
+ * @returns Creation status and routing identifiers.
+ *
+ * @example
+ * const result = await createTaleFromForm(userId, formData);
+ */
 export async function createTaleFromForm(userId: string, formData: FormData) {
 	const existingUser = await db.query.users.findFirst({
 		where: (model, { eq }) => eq(model.id, userId),
@@ -49,24 +60,26 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 	);
 	const status = readOption(formData, "status", statusTypes, "draft");
 	const bookId = readNullableNumber(formData, "bookId");
-	const partTitle = readText(formData, "partTitle", "Part 1");
-	const entryTitle = readText(formData, "entryTitle", "Opening");
-	const pageCount = readNumber(formData, "pageCount", 3, 1, 12);
-	const mainBranchName = readText(formData, "mainBranchName", "Main");
-	const branchMode = readOption(formData, "branchMode", branchModes, "linear");
-	const choiceBranchName = readText(
+	const requestedSlug = readText(formData, "slug", slugify(title));
+	const cloneable = readOption(
 		formData,
-		"choiceBranchName",
-		"Choice Path",
+		"cloneable",
+		cloneableTypes,
+		"private",
 	);
-	const pathLabel = readText(formData, "pathLabel", "Choose another route");
-	const blocksPerBranch = readNumber(formData, "blocksPerBranch", 3, 1, 12);
-	const starterText = readText(
-		formData,
-		"starterText",
-		"Begin writing this moment.",
-	);
-	const slug = `${slugify(title)}-${Date.now().toString(36)}`;
+	const editable = readBoolean(formData, "editable", true);
+	const canManageOfficial = existingUser.role === "administrator";
+	const isOfficial = canManageOfficial
+		? readBoolean(formData, "isOfficial", false)
+		: false;
+	const isVerified = canManageOfficial
+		? readBoolean(formData, "isVerified", false)
+		: false;
+	const slug = await createUniqueTaleSlug({
+		creatorId: userId,
+		isOfficial,
+		requestedSlug,
+	});
 
 	const taleId = await db.transaction(async (tx) => {
 		const [createdTale] = await tx
@@ -77,12 +90,12 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				title,
 				slug,
 				description,
-				isOfficial: false,
-				isVerified: false,
-				editable: true,
+				isOfficial,
+				isVerified,
+				editable,
 				visibility,
 				status,
-				cloneable: "private",
+				cloneable,
 				type,
 			})
 			.returning({ id: tales.id });
@@ -101,7 +114,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			.insert(parts)
 			.values({
 				taleId: createdTale.id,
-				title: partTitle,
+				title: "Part 1",
 				order: 0,
 			})
 			.returning({ id: parts.id });
@@ -113,7 +126,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			.values({
 				taleId: createdTale.id,
 				partId: createdPart.id,
-				title: entryTitle,
+				title: "Opening",
 				type: "chapter",
 				order: 0,
 			})
@@ -121,117 +134,183 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 
 		if (!createdEntry) throw new Error("Unable to create entry");
 
-		const createdPages = await tx
+		const [createdPage] = await tx
 			.insert(pages)
-			.values(
-				Array.from({ length: pageCount }, (_, index) => ({
-					taleId: createdTale.id,
-					partId: createdPart.id,
-					entryId: createdEntry.id,
-					type: "book" as const,
-					isPaginated: true,
-					order: index,
-				})),
-			)
+			.values({
+				taleId: createdTale.id,
+				partId: createdPart.id,
+				entryId: createdEntry.id,
+				type: "book" as const,
+				isPaginated: true,
+				order: 0,
+			})
 			.returning({ id: pages.id });
 
-		const firstPage = createdPages[0];
-		if (!firstPage) throw new Error("Unable to create first page");
+		if (!createdPage) throw new Error("Unable to create first page");
 
-		const branchNames =
-			branchMode === "branching"
-				? [mainBranchName, choiceBranchName]
-				: [mainBranchName];
-
-		const createdBranches = await tx
+		const [createdBranch] = await tx
 			.insert(branches)
-			.values(
-				branchNames.map((name, index) => ({
-					taleId: createdTale.id,
-					creatorId: userId,
-					name,
-					order: index,
-					isOfficial: false,
-					isVerified: false,
-					editable: true,
-					visibility,
-					cloneable: "private" as const,
-				})),
-			)
+			.values({
+				taleId: createdTale.id,
+				creatorId: userId,
+				name: "root",
+				title: "Root",
+				order: 0,
+				isOfficial,
+				isVerified,
+				editable,
+				visibility,
+				cloneable,
+			})
 			.returning({ id: branches.id });
 
-		if (branchMode === "branching" && createdBranches.length > 1) {
-			const [fromBranch, toBranch] = createdBranches;
+		if (!createdBranch) throw new Error("Unable to create root branch");
 
-			if (fromBranch && toBranch) {
-				await tx.insert(paths).values({
-					taleId: createdTale.id,
-					fromBranchId: fromBranch.id,
-					toBranchId: toBranch.id,
-					creatorId: userId,
-					type: "choice",
-					isOfficial: false,
-					isVerified: false,
-					editable: true,
-					visibility,
-					label: pathLabel,
-					order: 0,
-				});
-			}
-		}
-
-		const blockValues = createdBranches.flatMap((branch) =>
-			Array.from({ length: blocksPerBranch }, (_, blockIndex) => {
-				const page = createdPages[blockIndex % createdPages.length];
-
-				return {
-					taleId: createdTale.id,
-					branchId: branch.id,
-					creatorId: userId,
-					isOfficial: false,
-					isVerified: false,
-					editable: true,
-					entryId: createdEntry.id,
-					pageId: page?.id ?? firstPage.id,
-					partId: createdPart.id,
-					isSnap: false,
-					order: blockIndex,
-					visibility,
-					cloneable: "private" as const,
-				};
-			}),
-		);
-
-		const createdBlocks = await tx
+		const [createdBlock] = await tx
 			.insert(blocks)
-			.values(blockValues)
+			.values({
+				taleId: createdTale.id,
+				branchId: createdBranch.id,
+				creatorId: userId,
+				isOfficial,
+				isVerified,
+				editable,
+				entryId: createdEntry.id,
+				pageId: createdPage.id,
+				partId: createdPart.id,
+				title,
+				isSnap: false,
+				order: 0,
+				sizeMode: "fixed",
+				sizeConfig: {
+					height: { unit: "viewport", value: 1 },
+					horizontalAlignment: "center",
+					verticalAlignment: "center",
+					width: { unit: "viewport", value: 1 },
+				},
+				readingConfig: {
+					animationConfig: {
+						ambient: { tracks: [] },
+						scrolling: { tracks: [] },
+					},
+					readingLength: 800,
+					readingLengthMode: "manual",
+				},
+				styleConfig: {
+					backgroundCss: "linear-gradient(145deg, #15131f, #07070a)",
+					color: "#fff8e8",
+				},
+				visibility,
+				cloneable,
+			})
 			.returning({ id: blocks.id });
 
-		await tx.insert(fragments).values(
-			createdBlocks.map((block, index) => ({
+		if (!createdBlock) throw new Error("Unable to create starter block");
+
+		const [createdRootNode] = await tx
+			.insert(nodes)
+			.values({
 				taleId: createdTale.id,
-				blockId: block.id,
+				blockId: createdBlock.id,
+				creatorId: userId,
+				stableId: "root",
+				name: "Root",
+				isRoot: true,
+				order: 0,
+				config: {
+					children: [],
+					gap: 0,
+					id: "root",
+					mode: "flex",
+					overflow: "visible",
+					parentNodeId: null,
+				},
+				styleConfig: {
+					alignItems: "center",
+					display: "flex",
+					height: "100%",
+					justifyContent: "center",
+					padding: "2rem",
+					textAlign: "center",
+					width: "100%",
+				},
+				isOfficial,
+				isVerified,
+				editable,
+				visibility,
+				cloneable,
+			})
+			.returning({ id: nodes.id });
+
+		if (!createdRootNode) throw new Error("Unable to create root node");
+
+		const [createdFragment] = await tx
+			.insert(fragments)
+			.values({
+				taleId: createdTale.id,
+				blockId: createdBlock.id,
+				nodeId: createdRootNode.id,
 				creatorId: userId,
 				type: "text" as const,
-				isOfficial: false,
-				isVerified: false,
-				editable: true,
+				isOfficial,
+				isVerified,
+				editable,
 				order: 0,
 				visibility,
-				cloneable: "private" as const,
+				cloneable,
 				data: {
-					content: createStarterFragmentText(starterText, index),
+					content: title,
 				},
-			})),
-		);
+				styleConfig: {
+					fontSize: "clamp(2rem, 6vw, 5rem)",
+					fontWeight: 800,
+					lineHeight: 1.05,
+					textAlign: "center",
+				},
+			})
+			.returning({ id: fragments.id });
+
+		if (!createdFragment) throw new Error("Unable to create starter fragment");
+
+		await tx
+			.update(nodes)
+			.set({
+				config: {
+					children: [
+						{ fragmentId: String(createdFragment.id), type: "fragment" },
+					],
+					gap: 0,
+					id: String(createdRootNode.id),
+					mode: "flex",
+					overflow: "visible",
+					parentNodeId: null,
+				},
+			})
+			.where(eq(nodes.id, createdRootNode.id));
 
 		return createdTale.id;
 	});
 
-	return { status: "created" as const, taleId };
+	return {
+		creatorUsername: existingUser.username,
+		slug,
+		status: "created" as const,
+		taleId,
+	};
 }
 
-function readText(formData: FormData, key: string, fallback: string) {
+/**
+ * Reads a non-empty text field from form data.
+ *
+ * @param formData - Submitted form data.
+ * @param key - Field name.
+ * @param fallback - Value used when the field is empty.
+ * @returns Trimmed text value.
+ *
+ * @example
+ * const title = readText(formData, "title", "Untitled");
+ */
+function readText(formData: FormData, key: string, fallback: string): string {
 	const value = formData.get(key);
 
 	if (typeof value !== "string") return fallback;
@@ -240,21 +319,17 @@ function readText(formData: FormData, key: string, fallback: string) {
 	return trimmed.length > 0 ? trimmed : fallback;
 }
 
-function readNumber(
-	formData: FormData,
-	key: string,
-	fallback: number,
-	min: number,
-	max: number,
-) {
-	const value = Number(formData.get(key));
-
-	if (!Number.isFinite(value)) return fallback;
-
-	return Math.min(max, Math.max(min, Math.round(value)));
-}
-
-function readNullableNumber(formData: FormData, key: string) {
+/**
+ * Reads an optional numeric id from form data.
+ *
+ * @param formData - Submitted form data.
+ * @param key - Field name.
+ * @returns Numeric id or null.
+ *
+ * @example
+ * const bookId = readNullableNumber(formData, "bookId");
+ */
+function readNullableNumber(formData: FormData, key: string): number | null {
 	const value = formData.get(key);
 
 	if (typeof value !== "string" || value === "none" || value.trim() === "") {
@@ -270,7 +345,7 @@ function readOption<const TOptions extends readonly string[]>(
 	key: string,
 	options: TOptions,
 	fallback: TOptions[number],
-) {
+): TOptions[number] {
 	const value = formData.get(key);
 
 	if (typeof value !== "string") return fallback;
@@ -278,7 +353,38 @@ function readOption<const TOptions extends readonly string[]>(
 	return options.includes(value) ? (value as TOptions[number]) : fallback;
 }
 
-function slugify(value: string) {
+/**
+ * Reads a boolean-like select value from form data.
+ *
+ * @param formData - Submitted form data.
+ * @param key - Field name.
+ * @param fallback - Value used when missing.
+ * @returns Parsed boolean.
+ *
+ * @example
+ * const editable = readBoolean(formData, "editable", true);
+ */
+function readBoolean(
+	formData: FormData,
+	key: string,
+	fallback: boolean,
+): boolean {
+	const value = formData.get(key);
+	if (value === "true") return true;
+	if (value === "false") return false;
+	return fallback;
+}
+
+/**
+ * Creates a URL-safe tale slug.
+ *
+ * @param value - Raw slug or title.
+ * @returns URL-safe slug.
+ *
+ * @example
+ * const slug = slugify("New Tale");
+ */
+function slugify(value: string): string {
 	const slug = value
 		.toLowerCase()
 		.trim()
@@ -288,6 +394,38 @@ function slugify(value: string) {
 	return slug || "untitled-tale";
 }
 
-function createStarterFragmentText(starterText: string, index: number) {
-	return starterText.replaceAll("{block}", String(index + 1));
+/**
+ * Creates a unique tale slug inside the correct visibility scope.
+ *
+ * @param options - Slug scope options.
+ * @param options.creatorId - Tale creator id.
+ * @param options.isOfficial - Whether official slug uniqueness is required.
+ * @param options.requestedSlug - User-entered slug value.
+ * @returns Unique slug.
+ *
+ * @example
+ * const slug = await createUniqueTaleSlug({ creatorId, isOfficial: false, requestedSlug: "draft" });
+ */
+async function createUniqueTaleSlug({
+	creatorId,
+	isOfficial,
+	requestedSlug,
+}: {
+	creatorId: string;
+	isOfficial: boolean;
+	requestedSlug: string;
+}): Promise<string> {
+	const baseSlug = slugify(requestedSlug);
+	for (let attempt = 0; attempt < 100; attempt++) {
+		const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt + 1}`;
+		const existing = await db.query.tales.findFirst({
+			where: (model) =>
+				isOfficial
+					? and(eq(model.isOfficial, true), eq(model.slug, slug))
+					: and(eq(model.creatorId, creatorId), eq(model.slug, slug)),
+			columns: { id: true },
+		});
+		if (!existing) return slug;
+	}
+	return `${baseSlug}-${Date.now().toString(36)}`;
 }

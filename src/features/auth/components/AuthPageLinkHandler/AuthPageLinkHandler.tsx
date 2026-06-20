@@ -36,5 +36,12 @@ export default function AuthPageLinkHandler({
 		window.location.assign(`${url.pathname}${url.search}${url.hash}`);
 	};
 
-	return <div onClickCapture={handleClickCapture}>{children}</div>;
+	return (
+		<div
+			className="flex flex-1 items-center justify-center p-4"
+			onClickCapture={handleClickCapture}
+		>
+			{children}
+		</div>
+	);
 }

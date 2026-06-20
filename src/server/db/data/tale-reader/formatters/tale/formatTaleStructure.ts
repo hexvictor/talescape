@@ -1,5 +1,5 @@
-import { formatTale } from "~/app/(tale-reader)/_shared/services/formatTale";
-import type { RawTaleRecord, Tale } from "~/app/(tale-reader)/_shared/types";
+import { formatTale } from "~/app/(tale-app)/_shared/services/formatTale";
+import type { RawTaleRecord, Tale } from "~/app/(tale-app)/_shared/types";
 import { formatBlocks } from "../blocks/formatBlocks";
 import { formatBranches } from "../branches/formatBranches";
 import { formatEntries } from "../entries/formatEntries";

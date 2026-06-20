@@ -13,7 +13,7 @@ import type {
 	TalePage,
 	TalePart,
 	TalePath,
-} from "~/app/(tale-reader)/_shared/types";
+} from "~/app/(tale-app)/_shared/types";
 
 export type {
 	RawTaleRecord,

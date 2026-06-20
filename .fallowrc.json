@@ -110,16 +110,6 @@
 		"src/server/db/scripts/**/*.ts"
 	],
 	"ignorePatterns": ["src/server/db/migrations/**", "src/server/db/schema/**"],
-	"ignoreExports": [
-		{
-			"file": "src/app/(tale-reader)/_shared/types.ts",
-			"exports": ["*"]
-		},
-		{
-			"file": "src/server/db/types/tale-reader/readerConfig.ts",
-			"exports": ["*"]
-		}
-	],
 	"duplicates": {
 		"minOccurrences": 3,
 		"ignore": [

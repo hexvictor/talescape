@@ -1,5 +1,5 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import type { FirstBlockTransitionMode } from "~/app/(tale-reader)/_shared/types";
+import type { FirstBlockTransitionMode } from "~/app/(tale-app)/_shared/types";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
@@ -37,6 +37,7 @@ export const tales = createTable("tale", (d) => ({
 	status: d.text().notNull().$type<AssetStatus>().default("draft"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	type: d.text().notNull().$type<TaleType>(),
+	// THis shouldn't be here, but it's here for now to support the old reader. It will be removed in the future.
 	transitionFirstBlock: d.boolean().notNull().default(false),
 	firstBlockTransitionMode: d
 		.text()

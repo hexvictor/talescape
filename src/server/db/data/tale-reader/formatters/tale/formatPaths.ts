@@ -1,4 +1,4 @@
-import type { TalePath } from "~/app/(tale-reader)/_shared/types";
+import type { TalePath } from "~/app/(tale-app)/_shared/types";
 
 /**
  * Formats database path rows into the reader path model.

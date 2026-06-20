@@ -1,4 +1,4 @@
-import type { RawTaleRecord } from "~/app/(tale-reader)/_shared/types";
+import type { RawTaleRecord } from "~/app/(tale-app)/_shared/types";
 
 /**
  * Adds minimum official presets when the database has no preset rows yet.

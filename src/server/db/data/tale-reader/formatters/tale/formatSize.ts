@@ -1,4 +1,4 @@
-import type { BlockSize } from "~/app/(tale-reader)/_shared/types";
+import type { BlockSize } from "~/app/(tale-app)/_shared/types";
 import type {
 	ReaderSizeConfig,
 	ReaderSizeMode,

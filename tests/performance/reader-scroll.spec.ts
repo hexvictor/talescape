@@ -41,7 +41,7 @@ test.beforeEach(async ({ page }) => {
 test("reader scroll keeps rendering and animation work bounded", async ({
 	page,
 }, testInfo) => {
-	await page.goto("/official/official-tale-branched");
+	await page.goto("/official/branched");
 	await page
 		.locator("[data-reader-component='ReaderViewport']")
 		.waitFor({ state: "visible" });
