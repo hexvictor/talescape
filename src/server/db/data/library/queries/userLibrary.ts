@@ -40,7 +40,3 @@ export async function getUserLibrary(username: string) {
 		},
 	};
 }
-
-export type UserLibraryData = NonNullable<
-	Awaited<ReturnType<typeof getUserLibrary>>
->;

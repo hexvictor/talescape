@@ -1,7 +1,7 @@
 "use client";
 
 import type { Anchor, ResolvedTaleFragment, TalePath } from "../../../types";
-import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
+import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { positionedStyle } from "./positionedStyle";
 
 /**
@@ -106,7 +106,7 @@ function FixedFragmentLayer({
 						data-reader-role="fixed-fragment-content"
 						className="w-full"
 					>
-						<ReaderFragment
+						<TaleFragment
 							fragment={fragment}
 							index={index}
 							onChoosePath={onChoosePath}

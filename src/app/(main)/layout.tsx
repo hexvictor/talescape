@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import type { PropsWithChildren } from "react";
-import { Header } from "~/components/layout";
 import Footer from "~/components/layout/Footer";
+import { Header } from "~/components/layout/Header";
 
 export const metadata: Metadata = {
 	title: "Home | Talescape",

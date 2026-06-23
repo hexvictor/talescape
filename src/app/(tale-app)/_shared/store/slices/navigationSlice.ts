@@ -5,7 +5,7 @@ import type {
 	SavedReaderProgress,
 	Tale,
 } from "../../types";
-import type { TaleReaderState } from "../createTaleStore";
+import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type NavigationSlice = {
 	navigation: {

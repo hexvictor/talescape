@@ -2,10 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import {
-	useTaleStore,
-	useTaleStoreInstance,
-} from "../contexts/TaleStoreContext";
-import type { ReaderViewportLayout } from "../types";
+	useTaleReaderStore,
+	useTaleReaderStoreInstance,
+} from "../contexts/TaleReaderStoreContext";
 
 const resizeDebounceMs = 180;
 
@@ -26,27 +25,15 @@ type ViewportSizeOptions = {
  * const viewport = useViewportSize({ maximumRightInsetPx: 448, rightInsetRatio: 0.42 });
  */
 export function useViewportSize(options: ViewportSizeOptions = {}) {
-	const setViewportMetrics = useTaleStore(
-		(state) => state.ui.setViewportMetrics,
-	);
-	const size = useTaleStore((state) => state.ui.viewport);
-	const store = useTaleStoreInstance();
+	const setViewportSize = useTaleReaderStore((state) => state.ui.setViewportSize);
+	const size = useTaleReaderStore((state) => state.ui.viewport);
+	const store = useTaleReaderStoreInstance();
 	const timerRef = useRef<number | null>(null);
 	const maximumRightInsetPx = options.maximumRightInsetPx ?? 0;
 	const rightInsetRatio = options.rightInsetRatio ?? 0;
 	const root = options.root ?? null;
 
 	useEffect(() => {
-		const resolveLayout = (
-			width: number,
-			height: number,
-		): ReaderViewportLayout => {
-			if (width >= 768) {
-				return "desktop";
-			}
-			return height > width ? "mobile-portrait" : "mobile-landscape";
-		};
-
 		const update = () => {
 			const sourceWidth = root?.clientWidth ?? window.innerWidth;
 			const sourceHeight = root?.clientHeight ?? window.innerHeight;
@@ -58,16 +45,14 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 				height: sourceHeight,
 				width: Math.max(1, sourceWidth - rightInset),
 			};
-			const nextLayout = resolveLayout(nextViewport.width, nextViewport.height);
 			const current = store.getState().ui;
 			if (
-				current.layout === nextLayout &&
 				current.viewport.width === nextViewport.width &&
 				current.viewport.height === nextViewport.height
 			) {
 				return;
 			}
-			setViewportMetrics(nextViewport, nextLayout);
+			setViewportSize(nextViewport);
 		};
 		const debouncedUpdate = () => {
 			window.clearTimeout(timerRef.current ?? undefined);
@@ -86,7 +71,7 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 			window.removeEventListener("resize", debouncedUpdate);
 			window.clearTimeout(timerRef.current ?? undefined);
 		};
-	}, [maximumRightInsetPx, rightInsetRatio, root, setViewportMetrics, store]);
+	}, [maximumRightInsetPx, rightInsetRatio, root, setViewportSize, store]);
 
 	return size;
 }

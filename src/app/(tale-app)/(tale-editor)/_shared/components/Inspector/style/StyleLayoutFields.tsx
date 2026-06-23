@@ -1,8 +1,8 @@
-import type { ReaderStyle } from "~/app/(tale-app)/_shared/types";
 import {
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type { ReaderStyle } from "~/app/(tale-app)/_shared/types";
 import { TextSetting } from "../InspectorValueFields";
 
 export type StyleChangeHandler = (style: ReaderStyle) => void;

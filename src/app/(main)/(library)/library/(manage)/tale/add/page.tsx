@@ -32,8 +32,8 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 					Sign in to start a tale.
 				</h1>
 				<p className="mt-3 text-muted-foreground leading-7">
-					Tales need an owner before their branches, sections, blocks, and
-					fragments can be saved.
+					Tales need an owner before their branches, blocks, and fragments can
+					be saved.
 				</p>
 				<Button asChild className="mt-5">
 					<Link href="/sign-in">Sign in</Link>

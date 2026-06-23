@@ -37,10 +37,10 @@ export function EditorPaneResizeHandle({
 			aria-label={label}
 			data-reader-component="EditorPaneResizeHandle"
 			data-reader-role="pane-resizer"
-			className="group relative z-30 w-2 cursor-col-resize bg-white/5 hover:bg-[#d9b56f]/20"
+			className="group relative z-30 w-2 cursor-col-resize bg-foreground/5 hover:bg-primary/20"
 			onPointerDown={handlePointerDown}
 		>
-			<span className="-translate-x-1/2 absolute top-1/2 left-1/2 h-14 w-1 rounded-full bg-white/20 group-hover:bg-[#d9b56f]" />
+			<span className="-translate-x-1/2 absolute top-1/2 left-1/2 h-14 w-1 rounded-full bg-foreground/20 group-hover:bg-primary" />
 		</button>
 	);
 }

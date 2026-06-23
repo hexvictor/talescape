@@ -28,7 +28,7 @@ export function ImageFragment({
 			className={
 				fillsAuthoredFrame
 					? "h-full w-full overflow-hidden"
-					: "overflow-hidden rounded-lg border border-white/14 bg-black/35 shadow-2xl"
+					: "overflow-hidden rounded-lg border border-foreground/14 bg-background/35 shadow-2xl"
 			}
 		>
 			<img
@@ -56,7 +56,7 @@ export function ImageFragment({
 				}}
 			/>
 			{fragment.caption ? (
-				<figcaption className="border-white/10 border-t bg-black/54 px-4 py-3 text-white/62 text-xs">
+				<figcaption className="border-foreground/10 border-t bg-background/54 px-4 py-3 text-foreground/62 text-xs">
 					{fragment.caption}
 				</figcaption>
 			) : null}

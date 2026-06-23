@@ -17,7 +17,7 @@ export function SoundCueFragment({
 			<p className="font-black text-[#c7dfb9] text-xs uppercase tracking-[0.2em]">
 				{fragment.label ?? "Sound cue"}
 			</p>
-			<p className="mt-2 text-sm text-white/66 italic">{fragment.mood}</p>
+			<p className="mt-2 text-foreground/66 text-sm italic">{fragment.mood}</p>
 		</div>
 	);
 }

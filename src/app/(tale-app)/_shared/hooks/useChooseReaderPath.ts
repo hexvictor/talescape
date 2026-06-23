@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import {
-	useTaleStoreInstance,
-	useTaleStoreShallow,
-} from "../contexts/TaleStoreContext";
+	useTaleReaderStoreInstance,
+	useTaleReaderStoreShallow,
+} from "../contexts/TaleReaderStoreContext";
+import { useTaleAppStore } from "../contexts/TaleAppStoreContext";
 import { getNextSelectedBranchIds } from "../services/navigation";
 import { flowDirection } from "../services/readerGeometry";
 import type { TalePath } from "../types";
@@ -19,8 +20,9 @@ import type { TalePath } from "../types";
  */
 export function useChooseReaderPath(): (path: TalePath) => void {
 	const cueTimerRef = useRef<number | null>(null);
-	const store = useTaleStoreInstance();
-	const state = useTaleStoreShallow((readerState) => ({
+	const store = useTaleReaderStoreInstance();
+	const tale = useTaleAppStore((document) => document.document.tale);
+	const state = useTaleReaderStoreShallow((readerState) => ({
 		savePosition: readerState.progress.savePosition,
 		saveSelectedBranchIds: readerState.progress.setSelectedBranchIds,
 		scrollApi: readerState.scroll.api,
@@ -28,7 +30,6 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 		setScrollCue: readerState.scroll.setCue,
 		setPendingRestoreBlockId: readerState.scroll.setPendingRestoreBlockId,
 		setSelectedBranchIds: readerState.navigation.setSelectedBranchIds,
-		tale: readerState.tale.data,
 	}));
 
 	useEffect(
@@ -44,12 +45,12 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 				return;
 			}
 			const nextBranchIds = getNextSelectedBranchIds(
-				state.tale,
+				tale,
 				state.selectedBranchIds,
 				path,
 			);
-			const source = state.tale.indexMap.blocksById[path.fromBlockId];
-			const destination = state.tale.indexMap.blocksById[path.toBlockId];
+			const source = tale.indexMap.blocksById[path.fromBlockId];
+			const destination = tale.indexMap.blocksById[path.toBlockId];
 			const direction =
 				flowDirection(
 					destination?.transition.flow ??
@@ -78,6 +79,6 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 			state.setSelectedBranchIds(nextBranchIds);
 			state.saveSelectedBranchIds(nextBranchIds);
 		},
-		[state, store],
+		[state, store, tale],
 	);
 }

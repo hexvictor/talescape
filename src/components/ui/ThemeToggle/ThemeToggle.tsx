@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
+import { useAppStoreShallow } from "~/contexts/AppStoreContext";
 import { MoonIcon, SunIcon } from "~/lib/utils/icons";
-import { useThemeStore } from "~/stores/theme-store";
 
-function ThemeToggle() {
-	const hydrate = useThemeStore((state) => state.hydrate);
-	const theme = useThemeStore((state) => state.theme);
-	const toggleTheme = useThemeStore((state) => state.toggleTheme);
+/**
+ * Toggles the application-wide light and dark color theme.
+ *
+ * @returns An icon button reflecting the active theme.
+ *
+ * @example
+ * <ThemeToggle />
+ */
+function ThemeToggle(): React.JSX.Element {
+	const { isDarkTheme, toggleTheme } = useAppStoreShallow((state) => ({
+		isDarkTheme: state.derived.isDarkTheme,
+		toggleTheme: state.theme.toggleTheme,
+	}));
 
-	useEffect(() => {
-		hydrate();
-	}, [hydrate]);
-
-	const isDarkTheme = theme === "dark";
 	const ThemeIcon = isDarkTheme ? MoonIcon : SunIcon;
 
 	return (

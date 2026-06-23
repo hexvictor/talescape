@@ -1,27 +1,29 @@
 "use client";
 
-import { useStore } from "zustand";
-import type { StoreApi } from "zustand/vanilla";
-import { useShallow } from "zustand/react/shallow";
-import { useTaleStoreInstance } from "~/app/(tale-app)/_shared/contexts/TaleStoreContext";
-import type { TaleInspectorTarget, Tale } from "~/app/(tale-app)/_shared/types";
-import type { TaleEditorState } from "../store/taleEditorStore";
+import type { TaleInspectorTarget } from "~/app/(tale-app)/_shared/types";
+import { createDerivedStoreHooks } from "~/stores/createDerivedStoreHooks";
+import { useTaleEditorStoreInstance } from "../contexts/TaleEditorStoreContext";
+import {
+	type TaleEditorDerivedState,
+	type TaleEditorState,
+	createTaleEditorDerivedState,
+} from "../store/taleEditorStore";
+
+const taleEditorStoreHooks = createDerivedStoreHooks<
+	TaleEditorState,
+	TaleEditorDerivedState
+>(useTaleEditorStoreInstance, createTaleEditorDerivedState);
 
 /**
- * Selects one value from the editor-specific tale store.
+ * Selects canonical or lazy derived state from the tale editor store.
  *
- * @param selector - Selector receiving the complete editor state.
- * @returns Selected editor store value.
+ * @param selector - Selector receiving editor state and derivations.
+ * @returns Selected editor value.
  *
  * @example
- * const previewOpen = useTaleEditorStore((state) => state.editorWorkspace.previewOpen);
+ * const hasSelection = useTaleEditorStore((state) => state.derived.hasGraphSelection);
  */
-export function useTaleEditorStore<T>(
-	selector: (state: TaleEditorState) => T,
-): T {
-	const store = useTaleStoreInstance() as unknown as StoreApi<TaleEditorState>;
-	return useStore(store, selector);
-}
+export const useTaleEditorStore = taleEditorStoreHooks.useStore;
 
 /**
  * Selects a shallow-equal object from the editor-specific tale store.
@@ -30,13 +32,9 @@ export function useTaleEditorStore<T>(
  * @returns Stable shallow-equal editor selection.
  *
  * @example
- * const { previewOpen, surface } = useTaleEditorStoreShallow((state) => state.editorWorkspace);
+ * const { rightPanelOpen, previewWidth } = useTaleEditorStoreShallow((state) => state.editorWorkspace);
  */
-export function useTaleEditorStoreShallow<T>(
-	selector: (state: TaleEditorState) => T,
-): T {
-	return useTaleEditorStore(useShallow(selector));
-}
+export const useTaleEditorStoreShallow = taleEditorStoreHooks.useStoreShallow;
 
 type TaleEditorOverlayState = {
 	closeInspector: TaleEditorState["editor"]["closeInspector"];
@@ -59,29 +57,5 @@ export function useTaleEditorOverlayState(): TaleEditorOverlayState {
 		closeSecondaryInspector: state.editor.closeSecondaryInspector,
 		inspector: state.editor.inspector,
 		secondaryInspector: state.editor.secondaryInspector,
-	}));
-}
-
-type InspectorEditingState = {
-	requestRecompile: TaleEditorState["engine"]["requestRecompile"];
-	scrollApi: TaleEditorState["scroll"]["api"];
-	setData: TaleEditorState["tale"]["setData"];
-	tale: Tale;
-};
-
-/**
- * Selects shared state required by block and fragment inspectors.
- *
- * @returns Stable inspector editing state.
- *
- * @example
- * const { tale, setData } = useInspectorEditingState();
- */
-export function useInspectorEditingState(): InspectorEditingState {
-	return useTaleEditorStoreShallow((state) => ({
-		requestRecompile: state.engine.requestRecompile,
-		scrollApi: state.scroll.api,
-		setData: state.tale.setData,
-		tale: state.tale.data,
 	}));
 }

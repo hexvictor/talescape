@@ -6,7 +6,7 @@ import type {
 	TaleNode,
 	TalePath,
 } from "../../../types";
-import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
+import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { getNodeFragmentStyle, getNodeStyle } from "./nodeStyles";
 
 /**
@@ -106,7 +106,7 @@ function FragmentFrame({
 			className="relative min-w-0"
 			style={getNodeFragmentStyle(fragment.style, parentNode)}
 		>
-			<ReaderFragment
+			<TaleFragment
 				contentSized={anchor.block.size.mode === "content"}
 				fragment={fragment}
 				index={index}

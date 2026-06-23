@@ -1,6 +1,6 @@
 {
 	"name": "talescape",
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -82,7 +82,6 @@
 		"lorem-ipsum": "^2.0.8",
 		"lucide-react": "^1.21.0",
 		"motion": "^12.6.2",
-		"nanoid": "^5.1.5",
 		"next": "15.3.8",
 		"postgres": "^3.4.4",
 		"react": "^19.0.0",

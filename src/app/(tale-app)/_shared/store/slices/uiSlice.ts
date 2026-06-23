@@ -1,11 +1,8 @@
 import type { StateCreator } from "zustand/vanilla";
 import { viewportFallback } from "../../constants";
-import type {
-	TaleStoreMode,
-	ReaderViewportLayout,
-	ViewportSize,
-} from "../../types";
-import type { TaleReaderState } from "../createTaleStore";
+import type { ViewportSize } from "../../types";
+import type { TaleAppRuntime } from "../createTaleAppStore";
+import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ReaderUiVisibilityMode =
 	| "all"
@@ -21,15 +18,11 @@ export type UiSlice = {
 		hiddenVisibilityMode: Exclude<ReaderUiVisibilityMode, "all">;
 		navigationPinsVisible: boolean;
 		navigationUsesSelectedPart: boolean;
-		layout: ReaderViewportLayout;
 		reduceInactiveUiOpacity: boolean;
 		readerStatusVisible: boolean;
 		setActivityFadeDelaySeconds: (seconds: number) => void;
 		setDebugVisible: (visible: boolean) => void;
-		setViewportMetrics: (
-			viewport: ViewportSize,
-			layout: ReaderViewportLayout,
-		) => void;
+		setViewportSize: (viewport: ViewportSize) => void;
 		setNavigationPinsVisible: (visible: boolean) => void;
 		setNavigationUsesSelectedPart: (enabled: boolean) => void;
 		setReduceInactiveUiOpacity: (enabled: boolean) => void;
@@ -52,35 +45,35 @@ export type UiSlice = {
  * const uiSlice = createUiSlice(set, get, api);
  */
 export const createUiSlice =
-	(mode: TaleStoreMode): StateCreator<TaleReaderState, [], [], UiSlice> =>
+	(
+		runtime: Pick<TaleAppRuntime, "activity" | "application">,
+	): StateCreator<TaleReaderState, [], [], UiSlice> =>
 	(set) => ({
 		ui: {
 			activityFadeDelaySeconds: 4,
 			contentsOpen: false,
-			debugVisible: mode === "edit",
+			debugVisible: runtime.application === "editor",
 			hiddenVisibilityMode: "hidden",
-			layout: "desktop",
 			navigationPinsVisible: true,
 			navigationUsesSelectedPart: false,
-			reduceInactiveUiOpacity: mode !== "edit",
-			readerStatusVisible: mode === "edit",
+			reduceInactiveUiOpacity: runtime.application === "reader",
+			readerStatusVisible: runtime.application === "editor",
 			setActivityFadeDelaySeconds: (activityFadeDelaySeconds) =>
 				set((state) => ({
 					ui: { ...state.ui, activityFadeDelaySeconds },
 				})),
 			setDebugVisible: (debugVisible) =>
 				set((state) => ({ ui: { ...state.ui, debugVisible } })),
-			setViewportMetrics: (viewport, layout) =>
+			setViewportSize: (viewport) =>
 				set((state) => {
 					if (
-						state.ui.layout === layout &&
 						state.ui.viewport.width === viewport.width &&
 						state.ui.viewport.height === viewport.height
 					) {
 						return state;
 					}
 					return {
-						ui: { ...state.ui, layout, viewport },
+						ui: { ...state.ui, viewport },
 					};
 				}),
 			setNavigationPinsVisible: (navigationPinsVisible) =>

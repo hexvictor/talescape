@@ -1,7 +1,5 @@
-import type {
-	TaleStoreExtensionCreator,
-	TaleReaderState,
-} from "~/app/(tale-app)/_shared/store/createTaleStore";
+import { devtools } from "zustand/middleware";
+import { type StoreApi, createStore } from "zustand/vanilla";
 import {
 	type EditorGraphSlice,
 	createEditorGraphSlice,
@@ -12,26 +10,63 @@ import {
 	createEditorWorkspaceSlice,
 } from "./slices/editorWorkspaceSlice";
 
-export type TaleEditorState = TaleReaderState &
-	EditorSlice &
+export type TaleEditorState = EditorSlice &
 	EditorGraphSlice &
 	EditorWorkspaceSlice;
 
+export type TaleEditorDerivedState = {
+	readonly hasGraphSelection: boolean;
+	readonly usesGraphFocus: boolean;
+};
+
 /**
- * Creates the slices that exist only in the tale editor store.
+ * Creates independent editor selection, graph, and pane-layout state.
  *
- * @param set - Zustand state setter.
- * @param get - Zustand state getter.
- * @param api - Zustand store API.
- * @returns Editor, graph, and workspace state.
+ * @returns Editor store independent from document and reader stores.
  *
  * @example
- * <TaleStoreProvider createExtension={createTaleEditorStoreExtension} />
+ * const store = createTaleEditorStore();
  */
-export const createTaleEditorStoreExtension: TaleStoreExtensionCreator<
-	TaleEditorState
-> = (set, get, api) => ({
-	...createEditorSlice(set, get, api),
-	...createEditorGraphSlice(set, get, api),
-	...createEditorWorkspaceSlice(set, get, api),
-});
+export function createTaleEditorStore(): StoreApi<TaleEditorState> {
+	return createStore<TaleEditorState>()(
+		devtools(
+			(set, get, api) => ({
+				...createEditorSlice(set, get, api),
+				...createEditorGraphSlice(set, get, api),
+				...createEditorWorkspaceSlice(set, get, api),
+			}),
+			{
+				enabled:
+					process.env.NODE_ENV === "development" &&
+					process.env.NEXT_PUBLIC_READER_STORE_DEVTOOLS === "true",
+				name: "TaleEditorStore",
+			},
+		),
+	);
+}
+
+/**
+ * Creates lazy editor derivations for one state snapshot.
+ *
+ * @param state - Current editor state.
+ * @returns Read-only editor values derived from canonical state.
+ *
+ * @example
+ * const derived = createTaleEditorDerivedState(store.getState());
+ */
+export function createTaleEditorDerivedState(
+	state: TaleEditorState,
+): TaleEditorDerivedState {
+	return {
+		get hasGraphSelection() {
+			return Boolean(
+				state.editor.selectedBlockId ||
+					state.editor.selectedBranchId ||
+					state.editorGraph.selectedPathId,
+			);
+		},
+		get usesGraphFocus() {
+			return state.editorGraph.focusMode !== "off";
+		},
+	};
+}

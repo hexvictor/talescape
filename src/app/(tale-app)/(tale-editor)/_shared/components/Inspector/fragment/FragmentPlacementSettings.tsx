@@ -1,13 +1,13 @@
-import type {
-	FragmentPlacement,
-	ResolvedTaleBlock,
-	ResolvedTaleFragment,
-} from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type {
+	FragmentPlacement,
+	ResolvedTaleBlock,
+	ResolvedTaleFragment,
+} from "~/app/(tale-app)/_shared/types";
 import { NumberSetting, OptionalNumberSetting } from "../InspectorValueFields";
 
 /**

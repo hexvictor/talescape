@@ -1,24 +1,27 @@
 "use client";
 
-import type { RefObject } from "react";
 import { useEffect } from "react";
-import { useReaderStageState } from "../../../hooks/store/useReaderRuntimeSelectors";
+import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import { countReaderDiagnostic } from "../../../services/readerDiagnostics";
-import type { CompiledReader, TalePath, ViewportSize } from "../../../types";
-import { ReaderBlock } from "../ReaderBlock/ReaderBlock";
+import { TaleBlock } from "../TaleBlock/TaleBlock";
 
-export function ReaderStage({
-	compiled,
-	onChoosePath,
-	stageRef,
-	viewport,
-}: {
-	compiled: CompiledReader;
-	onChoosePath: (path: TalePath) => void;
-	stageRef: RefObject<HTMLDivElement | null>;
-	viewport: ViewportSize;
-}) {
-	const { renderedBlockIds, renderRevision, scrollApi } = useReaderStageState();
+/**
+ * Renders the active block window inside the reader camera stage.
+ *
+ * @returns Positioned reader blocks for the current render window.
+ *
+ * @example
+ * <ReaderStage />
+ */
+export function ReaderStage(): React.JSX.Element {
+	const { compiled, stageRef, viewport } = useReaderViewportContext();
+	const { renderedBlockIds, renderRevision, scrollApi } =
+		useTaleReaderStoreShallow((state) => ({
+			renderedBlockIds: state.scroll.renderedBlockIds,
+			renderRevision: state.scroll.renderRevision,
+			scrollApi: state.scroll.api,
+		}));
 	const requestedIds = new Set(renderedBlockIds);
 	const renderedAnchors =
 		renderedBlockIds.length === 0
@@ -45,11 +48,7 @@ export function ReaderStage({
 			}}
 		>
 			{renderedAnchors.map((anchor) => (
-				<ReaderBlock
-					key={anchor.block.id}
-					anchor={anchor}
-					onChoosePath={onChoosePath}
-				/>
+				<TaleBlock key={anchor.block.id} anchor={anchor} />
 			))}
 		</div>
 	);

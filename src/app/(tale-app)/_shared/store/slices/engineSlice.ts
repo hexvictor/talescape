@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand/vanilla";
 import type { LayoutPhase } from "../../types";
-import type { TaleReaderState } from "../createTaleStore";
+import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type EngineStatus = "idle" | "measuring" | "compiling" | "ready";
 

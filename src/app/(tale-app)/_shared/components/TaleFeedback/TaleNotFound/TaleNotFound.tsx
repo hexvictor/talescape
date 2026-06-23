@@ -7,7 +7,7 @@ function TaleNotFound(): React.JSX.Element {
 		<div
 			data-reader-component="TaleNotFound"
 			data-reader-role="feedback-screen"
-			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white"
+			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background p-6 text-center text-foreground"
 		>
 			<h1 className="mb-4 font-bold text-2xl">Tale Not Found</h1>
 			<p className="mb-2 text-gray-400">

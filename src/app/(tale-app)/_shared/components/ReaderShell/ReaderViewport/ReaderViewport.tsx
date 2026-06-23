@@ -1,65 +1,95 @@
 "use client";
 
-import { useState } from "react";
 import type { ReactNode } from "react";
-import { useTaleStore } from "../../../contexts/TaleStoreContext";
-import { useReaderViewportController } from "../../../hooks/useReaderViewportController";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ReaderViewportProvider } from "../../../contexts/ReaderViewportContext";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
+import { useChooseReaderPath } from "../../../hooks/useChooseReaderPath";
+import { usePrepareReaderLayout } from "../../../hooks/usePrepareReaderLayout";
+import { useReaderScrollEngine } from "../../../hooks/useReaderScrollEngine";
+import { useViewportSize } from "../../../hooks/useViewportSize";
 import { countReaderDiagnostic } from "../../../services/readerDiagnostics";
 import { ReaderHub } from "../../ReaderUi/ReaderHub/ReaderHub";
 import { ReaderLoading } from "../../ReaderUi/ReaderLoading/ReaderLoading";
 import { ReaderMotionReadiness } from "../../ReaderUi/ReaderLoading/ReaderMotionReadiness";
+import { ReaderOverlay } from "../../ReaderUi/ReaderOverlay/ReaderOverlay";
 import { ReaderMeasurementLayer } from "../ReaderMeasurementLayer/ReaderMeasurementLayer";
 import { ReaderStage } from "../ReaderStage/ReaderStage";
-import { ReaderOverlayUi } from "./ReaderOverlayUi";
 
-type ReaderViewportProps = {
-	additionalOverlay?: ReactNode;
-	embedded?: boolean;
-	showReaderUi?: boolean;
-};
+type ReaderViewportProps = { additionalOverlay?: ReactNode };
 
 /**
  * Renders the reader camera either as the full page reader or inside an editor pane.
  *
  * @param props - Reader viewport props.
  * @param props.additionalOverlay - Optional route-owned overlay rendered over the viewport.
- * @param props.embedded - Whether the viewport is scoped to its own scroll container.
- * @param props.showReaderUi - Whether reader navigation/debug UI should be rendered.
  * @returns Reader viewport and scroll spacer.
  *
  * @example
- * <ReaderViewport embedded showReaderUi={false} />
+ * <ReaderViewport />
  */
 export function ReaderViewport({
 	additionalOverlay,
-	embedded = false,
-	showReaderUi = true,
 }: ReaderViewportProps = {}): React.JSX.Element {
 	countReaderDiagnostic("ReaderViewport React render");
+	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
 	const [viewportRoot, setViewportRoot] = useState<HTMLDivElement | null>(null);
-	const readerHubVisible = useTaleStore(
-		(state) =>
-			showReaderUi &&
-			(state.ui.visibilityMode === "all" ||
-				state.ui.visibilityMode === "navigation"),
-	);
-	const readerHubOpen = useTaleStore(
-		(state) =>
-			showReaderUi &&
-			state.hub.open &&
-			(state.ui.visibilityMode === "all" ||
-				state.ui.visibilityMode === "navigation"),
-	);
 	const {
-		choosePath,
 		compiled,
-		hubDocked,
+		hubDocked: readerHubDocked,
+		hubOpen,
 		measurementBlockIds,
-		measurementRef,
+		setPhase,
+		setProgress,
+		showsNavigation,
+	} = useTaleReaderStoreShallow((state) => ({
+		compiled: state.reader.compiled,
+		hubDocked: state.derived.hubDocked,
+		hubOpen: state.derived.isHubOpen,
+		measurementBlockIds: state.reader.measurementBlockIds,
+		setPhase: state.engine.setPhase,
+		setProgress: state.engine.setProgress,
+		showsNavigation: state.derived.showsNavigation,
+	}));
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const hubDocked = !isPreviewing && readerHubDocked;
+	const readerHubOpen = !isPreviewing && hubOpen;
+	const readerHubVisible = !isPreviewing && showsNavigation;
+	const viewport = useViewportSize({
+		maximumRightInsetPx: hubDocked ? 448 : 0,
+		rightInsetRatio: hubDocked ? 0.42 : 0,
+		root: isPreviewing ? viewportRoot : null,
+	});
+	const measurementRef = useRef<HTMLDivElement>(null);
+	const stageRef = useRef<HTMLDivElement>(null);
+	const choosePath = useChooseReaderPath();
+
+	usePrepareReaderLayout(measurementRef, viewport);
+
+	const finishRestoring = useCallback(() => {
+		setProgress(97);
+		setPhase("preparing-motion");
+	}, [setPhase, setProgress]);
+
+	useReaderScrollEngine({
+		compiled,
+		onReady: finishRestoring,
+		requireScrollRoot: isPreviewing,
+		scrollRoot: isPreviewing ? viewportRoot : null,
 		stageRef,
-		tale,
 		viewport,
-	} = useReaderViewportController({ embedded, viewportRoot });
+	});
+
+	useEffect(() => {
+		if (isPreviewing) return;
+		document.documentElement.classList.add("scrollbar-none");
+		document.body.classList.add("scrollbar-none");
+		return () => {
+			document.documentElement.classList.remove("scrollbar-none");
+			document.body.classList.remove("scrollbar-none");
+		};
+	}, [isPreviewing]);
 
 	const viewportContent = (
 		<>
@@ -74,15 +104,19 @@ export function ReaderViewport({
 			>
 				<div className="absolute inset-0">
 					{compiled ? (
-						<ReaderStage
-							compiled={compiled}
-							onChoosePath={choosePath}
-							stageRef={stageRef}
-							viewport={viewport}
-						/>
+						<ReaderViewportProvider
+							value={{
+								compiled,
+								onChoosePath: choosePath,
+								stageRef,
+								viewport,
+							}}
+						>
+							<ReaderStage />
+						</ReaderViewportProvider>
 					) : null}
 				</div>
-				{showReaderUi ? <ReaderOverlayUi /> : null}
+				<ReaderOverlay />
 				{additionalOverlay}
 			</div>
 			{readerHubVisible ? <ReaderHub /> : null}
@@ -101,24 +135,24 @@ export function ReaderViewport({
 					viewport={viewport}
 				/>
 			) : null}
-			{embedded ? (
+			{isPreviewing ? (
 				<div
 					ref={setViewportRoot}
 					data-reader-component="ReaderViewport"
-					data-reader-role="embedded-scroll-root"
-					className="scrollbar-none h-full overflow-y-auto bg-[#0d0b08] outline-none"
+					data-reader-role="preview-scroll-root"
+					className="scrollbar-none h-full overflow-y-auto bg-background outline-none"
 				>
 					<main
 						data-reader-component="ReaderViewport"
 						data-reader-role="reader-viewport"
-						className="sticky top-0 isolate h-full overflow-hidden bg-[#0d0b08] text-[#fff8e8]"
+						className="sticky top-0 isolate h-full overflow-hidden bg-background text-foreground"
 					>
 						{viewportContent}
 					</main>
 					<div
 						aria-hidden="true"
 						data-reader-component="ReaderViewport"
-						data-reader-role="embedded-scroll-spacer"
+						data-reader-role="preview-scroll-spacer"
 						style={{ height: compiled?.totalScroll ?? 1 }}
 					/>
 				</div>
@@ -127,7 +161,7 @@ export function ReaderViewport({
 					<main
 						data-reader-component="ReaderViewport"
 						data-reader-role="reader-viewport"
-						className="fixed inset-0 isolate overflow-hidden bg-[#0d0b08] text-[#fff8e8]"
+						className="fixed inset-0 isolate overflow-hidden bg-background text-foreground"
 					>
 						{viewportContent}
 					</main>

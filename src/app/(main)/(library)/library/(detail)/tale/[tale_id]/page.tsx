@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import { getLibraryTaleDetail } from "~/server/db/data/library/queries";
-import {
-	TaleDetailContent,
-	normalizeTaleDetailView,
-} from "../../../_shared/components/TaleDetailContent";
+import { TaleDetailContent } from "../../../_shared/components/TaleDetailContent";
+import { normalizeTaleDetailView } from "../../../_shared/components/taleDetailViews";
 
 type TaleOverviewProps = {
 	params: Promise<{

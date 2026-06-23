@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useInspectorEditingState } from "~/app/(tale-app)/(tale-editor)/_shared/hooks/useTaleEditorStore";
 import { editFragment } from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
+import { DebugTabs } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { useTaleReaderStore } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import type {
 	ResolvedTaleFragment,
 	TaleFragment,
 } from "~/app/(tale-app)/_shared/types";
-import { DebugTabs } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import {
 	FragmentPlacementSettings,
 	FragmentSummary,
@@ -43,19 +44,23 @@ export function FragmentInspectorPanel({
 	blockId: string;
 	fragmentId: string;
 }) {
-	const { requestRecompile, scrollApi, setData, tale } =
-		useInspectorEditingState();
+	const scrollApi = useTaleReaderStore((state) => state.scroll.api);
+	const { setTale, tale } = useTaleAppStoreShallow((state) => ({
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+	}));
 	const [activeTab, setActiveTab] = useState<FragmentInspectorTab>("summary");
 	const block = tale.indexMap.blocksById[blockId];
 	const fragment = tale.indexMap.fragmentsById[fragmentId];
 	if (!block || !fragment) {
-		return <p className="text-sm text-white/55">Fragment missing.</p>;
+		return <p className="text-foreground/55 text-sm">Fragment missing.</p>;
 	}
 
 	const commit = (update: (item: ResolvedTaleFragment) => TaleFragment) => {
 		scrollApi?.capturePosition();
-		setData(editFragment(tale, fragment.id, update));
-		requestRecompile("fragment-inspector");
+		setTale(editFragment(tale, fragment.id, update), {
+			reason: "fragment-inspector",
+		});
 	};
 
 	return (

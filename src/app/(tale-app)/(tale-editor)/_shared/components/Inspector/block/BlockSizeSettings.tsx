@@ -1,9 +1,9 @@
-import type { BlockSize } from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type { BlockSize } from "~/app/(tale-app)/_shared/types";
 import {
 	OptionalUnitNumberSetting,
 	UnitNumberSetting,
@@ -31,7 +31,7 @@ export function BlockSizeSettings({
 			readerRole="block-size-settings"
 			title="Size and placement"
 		>
-			<div className="rounded border border-white/8 bg-black/15 p-3">
+			<div className="rounded border border-foreground/8 bg-background/15 p-3">
 				<Setting label="Sizing mode">
 					<select
 						className={settingClassName}
@@ -173,8 +173,8 @@ function SizeSettingsSection({
 	title: string;
 }): React.JSX.Element {
 	return (
-		<section className="rounded border border-white/8 bg-black/15 p-3">
-			<h4 className="mb-2 font-bold text-[10px] text-white/42 uppercase">
+		<section className="rounded border border-foreground/8 bg-background/15 p-3">
+			<h4 className="mb-2 font-bold text-[10px] text-foreground/42 uppercase">
 				{title}
 			</h4>
 			<div className="grid grid-cols-1 gap-3 xl:grid-cols-2">{children}</div>

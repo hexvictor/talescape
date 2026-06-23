@@ -32,16 +32,16 @@ export const clerkAppearance = {
 		headerTitle: "text-foreground",
 		headerSubtitle: "text-muted-foreground",
 		socialButtonsBlockButton: {
-			backgroundColor: "#fffaf3",
+			backgroundColor: "var(--secondary)",
 			borderColor: "var(--border)",
 			boxShadow: "0 1px 2px rgb(0 0 0 / 0.08)",
-			color: "#1c1209",
+			color: "var(--secondary-foreground)",
 			"&:hover": {
-				backgroundColor: "#fff3e3",
+				backgroundColor: "var(--accent)",
 			},
 		},
 		socialButtonsBlockButtonText: {
-			color: "#1c1209",
+			color: "var(--secondary-foreground)",
 			fontWeight: 600,
 		},
 		socialButtonsProviderIcon: "shrink-0",

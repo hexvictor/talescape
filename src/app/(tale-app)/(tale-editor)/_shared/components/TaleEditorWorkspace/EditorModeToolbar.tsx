@@ -1,87 +1,71 @@
 "use client";
 
-import { BookOpen, Save } from "lucide-react";
-import type { EditorSurface } from "../../store/editorStoreTypes";
+import { Save } from "lucide-react";
+import { createTaleEditorDraftPayload } from "~/app/(tale-app)/(tale-editor)/_shared/services/createTaleEditorDraftPayload";
+import {
+	useTaleAppStore,
+	useTaleAppStoreShallow,
+} from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import AutoHideTopBar from "~/components/layout/AutoHideTopBar/AutoHideTopBar";
+import ThemeToggle from "~/components/ui/ThemeToggle";
+import { api } from "~/trpc/react";
+import { EditorActivitySwitcher } from "./EditorActivitySwitcher";
 
 /**
- * Renders the editor mode switcher and save action.
+ * Renders editor mode controls and persists the active tale document.
  *
- * @param props - Toolbar properties.
- * @param props.onChange - Receives the next editor surface.
- * @param props.onSave - Saves the current editor draft.
- * @param props.saving - Whether the save mutation is active.
- * @param props.status - Current save status label.
- * @param props.surface - Active editor surface.
  * @returns Editor mode toolbar.
  *
  * @example
- * <EditorModeToolbar surface="edit" onChange={setSurface} onSave={save} />
+ * <EditorModeToolbar />
  */
-export function EditorModeToolbar({
-	onChange,
-	onSave,
-	saving = false,
-	status = "Unsaved",
-	surface,
-}: {
-	onChange: (surface: EditorSurface) => void;
-	onSave: () => void;
-	saving?: boolean;
-	status?: string;
-	surface: EditorSurface;
-}): React.JSX.Element {
-	return (
-		<header
-			data-reader-component="EditorModeToolbar"
-			data-reader-role="editor-toolbar"
-			className="relative z-60 flex h-14 items-center justify-between border-white/10 border-b bg-black px-4"
-		>
-			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					className={modeButtonClassName(surface === "reading")}
-					onClick={() => onChange("reading")}
-				>
-					<BookOpen size={15} />
-					Reading mode
-				</button>
-				<button
-					type="button"
-					className={modeButtonClassName(surface === "edit")}
-					onClick={() => onChange("edit")}
-				>
-					Edit mode
-				</button>
-			</div>
-			<div className="flex items-center gap-3">
-				<span className="text-white/42 text-xs">{status}</span>
-				<button
-					type="button"
-					disabled={saving}
-					className="flex h-9 items-center gap-2 rounded border border-[#d9b56f]/45 bg-[#d9b56f]/14 px-3 font-semibold text-[#f4d99b] text-xs disabled:opacity-45"
-					onClick={onSave}
-				>
-					<Save size={14} />
-					Save
-				</button>
-			</div>
-		</header>
-	);
-}
+export function EditorModeToolbar(): React.JSX.Element {
+	const { dirty, markSaved, tale } = useTaleAppStoreShallow((state) => ({
+		dirty: state.document.dirty,
+		markSaved: state.document.markSaved,
+		tale: state.document.tale,
+	}));
+	const activity = useTaleAppStore((state) => state.runtime.activity);
+	const saveDraft = api.taleReader.editor.saveDraft.useMutation();
+	const status = saveDraft.isPending
+		? "Saving"
+		: saveDraft.isError
+			? "Save failed"
+			: dirty
+				? "Unsaved"
+				: "Saved";
 
-/**
- * Resolves the visual state for one editor mode button.
- *
- * @param active - Whether the mode is active.
- * @returns Button class name.
- *
- * @example
- * const className = modeButtonClassName(true);
- */
-function modeButtonClassName(active: boolean): string {
-	return `flex h-9 items-center gap-2 rounded px-3 text-xs transition ${
-		active
-			? "bg-white text-black"
-			: "border border-white/10 text-white/60 hover:bg-white/8 hover:text-white"
-	}`;
+	const save = (): void => {
+		saveDraft.mutate(createTaleEditorDraftPayload(tale), {
+			onSuccess: markSaved,
+		});
+	};
+
+	return (
+		<AutoHideTopBar
+			revealZoneHeight={"2rem"}
+			forceVisible={activity === "editing"}
+		>
+			<header
+				data-reader-component="EditorModeToolbar"
+				data-reader-role="editor-toolbar"
+				className="relative z-60 flex h-14 items-center justify-between border-foreground/10 border-b bg-background/95 px-4 text-foreground backdrop-blur-md"
+			>
+				<EditorActivitySwitcher />
+				<div className="flex items-center gap-3">
+					<ThemeToggle />
+					<span className="text-foreground/42 text-xs">{status}</span>
+					<button
+						type="button"
+						disabled={saveDraft.isPending}
+						className="flex h-9 items-center gap-2 rounded border border-primary/45 bg-primary/14 px-3 font-semibold text-primary text-xs disabled:opacity-45"
+						onClick={save}
+					>
+						<Save size={14} />
+						Save
+					</button>
+				</div>
+			</header>
+		</AutoHideTopBar>
+	);
 }

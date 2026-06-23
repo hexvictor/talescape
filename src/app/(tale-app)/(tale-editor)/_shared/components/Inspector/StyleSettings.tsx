@@ -1,9 +1,9 @@
-import type { ReaderStyle, TaleNode } from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type { ReaderStyle, TaleNode } from "~/app/(tale-app)/_shared/types";
 import { NumberSetting, TextSetting } from "./InspectorValueFields";
 import { StyleLayoutSettings } from "./StyleLayoutSettings";
 
@@ -101,8 +101,8 @@ export function StyleSettings({
 						<option value="justify">Justify</option>
 					</select>
 				</Setting>
-				<details className="col-span-2 rounded border border-white/8 p-2">
-					<summary className="cursor-pointer font-semibold text-[10px] text-white/52 uppercase">
+				<details className="col-span-2 rounded border border-foreground/8 p-2">
+					<summary className="cursor-pointer font-semibold text-[10px] text-foreground/52 uppercase">
 						Advanced layout and CSS
 					</summary>
 					<div className="mt-3 grid grid-cols-2 gap-2">

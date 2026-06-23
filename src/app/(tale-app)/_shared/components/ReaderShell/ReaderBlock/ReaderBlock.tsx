@@ -1,9 +1,8 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { useTaleEditorBridge } from "../../../contexts/TaleEditorBridgeContext";
-import type { Anchor, TalePath } from "../../../types";
-import { InspectorButton } from "../InspectorButton/InspectorButton";
+import type { CSSProperties, ReactNode } from "react";
+import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
+import type { Anchor } from "../../../types";
 import { FixedFragments } from "./FixedFragments";
 import { ReaderBlockContent } from "./ReaderBlockContent";
 
@@ -12,32 +11,18 @@ import { ReaderBlockContent } from "./ReaderBlockContent";
  *
  * @param props - Compiled anchor and path selection callback.
  * @returns The positioned reader block.
+ *
+ * @example
+ * <ReaderBlock anchor={anchor} />
  */
 export function ReaderBlock({
 	anchor,
-	onChoosePath,
+	children,
 }: {
 	anchor: Anchor;
-	onChoosePath: (path: TalePath) => void;
+	children?: ReactNode;
 }): React.JSX.Element {
-	const {
-		highlightedBranchId,
-		hoveredBlockId,
-		selectedBlockId,
-		selectedBranchId,
-	} = useTaleEditorBridge();
-	const branchHovered = highlightedBranchId === anchor.branch.id;
-	const blockHovered = hoveredBlockId === anchor.block.id;
-	const blockSelected = selectedBlockId === anchor.block.id;
-	const branchSelected =
-		selectedBranchId === anchor.branch.id ||
-		(blockSelected && anchor.block.branchId === anchor.branch.id);
-	const blockOutlineColor = blockHovered
-		? "border-emerald-300"
-		: "border-cyan-300";
-	const branchOutlineColor = branchHovered
-		? "border-fuchsia-300"
-		: "border-[#d9b56f]";
+	const { onChoosePath } = useReaderViewportContext();
 
 	return (
 		<article
@@ -62,25 +47,7 @@ export function ReaderBlock({
 				} satisfies CSSProperties
 			}
 		>
-			{branchSelected || branchHovered ? (
-				<div
-					data-reader-component="ReaderBlock"
-					data-reader-role="branch-highlight-outline"
-					className={`pointer-events-none absolute inset-0 z-[24] rounded-[inherit] border-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.65),0_0_24px_rgba(217,181,111,0.35)] ${branchOutlineColor}`}
-				/>
-			) : null}
-			{blockSelected || blockHovered ? (
-				<div
-					data-reader-component="ReaderBlock"
-					data-reader-role="block-highlight-outline"
-					className={`pointer-events-none absolute inset-1 z-[25] rounded-[inherit] border-2 shadow-[0_0_24px_rgba(103,232,249,0.36)] ${blockOutlineColor}`}
-				/>
-			) : null}
-			<InspectorButton
-				label={`Edit ${anchor.block.title}`}
-				position="block"
-				target={{ id: anchor.block.id, type: "block" }}
-			/>
+			{children}
 			<ReaderBlockContent anchor={anchor} onChoosePath={onChoosePath} />
 			<FixedFragments anchor={anchor} onChoosePath={onChoosePath} />
 		</article>

@@ -88,35 +88,12 @@ export async function getLibraryTaleDetail(taleId: number) {
 	const branches = branchRecords
 		.filter((branch) => canViewResource(branch, userId))
 		.map((branch) => ({ ...branch, index: branch.order }));
-	const sections = branches.map((branch) => ({
-		branch,
-		branchId: branch.id,
-		cloneable: branch.cloneable,
-		createdAt: branch.createdAt,
-		creatorId: branch.creatorId,
-		direction: "down" as const,
-		editable: branch.editable,
-		id: branch.id,
-		index: branch.order,
-		inputMode: ["buttons", "keyboard", "touch"] as const,
-		isOfficial: branch.isOfficial,
-		isSnap: false,
-		isVerified: branch.isVerified,
-		orientation: "vertical" as const,
-		taleId: branch.taleId,
-		updatedAt: branch.updatedAt,
-		visibility: branch.visibility,
-	}));
 	const blocks = blockRecords
 		.filter((block) => canViewResource(block, userId))
 		.map((block) => ({
 			...block,
 			index: block.order,
 			page: { ...block.page, index: block.page.order },
-			section: block.branch
-				? sections.find((section) => section.branchId === block.branch.id)
-				: null,
-			sectionId: block.branchId,
 			entry: block.page.entry,
 			entryId: block.page.entryId,
 			part: block.page.part,
@@ -139,7 +116,6 @@ export async function getLibraryTaleDetail(taleId: number) {
 			accessLabel: getAccessLabel(tale, userId),
 			nodeCounts: {
 				branches: branches.length,
-				sections: sections.length,
 				blocks: blocks.length,
 				fragments: fragments.length,
 				paths: paths.length,
@@ -149,7 +125,6 @@ export async function getLibraryTaleDetail(taleId: number) {
 			},
 		},
 		branches,
-		sections,
 		blocks,
 		fragments,
 		paths,

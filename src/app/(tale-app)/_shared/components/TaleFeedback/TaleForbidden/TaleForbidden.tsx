@@ -25,7 +25,7 @@ export default function TaleForbidden({
 		<div
 			data-reader-component="TaleForbidden"
 			data-reader-role="feedback-screen"
-			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center text-white"
+			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background p-6 text-center text-foreground"
 		>
 			<h1 className="mb-2 font-bold text-2xl">
 				{action === "edit" ? "Editing unavailable" : "Access forbidden"}

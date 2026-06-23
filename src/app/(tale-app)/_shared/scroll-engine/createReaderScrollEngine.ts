@@ -22,7 +22,7 @@ import {
 	countReaderDiagnostic,
 	logReaderDiagnostic,
 } from "../services/readerDiagnostics";
-import type { TaleReaderState } from "../store/createTaleStore";
+import type { TaleReaderState } from "../store/createTaleReaderStore";
 import type {
 	Anchor,
 	CompiledReader,

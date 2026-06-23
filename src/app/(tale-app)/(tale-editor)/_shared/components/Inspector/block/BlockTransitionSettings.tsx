@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useTaleEditorStoreShallow } from "../../../hooks/useTaleEditorStore";
-import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
 import { FlowSettings, MotionNumber } from "./MotionControls";
 import type { BlockChangeHandler } from "./blockMotionTypes";
 
@@ -28,20 +28,18 @@ export function BlockTransitionSettings({
 }): React.JSX.Element {
 	const {
 		animationPresetsById,
-		requestRecompile,
 		setTale,
 		tale,
 		firstBlockTransitionMode,
 		transitionFirstBlock,
 		transitionPresets,
-	} = useTaleEditorStoreShallow((state) => ({
-		animationPresetsById: state.tale.data.indexMap.animationPresetsById,
-		requestRecompile: state.engine.requestRecompile,
-		setTale: state.tale.setData,
-		tale: state.tale.data,
-		firstBlockTransitionMode: state.tale.data.firstBlockTransitionMode,
-		transitionFirstBlock: state.tale.data.transitionFirstBlock,
-		transitionPresets: state.tale.data.structure.transitionPresets,
+	} = useTaleAppStoreShallow((state) => ({
+		animationPresetsById: state.document.tale.indexMap.animationPresetsById,
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+		firstBlockTransitionMode: state.document.tale.firstBlockTransitionMode,
+		transitionFirstBlock: state.document.tale.transitionFirstBlock,
+		transitionPresets: state.document.tale.structure.transitionPresets,
 	}));
 	const [transitionPresetId, setTransitionPresetId] = useState(
 		transitionPresets[0]?.id ?? "",
@@ -68,7 +66,7 @@ export function BlockTransitionSettings({
 				</select>
 				<button
 					type="button"
-					className="rounded border border-white/12 px-3 text-white/65 text-xs hover:bg-white/8 hover:text-white"
+					className="rounded border border-foreground/12 px-3 text-foreground/65 text-xs hover:bg-foreground/8 hover:text-foreground"
 					onClick={() => {
 						const preset = transitionPresets.find(
 							(item) => item.id === transitionPresetId,
@@ -155,7 +153,6 @@ export function BlockTransitionSettings({
 								...tale,
 								transitionFirstBlock: event.target.checked,
 							});
-							requestRecompile("first-block-transition-toggle");
 						}}
 					/>
 				</Setting>
@@ -172,7 +169,6 @@ export function BlockTransitionSettings({
 									| "fromPlacement"
 									| "inPlace",
 							});
-							requestRecompile("first-block-transition-mode");
 						}}
 					>
 						<option value="fromPlacement">Move from placement direction</option>

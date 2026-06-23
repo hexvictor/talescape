@@ -1,11 +1,4 @@
-import {
-	BookOpen,
-	Box,
-	FileText,
-	GitBranch,
-	Layers,
-	Route,
-} from "lucide-react";
+import { BookOpen, Box, FileText, GitBranch, Route } from "lucide-react";
 import type {
 	LibraryBlockList,
 	LibraryBranchList,
@@ -14,7 +7,6 @@ import type {
 	LibraryPageList,
 	LibraryPartList,
 	LibraryPathList,
-	LibrarySectionList,
 } from "~/server/db/data/library/queries";
 import { LibraryNodeList, type NodeLink } from "./LibraryNodeList";
 import { LibraryReaderPreview } from "./LibraryReaderPreview";
@@ -50,43 +42,6 @@ export function BranchesPanel({
 	);
 }
 
-export function SectionsPanel({
-	sections,
-}: {
-	sections: LibrarySectionList;
-}) {
-	return (
-		<LibraryNodeList
-			emptyTitle="No sections visible"
-			rows={sections.map((section) => ({
-				id: section.id,
-				icon: <Layers aria-hidden="true" className="size-4" />,
-				title: `Section ${section.index + 1}`,
-				meta: section.tale.title,
-				detail: `${section.branch.name} - ${section.orientation} ${section.direction}`,
-				badges: [section.visibility, section.isSnap ? "snap" : "free scroll"],
-				preview: (
-					<LibraryReaderPreview
-						title={`Preview section ${section.index + 1}`}
-						description={`Rendered from the first readable fragment in ${section.branch.name}.`}
-						fragment={section.previewFragment}
-					/>
-				),
-				links: [
-					taleLink(section.taleId),
-					structureLink(
-						"Branch",
-						section.taleId,
-						"branches",
-						section.branch.id,
-					),
-					structureLink("Section", section.taleId, "sections", section.id),
-				],
-			}))}
-		/>
-	);
-}
-
 export function BlocksPanel({ blocks }: { blocks: LibraryBlockList }) {
 	return (
 		<LibraryNodeList
@@ -110,7 +65,6 @@ export function BlocksPanel({ blocks }: { blocks: LibraryBlockList }) {
 				links: compactLinks([
 					taleLink(block.taleId),
 					structureLink("Branch", block.taleId, "branches", block.branch.id),
-					structureLink("Section", block.taleId, "sections", block.section.id),
 					structureLink("Block", block.taleId, "blocks", block.id),
 					structureLink("Part", block.taleId, "parts", block.part.id),
 					structureLink("Entry", block.taleId, "entries", block.entry.id),
@@ -156,12 +110,6 @@ export function FragmentsPanel({
 						fragment.taleId,
 						"branches",
 						fragment.branch.id,
-					),
-					structureLink(
-						"Section",
-						fragment.taleId,
-						"sections",
-						fragment.section.id,
 					),
 					structureLink("Block", fragment.taleId, "blocks", fragment.block.id),
 					structureLink("Fragment", fragment.taleId, "fragments", fragment.id),

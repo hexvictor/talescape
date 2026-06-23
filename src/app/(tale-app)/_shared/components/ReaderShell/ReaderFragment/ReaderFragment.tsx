@@ -1,7 +1,6 @@
 "use client";
 
 import type { ResolvedTaleFragment, TalePath } from "../../../types";
-import { InspectorButton } from "../InspectorButton/InspectorButton";
 import { ChoiceButtonFragment } from "./fragments/ChoiceButtonFragment";
 import { DefaultFragment } from "./fragments/DefaultFragment";
 import { ImageFragment } from "./fragments/ImageFragment";
@@ -18,7 +17,7 @@ export function ReaderFragment({
 	fragment: ResolvedTaleFragment;
 	index: number;
 	onChoosePath?: (path: TalePath) => void;
-}) {
+}): React.JSX.Element {
 	return (
 		<div
 			data-reader-component="ReaderFragment"
@@ -27,15 +26,6 @@ export function ReaderFragment({
 			data-reader-role="fragment-container"
 			className="group/fragment relative h-full w-full"
 		>
-			<InspectorButton
-				label={`Edit fragment ${fragment.id}`}
-				revealOnHover
-				target={{
-					blockId: fragment.blockId,
-					id: fragment.id,
-					type: "fragment",
-				}}
-			/>
 			{fragment.type === "choiceButton" ? (
 				<ChoiceButtonFragment
 					fragment={fragment}

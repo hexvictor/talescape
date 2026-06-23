@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useInspectorEditingState } from "~/app/(tale-app)/(tale-editor)/_shared/hooks/useTaleEditorStore";
 import { editBlock } from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
+import { DebugTabs } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { useTaleReaderStore } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import type {
 	ResolvedTaleBlock,
 	TaleBlock,
 } from "~/app/(tale-app)/_shared/types";
-import { DebugTabs } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import {
 	BlockSizeSettings,
 	BlockSummary,
@@ -38,16 +39,21 @@ const tabs: { id: BlockInspectorTab; label: string }[] = [
  * <BlockInspectorPanel blockId="block-1" />
  */
 export function BlockInspectorPanel({ blockId }: { blockId: string }) {
-	const { requestRecompile, scrollApi, setData, tale } =
-		useInspectorEditingState();
+	const scrollApi = useTaleReaderStore((state) => state.scroll.api);
+	const { setTale, tale } = useTaleAppStoreShallow((state) => ({
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+	}));
 	const [activeTab, setActiveTab] = useState<BlockInspectorTab>("summary");
 	const block = tale.indexMap.blocksById[blockId];
-	if (!block) return <p className="text-sm text-white/55">Block missing.</p>;
+	if (!block)
+		return <p className="text-foreground/55 text-sm">Block missing.</p>;
 
 	const commit = (update: (item: ResolvedTaleBlock) => TaleBlock) => {
 		scrollApi?.capturePosition();
-		setData(editBlock(tale, block.id, update));
-		requestRecompile("block-inspector");
+		setTale(editBlock(tale, block.id, update), {
+			reason: "block-inspector",
+		});
 	};
 
 	return (

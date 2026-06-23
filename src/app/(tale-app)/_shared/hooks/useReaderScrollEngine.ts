@@ -2,7 +2,7 @@
 
 import type { RefObject } from "react";
 import { useEffect } from "react";
-import { useTaleStoreInstance } from "../contexts/TaleStoreContext";
+import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
 import { createReaderScrollEngine } from "../scroll-engine/createReaderScrollEngine";
 import { createReaderScrollDriver } from "../scroll-engine/scrollDriver";
 import { logReaderDiagnostic } from "../services/readerDiagnostics";
@@ -23,7 +23,7 @@ export function useReaderScrollEngine({
 	stageRef: RefObject<HTMLDivElement | null>;
 	viewport: ViewportSize;
 }) {
-	const store = useTaleStoreInstance();
+	const store = useTaleReaderStoreInstance();
 
 	useEffect(() => {
 		const stage = stageRef.current;

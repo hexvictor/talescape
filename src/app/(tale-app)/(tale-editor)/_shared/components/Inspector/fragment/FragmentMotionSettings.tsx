@@ -1,14 +1,14 @@
 "use client";
 
-import type {
-	ResolvedTaleFragment,
-	TaleFragment,
-} from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type {
+	ResolvedTaleFragment,
+	TaleFragment,
+} from "~/app/(tale-app)/_shared/types";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
 import { LoopingAnimationEditor } from "../LoopingAnimationEditor";
 

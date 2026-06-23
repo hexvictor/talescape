@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand/vanilla";
 import type { Direction, ReaderScrollTargetOptions } from "../../types";
-import type { TaleReaderState } from "../createTaleStore";
+import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ReaderScrollApi = {
 	capturePosition: () => void;
@@ -22,6 +22,14 @@ export type ScrollSlice = {
 	};
 };
 
+/**
+ * Creates imperative scroll ownership and render-window state for one reader.
+ *
+ * The API contains stable engine commands; frame-by-frame scroll values remain
+ * outside Zustand to avoid React subscriptions during camera movement.
+ *
+ * @returns The initialized reader scroll slice.
+ */
 export const createScrollSlice: StateCreator<
 	TaleReaderState,
 	[],

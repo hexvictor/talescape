@@ -18,6 +18,7 @@ type PathType = TalePath["type"];
 
 export type PathEditorEdgeData = {
 	animated: boolean;
+	dragging?: boolean;
 	edgeType: string;
 	fromBranchTitle: string;
 	label: string;
@@ -53,13 +54,15 @@ export function TaleBranchGraphEdge(
 		targetPosition,
 	} = props;
 	const [hovered, setHovered] = useState(false);
-	const edgeColor =
-		hovered || data?.selected
-			? "#67e8f9"
-			: getPathStrokeColor(data?.pathType ?? "choice");
-	const animated = hovered || Boolean(data?.animated);
+	const dragging = Boolean(data?.dragging);
+	const emphasized = !dragging && (hovered || Boolean(data?.selected));
+	const edgeColor = emphasized
+		? "#67e8f9"
+		: getPathStrokeColor(data?.pathType ?? "choice");
+	const animated = !dragging && (hovered || Boolean(data?.animated));
 	const secondaryPath =
 		data?.pathType === "return" || data?.pathType === "teleport";
+	const focusOpacity = typeof style?.opacity === "number" ? style.opacity : 1;
 	const [edgePath, labelX, labelY] = getEditorEdgePath({
 		edgeType: data?.edgeType ?? "smoothstep",
 		sourcePosition,
@@ -83,10 +86,11 @@ export function TaleBranchGraphEdge(
 				path={edgePath}
 				style={{
 					...style,
-					opacity: secondaryPath && !animated ? 0.52 : 1,
+					opacity:
+						secondaryPath && !animated ? focusOpacity * 0.52 : focusOpacity,
 					stroke: edgeColor,
 					strokeDasharray: secondaryPath || animated ? "9 7" : undefined,
-					strokeWidth: hovered || data?.selected ? 3 : 2,
+					strokeWidth: emphasized ? 3 : 2,
 				}}
 			/>
 			<path
@@ -95,33 +99,40 @@ export function TaleBranchGraphEdge(
 				fill="none"
 				stroke="transparent"
 				strokeWidth={18}
-				onMouseEnter={() => setHovered(true)}
-				onMouseLeave={() => setHovered(false)}
+				style={{ pointerEvents: dragging ? "none" : undefined }}
+				onMouseEnter={() => {
+					if (!dragging) setHovered(true);
+				}}
+				onMouseLeave={() => {
+					if (!dragging) setHovered(false);
+				}}
 			/>
-			<EdgeLabelRenderer>
-				<div
-					data-reader-component="TaleBranchGraphEdge"
-					data-reader-role="edge-label"
-					className={`nodrag nopan pointer-events-none absolute z-50 grid grid-rows-3 gap-2 font-semibold text-[10px] text-cyan-100 transition-opacity ${
-						hovered || data?.selected ? "opacity-100" : "opacity-0"
-					}`}
-					style={{
-						transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-					}}
-				>
-					<span className="rounded border border-cyan-300/35 bg-black/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
-						<LineDotRightHorizontal className="mr-0.5 inline-block h-4 w-4 rotate-180" />{" "}
-						{data?.fromBranchTitle ?? "Source branch"}
-					</span>
-					<span className="rounded border border-cyan-300/35 bg-black/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
-						{data?.label}
-					</span>
-					<span className="rounded border border-cyan-300/35 bg-black/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
-						<LineDotRightHorizontal className="mr-0.5 inline-block h-4 w-4 " />{" "}
-						{data?.toBranchTitle ?? "Target branch"}
-					</span>
-				</div>
-			</EdgeLabelRenderer>
+			{dragging ? null : (
+				<EdgeLabelRenderer>
+					<div
+						data-reader-component="TaleBranchGraphEdge"
+						data-reader-role="edge-label"
+						className={`nodrag nopan pointer-events-none absolute z-50 grid grid-rows-3 gap-2 font-semibold text-[10px] text-cyan-100 transition-opacity ${
+							hovered || data?.selected ? "opacity-100" : "opacity-0"
+						}`}
+						style={{
+							transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+						}}
+					>
+						<span className="rounded border border-cyan-300/35 bg-background/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
+							<LineDotRightHorizontal className="mr-0.5 inline-block h-4 w-4 rotate-180" />{" "}
+							{data?.fromBranchTitle ?? "Source branch"}
+						</span>
+						<span className="rounded border border-cyan-300/35 bg-background/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
+							{data?.label}
+						</span>
+						<span className="rounded border border-cyan-300/35 bg-background/90 px-2 py-1 shadow-cyan-300/10 shadow-lg ">
+							<LineDotRightHorizontal className="mr-0.5 inline-block h-4 w-4 " />{" "}
+							{data?.toBranchTitle ?? "Target branch"}
+						</span>
+					</div>
+				</EdgeLabelRenderer>
+			)}
 		</>
 	);
 }
@@ -170,7 +181,7 @@ function EdgeEndpointLabel({
 		<div
 			data-reader-component="EdgeEndpointLabel"
 			data-reader-role="edge-branch-label"
-			className={`pointer-events-none absolute max-w-40 truncate rounded border border-white/12 bg-black/88 px-2 py-1 text-[9px] text-white/68 shadow-lg transition-opacity ${
+			className={`pointer-events-none absolute max-w-40 truncate rounded border border-foreground/12 bg-background/88 px-2 py-1 text-[9px] text-foreground/68 shadow-lg transition-opacity ${
 				visible ? "opacity-100" : "opacity-0"
 			}`}
 			style={{

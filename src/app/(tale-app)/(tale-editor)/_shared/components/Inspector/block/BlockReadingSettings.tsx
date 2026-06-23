@@ -1,10 +1,10 @@
 "use client";
 
-import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	Setting,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
 import { CameraPathSettings, MotionNumber } from "./MotionControls";
 import type { BlockChangeHandler } from "./blockMotionTypes";
 
@@ -31,7 +31,7 @@ export function BlockReadingSettings({
 		>
 			<Setting label="Length mode">
 				<select
-					className="h-9 w-full rounded border border-white/12 bg-black/35 px-2 text-white/82 text-xs"
+					className="h-9 w-full rounded border border-foreground/12 bg-background/35 px-2 text-foreground/82 text-xs"
 					value={block.reading.readingLengthMode}
 					onChange={(event) =>
 						onChange((item) => ({

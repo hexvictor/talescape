@@ -1,14 +1,14 @@
 "use client";
 
+import {
+	Setting,
+	settingClassName,
+} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
 	BlockCameraPath,
 	BlockFlow,
 	Direction,
 } from "~/app/(tale-app)/_shared/types";
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 
 /**
  * Edits physical block placement independently from camera framing.

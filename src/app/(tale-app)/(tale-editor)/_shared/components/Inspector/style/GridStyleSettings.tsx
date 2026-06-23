@@ -29,7 +29,7 @@ export function GridStyleSettings({
 	};
 
 	return (
-		<div className="col-span-2 grid grid-cols-2 gap-2 rounded border border-white/8 bg-black/15 p-2">
+		<div className="col-span-2 grid grid-cols-2 gap-2 rounded border border-foreground/8 bg-background/15 p-2">
 			<TextSetting
 				label="Template columns"
 				placeholder="repeat(3, minmax(0, 1fr))"

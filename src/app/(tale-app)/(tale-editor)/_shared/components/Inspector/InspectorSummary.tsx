@@ -1,11 +1,11 @@
-import type {
-	ResolvedTaleBlock,
-	ResolvedTaleFragment,
-} from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	DebugField,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type {
+	ResolvedTaleBlock,
+	ResolvedTaleFragment,
+} from "~/app/(tale-app)/_shared/types";
 
 /**
  * Renders the inspector title bar.
@@ -26,12 +26,12 @@ export function InspectorHeader({
 		<div
 			data-reader-component="InspectorHeader"
 			data-reader-role="inspector-summary"
-			className="border-white/10 border-b bg-black/24 px-3 py-3"
+			className="border-foreground/10 border-b bg-background/24 px-3 py-3"
 		>
-			<p className="truncate font-black text-[#d9b56f] text-xs uppercase">
+			<p className="truncate font-black text-primary text-xs uppercase">
 				{title}
 			</p>
-			<p className="mt-1 truncate text-white/42 text-xs">{subtitle}</p>
+			<p className="mt-1 truncate text-foreground/42 text-xs">{subtitle}</p>
 		</div>
 	);
 }

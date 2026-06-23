@@ -48,7 +48,6 @@ export type LibraryTaleList = Awaited<ReturnType<typeof getLibraryTales>>;
 export type LibraryBookList = Awaited<ReturnType<typeof getLibraryBooks>>;
 export type LibraryAuthorList = Awaited<ReturnType<typeof getLibraryAuthors>>;
 export type LibraryBranchList = Awaited<ReturnType<typeof getLibraryBranches>>;
-export type LibrarySectionList = Awaited<ReturnType<typeof getLibrarySections>>;
 export type LibraryBlockList = Awaited<ReturnType<typeof getLibraryBlocks>>;
 export type LibraryFragmentList = Awaited<
 	ReturnType<typeof getLibraryFragments>
@@ -64,26 +63,6 @@ type LibraryTalesOptions = {
 
 type LibraryBooksOptions = {
 	creatorId?: string;
-};
-
-type LibrarySectionRow = {
-	branch: {
-		id: number;
-		index: number;
-		name: string;
-	};
-	direction: "down";
-	id: number;
-	index: number;
-	isSnap: boolean;
-	orientation: "vertical";
-	previewFragment: LibraryPreviewFragment | null;
-	tale: {
-		id: number;
-		title: string;
-	};
-	taleId: number;
-	visibility: "private" | "public" | "restricted";
 };
 
 export async function getLibraryTales(options: LibraryTalesOptions = {}) {
@@ -121,7 +100,6 @@ export async function getLibraryTales(options: LibraryTalesOptions = {}) {
 		),
 		nodeCounts: {
 			branches: counts.branches.get(row.tale.id) ?? 0,
-			sections: counts.sections.get(row.tale.id) ?? 0,
 			blocks: counts.blocks.get(row.tale.id) ?? 0,
 			fragments: counts.fragments.get(row.tale.id) ?? 0,
 			paths: counts.paths.get(row.tale.id) ?? 0,
@@ -212,10 +190,6 @@ export async function getLibraryBranches() {
 	}));
 }
 
-export async function getLibrarySections(): Promise<LibrarySectionRow[]> {
-	return [];
-}
-
 export async function getLibraryBlocks() {
 	const { userId } = await getSignedInLibraryUser();
 	const rows = await db
@@ -257,7 +231,6 @@ export async function getLibraryBlocks() {
 		...row.block,
 		index: row.block.order,
 		tale: { id: row.taleId, title: row.taleTitle },
-		section: { id: row.branchId, index: row.branchIndex },
 		branch: {
 			id: row.branchId,
 			name: row.branchName,
@@ -325,7 +298,6 @@ export async function getLibraryFragments() {
 		index: row.fragment.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		block: { id: row.blockId, index: row.blockIndex },
-		section: { id: row.branchId, index: row.branchIndex },
 		branch: {
 			id: row.branchId,
 			name: row.branchName,

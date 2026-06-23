@@ -1,6 +1,6 @@
 "use client";
 
-import { useReaderHubSettingsState } from "../../../hooks/store/useReaderNavigationSelectors";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 
 /**
  * Renders reader behavior and overlay preferences.
@@ -11,7 +11,20 @@ import { useReaderHubSettingsState } from "../../../hooks/store/useReaderNavigat
  * <ReaderHubSettings />
  */
 export function ReaderHubSettings(): React.JSX.Element {
-	const settings = useReaderHubSettingsState();
+	const settings = useTaleReaderStoreShallow((state) => ({
+		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
+		debugVisible: state.ui.debugVisible,
+		navigationPinsVisible: state.ui.navigationPinsVisible,
+		navigationUsesSelectedPart: state.ui.navigationUsesSelectedPart,
+		readerStatusVisible: state.ui.readerStatusVisible,
+		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
+		setActivityFadeDelaySeconds: state.ui.setActivityFadeDelaySeconds,
+		setDebugVisible: state.ui.setDebugVisible,
+		setNavigationPinsVisible: state.ui.setNavigationPinsVisible,
+		setNavigationUsesSelectedPart: state.ui.setNavigationUsesSelectedPart,
+		setReaderStatusVisible: state.ui.setReaderStatusVisible,
+		setReduceInactiveUiOpacity: state.ui.setReduceInactiveUiOpacity,
+	}));
 
 	return (
 		<div
@@ -44,10 +57,10 @@ export function ReaderHubSettings(): React.JSX.Element {
 				label="Show story and page status"
 				onChange={settings.setReaderStatusVisible}
 			/>
-			<label className="block rounded-md border border-white/8 bg-white/[0.035] p-3">
-				<span className="flex items-center justify-between gap-3 text-white/72 text-xs">
+			<label className="block rounded-md border border-foreground/8 bg-foreground/[0.035] p-3">
+				<span className="flex items-center justify-between gap-3 text-foreground/72 text-xs">
 					Inactive fade delay
-					<strong className="text-[#e2c98f]">
+					<strong className="text-primary">
 						{settings.activityFadeDelaySeconds}s
 					</strong>
 				</span>
@@ -83,7 +96,7 @@ function SettingsToggle({
 	onChange: (checked: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-white/8 bg-white/[0.035] p-3 text-white/72 text-xs">
+		<label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-foreground/8 bg-foreground/[0.035] p-3 text-foreground/72 text-xs">
 			{label}
 			<input
 				type="checkbox"

@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
-import { useReaderLoadingState } from "../../../hooks/store/useReaderRuntimeSelectors";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import type { LayoutPhase } from "../../../types";
 import { useSmoothedLoadingProgress } from "./useSmoothedLoadingProgress";
 
@@ -26,8 +27,16 @@ const phaseText: Record<LayoutPhase, string> = {
  * <ReaderLoading />
  */
 export function ReaderLoading(): React.JSX.Element {
-	const { phase, ready, setPhase, setReady, setStatus, targetProgress, title } =
-		useReaderLoadingState();
+	const title = useTaleAppStore((state) => state.document.tale.title);
+	const { phase, ready, setPhase, setReady, setStatus, targetProgress } =
+		useTaleReaderStoreShallow((state) => ({
+			phase: state.engine.phase,
+			ready: state.engine.ready,
+			setPhase: state.engine.setPhase,
+			setReady: state.engine.setReady,
+			setStatus: state.engine.setStatus,
+			targetProgress: state.engine.progress,
+		}));
 	const progress = useSmoothedLoadingProgress(targetProgress);
 	const visible = !ready;
 
@@ -45,7 +54,7 @@ export function ReaderLoading(): React.JSX.Element {
 					key="reader-loading"
 					data-reader-component="ReaderLoading"
 					data-reader-role="loading-overlay"
-					className="absolute inset-0 z-50 flex items-center justify-center bg-[#0d0b08] text-[#fff8e8]"
+					className="absolute inset-0 z-50 flex items-center justify-center bg-background text-foreground"
 					initial={{ opacity: 1 }}
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
@@ -57,19 +66,19 @@ export function ReaderLoading(): React.JSX.Element {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.35, ease: "easeOut" }}
 					>
-						<p className="truncate font-black text-[#d9b56f] text-xs uppercase tracking-[0.2em]">
+						<p className="truncate font-black text-primary text-xs uppercase tracking-[0.2em]">
 							{title}
 						</p>
 						<h1 className="mt-4 font-black text-3xl">Opening tale</h1>
-						<div className="mt-7 h-1 overflow-hidden rounded-full bg-white/10">
+						<div className="mt-7 h-1 overflow-hidden rounded-full bg-foreground/10">
 							<motion.div
-								className="h-full origin-left rounded-full bg-[#d9b56f]"
+								className="h-full origin-left rounded-full bg-primary"
 								style={{ scaleX: progress / 100 }}
 							/>
 						</div>
 						<div className="mt-4 flex items-center justify-between gap-4 text-sm">
-							<p className="text-white/60">{phaseText[phase]}</p>
-							<p className="font-black text-[#d9b56f] tabular-nums">
+							<p className="text-foreground/60">{phaseText[phase]}</p>
+							<p className="font-black text-primary tabular-nums">
 								{Math.round(progress)}%
 							</p>
 						</div>

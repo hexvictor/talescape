@@ -84,10 +84,10 @@ export default function TaleUnauthorized({
 		<div
 			data-reader-component="TaleUnauthorized"
 			data-reader-role="feedback-screen"
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black p-6 text-white"
+			className="fixed inset-0 z-50 flex items-center justify-center bg-background p-6 text-foreground"
 		>
-			<div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-6 text-center shadow-2xl backdrop-blur-sm">
-				<p className="mb-3 text-white/45 text-xs uppercase tracking-[0.24em]">
+			<div className="w-full max-w-md rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center shadow-2xl backdrop-blur-sm">
+				<p className="mb-3 text-foreground/45 text-xs uppercase tracking-[0.24em]">
 					Protected tale
 				</p>
 
@@ -97,8 +97,8 @@ export default function TaleUnauthorized({
 
 				{title ? (
 					<div className="space-y-2">
-						<p className="text-lg text-white/90 italic">"{title}"</p>
-						<p className="text-sm text-white/65 leading-6">
+						<p className="text-foreground/90 text-lg italic">"{title}"</p>
+						<p className="text-foreground/65 text-sm leading-6">
 							{mode === "edit"
 								? "You need to sign in with an account that can edit this tale."
 								: status === 403
@@ -108,29 +108,29 @@ export default function TaleUnauthorized({
 								<>
 									{" "}
 									It is marked{" "}
-									<strong className="text-white">{visibility}</strong>.
+									<strong className="text-foreground">{visibility}</strong>.
 								</>
 							) : null}
 						</p>
 					</div>
 				) : (
-					<p className="mb-1 text-sm text-white/65 leading-6">
+					<p className="mb-1 text-foreground/65 text-sm leading-6">
 						You must sign in to {action} this tale.
 					</p>
 				)}
 
 				<Link
 					href={signInHref}
-					className="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 font-medium text-black transition-colors hover:bg-white/90"
+					className="mt-6 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background transition-colors hover:bg-foreground/90"
 				>
 					Sign in
 				</Link>
 
-				<p className="mt-3 text-white/40 text-xs">
+				<p className="mt-3 text-foreground/40 text-xs">
 					You will return to this tale after signing in.
 				</p>
 
-				<div className="mt-6 border-white/10 border-t pt-4 text-left text-white/35 text-xs">
+				<div className="mt-6 border-foreground/10 border-t pt-4 text-left text-foreground/35 text-xs">
 					<p>Slug: {slug}</p>
 					<p>Creator Username: {creatorUsername}</p>
 					{creator && <p>Owner: {creator}</p>}

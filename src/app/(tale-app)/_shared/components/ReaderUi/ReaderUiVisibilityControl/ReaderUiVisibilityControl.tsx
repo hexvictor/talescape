@@ -3,13 +3,8 @@
 import clsx from "clsx";
 import { Bug, Eye, EyeOff, Gauge, Navigation } from "lucide-react";
 import { useState } from "react";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import type { ReaderUiVisibilityMode } from "../../../store/slices/uiSlice";
-
-type ReaderUiVisibilityControlProps = {
-	mode: ReaderUiVisibilityMode;
-	onChange: (mode: ReaderUiVisibilityMode) => void;
-	onToggle: () => void;
-};
 
 const VISIBILITY_OPTIONS: Array<{
 	icon: typeof Eye;
@@ -29,13 +24,14 @@ const VISIBILITY_OPTIONS: Array<{
  * @returns The reader UI visibility control.
  *
  * @example
- * <ReaderUiVisibilityControl mode="all" onChange={setMode} />
+ * <ReaderUiVisibilityControl />
  */
-export function ReaderUiVisibilityControl({
-	mode,
-	onChange,
-	onToggle,
-}: ReaderUiVisibilityControlProps): React.JSX.Element {
+export function ReaderUiVisibilityControl(): React.JSX.Element {
+	const { mode, setMode, toggle } = useTaleReaderStoreShallow((state) => ({
+		mode: state.ui.visibilityMode,
+		setMode: state.ui.setVisibilityMode,
+		toggle: state.ui.toggleReaderUi,
+	}));
 	const [open, setOpen] = useState(false);
 	const CurrentIcon =
 		VISIBILITY_OPTIONS.find((option) => option.mode === mode)?.icon ?? Bug;
@@ -51,7 +47,7 @@ export function ReaderUiVisibilityControl({
 		>
 			{open ? (
 				<div className="absolute bottom-full left-0 pb-2">
-					<div className="flex w-40 flex-col gap-1 rounded-md border border-white/12 bg-black/88 p-1.5 shadow-2xl backdrop-blur-md">
+					<div className="flex w-40 flex-col gap-1 rounded-md border border-foreground/12 bg-background/88 p-1.5 shadow-2xl backdrop-blur-md">
 						{VISIBILITY_OPTIONS.map((option) => {
 							const Icon = option.icon;
 							return (
@@ -63,10 +59,10 @@ export function ReaderUiVisibilityControl({
 									className={clsx(
 										"flex items-center gap-2 rounded px-2 py-2 text-left text-xs transition",
 										option.mode === mode
-											? "bg-white/14 text-white"
-											: "text-white/58 hover:bg-white/8 hover:text-white",
+											? "bg-foreground/14 text-foreground"
+											: "text-foreground/58 hover:bg-foreground/8 hover:text-foreground",
 									)}
-									onClick={() => onChange(option.mode)}
+									onClick={() => setMode(option.mode)}
 								>
 									<Icon size={14} />
 									{option.label}
@@ -81,10 +77,10 @@ export function ReaderUiVisibilityControl({
 				aria-label="Change reader UI visibility"
 				aria-expanded={open}
 				className={clsx(
-					"grid h-10 w-10 place-items-center rounded-lg border border-white/12 bg-black/72 text-white opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					"grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
 					mode === "hidden" && "opacity-15",
 				)}
-				onClick={onToggle}
+				onClick={toggle}
 			>
 				<CurrentIcon size={17} />
 			</button>

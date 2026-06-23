@@ -1,8 +1,9 @@
 "use client";
 
+import { ReaderProgressPersistence } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderProgressPersistence";
 import { ReaderViewport } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderViewport/ReaderViewport";
-import { TaleStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleStoreContext";
-import { usePersistReaderProgress } from "~/app/(tale-app)/_shared/hooks/usePersistReaderProgress";
+import { TaleAppStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { TaleReaderStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import { readProgress } from "~/app/(tale-app)/_shared/services/readerProgressStorage";
 import type { SavedReaderProgress, Tale } from "~/app/(tale-app)/_shared/types";
 
@@ -12,7 +13,7 @@ type TaleReaderProps = {
 };
 
 /**
- * Renders the read-only tale experience with its isolated runtime store.
+ * Renders the read-only tale experience with its isolated reader store.
  *
  * @param props - Tale reader props.
  * @param props.progress - Current user's saved progress, or null for guests.
@@ -27,26 +28,14 @@ export function TaleReader({
 	tale,
 }: TaleReaderProps): React.JSX.Element {
 	return (
-		<TaleStoreProvider
-			mode="read"
-			progress={progress ?? readProgress(tale)}
-			tale={tale}
-		>
-			<ReaderProgressPersistence />
-			<ReaderViewport />
-		</TaleStoreProvider>
+		<TaleAppStoreProvider application="reader" tale={tale}>
+			<TaleReaderStoreProvider
+				progress={progress ?? readProgress(tale)}
+				tale={tale}
+			>
+				<ReaderProgressPersistence />
+				<ReaderViewport />
+			</TaleReaderStoreProvider>
+		</TaleAppStoreProvider>
 	);
-}
-
-/**
- * Persists reader progress from inside the active runtime store provider.
- *
- * @returns Null because this component owns only persistence effects.
- *
- * @example
- * <ReaderProgressPersistence />
- */
-function ReaderProgressPersistence(): null {
-	usePersistReaderProgress();
-	return null;
 }

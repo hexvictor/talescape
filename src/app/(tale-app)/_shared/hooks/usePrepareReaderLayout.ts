@@ -2,8 +2,9 @@
 
 import type { RefObject } from "react";
 import { useEffect, useRef } from "react";
-import { useTaleStoreInstance } from "../contexts/TaleStoreContext";
-import { setResolvedAnchors } from "../services/formatTale";
+import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
+import { useTaleReaderStoreShallow } from "../contexts/TaleReaderStoreContext";
+import { useTaleAppStoreInstance } from "../contexts/TaleAppStoreContext";
 import { compileReader, getCompiledBlockIds } from "../services/readerCompiler";
 import {
 	countReaderDiagnostic,
@@ -19,7 +20,6 @@ import type {
 	ResolvedTaleBlock,
 	ViewportSize,
 } from "../types";
-import { usePrepareReaderLayoutState } from "./store/useReaderRuntimeSelectors";
 
 function getMeasurementCacheKey(
 	block: ResolvedTaleBlock,
@@ -63,7 +63,8 @@ export function usePrepareReaderLayout(
 	measurementRef: RefObject<HTMLDivElement | null>,
 	viewport: ViewportSize,
 ) {
-	const store = useTaleStoreInstance();
+	const store = useTaleReaderStoreInstance();
+	const documentStore = useTaleAppStoreInstance();
 	const measurementCacheRef = useRef<Record<string, ResolvedBlockSize>>({});
 	const compiledCacheRef = useRef<Record<string, CompiledReader>>({});
 	const {
@@ -75,14 +76,23 @@ export function usePrepareReaderLayout(
 		setProgress,
 		setReady,
 		setStatus,
-	} = usePrepareReaderLayoutState();
+	} = useTaleReaderStoreShallow((state) => ({
+		revision: state.engine.revision,
+		selectedBranchIds: state.navigation.selectedBranchIds,
+		setCompiled: state.reader.setCompiled,
+		setMeasurementBlockIds: state.reader.setMeasurementBlockIds,
+		setPhase: state.engine.setPhase,
+		setProgress: state.engine.setProgress,
+		setReady: state.engine.setReady,
+		setStatus: state.engine.setStatus,
+	}));
 
 	useEffect(() => {
 		void revision;
 		let cancelled = false;
 		const prepare = async () => {
 			const currentState = store.getState();
-			const tale = currentState.tale.data;
+			const tale = documentStore.getState().document.tale;
 			if (!currentState.reader.compiled) setReady(false);
 			setStatus("measuring");
 			const routeBlockIds = getCompiledBlockIds(tale, selectedBranchIds);
@@ -168,11 +178,6 @@ export function usePrepareReaderLayout(
 				compiledCacheRef.current[compiledCacheKey] ??
 				compileReader(tale, selectedBranchIds, sizes, viewport);
 			compiledCacheRef.current[compiledCacheKey] = compiled;
-			store
-				.getState()
-				.tale.setData(setResolvedAnchors(tale, compiled.anchors), {
-					recompile: false,
-				});
 			setCompiled(compiled);
 			setPhase("restoring-progress");
 			setProgress(94);
@@ -193,6 +198,7 @@ export function usePrepareReaderLayout(
 		};
 	}, [
 		measurementRef,
+		documentStore,
 		revision,
 		selectedBranchIds,
 		setCompiled,

@@ -1,7 +1,8 @@
 "use client";
 
 import { Magnet, MagnetIcon } from "lucide-react";
-import { useTaleStoreShallow } from "../../../contexts/TaleStoreContext";
+import { useTaleAppStoreShallow } from "../../../contexts/TaleAppStoreContext";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import { updateAllBlockSnapSettings } from "../../../services/updateAllBlockSnapSettings";
 
 /**
@@ -10,35 +11,33 @@ import { updateAllBlockSnapSettings } from "../../../services/updateAllBlockSnap
  * @returns Global block snap controls.
  */
 export function GlobalSnapControls(): React.JSX.Element {
-	const { requestRecompile, scrollApi, setData, tale } = useTaleStoreShallow(
-		(state) => ({
-			requestRecompile: state.engine.requestRecompile,
-			scrollApi: state.scroll.api,
-			setData: state.tale.setData,
-			tale: state.tale.data,
-		}),
-	);
+	const scrollApi = useTaleReaderStoreShallow((state) => state.scroll.api);
+	const { setTale, tale } = useTaleAppStoreShallow((state) => ({
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+	}));
 	const allEnabled = tale.structure.blocks.every((block) => block.snap);
 	const allDisabled = tale.structure.blocks.every((block) => !block.snap);
 
 	const apply = (snap: boolean): void => {
 		scrollApi?.capturePosition();
-		setData(updateAllBlockSnapSettings(tale, snap));
-		requestRecompile("global-snap-setting");
+		setTale(updateAllBlockSnapSettings(tale, snap), {
+			reason: "global-snap-setting",
+		});
 	};
 
 	return (
 		<div
 			data-reader-component="GlobalSnapControls"
 			data-reader-role="snap-settings"
-			className="flex items-center gap-1 border-white/10 border-b px-3 py-2"
+			className="flex items-center gap-1 border-foreground/10 border-b px-3 py-2"
 		>
-			<span className="mr-auto text-[10px] text-white/42 uppercase">
+			<span className="mr-auto text-[10px] text-foreground/42 uppercase">
 				All blocks
 			</span>
 			<button
 				type="button"
-				className="flex h-8 items-center gap-1.5 rounded border border-white/10 px-2 text-[10px] text-white/58 hover:bg-white/8 hover:text-white data-[active=true]:border-[#d9b56f]/55 data-[active=true]:text-[#d9b56f]"
+				className="flex h-8 items-center gap-1.5 rounded border border-foreground/10 px-2 text-[10px] text-foreground/58 hover:bg-foreground/8 hover:text-foreground data-[active=true]:border-primary/55 data-[active=true]:text-primary"
 				data-active={allEnabled}
 				onClick={() => apply(true)}
 			>
@@ -47,7 +46,7 @@ export function GlobalSnapControls(): React.JSX.Element {
 			</button>
 			<button
 				type="button"
-				className="flex h-8 items-center gap-1.5 rounded border border-white/10 px-2 text-[10px] text-white/58 hover:bg-white/8 hover:text-white data-[active=true]:border-[#d9b56f]/55 data-[active=true]:text-[#d9b56f]"
+				className="flex h-8 items-center gap-1.5 rounded border border-foreground/10 px-2 text-[10px] text-foreground/58 hover:bg-foreground/8 hover:text-foreground data-[active=true]:border-primary/55 data-[active=true]:text-primary"
 				data-active={allDisabled}
 				onClick={() => apply(false)}
 			>

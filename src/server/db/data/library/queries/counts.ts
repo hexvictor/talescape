@@ -26,10 +26,6 @@ import {
 	visibleTaleByIdCondition,
 } from "./access";
 
-export type LibraryCounts = Awaited<ReturnType<typeof getLibraryCounts>>;
-
-export type CountsByTale = Awaited<ReturnType<typeof getCountsByTaleIds>>;
-
 export async function getLibraryCounts() {
 	const { userId } = await getSignedInLibraryUser();
 
@@ -63,7 +59,6 @@ export async function getLibraryCounts() {
 		tales: talesCount,
 		nodes: branchesCount + blocksCount + fragmentsCount,
 		branches: branchesCount,
-		sections: 0,
 		blocks: blocksCount,
 		fragments: fragmentsCount,
 		paths: pathsCount,
@@ -80,7 +75,6 @@ export async function getCountsByTaleIds(
 	if (taleIds.length === 0) {
 		return {
 			branches: new Map<number, number>(),
-			sections: new Map<number, number>(),
 			blocks: new Map<number, number>(),
 			fragments: new Map<number, number>(),
 			paths: new Map<number, number>(),
@@ -159,7 +153,6 @@ export async function getCountsByTaleIds(
 
 	return {
 		branches: toCountMap(branchCounts),
-		sections: new Map<number, number>(),
 		blocks: toCountMap(blockCounts),
 		fragments: toCountMap(fragmentCounts),
 		paths: toCountMap(pathCounts),

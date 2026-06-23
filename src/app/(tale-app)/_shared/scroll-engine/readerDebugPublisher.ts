@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand";
-import type { TaleReaderState } from "../store/createTaleStore";
+import type { TaleReaderState } from "../store/createTaleReaderStore";
 
 /**
  * Publishes the active timeline segment at a limited frequency while the debug

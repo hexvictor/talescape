@@ -9,7 +9,7 @@ import {
 } from "~/server/api/trpc";
 import { books } from "~/server/db/schema";
 
-export const createBookInputSchema = z.object({
+const createBookInputSchema = z.object({
 	title: z.string().min(1, "Title cannot be empty"),
 	authorId: z
 		.number()
@@ -70,6 +70,9 @@ const getBooksInputSchema = z.object({
 		.optional(),
 });
 
+/**
+ * Exposes validated book creation and library book queries.
+ */
 export const bookRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createBookInputSchema)
@@ -127,7 +130,6 @@ export const bookRouter = createTRPCRouter({
 
 			const requiredConditions = [eq(books.creatorId, ctx.session.userId)];
 
-			// Call the helper with both dynamic filters AND required conditions
 			const whereClause = createWhereConditions(
 				books,
 				dynamicFilters,

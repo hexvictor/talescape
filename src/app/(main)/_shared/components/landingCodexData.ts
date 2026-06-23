@@ -34,41 +34,6 @@ export const getRecentCodexEntries = cache(async () => [
 	"Forum thread: Who opened the moon vault?",
 ]);
 
-export const getLibraryBooks = cache(async () => [
-	{
-		title: "The Ember Index",
-		author: "N. Aurelian Vale",
-		status: "Drafting",
-		image: mockImages[19]?.url ?? fallbackImage,
-		description:
-			"A court archivist discovers every forbidden spell has been catalogued in her handwriting.",
-	},
-	{
-		title: "The Glass Coast Almanac",
-		author: "Mira Solwen",
-		status: "Published",
-		image: mockImages[5]?.url ?? fallbackImage,
-		description:
-			"Pirate houses, drowned bells, and a lighthouse that bargains with ships instead of guiding them.",
-	},
-	{
-		title: "Oaths Under Ardent Vale",
-		author: "Jon Thorne",
-		status: "Planning",
-		image: mockImages[22]?.url ?? fallbackImage,
-		description:
-			"Five rival orders chase the same prophecy through trial courts, ruins, and masked festivals.",
-	},
-	{
-		title: "Moon Vault Etiquette",
-		author: "Ilyra Penn",
-		status: "Private",
-		image: mockImages[12]?.url ?? fallbackImage,
-		description:
-			"A polite handbook for thieves, scholars, and anyone invited to rob a celestial archive.",
-	},
-]);
-
 export const getCodexEntries = cache(async () => [
 	{
 		type: "Character",

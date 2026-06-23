@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useReaderMotionReadinessState } from "../../../hooks/store/useReaderRuntimeSelectors";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 
 /**
  * Confirms that Motion has committed an animation before exposing the reader.
@@ -12,7 +12,10 @@ import { useReaderMotionReadinessState } from "../../../hooks/store/useReaderRun
  * <ReaderMotionReadiness />
  */
 export function ReaderMotionReadiness(): React.JSX.Element | null {
-	const { phase, setProgress } = useReaderMotionReadinessState();
+	const { phase, setProgress } = useTaleReaderStoreShallow((state) => ({
+		phase: state.engine.phase,
+		setProgress: state.engine.setProgress,
+	}));
 
 	if (phase !== "preparing-motion") return null;
 

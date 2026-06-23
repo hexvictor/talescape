@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand";
-import type { TaleReaderState } from "../store/createTaleStore";
+import type { TaleReaderState } from "../store/createTaleReaderStore";
 import type { Anchor, CompiledReader, ReaderLocation } from "../types";
 
 type PendingLocation = {

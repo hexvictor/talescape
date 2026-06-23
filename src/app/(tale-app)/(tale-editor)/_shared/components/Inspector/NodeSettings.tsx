@@ -1,14 +1,14 @@
 import { useState } from "react";
-import type {
-	ResolvedTaleBlock,
-	TaleNode,
-} from "~/app/(tale-app)/_shared/types";
 import {
 	DebugCard,
 	DebugField,
 	Setting,
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import type {
+	ResolvedTaleBlock,
+	TaleNode,
+} from "~/app/(tale-app)/_shared/types";
 import { AnimationSelectionEditor } from "./AnimationSelectionEditor";
 import { NumberSetting } from "./InspectorValueFields";
 import { LoopingAnimationEditor } from "./LoopingAnimationEditor";
@@ -142,13 +142,13 @@ function NodeEditor({
 		<section
 			data-reader-component="NodeEditor"
 			data-reader-role="node-settings-card"
-			className="rounded-md border border-white/10 bg-white/[0.035] p-3"
+			className="rounded-md border border-foreground/10 bg-foreground/[0.035] p-3"
 		>
 			<div className="mb-3 flex items-center justify-between gap-2">
-				<h3 className="truncate font-black text-[#d9b56f] text-[10px] uppercase">
+				<h3 className="truncate font-black text-[10px] text-primary uppercase">
 					{node.id}
 				</h3>
-				<span className="text-white/38 text-xs">
+				<span className="text-foreground/38 text-xs">
 					{node.children.length} children
 				</span>
 			</div>
@@ -299,10 +299,10 @@ function CollapsibleNodeSection({
 	title: string;
 }): React.JSX.Element {
 	return (
-		<section className="mt-3 rounded border border-white/8 bg-black/20 p-2">
+		<section className="mt-3 rounded border border-foreground/8 bg-background/20 p-2">
 			<button
 				type="button"
-				className="flex w-full items-center justify-between text-left font-bold text-[10px] text-white/56 uppercase hover:text-white"
+				className="flex w-full items-center justify-between text-left font-bold text-[10px] text-foreground/56 uppercase hover:text-foreground"
 				onClick={onToggle}
 			>
 				{title}

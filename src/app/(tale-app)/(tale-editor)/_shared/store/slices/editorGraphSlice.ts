@@ -3,6 +3,7 @@ import type {
 	EditorEdgeType,
 	EditorGraphDirection,
 	EditorPathType,
+	GraphFocusMode,
 	GraphPosition,
 	PathVisibilityMode,
 } from "../editorStoreTypes";
@@ -21,6 +22,9 @@ export type EditorGraphSlice = {
 		branchPositions: Record<string, GraphPosition>;
 		collapsedBranchIds: Set<string>;
 		edgeType: EditorEdgeType;
+		focusMode: GraphFocusMode;
+		unfocusedEdgeOpacity: number;
+		unfocusedNodeOpacity: number;
 		expandedBranchIds: Set<string>;
 		graphDirection: EditorGraphDirection;
 		layoutRequestRevision: number;
@@ -31,10 +35,13 @@ export type EditorGraphSlice = {
 		resetLayout: () => void;
 		setBranchPosition: (branchId: string, position: GraphPosition) => void;
 		setEdgeType: (edgeType: EditorEdgeType) => void;
+		setFocusMode: (mode: GraphFocusMode) => void;
 		setGraphDirection: (direction: EditorGraphDirection) => void;
 		setPathVisibilityMode: (mode: PathVisibilityMode) => void;
 		setSelectedPathId: (pathId: string | null) => void;
 		setVisiblePathTypes: (types: Set<EditorPathType>) => void;
+		setUnfocusedEdgeOpacity: (opacity: number) => void;
+		setUnfocusedNodeOpacity: (opacity: number) => void;
 		toggleBlocks: (branchId: string) => void;
 		toggleDescendants: (branchId: string) => void;
 	};
@@ -59,11 +66,14 @@ export const createEditorGraphSlice: StateCreator<
 		branchPositions: {},
 		collapsedBranchIds: new Set(),
 		edgeType: "smoothstep",
+		focusMode: "direct",
 		expandedBranchIds: new Set(),
 		graphDirection: "horizontal",
 		layoutRequestRevision: 0,
 		pathVisibilityMode: "all",
 		selectedPathId: null,
+		unfocusedEdgeOpacity: 0.08,
+		unfocusedNodeOpacity: 0.12,
 		visiblePathTypes: new Set(allPathTypes),
 		expandBlocks: (branchId) =>
 			set((state) => ({
@@ -96,6 +106,10 @@ export const createEditorGraphSlice: StateCreator<
 			set((state) => ({
 				editorGraph: { ...state.editorGraph, edgeType },
 			})),
+		setFocusMode: (focusMode) =>
+			set((state) => ({
+				editorGraph: { ...state.editorGraph, focusMode },
+			})),
 		setGraphDirection: (graphDirection) =>
 			set((state) => ({
 				editorGraph: { ...state.editorGraph, graphDirection },
@@ -111,6 +125,20 @@ export const createEditorGraphSlice: StateCreator<
 		setVisiblePathTypes: (visiblePathTypes) =>
 			set((state) => ({
 				editorGraph: { ...state.editorGraph, visiblePathTypes },
+			})),
+		setUnfocusedEdgeOpacity: (unfocusedEdgeOpacity) =>
+			set((state) => ({
+				editorGraph: {
+					...state.editorGraph,
+					unfocusedEdgeOpacity: clampOpacity(unfocusedEdgeOpacity),
+				},
+			})),
+		setUnfocusedNodeOpacity: (unfocusedNodeOpacity) =>
+			set((state) => ({
+				editorGraph: {
+					...state.editorGraph,
+					unfocusedNodeOpacity: clampOpacity(unfocusedNodeOpacity),
+				},
 			})),
 		toggleBlocks: (branchId) =>
 			set((state) => ({
@@ -150,4 +178,9 @@ function toggleSetValue(values: Set<string>, value: string): Set<string> {
 	if (next.has(value)) next.delete(value);
 	else next.add(value);
 	return next;
+}
+
+/** Clamps graph opacity settings to valid CSS opacity bounds. */
+function clampOpacity(value: number): number {
+	return Math.max(0, Math.min(1, value));
 }

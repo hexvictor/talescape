@@ -308,9 +308,9 @@ export function createReaderScrollDriver({
 }
 
 /**
- * Reads native scroll from either the window or an embedded scroll container.
+ * Reads native scroll from either the window or a scoped scroll container.
  *
- * @param scrollRoot - Optional embedded scroll element.
+ * @param scrollRoot - Optional scoped scroll element.
  * @returns Current native scroll offset.
  *
  * @example
@@ -321,9 +321,9 @@ function getNativeScroll(scrollRoot: HTMLElement | null): number {
 }
 
 /**
- * Writes native scroll to either the window or an embedded scroll container.
+ * Writes native scroll to either the window or a scoped scroll container.
  *
- * @param scrollRoot - Optional embedded scroll element.
+ * @param scrollRoot - Optional scoped scroll element.
  * @param value - Scroll position to apply.
  * @returns Nothing.
  *

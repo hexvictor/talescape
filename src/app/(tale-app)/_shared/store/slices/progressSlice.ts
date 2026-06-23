@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand/vanilla";
 import { writeProgress } from "../../services/readerProgressStorage";
 import type { ReaderLocation, SavedReaderProgress, Tale } from "../../types";
-import type { TaleReaderState } from "../createTaleStore";
+import type { TaleReaderState } from "../createTaleReaderStore";
 
 function addUniqueValues(items: string[], values: string[]): string[] {
 	return [...new Set([...items, ...values])];

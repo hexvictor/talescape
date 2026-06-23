@@ -4,7 +4,6 @@ import {
 	Box,
 	FileText,
 	GitBranch,
-	Layers,
 	Route,
 } from "lucide-react";
 import Link from "next/link";
@@ -13,38 +12,21 @@ import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type { LibraryTaleDetail } from "~/server/db/data/library/queries";
 import { LibraryBreadcrumbs } from "./LibraryBreadcrumbs";
-import {
-	LibraryNodeList,
-	type NodeLink,
-	type NodeRow,
-} from "./LibraryNodeList";
+import { LibraryNodeList } from "./LibraryNodeList";
 import { capitalize, getFragmentPreview } from "./LibraryNodePanels";
+import { createTaleNodeRows } from "./createTaleNodeRows";
+import { type TaleDetailView, taleDetailViews } from "./taleDetailViews";
 import { getTaleEditorHref, getTaleReaderHref } from "./taleReaderHref";
 
-export const taleDetailViews = [
-	{ key: "overview", label: "Overview" },
-	{ key: "branches", label: "Branches" },
-	{ key: "sections", label: "Sections" },
-	{ key: "blocks", label: "Blocks" },
-	{ key: "fragments", label: "Fragments" },
-	{ key: "paths", label: "Paths" },
-	{ key: "parts", label: "Parts" },
-	{ key: "entries", label: "Entries" },
-	{ key: "pages", label: "Pages" },
-] as const;
-
-export type TaleDetailView = (typeof taleDetailViews)[number]["key"];
-
-const taleDetailViewKeys = new Set(taleDetailViews.map((view) => view.key));
-
-export function normalizeTaleDetailView(
-	view: string | undefined,
-): TaleDetailView {
-	return taleDetailViewKeys.has(view as TaleDetailView)
-		? (view as TaleDetailView)
-		: "overview";
-}
-
+/**
+ * Renders tale metadata, metrics, overview, and the selected structure listing.
+ *
+ * @param props - Tale detail data and active structure view.
+ * @returns Library tale detail page content.
+ *
+ * @example
+ * <TaleDetailContent detail={detail} activeView="overview" />
+ */
 export function TaleDetailContent({
 	detail,
 	activeView,
@@ -126,7 +108,6 @@ function TaleHeader({ detail }: { detail: LibraryTaleDetail }) {
 function TaleMetrics({ detail }: { detail: LibraryTaleDetail }) {
 	const metrics = [
 		["Branches", detail.tale.nodeCounts.branches],
-		["Sections", detail.tale.nodeCounts.sections],
 		["Blocks", detail.tale.nodeCounts.blocks],
 		["Fragments", detail.tale.nodeCounts.fragments],
 		["Paths", detail.tale.nodeCounts.paths],
@@ -157,7 +138,6 @@ function TaleStructureNav({
 	const counts: Record<TaleDetailView, number | null> = {
 		overview: null,
 		branches: detail.tale.nodeCounts.branches,
-		sections: detail.tale.nodeCounts.sections,
 		blocks: detail.tale.nodeCounts.blocks,
 		fragments: detail.tale.nodeCounts.fragments,
 		paths: detail.tale.nodeCounts.paths,
@@ -168,7 +148,7 @@ function TaleStructureNav({
 
 	return (
 		<nav
-			aria-label="Tale structure sections"
+			aria-label="Tale structure views"
 			className="scrollbar-none overflow-x-auto"
 		>
 			<div className="flex min-w-max gap-2 rounded-md border bg-card p-2 shadow-sm">
@@ -231,8 +211,8 @@ function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 			</div>
 			<div className="mt-4 grid gap-4">
 				{detail.branches.map((branch) => {
-					const branchSections = detail.sections.filter(
-						(section) => section.branchId === branch.id,
+					const branchBlocks = detail.blocks.filter(
+						(block) => block.branchId === branch.id,
 					);
 
 					return (
@@ -245,42 +225,16 @@ function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 								<h3 className="font-semibold">{branch.name}</h3>
 								<Badge variant="outline">Branch {branch.index + 1}</Badge>
 							</div>
-							<div className="mt-3 grid gap-3">
-								{branchSections.map((section) => {
-									const sectionBlocks = detail.blocks.filter(
-										(block) => block.sectionId === section.id,
-									);
-
-									return (
-										<div
-											key={section.id}
-											id={`section-${section.id}`}
-											className="rounded-md bg-background p-3"
-										>
-											<div className="flex items-center gap-2">
-												<Layers
-													aria-hidden="true"
-													className="size-4 text-primary"
-												/>
-												<p className="font-medium text-sm">
-													Section {section.index + 1} - {section.orientation}{" "}
-													{section.direction}
-												</p>
-											</div>
-											<div className="mt-3 grid gap-2">
-												{sectionBlocks.map((block) => (
-													<BlockRow
-														key={block.id}
-														block={block}
-														fragments={detail.fragments.filter(
-															(fragment) => fragment.blockId === block.id,
-														)}
-													/>
-												))}
-											</div>
-										</div>
-									);
-								})}
+							<div className="mt-3 grid gap-2 rounded-md bg-background p-3">
+								{branchBlocks.map((block) => (
+									<BlockRow
+										key={block.id}
+										block={block}
+										fragments={detail.fragments.filter(
+											(fragment) => fragment.blockId === block.id,
+										)}
+									/>
+								))}
 							</div>
 						</div>
 					);
@@ -439,243 +393,4 @@ function TaleNodePanel({
 	const emptyTitle = `No ${view} visible`;
 
 	return <LibraryNodeList emptyTitle={emptyTitle} rows={rows} />;
-}
-
-function createTaleNodeRows(
-	detail: LibraryTaleDetail,
-	view: Exclude<TaleDetailView, "overview">,
-): NodeRow[] {
-	if (view === "branches") {
-		return detail.branches.map((branch) => ({
-			id: branch.id,
-			anchorId: `branch-${branch.id}`,
-			icon: <GitBranch aria-hidden="true" className="size-4" />,
-			title: branch.name,
-			meta: detail.tale.title,
-			detail: `Index ${branch.index}`,
-			badges: [branch.visibility, branch.editable ? "editable" : "locked"],
-			links: [taleLink(detail.tale.id)],
-		}));
-	}
-
-	if (view === "sections") {
-		return detail.sections.map((section) => ({
-			id: section.id,
-			anchorId: `section-${section.id}`,
-			icon: <Layers aria-hidden="true" className="size-4" />,
-			title: `Section ${section.index + 1}`,
-			meta: detail.tale.title,
-			detail: `${section.branch?.name ?? "Branch"} - ${section.orientation} ${section.direction}`,
-			badges: [section.visibility, section.isSnap ? "snap" : "free scroll"],
-			links: compactLinks([
-				taleLink(detail.tale.id),
-				section.branch
-					? structureLink(
-							"Branch",
-							detail.tale.id,
-							"branches",
-							section.branch.id,
-						)
-					: null,
-			]),
-		}));
-	}
-
-	if (view === "blocks") {
-		return detail.blocks.map((block) => ({
-			id: block.id,
-			anchorId: `block-${block.id}`,
-			icon: <Box aria-hidden="true" className="size-4" />,
-			title: `Block ${block.index + 1}`,
-			meta: detail.tale.title,
-			detail: `${block.entry?.title ?? "Entry"} - ${
-				block.page ? `Page ${block.page.index + 1}` : "Unpaged beat"
-			}`,
-			badges: [block.visibility, block.part?.title ?? "Part"],
-			links: compactLinks([
-				taleLink(detail.tale.id),
-				block.section?.branch
-					? structureLink(
-							"Branch",
-							detail.tale.id,
-							"branches",
-							block.section.branch.id,
-						)
-					: null,
-				block.section
-					? structureLink(
-							"Section",
-							detail.tale.id,
-							"sections",
-							block.section.id,
-						)
-					: null,
-				block.part
-					? structureLink("Part", detail.tale.id, "parts", block.part.id)
-					: null,
-				block.entry
-					? structureLink("Entry", detail.tale.id, "entries", block.entry.id)
-					: null,
-				block.page
-					? structureLink("Page", detail.tale.id, "pages", block.page.id)
-					: null,
-			]),
-		}));
-	}
-
-	if (view === "fragments") {
-		return detail.fragments.map((fragment) => {
-			const block = detail.blocks.find((item) => item.id === fragment.blockId);
-
-			return {
-				id: fragment.id,
-				anchorId: `fragment-${fragment.id}`,
-				icon: <FileText aria-hidden="true" className="size-4" />,
-				title: `${capitalize(fragment.type)} fragment`,
-				meta: detail.tale.title,
-				detail: getFragmentPreview(fragment.data),
-				badges: [
-					fragment.visibility,
-					`Block ${fragment.block?.index ?? "?"}`,
-					`Fragment ${fragment.index + 1}`,
-				],
-				links: compactLinks([
-					taleLink(detail.tale.id),
-					block?.section?.branch
-						? structureLink(
-								"Branch",
-								detail.tale.id,
-								"branches",
-								block.section.branch.id,
-							)
-						: null,
-					block?.section
-						? structureLink(
-								"Section",
-								detail.tale.id,
-								"sections",
-								block.section.id,
-							)
-						: null,
-					structureLink("Block", detail.tale.id, "blocks", fragment.blockId),
-					block?.part
-						? structureLink("Part", detail.tale.id, "parts", block.part.id)
-						: null,
-					block?.entry
-						? structureLink("Entry", detail.tale.id, "entries", block.entry.id)
-						: null,
-					block?.page
-						? structureLink("Page", detail.tale.id, "pages", block.page.id)
-						: null,
-				]),
-			};
-		});
-	}
-
-	if (view === "paths") {
-		return detail.paths.map((path) => ({
-			id: path.id,
-			anchorId: `path-${path.id}`,
-			icon: <Route aria-hidden="true" className="size-4" />,
-			title: path.label ?? `${capitalize(path.type)} path`,
-			meta: detail.tale.title,
-			detail: `${path.fromBranch?.name ?? "Start"} -> ${path.toBranch?.name ?? "End"}`,
-			badges: [path.visibility, `Order ${path.order}`],
-			links: compactLinks([
-				taleLink(detail.tale.id),
-				path.fromBranch
-					? structureLink(
-							"From branch",
-							detail.tale.id,
-							"branches",
-							path.fromBranch.id,
-						)
-					: null,
-				path.toBranch
-					? structureLink(
-							"To branch",
-							detail.tale.id,
-							"branches",
-							path.toBranch.id,
-						)
-					: null,
-			]),
-		}));
-	}
-
-	if (view === "parts") {
-		return detail.parts.map((part) => ({
-			id: part.id,
-			anchorId: `part-${part.id}`,
-			icon: <BookOpen aria-hidden="true" className="size-4" />,
-			title: part.title,
-			meta: detail.tale.title,
-			detail: `Narrative order ${part.index + 1}`,
-			badges: ["part"],
-			links: [taleLink(detail.tale.id)],
-		}));
-	}
-
-	if (view === "entries") {
-		return detail.entries.map((entry) => ({
-			id: entry.id,
-			anchorId: `entry-${entry.id}`,
-			icon: <FileText aria-hidden="true" className="size-4" />,
-			title: entry.title,
-			meta: detail.tale.title,
-			detail: `${entry.part?.title ?? "Part"} - ${entry.type}`,
-			badges: [`Entry ${entry.index + 1}`],
-			links: compactLinks([
-				taleLink(detail.tale.id),
-				entry.part
-					? structureLink("Part", detail.tale.id, "parts", entry.part.id)
-					: null,
-			]),
-		}));
-	}
-
-	return detail.pages.map((page) => ({
-		id: page.id,
-		anchorId: `page-${page.id}`,
-		icon: <FileText aria-hidden="true" className="size-4" />,
-		title: `Page ${page.index + 1}`,
-		meta: detail.tale.title,
-		detail: `${page.entry?.title ?? "Entry"} - ${page.type}`,
-		badges: [page.isPaginated ? "paginated" : "unpaginated"],
-		links: compactLinks([
-			taleLink(detail.tale.id),
-			page.part
-				? structureLink("Part", detail.tale.id, "parts", page.part.id)
-				: null,
-			page.entry
-				? structureLink("Entry", detail.tale.id, "entries", page.entry.id)
-				: null,
-		]),
-	}));
-}
-
-function taleLink(taleId: number) {
-	return { label: "Tale", href: `/library/tale/${taleId}` };
-}
-
-function structureLink(
-	label: string,
-	taleId: number,
-	view: string,
-	id: number,
-): NodeLink {
-	return {
-		label,
-		href: `/library/tale/${taleId}?view=${view}#${singularize(view)}-${id}`,
-	};
-}
-
-function compactLinks(links: Array<NodeLink | null>) {
-	return links.filter((link): link is NodeLink => link !== null);
-}
-
-function singularize(view: string) {
-	if (view === "branches") return "branch";
-	if (view === "entries") return "entry";
-	return view.endsWith("s") ? view.slice(0, -1) : view;
 }

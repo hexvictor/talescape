@@ -5,16 +5,14 @@ import {
 	getLibraryBlocks,
 	getLibraryBranches,
 	getLibraryFragments,
-	getLibrarySections,
 } from "~/server/db/data/library/queries";
 import {
 	BlocksPanel,
 	BranchesPanel,
 	FragmentsPanel,
-	SectionsPanel,
 } from "../../_shared/components/LibraryNodePanels";
 
-type NodeTab = "branches" | "sections" | "blocks" | "fragments";
+type NodeTab = "branches" | "blocks" | "fragments";
 
 type LibraryNodesPageProps = {
 	searchParams?: Promise<{
@@ -24,7 +22,6 @@ type LibraryNodesPageProps = {
 
 const nodeTabs = [
 	{ key: "branches", label: "Branches" },
-	{ key: "sections", label: "Sections" },
 	{ key: "blocks", label: "Blocks" },
 	{ key: "fragments", label: "Fragments" },
 ] as const;
@@ -41,10 +38,10 @@ export default async function LibraryNodesPage({
 			<section className="rounded-md border bg-card p-4 shadow-sm">
 				<h2 className="font-semibold text-lg">Story nodes</h2>
 				<p className="mt-1 text-muted-foreground text-sm">
-					Branches, sections, blocks, and fragments visible from the library.
+					Branches, blocks, and fragments visible from the library.
 				</p>
 				<nav
-					aria-label="Node sections"
+					aria-label="Node types"
 					className="scrollbar-none mt-4 overflow-x-auto"
 				>
 					<div className="flex min-w-max gap-2">
@@ -95,16 +92,6 @@ async function NodeTabPanel({ activeTab }: { activeTab: NodeTab }) {
 		);
 	}
 
-	if (activeTab === "sections") {
-		const sections = await getLibrarySections();
-
-		return (
-			<NodeShelf title="Sections" count={sections.length}>
-				<SectionsPanel sections={sections} />
-			</NodeShelf>
-		);
-	}
-
 	if (activeTab === "blocks") {
 		const blocks = await getLibraryBlocks();
 
@@ -125,16 +112,14 @@ async function NodeTabPanel({ activeTab }: { activeTab: NodeTab }) {
 }
 
 async function getNodeCounts() {
-	const [branches, sections, blocks, fragments] = await Promise.all([
+	const [branches, blocks, fragments] = await Promise.all([
 		getLibraryBranches(),
-		getLibrarySections(),
 		getLibraryBlocks(),
 		getLibraryFragments(),
 	]);
 
 	return {
 		branches: branches.length,
-		sections: sections.length,
 		blocks: blocks.length,
 		fragments: fragments.length,
 	};
@@ -161,12 +146,7 @@ function NodeShelf({
 }
 
 function getNodeTab(value: string | undefined): NodeTab {
-	if (
-		value === "branches" ||
-		value === "sections" ||
-		value === "blocks" ||
-		value === "fragments"
-	) {
+	if (value === "branches" || value === "blocks" || value === "fragments") {
 		return value;
 	}
 

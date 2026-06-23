@@ -1,6 +1,6 @@
 "use client";
 
-import { useTaleStore } from "../contexts/TaleStoreContext";
+import { useTaleReaderStore } from "../contexts/TaleReaderStoreContext";
 import type {
 	ReaderLocation,
 	ResolvedTaleBlock,
@@ -28,8 +28,8 @@ type ReaderLocationContext = {
  * const { block, page, entry } = useReaderLocationContext();
  */
 export function useReaderLocationContext(): ReaderLocationContext {
-	const anchor = useTaleStore((state) => state.navigation.currentAnchor);
-	const location = useTaleStore((state) => state.navigation.current);
+	const anchor = useTaleReaderStore((state) => state.navigation.currentAnchor);
+	const location = useTaleReaderStore((state) => state.navigation.current);
 
 	return {
 		block: anchor?.block ?? null,

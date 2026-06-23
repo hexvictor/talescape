@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import {
+	editBranch,
+	editPath,
+} from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
+import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import type { Tale, TalePath } from "~/app/(tale-app)/_shared/types";
+import {
 	useTaleEditorStore,
 	useTaleEditorStoreShallow,
 } from "../../hooks/useTaleEditorStore";
 import type {
 	EditorEdgeType,
 	EditorGraphDirection,
+	GraphFocusMode,
 	PathVisibilityMode,
 } from "../../store/editorStoreTypes";
-import {
-	editBranch,
-	editPath,
-} from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
-import type { Tale, TalePath } from "~/app/(tale-app)/_shared/types";
 import { TaleInspectorPanel } from "../Inspector/TaleInspectorPanel";
 
 type EditorRightPanelTab = "elements" | "settings";
@@ -34,37 +36,41 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 		useTaleEditorStoreShallow((state) => state.editor);
 	const {
 		edgeType,
+		focusMode,
 		graphDirection,
 		pathVisibilityMode,
 		selectedPathId,
 		setEdgeType,
+		setFocusMode,
 		setGraphDirection,
 		setPathVisibilityMode,
 		setVisiblePathTypes,
+		setUnfocusedEdgeOpacity,
+		setUnfocusedNodeOpacity,
+		unfocusedEdgeOpacity,
+		unfocusedNodeOpacity,
 		visiblePathTypes,
 	} = useTaleEditorStoreShallow((state) => state.editorGraph);
 	const width = useTaleEditorStore(
 		(state) => state.editorWorkspace.rightPanelWidth,
 	);
-	const branch = useTaleEditorStore((state) =>
-		selectedBranchId
-			? state.tale.data.indexMap.branchesById[selectedBranchId]
-			: null,
-	);
-	const path = useTaleEditorStore((state) =>
-		selectedPathId ? state.tale.data.indexMap.pathsById[selectedPathId] : null,
-	);
-	const tale = useTaleEditorStore((state) => state.tale.data);
-	const setData = useTaleEditorStore((state) => state.tale.setData);
+	const { setTale: setData, tale } = useTaleAppStoreShallow((state) => ({
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+	}));
+	const branch = selectedBranchId
+		? tale.indexMap.branchesById[selectedBranchId]
+		: null;
+	const path = selectedPathId ? tale.indexMap.pathsById[selectedPathId] : null;
 
 	return (
 		<aside
 			data-reader-component="TaleEditorSelectionPanel"
 			data-reader-role="editor-right-panel"
-			className="h-full overflow-hidden border-white/10 border-l bg-black/84"
+			className="h-full overflow-hidden border-foreground/10 border-l bg-background/84"
 			style={{ width }}
 		>
-			<header className="flex border-white/10 border-b p-2">
+			<header className="flex border-foreground/10 border-b p-2">
 				<PanelTab
 					active={tab === "elements"}
 					onClick={() => setTab("elements")}
@@ -82,13 +88,19 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 				{tab === "settings" ? (
 					<EditorGraphSettings
 						edgeType={edgeType}
+						focusMode={focusMode}
 						graphDirection={graphDirection}
 						pathVisibilityMode={pathVisibilityMode}
 						visiblePathTypes={visiblePathTypes}
 						onEdgeTypeChange={setEdgeType}
+						onFocusModeChange={setFocusMode}
 						onGraphDirectionChange={setGraphDirection}
 						onPathVisibilityModeChange={setPathVisibilityMode}
 						onVisiblePathTypesChange={setVisiblePathTypes}
+						onUnfocusedEdgeOpacityChange={setUnfocusedEdgeOpacity}
+						onUnfocusedNodeOpacityChange={setUnfocusedNodeOpacity}
+						unfocusedEdgeOpacity={unfocusedEdgeOpacity}
+						unfocusedNodeOpacity={unfocusedNodeOpacity}
 					/>
 				) : selectedTarget ? (
 					<TaleInspectorPanel target={selectedTarget} />
@@ -103,7 +115,7 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 						onChange={setData}
 					/>
 				) : (
-					<p className="text-sm text-white/45">
+					<p className="text-foreground/45 text-sm">
 						Select a branch or block to edit it.
 					</p>
 				)}
@@ -137,7 +149,9 @@ function PanelTab({
 		<button
 			type="button"
 			className={`h-9 flex-1 rounded text-xs ${
-				active ? "bg-white text-black" : "text-white/55 hover:bg-white/8"
+				active
+					? "bg-foreground text-background"
+					: "text-foreground/55 hover:bg-foreground/8"
 			}`}
 			onClick={onClick}
 		>
@@ -175,13 +189,13 @@ function BranchEditor({
 }): React.JSX.Element {
 	return (
 		<div data-reader-component="BranchEditor" data-reader-role="branch-form">
-			<p className="font-black text-[#d9b56f] text-xs uppercase tracking-[0.18em]">
+			<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
 				Branch
 			</p>
-			<label className="mt-4 block text-white/62 text-xs">
+			<label className="mt-4 block text-foreground/62 text-xs">
 				Title
 				<input
-					className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
 					value={title}
 					onChange={(event) =>
 						onChange(
@@ -193,10 +207,10 @@ function BranchEditor({
 					}
 				/>
 			</label>
-			<label className="mt-3 block text-white/62 text-xs">
+			<label className="mt-3 block text-foreground/62 text-xs">
 				Description
 				<textarea
-					className="mt-1 min-h-28 w-full rounded border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+					className="mt-1 min-h-28 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-primary/60"
 					value={description}
 					onChange={(event) =>
 						onChange(
@@ -250,10 +264,10 @@ function PathEditor({
 					)
 				}
 			/>
-			<label className="mt-3 block text-white/62 text-xs">
+			<label className="mt-3 block text-foreground/62 text-xs">
 				Type
 				<select
-					className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#67e8f9]/60"
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
 					value={path.type}
 					onChange={(event) =>
 						onChange(
@@ -271,10 +285,10 @@ function PathEditor({
 					<option value="teleport">Teleport</option>
 				</select>
 			</label>
-			<label className="mt-3 block text-white/62 text-xs">
+			<label className="mt-3 block text-foreground/62 text-xs">
 				Description
 				<textarea
-					className="mt-1 min-h-24 w-full rounded border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-[#67e8f9]/60"
+					className="mt-1 min-h-24 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
 					value={path.description ?? ""}
 					onChange={(event) =>
 						onChange(
@@ -329,35 +343,75 @@ function PathEditor({
  */
 function EditorGraphSettings({
 	edgeType,
+	focusMode,
 	graphDirection,
 	onEdgeTypeChange,
+	onFocusModeChange,
 	onGraphDirectionChange,
 	onPathVisibilityModeChange,
 	onVisiblePathTypesChange,
+	onUnfocusedEdgeOpacityChange,
+	onUnfocusedNodeOpacityChange,
 	pathVisibilityMode,
 	visiblePathTypes,
+	unfocusedEdgeOpacity,
+	unfocusedNodeOpacity,
 }: {
 	edgeType: EditorEdgeType;
+	focusMode: GraphFocusMode;
 	graphDirection: EditorGraphDirection;
 	onEdgeTypeChange: (edgeType: EditorEdgeType) => void;
+	onFocusModeChange: (mode: GraphFocusMode) => void;
 	onGraphDirectionChange: (direction: EditorGraphDirection) => void;
 	onPathVisibilityModeChange: (mode: PathVisibilityMode) => void;
 	onVisiblePathTypesChange: (types: Set<PathType>) => void;
+	onUnfocusedEdgeOpacityChange: (opacity: number) => void;
+	onUnfocusedNodeOpacityChange: (opacity: number) => void;
 	pathVisibilityMode: PathVisibilityMode;
 	visiblePathTypes: Set<PathType>;
+	unfocusedEdgeOpacity: number;
+	unfocusedNodeOpacity: number;
 }): React.JSX.Element {
 	return (
 		<div
 			data-reader-component="EditorGraphSettings"
 			data-reader-role="settings"
 		>
-			<p className="font-black text-[#d9b56f] text-xs uppercase tracking-[0.18em]">
+			<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
 				Editor Settings
 			</p>
-			<label className="mt-4 block text-white/62 text-xs">
+			<label className="mt-4 block text-foreground/62 text-xs">
+				Hover focus
+				<select
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
+					value={focusMode}
+					onChange={(event) =>
+						onFocusModeChange(event.target.value as GraphFocusMode)
+					}
+				>
+					<option value="direct">Direct connections</option>
+					<option value="ancestry">Parent ancestry</option>
+					<option value="off">Disabled</option>
+				</select>
+			</label>
+			{focusMode !== "off" ? (
+				<div className="mt-4 grid grid-cols-2 gap-3">
+					<OpacityField
+						label="Other nodes"
+						value={unfocusedNodeOpacity}
+						onChange={onUnfocusedNodeOpacityChange}
+					/>
+					<OpacityField
+						label="Other edges"
+						value={unfocusedEdgeOpacity}
+						onChange={onUnfocusedEdgeOpacityChange}
+					/>
+				</div>
+			) : null}
+			<label className="mt-4 block text-foreground/62 text-xs">
 				Path edge style
 				<select
-					className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
 					value={edgeType}
 					onChange={(event) =>
 						onEdgeTypeChange(event.target.value as EditorEdgeType)
@@ -369,10 +423,10 @@ function EditorGraphSettings({
 					<option value="default">Default</option>
 				</select>
 			</label>
-			<label className="mt-4 block text-white/62 text-xs">
+			<label className="mt-4 block text-foreground/62 text-xs">
 				Graph direction
 				<select
-					className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
 					value={graphDirection}
 					onChange={(event) =>
 						onGraphDirectionChange(event.target.value as EditorGraphDirection)
@@ -382,10 +436,10 @@ function EditorGraphSettings({
 					<option value="vertical">Vertical tree</option>
 				</select>
 			</label>
-			<label className="mt-4 block text-white/62 text-xs">
+			<label className="mt-4 block text-foreground/62 text-xs">
 				Path visibility
 				<select
-					className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
 					value={pathVisibilityMode}
 					onChange={(event) => {
 						const mode = event.target.value as PathVisibilityMode;
@@ -410,7 +464,7 @@ function EditorGraphSettings({
 					{pathTypes.map((type) => (
 						<label
 							key={type}
-							className="flex items-center justify-between rounded border border-white/10 bg-white/[0.03] px-3 py-2 text-white/70 text-xs"
+							className="flex items-center justify-between rounded border border-foreground/10 bg-foreground/[0.03] px-3 py-2 text-foreground/70 text-xs"
 						>
 							<span className="capitalize">{type}</span>
 							<input
@@ -428,6 +482,43 @@ function EditorGraphSettings({
 				</div>
 			) : null}
 		</div>
+	);
+}
+
+/**
+ * Renders a normalized graph opacity control.
+ *
+ * @param props - Opacity field props.
+ * @returns Labeled range control.
+ *
+ * @example
+ * <OpacityField label="Other nodes" value={0.1} onChange={setOpacity} />
+ */
+function OpacityField({
+	label,
+	onChange,
+	value,
+}: {
+	label: string;
+	onChange: (value: number) => void;
+	value: number;
+}): React.JSX.Element {
+	return (
+		<label className="text-foreground/62 text-xs">
+			<span className="flex justify-between gap-2">
+				{label}
+				<span>{Math.round(value * 100)}%</span>
+			</span>
+			<input
+				className="mt-2 w-full accent-[#d9b56f]"
+				max="1"
+				min="0"
+				step="0.01"
+				type="range"
+				value={value}
+				onChange={(event) => onChange(Number(event.target.value))}
+			/>
+		</label>
 	);
 }
 
@@ -461,10 +552,10 @@ function EditorTextField({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-4 block text-white/62 text-xs">
+		<label className="mt-4 block text-foreground/62 text-xs">
 			{label}
 			<input
-				className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#d9b56f]/60"
+				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
@@ -497,10 +588,10 @@ function PathBlockSelect({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-3 block text-white/62 text-xs">
+		<label className="mt-3 block text-foreground/62 text-xs">
 			{label}
 			<select
-				className="mt-1 h-10 w-full rounded border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-[#67e8f9]/60"
+				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			>

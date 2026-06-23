@@ -13,8 +13,12 @@ export type EditorSlice = {
 		secondaryInspector: TaleInspectorTarget | null;
 		closeInspector: () => void;
 		closeSecondaryInspector: () => void;
+		clearGraphSelection: () => void;
 		openInspector: (target: TaleInspectorTarget) => void;
 		openSecondaryInspector: (target: TaleInspectorTarget) => void;
+		selectBlockForEditing: (blockId: string) => void;
+		selectBranchForEditing: (branchId: string) => void;
+		selectPathForEditing: (pathId: string) => void;
 		setSelectedBlockId: (blockId: string | null) => void;
 		setSelectedBranchId: (branchId: string | null) => void;
 		setHighlightedBranchId: (branchId: string | null) => void;
@@ -41,7 +45,7 @@ export const createEditorSlice: StateCreator<
 		highlightedBranchId: null,
 		hoveredBlockId: null,
 		inspector: null,
-		inspectorControlsOpen: true,
+		inspectorControlsOpen: false,
 		selectedBlockId: null,
 		selectedBranchId: null,
 		secondaryInspector: null,
@@ -53,6 +57,17 @@ export const createEditorSlice: StateCreator<
 					secondaryInspector: null,
 				},
 			})),
+		clearGraphSelection: () =>
+			set((state) => ({
+				editor: {
+					...state.editor,
+					inspector: null,
+					secondaryInspector: null,
+					selectedBlockId: null,
+					selectedBranchId: null,
+				},
+				editorGraph: { ...state.editorGraph, selectedPathId: null },
+			})),
 		openInspector: (inspector) =>
 			set((state) => ({
 				editor: {
@@ -63,10 +78,7 @@ export const createEditorSlice: StateCreator<
 							? inspector.id
 							: state.editor.selectedBlockId,
 					selectedBranchId:
-						inspector.type === "block"
-							? (state.tale.data.indexMap.blocksById[inspector.id]?.branchId ??
-								state.editor.selectedBranchId)
-							: state.editor.selectedBranchId,
+						inspector.type === "block" ? null : state.editor.selectedBranchId,
 					secondaryInspector: null,
 				},
 			})),
@@ -77,6 +89,39 @@ export const createEditorSlice: StateCreator<
 		openSecondaryInspector: (secondaryInspector) =>
 			set((state) => ({
 				editor: { ...state.editor, secondaryInspector },
+			})),
+		selectBlockForEditing: (blockId) =>
+			set((state) => ({
+				editor: {
+					...state.editor,
+					inspector: { id: blockId, type: "block" },
+					secondaryInspector: null,
+					selectedBlockId: blockId,
+					selectedBranchId: null,
+				},
+				editorGraph: { ...state.editorGraph, selectedPathId: null },
+			})),
+		selectBranchForEditing: (selectedBranchId) =>
+			set((state) => ({
+				editor: {
+					...state.editor,
+					inspector: null,
+					secondaryInspector: null,
+					selectedBlockId: null,
+					selectedBranchId,
+				},
+				editorGraph: { ...state.editorGraph, selectedPathId: null },
+			})),
+		selectPathForEditing: (selectedPathId) =>
+			set((state) => ({
+				editor: {
+					...state.editor,
+					inspector: null,
+					secondaryInspector: null,
+					selectedBlockId: null,
+					selectedBranchId: null,
+				},
+				editorGraph: { ...state.editorGraph, selectedPathId },
 			})),
 		setHighlightedBranchId: (highlightedBranchId) =>
 			set((state) => ({

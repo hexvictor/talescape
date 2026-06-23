@@ -1,7 +1,7 @@
 "use client";
 
 import type { Anchor, ResolvedTaleFragment, TalePath } from "../../../types";
-import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
+import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { NodeRenderer } from "./NodeRenderer";
 import { positionedStyle } from "./positionedStyle";
 
@@ -127,7 +127,7 @@ function PositionedFragments({
 				data-reader-role="positioned-fragment-content"
 				className="w-full"
 			>
-				<ReaderFragment
+				<TaleFragment
 					contentSized={anchor.block.size.mode === "content"}
 					fragment={fragment}
 					index={index}

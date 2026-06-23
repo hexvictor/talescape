@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AutoHideHeader } from "~/components/layout";
+import { Header } from "~/components/layout/Header";
 
 export const metadata: Metadata = {
 	title: "Taleviewer | Talescape",
@@ -12,7 +12,7 @@ export default function TaleviewerLayout({
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<>
-			<AutoHideHeader />
+			<Header autoHide />
 			{children}
 		</>
 	);

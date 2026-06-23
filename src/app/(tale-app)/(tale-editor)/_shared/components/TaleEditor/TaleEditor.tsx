@@ -1,11 +1,11 @@
 "use client";
 
-import { TaleStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleStoreContext";
+import { TaleAppStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { TaleReaderStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import { readProgress } from "~/app/(tale-app)/_shared/services/readerProgressStorage";
 import type { SavedReaderProgress, Tale } from "~/app/(tale-app)/_shared/types";
-import { createTaleEditorStoreExtension } from "../../store/taleEditorStore";
+import { TaleEditorStoreProvider } from "../../contexts/TaleEditorStoreContext";
 import { TaleEditorWorkspace } from "../TaleEditorWorkspace";
-import { TaleEditorBridge } from "./TaleEditorBridge";
 
 type TaleEditorProps = {
 	progress: SavedReaderProgress | null;
@@ -28,15 +28,15 @@ export function TaleEditor({
 	tale,
 }: TaleEditorProps): React.JSX.Element {
 	return (
-		<TaleStoreProvider
-			createExtension={createTaleEditorStoreExtension}
-			mode="edit"
-			progress={progress ?? readProgress(tale)}
-			tale={tale}
-		>
-			<TaleEditorBridge>
-				<TaleEditorWorkspace />
-			</TaleEditorBridge>
-		</TaleStoreProvider>
+		<TaleAppStoreProvider application="editor" tale={tale}>
+			<TaleEditorStoreProvider>
+				<TaleReaderStoreProvider
+					progress={progress ?? readProgress(tale)}
+					tale={tale}
+				>
+					<TaleEditorWorkspace />
+				</TaleReaderStoreProvider>
+			</TaleEditorStoreProvider>
+		</TaleAppStoreProvider>
 	);
 }

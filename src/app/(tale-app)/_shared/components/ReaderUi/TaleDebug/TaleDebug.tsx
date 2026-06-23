@@ -1,8 +1,10 @@
 "use client";
 
-import { Bug, ScanSearch, Settings2, X } from "lucide-react";
+import { Bug, X } from "lucide-react";
 import { useState } from "react";
-import { useTaleStoreShallow } from "../../../contexts/TaleStoreContext";
+import { EditorDebugHeaderActions } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorDebugHeaderActions";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import { useTaleDebugState } from "../../../hooks/store/useReaderDebugSelectors";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { DebugLocationDetails } from "./DebugLocationDetails";
@@ -27,31 +29,51 @@ const coreTabs: { id: DebugTab; label: string }[] = [
 ];
 
 /**
- * Renders diagnostics without subscribing inactive panels to scroll progress.
- *
- * @returns Compact debug launcher or the active diagnostics panel.
- *
- * @example
- * <TaleDebug />
- */
-export function TaleDebug(): React.JSX.Element {
+
+* Renders diagnostics only while reader debug visibility is enabled.
+*
+* @returns Null while hidden or the active diagnostics panel.
+*
+* @example
+* <TaleDebug />
+
+*/
+export function TaleDebug(): React.JSX.Element | null {
+	const visible = useTaleReaderStoreShallow(
+		(state) => state.ui.visibilityMode === "all" && state.ui.debugVisible,
+	);
+
+	if (!visible) return null;
+
+	return <TaleDebugContent />;
+}
+
+/**
+
+* Renders the active reader diagnostics panel and compact debug launcher.
+*
+* @returns Compact debug launcher or the expanded diagnostics panel.
+*
+* @example
+* <TaleDebugContent />
+
+*/
+function TaleDebugContent(): React.JSX.Element {
 	const { block, branch, entry, location, page, part } =
 		useReaderLocationContext();
 	const {
 		activeSegmentIndex,
 		compiled,
-		inspectorControlsOpen,
-		mode,
 		open,
-		openInspector,
 		phase,
 		seenBlocks,
 		taleTitle,
 		toggleDebug,
-		toggleInspectorControls,
 	} = useTaleDebugState();
-	const tale = useTaleStoreShallow((state) => state.tale.data);
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
 	const [activeTab, setActiveTab] = useState<DebugTab>("summary");
+
 	const currentContentsBlock = compiled?.contents
 		.flatMap((contentsPart) =>
 			contentsPart.entries.flatMap((contentsEntry) => contentsEntry.blocks),
@@ -69,15 +91,15 @@ export function TaleDebug(): React.JSX.Element {
 				data-reader-role="compact-debug-status"
 				type="button"
 				aria-label="Open reader debug"
-				className="pointer-events-auto absolute top-4 left-4 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-white/12 bg-black/72 px-3 py-2 text-left text-[#d9b56f] opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100"
+				className="pointer-events-auto absolute top-4 left-4 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100"
 				onClick={toggleDebug}
 			>
 				<Bug size={18} />
 				<span className="hidden min-w-0 sm:block">
-					<span className="block truncate font-semibold text-[11px] text-white/78">
+					<span className="block truncate font-semibold text-[11px] text-foreground/78">
 						{block?.title ?? taleTitle}
 					</span>
-					<span className="block truncate text-[10px] text-white/42">
+					<span className="block truncate text-[10px] text-foreground/42">
 						{currentPage?.label ?? page?.type ?? "No page"} ·{" "}
 						{entry?.title ?? "No entry"}
 					</span>
@@ -94,63 +116,32 @@ export function TaleDebug(): React.JSX.Element {
 	return (
 		<aside
 			data-reader-ui="true"
-			className="pointer-events-auto absolute top-4 bottom-4 left-4 z-60 flex w-[min(38rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-white/12 bg-black/80 shadow-2xl backdrop-blur-md"
+			className="pointer-events-auto absolute top-4 bottom-4 left-4 z-60 flex w-[min(38rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-foreground/12 bg-background/80 shadow-2xl backdrop-blur-md"
 		>
-			<header className="flex shrink-0 items-center justify-between gap-4 border-white/10 border-b px-4 py-3">
+			<header className="flex shrink-0 items-center justify-between gap-4 border-foreground/10 border-b px-4 py-3">
 				<div className="min-w-0">
-					<p className="font-black text-[#d9b56f] text-xs uppercase tracking-[0.2em]">
+					<p className="font-black text-primary text-xs uppercase tracking-[0.2em]">
 						Reader Debug
 					</p>
-					<p className="truncate text-white/46 text-xs">
+					<p className="truncate text-foreground/46 text-xs">
 						{block?.title ?? taleTitle}
 					</p>
 				</div>
 				<div className="flex items-center gap-1">
-					{mode === "edit" ? (
-						<>
-							<button
-								type="button"
-								aria-label="Inspect current block"
-								disabled={!location?.blockId}
-								className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white disabled:opacity-25"
-								onClick={() => {
-									if (location?.blockId) {
-										openInspector({ id: location.blockId, type: "block" });
-									}
-								}}
-							>
-								<ScanSearch size={16} />
-							</button>
-							<button
-								type="button"
-								aria-label={
-									inspectorControlsOpen
-										? "Hide inspector buttons"
-										: "Show inspector buttons"
-								}
-								className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white"
-								onClick={toggleInspectorControls}
-							>
-								<Settings2
-									className={
-										inspectorControlsOpen ? "text-[#d9b56f]" : undefined
-									}
-									size={16}
-								/>
-							</button>
-						</>
+					{isEditor ? (
+						<EditorDebugHeaderActions blockId={location?.blockId ?? null} />
 					) : null}
 					<button
 						type="button"
 						aria-label="Hide reader debug"
-						className="grid h-9 w-9 place-items-center rounded border border-white/10 text-white/55 hover:text-white"
+						className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground"
 						onClick={toggleDebug}
 					>
 						<X size={16} />
 					</button>
 				</div>
 			</header>
-			{mode === "edit" ? <GlobalSnapControls /> : null}
+			{isEditor ? <GlobalSnapControls /> : null}
 			<DebugTabs active={activeTab} onChange={setActiveTab} tabs={coreTabs} />
 			<div className="min-h-0 flex-1 overflow-y-auto p-3">
 				{activeTab === "summary" ? (

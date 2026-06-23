@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
-import { useTaleStoreInstance } from "../contexts/TaleStoreContext";
+import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
 import type { SavedReaderProgress } from "../types";
 
 const progressPersistenceDelayMs = 2000;
@@ -31,7 +31,7 @@ function isDatabaseBackedProgress(
  * usePersistReaderProgress();
  */
 export function usePersistReaderProgress(): void {
-	const store = useTaleStoreInstance();
+	const store = useTaleReaderStoreInstance();
 	const mutation = api.taleReader.progress.update.useMutation();
 	const inFlightRef = useRef(false);
 	const lastFingerprintRef = useRef("");

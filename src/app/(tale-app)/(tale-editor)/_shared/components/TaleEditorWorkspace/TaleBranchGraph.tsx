@@ -30,6 +30,7 @@ import {
 	ReactFlow,
 	type ReactFlowInstance,
 	useNodesState,
+	useUpdateNodeInternals,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -43,25 +44,31 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-	useTaleEditorStore,
-	useTaleEditorStoreShallow,
-} from "../../hooks/useTaleEditorStore";
-import type {
-	GraphPosition,
-	PathVisibilityMode,
-} from "../../store/editorStoreTypes";
-import {
 	addDraftBlock,
 	addDraftBranch,
 	connectDraftBranches,
 	moveBlockInTale,
 	reconnectDraftPath,
 } from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
+import {
+	useTaleAppStore,
+	useTaleAppStoreShallow,
+} from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import type {
 	ResolvedTaleBlock,
 	ResolvedTaleBranch,
 	TalePath,
 } from "~/app/(tale-app)/_shared/types";
+import {
+	useTaleEditorStore,
+	useTaleEditorStoreShallow,
+} from "../../hooks/useTaleEditorStore";
+import type {
+	GraphFocusMode,
+	GraphPosition,
+	PathVisibilityMode,
+} from "../../store/editorStoreTypes";
 import {
 	type PathEditorEdge,
 	TaleBranchGraphEdge,
@@ -85,6 +92,7 @@ type BranchEditorNodeData = {
 	hasSelectedBlock: boolean;
 	activeBlockId: string | null;
 	graphDirection: "horizontal" | "vertical";
+	graphDragging: boolean;
 	incomingPaths: TalePath[];
 	onAddBlock: (branchId: string) => void;
 	onHoverBlock: (blockId: string | null) => void;
@@ -114,58 +122,49 @@ const edgeTypes = { pathEditor: TaleBranchGraphEdge };
 const primaryPathTypes = new Set<PathType>(["choice", "convergence", "ending"]);
 
 /**
- * Renders the branch/path graph used by the tale editor workspace.
+ * Renders the branch and path graph used by the editing surface.
  *
- * @param props - Graph props.
- * @param props.activeBranchId - Branch currently active in the preview/reader.
- * @param props.onHighlightBranch - Receives hovered branch id for preview emphasis.
- * @param props.onSelectBlock - Receives selected block id.
- * @param props.onSelectBranch - Receives selected branch id.
- * @param props.onClearSelection - Clears the current selected editor element.
- * @param props.onSelectPath - Receives selected path id.
  * @returns React Flow branch editor graph.
  *
  * @example
- * <TaleBranchGraph activeBranchId={branchId} onSelectBlock={selectBlock} onSelectBranch={selectBranch} onHighlightBranch={setBranch} />
+ * <TaleBranchGraph />
  */
-export function TaleBranchGraph({
-	activeBranchId,
-	onHighlightBranch,
-	onClearSelection,
-	onSelectBlock,
-	onSelectBranch,
-	onSelectPath,
-	showActiveState,
-}: {
-	activeBranchId: string | null;
-	onClearSelection: () => void;
-	onHighlightBranch: (branchId: string | null) => void;
-	onSelectBlock: (blockId: string) => void;
-	onSelectBranch: (branchId: string) => void;
-	onSelectPath: (pathId: string) => void;
-	showActiveState: boolean;
-}): React.JSX.Element {
-	const tale = useTaleEditorStore((state) => state.tale.data);
-	const setData = useTaleEditorStore((state) => state.tale.setData);
-	const { selectedBlockId, selectedBranchId } = useTaleEditorStoreShallow(
-		(state) => state.editor,
+export function TaleBranchGraph(): React.JSX.Element {
+	const { setTale: setData, tale } = useTaleAppStoreShallow((state) => ({
+		setTale: state.document.setTale,
+		tale: state.document.tale,
+	}));
+	const {
+		clearGraphSelection,
+		highlightedBranchId,
+		selectBlockForEditing,
+		selectBranchForEditing,
+		selectPathForEditing,
+		selectedBlockId,
+		selectedBranchId,
+		setHighlightedBranchId,
+		setHoveredBlockId,
+	} = useTaleEditorStoreShallow((state) => state.editor);
+	const showActiveState = useTaleAppStore(
+		(state) => state.derived.isPreviewing,
 	);
-	const activeBlockId = useTaleEditorStore((state) =>
-		showActiveState ? (state.navigation.current?.blockId ?? null) : null,
-	);
-	const highlightedBranchId = useTaleEditorStore(
-		(state) => state.editor.highlightedBranchId,
-	);
-	const setHoveredBlockId = useTaleEditorStore(
-		(state) => state.editor.setHoveredBlockId,
-	);
-	const scrollApi = useTaleEditorStore((state) => state.scroll.api);
+	const { activeBlockId, activeBranchId, scrollApi } =
+		useTaleReaderStoreShallow((state) => ({
+			activeBlockId: showActiveState
+				? (state.navigation.current?.blockId ?? null)
+				: null,
+			activeBranchId: showActiveState
+				? (state.navigation.current?.branchId ?? null)
+				: null,
+			scrollApi: state.scroll.api,
+		}));
 	const {
 		branchPositions,
 		collapsedBranchIds,
 		edgeType,
 		expandBlocks,
 		expandedBranchIds,
+		focusMode,
 		graphDirection,
 		layoutRequestRevision,
 		pathVisibilityMode: visibilityMode,
@@ -175,6 +174,8 @@ export function TaleBranchGraph({
 		toggleBlocks,
 		toggleDescendants,
 		visiblePathTypes,
+		unfocusedEdgeOpacity,
+		unfocusedNodeOpacity,
 	} = useTaleEditorStoreShallow((state) => state.editorGraph);
 	const [layoutPositions, setLayoutPositions] = useState<
 		Record<string, GraphPosition>
@@ -182,6 +183,8 @@ export function TaleBranchGraph({
 	const flowInstanceRef = useRef<
 		ReactFlowInstance<BranchEditorNode, PathEditorEdge> | undefined
 	>(undefined);
+	const fittedLayoutRevisionRef = useRef<number | null>(null);
+	const resolvedLayoutRevisionRef = useRef<number | null>(null);
 	const [draggedBlock, setDraggedBlock] = useState<ResolvedTaleBlock | null>(
 		null,
 	);
@@ -215,6 +218,25 @@ export function TaleBranchGraph({
 			),
 		[graphBranchIds, tale.structure.paths],
 	);
+	const branchTopologyKey = tale.structure.branches
+		.map(
+			(branch) =>
+				`${branch.id}:${branch.parentBranchId ?? "root"}:${branch.order}:${branch.position.index}`,
+		)
+		.join("|");
+	const layoutTrigger = `${graphDirection}:${layoutRequestRevision}:${branchTopologyKey}`;
+	const graphLayoutSourceRef = useRef({
+		blocks: tale.structure.blocks,
+		branches: tale.structure.branches,
+		collapsedBranchIds,
+		expandedBranchIds,
+	});
+	graphLayoutSourceRef.current = {
+		blocks: tale.structure.blocks,
+		branches: tale.structure.branches,
+		collapsedBranchIds,
+		expandedBranchIds,
+	};
 	const handleAddBlock = useCallback(
 		(branchId: string): void => {
 			setData(addDraftBlock(tale, branchId), { reason: "editor-add-block" });
@@ -292,21 +314,30 @@ export function TaleBranchGraph({
 		[setData, tale],
 	);
 	useEffect(() => {
+		if (!layoutTrigger) return;
 		let cancelled = false;
+		const layoutSource = graphLayoutSourceRef.current;
 		layoutTaleBranchGraph({
-			branches: graphBranches,
-			blocks: tale.structure.blocks,
-			collapsedBranchIds,
-			expandedBranchIds,
+			branches: layoutSource.branches,
+			blocks: layoutSource.blocks,
+			collapsedBranchIds: layoutSource.collapsedBranchIds,
+			expandedBranchIds: layoutSource.expandedBranchIds,
 			graphDirection,
 			requestRevision: layoutRequestRevision,
 		})
 			.then((positions) => {
 				if (!cancelled) {
+					resolvedLayoutRevisionRef.current = layoutRequestRevision;
 					setLayoutPositions(positions);
-					window.requestAnimationFrame(() => {
-						flowInstanceRef.current?.fitView({ duration: 280, padding: 0.18 });
-					});
+					if (fittedLayoutRevisionRef.current !== layoutRequestRevision) {
+						fittedLayoutRevisionRef.current = layoutRequestRevision;
+						window.requestAnimationFrame(() => {
+							flowInstanceRef.current?.fitView({
+								duration: 280,
+								padding: 0.18,
+							});
+						});
+					}
 				}
 			})
 			.catch(() => {
@@ -315,34 +346,29 @@ export function TaleBranchGraph({
 		return () => {
 			cancelled = true;
 		};
-	}, [
-		collapsedBranchIds,
-		expandedBranchIds,
-		graphBranches,
-		graphDirection,
-		layoutRequestRevision,
-		tale.structure.blocks,
-	]);
+	}, [graphDirection, layoutRequestRevision, layoutTrigger]);
 
 	const compiledGraph = useMemo(
 		() =>
 			compileBranchEditorGraph({
 				activeBranchId: showActiveState ? activeBranchId : null,
 				activeBlockId,
+				allBranches: tale.structure.branches,
 				branchPositions,
 				branches: graphBranches,
 				blocks: tale.structure.blocks,
 				collapsedBranchIds,
 				edgeType,
 				expandedBranchIds,
+				focusMode,
 				graphDirection,
 				highlightedBranchId,
 				layoutPositions,
 				onAddBlock: handleAddBlock,
 				onHoverBlock: setHoveredBlockId,
-				onHover: onHighlightBranch,
-				onSelectBlock,
-				onSelectBranch,
+				onHover: setHighlightedBranchId,
+				onSelectBlock: selectBlockForEditing,
+				onSelectBranch: selectBranchForEditing,
 				onToggleBlocks: toggleBlocks,
 				onToggleDescendants: toggleDescendants,
 				onTravelToBlock: (blockId) =>
@@ -353,6 +379,8 @@ export function TaleBranchGraph({
 				selectedPathId,
 				visibilityMode,
 				visiblePathTypes,
+				unfocusedEdgeOpacity,
+				unfocusedNodeOpacity,
 			}),
 		[
 			activeBranchId,
@@ -361,57 +389,94 @@ export function TaleBranchGraph({
 			collapsedBranchIds,
 			edgeType,
 			expandedBranchIds,
+			focusMode,
 			graphBranches,
 			graphDirection,
 			graphPaths,
 			handleAddBlock,
 			highlightedBranchId,
 			layoutPositions,
-			onHighlightBranch,
-			onSelectBlock,
-			onSelectBranch,
+			selectBlockForEditing,
+			selectBranchForEditing,
 			scrollApi,
 			selectedBranchId,
 			selectedBlockId,
 			selectedPathId,
 			setHoveredBlockId,
+			setHighlightedBranchId,
 			showActiveState,
 			tale.structure.blocks,
+			tale.structure.branches,
 			toggleBlocks,
 			toggleDescendants,
 			visibilityMode,
 			visiblePathTypes,
+			unfocusedEdgeOpacity,
+			unfocusedNodeOpacity,
 		],
 	);
 	const [nodes, setNodes, onNodesChange] = useNodesState<BranchEditorNode>(
 		compiledGraph.nodes,
 	);
-	const appliedLayoutPositionsRef = useRef(layoutPositions);
+	const [renderedEdges, setRenderedEdges] = useState<PathEditorEdge[]>(
+		compiledGraph.edges,
+	);
+	const draggingBranchIdRef = useRef<string | null>(null);
+	const appliedLayoutRevisionRef = useRef<number | null>(null);
 	useEffect(() => {
-		const layoutChanged = appliedLayoutPositionsRef.current !== layoutPositions;
+		const applyLayoutToExistingNodes =
+			appliedLayoutRevisionRef.current !== resolvedLayoutRevisionRef.current;
 		setNodes((currentNodes) => {
 			const currentNodeById = new Map(
 				currentNodes.map((node) => [node.id, node]),
 			);
 			return compiledGraph.nodes.map((node) => {
 				const currentNode = currentNodeById.get(node.id);
+				if (draggingBranchIdRef.current === node.id && currentNode) {
+					return currentNode;
+				}
 				return {
+					...currentNode,
 					...node,
+					data: {
+						...node.data,
+						graphDragging: draggingBranchIdRef.current !== null,
+					},
 					position:
-						layoutChanged || !currentNode
+						applyLayoutToExistingNodes || !currentNode
 							? node.position
 							: currentNode.position,
 				};
 			});
 		});
-		appliedLayoutPositionsRef.current = layoutPositions;
-	}, [compiledGraph.nodes, layoutPositions, setNodes]);
+		appliedLayoutRevisionRef.current = resolvedLayoutRevisionRef.current;
+	}, [compiledGraph.nodes, setNodes]);
+	useEffect(() => {
+		const compiledEdgeIds = new Set(compiledGraph.edges.map((edge) => edge.id));
+		setRenderedEdges((currentEdges) =>
+			currentEdges.filter((edge) => compiledEdgeIds.has(edge.id)),
+		);
+		let measurementFrame = 0;
+		const mountFrame = window.requestAnimationFrame(() => {
+			measurementFrame = window.requestAnimationFrame(() => {
+				setRenderedEdges(
+					draggingBranchIdRef.current
+						? setGraphEdgesDragging(compiledGraph.edges, true)
+						: compiledGraph.edges,
+				);
+			});
+		});
+		return () => {
+			window.cancelAnimationFrame(mountFrame);
+			window.cancelAnimationFrame(measurementFrame);
+		};
+	}, [compiledGraph.edges]);
 
 	return (
 		<section
 			data-reader-component="TaleBranchGraph"
 			data-reader-role="branch-graph"
-			className="relative h-full min-h-0 flex-1 overflow-hidden bg-[#18181b]"
+			className="relative h-full min-h-0 flex-1 overflow-hidden bg-muted/40"
 		>
 			<DndContext
 				sensors={sensors}
@@ -422,7 +487,7 @@ export function TaleBranchGraph({
 					type="button"
 					data-reader-component="TaleBranchGraph"
 					data-reader-role="add-branch-control"
-					className="absolute top-3 right-3 z-20 flex h-9 items-center gap-2 rounded border border-white/12 bg-black/76 px-3 text-white/72 text-xs hover:bg-white/8 hover:text-white"
+					className="absolute top-3 right-3 z-20 flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/76 px-3 text-foreground/72 text-xs hover:bg-foreground/8 hover:text-foreground"
 					onClick={handleAddBranch}
 				>
 					<Plus size={14} />
@@ -432,7 +497,7 @@ export function TaleBranchGraph({
 					type="button"
 					data-reader-component="TaleBranchGraph"
 					data-reader-role="reset-layout-control"
-					className="absolute top-3 right-32 z-20 grid h-9 w-9 place-items-center rounded border border-white/12 bg-black/76 text-white/72 hover:bg-white/8 hover:text-white"
+					className="absolute top-3 right-32 z-20 grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
 					title="Reorganize branches"
 					onClick={resetLayout}
 				>
@@ -441,43 +506,71 @@ export function TaleBranchGraph({
 				<ReactFlow<BranchEditorNode, PathEditorEdge>
 					fitView
 					edgesReconnectable
-					edges={compiledGraph.edges}
+					edges={renderedEdges}
 					nodes={nodes}
 					nodeDragThreshold={1}
 					nodeTypes={nodeTypes}
 					edgeTypes={edgeTypes}
 					nodesDraggable
+					onlyRenderVisibleElements
 					onEdgeClick={(event, edge) => {
+						if (draggingBranchIdRef.current) return;
 						event.stopPropagation();
-						onSelectPath(edge.id);
+						selectPathForEditing(edge.id);
 					}}
 					onConnect={handleConnect}
 					onNodesChange={onNodesChange}
 					onInit={(instance) => {
 						flowInstanceRef.current = instance;
 					}}
-					onNodeDragStop={(_, node) =>
-						setBranchPosition(node.id, node.position)
-					}
-					onNodeMouseEnter={(_, node) => onHighlightBranch(node.id)}
-					onNodeMouseLeave={() => onHighlightBranch(null)}
-					onPaneClick={onClearSelection}
+					onNodeDragStart={(_, node) => {
+						draggingBranchIdRef.current = node.id;
+						setHighlightedBranchId(null);
+						setHoveredBlockId(null);
+						setNodes((currentNodes) =>
+							currentNodes.map((currentNode) => ({
+								...currentNode,
+								data: { ...currentNode.data, graphDragging: true },
+							})),
+						);
+						setRenderedEdges((currentEdges) =>
+							setGraphEdgesDragging(currentEdges, true),
+						);
+					}}
+					onNodeDragStop={(_, node) => {
+						draggingBranchIdRef.current = null;
+						setNodes((currentNodes) =>
+							currentNodes.map((currentNode) => ({
+								...currentNode,
+								data: { ...currentNode.data, graphDragging: false },
+							})),
+						);
+						setRenderedEdges(compiledGraph.edges);
+						setBranchPosition(node.id, node.position);
+					}}
+					onNodeMouseEnter={(_, node) => {
+						if (!draggingBranchIdRef.current) setHighlightedBranchId(node.id);
+					}}
+					onNodeMouseLeave={() => {
+						if (!draggingBranchIdRef.current) setHighlightedBranchId(null);
+					}}
+					onPaneClick={clearGraphSelection}
 					onReconnect={handleReconnect}
 				>
-					<Background color="rgba(255,255,255,0.16)" gap={24} />
-					<Controls className="talescape-flow-controls [&_.react-flow__controls-button]:!border-white/10 [&_.react-flow__controls-button]:!bg-black [&_.react-flow__controls-button]:!text-white" />
+					<Background color="var(--muted-foreground)" gap={24} />
+					<Controls className="talescape-flow-controls [&_.react-flow__controls-button]:!border-foreground/10 [&_.react-flow__controls-button]:!bg-background [&_.react-flow__controls-button]:!text-foreground" />
 					<MiniMap
 						pannable
 						zoomable
-						bgColor="#050506"
-						maskColor="rgba(217,181,111,0.16)"
+						bgColor="var(--background)"
+						maskColor="color-mix(in oklab, var(--primary) 16%, transparent)"
 						nodeBorderRadius={8}
 						nodeColor={(node) =>
-							node.id === selectedBranchId ? "#67e8f9" : "#d9b56f"
+							node.id === selectedBranchId ? "var(--chart-2)" : "var(--primary)"
 						}
-						nodeStrokeColor={() => "#f8fafc"}
+						nodeStrokeColor={() => "var(--foreground)"}
 						nodeStrokeWidth={2}
-						className="talescape-flow-minimap !bg-black/80"
+						className="talescape-flow-minimap !bg-background/80"
 					/>
 				</ReactFlow>
 				<DragOverlay>
@@ -486,29 +579,29 @@ export function TaleBranchGraph({
 			</DndContext>
 			<style jsx global>{`
 				.talescape-flow-controls .react-flow__controls-button {
-					background: #050506 !important;
-					border-color: rgba(255, 255, 255, 0.16) !important;
-					color: #f8fafc !important;
-					fill: #f8fafc !important;
+					background: var(--background) !important;
+					border-color: var(--border) !important;
+					color: var(--foreground) !important;
+					fill: var(--foreground) !important;
 				}
 				.talescape-flow-controls .react-flow__controls-button svg {
-					color: #f8fafc !important;
-					fill: #f8fafc !important;
-					stroke: #f8fafc !important;
+					color: var(--foreground) !important;
+					fill: var(--foreground) !important;
+					stroke: var(--foreground) !important;
 				}
 				.talescape-flow-controls .react-flow__controls-button:hover {
-					background: rgba(255, 255, 255, 0.12) !important;
+					background: var(--accent) !important;
 				}
 				.talescape-flow-minimap {
-					background: rgba(0, 0, 0, 0.82) !important;
-					border: 1px solid rgba(255, 255, 255, 0.14);
+					background: color-mix(in oklab, var(--background) 88%, transparent) !important;
+					border: 1px solid var(--border);
 					border-radius: 10px;
 				}
 				.talescape-flow-minimap .react-flow__minimap-mask {
-					fill: rgba(217, 181, 111, 0.14) !important;
+					fill: color-mix(in oklab, var(--primary) 14%, transparent) !important;
 				}
 				.talescape-flow-minimap .react-flow__minimap-node {
-					stroke: rgba(248, 250, 252, 0.82) !important;
+					stroke: var(--foreground) !important;
 					stroke-width: 2px !important;
 				}
 				.talescape-animated-edge {
@@ -536,12 +629,14 @@ export function TaleBranchGraph({
 function compileBranchEditorGraph({
 	activeBranchId,
 	activeBlockId,
+	allBranches,
 	branchPositions,
 	branches,
 	blocks,
 	collapsedBranchIds,
 	edgeType,
 	expandedBranchIds,
+	focusMode,
 	graphDirection,
 	highlightedBranchId,
 	layoutPositions,
@@ -559,15 +654,19 @@ function compileBranchEditorGraph({
 	selectedPathId,
 	visibilityMode,
 	visiblePathTypes,
+	unfocusedEdgeOpacity,
+	unfocusedNodeOpacity,
 }: {
 	activeBranchId: string | null;
 	activeBlockId: string | null;
+	allBranches: ResolvedTaleBranch[];
 	branchPositions: Record<string, GraphPosition>;
 	branches: ResolvedTaleBranch[];
 	blocks: ResolvedTaleBlock[];
 	collapsedBranchIds: Set<string>;
 	edgeType: string;
 	expandedBranchIds: Set<string>;
+	focusMode: GraphFocusMode;
 	graphDirection: "horizontal" | "vertical";
 	highlightedBranchId: string | null;
 	layoutPositions: Record<string, GraphPosition>;
@@ -585,8 +684,10 @@ function compileBranchEditorGraph({
 	selectedPathId: string | null;
 	visibilityMode: PathVisibilityMode;
 	visiblePathTypes: Set<PathType>;
+	unfocusedEdgeOpacity: number;
+	unfocusedNodeOpacity: number;
 }): { edges: PathEditorEdge[]; nodes: BranchEditorNode[] } {
-	const branchById = new Map(branches.map((branch) => [branch.id, branch]));
+	const branchById = new Map(allBranches.map((branch) => [branch.id, branch]));
 	const blocksByBranchId = new Map<string, ResolvedTaleBlock[]>();
 	for (const block of blocks) {
 		const branchBlocks = blocksByBranchId.get(block.branchId) ?? [];
@@ -610,10 +711,17 @@ function compileBranchEditorGraph({
 		incomingPathsByBranchId.set(path.toBranchId, incomingPaths);
 	}
 	const branchIdsWithChildren = new Set(
-		branches.flatMap((branch) =>
+		allBranches.flatMap((branch) =>
 			branch.parentBranchId ? [branch.parentBranchId] : [],
 		),
 	);
+	const focusedBranchIds = getFocusedBranchIds({
+		branchById,
+		focusMode,
+		highlightedBranchId,
+		paths: visiblePaths,
+	});
+	const focusActive = focusedBranchIds !== null;
 
 	const nodes = branches.map((branch, index): BranchEditorNode => {
 		const depth = getBranchDepth(branch, branchById);
@@ -631,6 +739,7 @@ function compileBranchEditorGraph({
 				blocksExpanded: expandedBranchIds.has(branch.id),
 				descendantsCollapsed: collapsedBranchIds.has(branch.id),
 				graphDirection,
+				graphDragging: false,
 				hasDescendants: branchIdsWithChildren.has(branch.id),
 				hasSelectedBlock: branchBlocks.some(
 					(block) => block.id === selectedBlockId,
@@ -649,6 +758,13 @@ function compileBranchEditorGraph({
 				selectedBranchId,
 			},
 			id: branch.id,
+			style: {
+				opacity:
+					focusActive && !focusedBranchIds?.has(branch.id)
+						? unfocusedNodeOpacity
+						: 1,
+				transition: "opacity 140ms ease",
+			},
 			position:
 				branchPositions[branch.id] ??
 				layoutPositions[branch.id] ??
@@ -664,8 +780,12 @@ function compileBranchEditorGraph({
 			(path) =>
 				branchIds.has(path.fromBranchId) && branchIds.has(path.toBranchId),
 		)
-		.map(
-			(path): PathEditorEdge => ({
+		.map((path): PathEditorEdge => {
+			const focused =
+				!focusActive ||
+				(Boolean(focusedBranchIds?.has(path.fromBranchId)) &&
+					Boolean(focusedBranchIds?.has(path.toBranchId)));
+			return {
 				data: {
 					animated:
 						highlightedBranchId === path.fromBranchId ||
@@ -692,20 +812,90 @@ function compileBranchEditorGraph({
 				source: path.fromBranchId,
 				sourceHandle: `source-path-${path.id}`,
 				style: {
+					opacity: focused ? 1 : unfocusedEdgeOpacity,
 					stroke:
 						path.id === selectedPathId
 							? "#67e8f9"
 							: getPathStrokeColor(path.type),
 					strokeWidth: path.id === selectedPathId ? 3 : 2,
+					transition: "opacity 140ms ease",
 				},
 				target: path.toBranchId,
 				targetHandle: `target-path-${path.id}`,
 				type: "pathEditor",
 				reconnectable: true,
-			}),
-		);
+			};
+		});
 
 	return { edges, nodes };
+}
+
+/**
+ * Resolves branches that remain emphasized while one graph node is hovered.
+ *
+ * @param options - Graph focus inputs.
+ * @returns Focused branch ids, or null when focus dimming is inactive.
+ *
+ * @example
+ * const focused = getFocusedBranchIds({ branchById, focusMode, highlightedBranchId, paths });
+ */
+function getFocusedBranchIds({
+	branchById,
+	focusMode,
+	highlightedBranchId,
+	paths,
+}: {
+	branchById: Map<string, ResolvedTaleBranch>;
+	focusMode: GraphFocusMode;
+	highlightedBranchId: string | null;
+	paths: TalePath[];
+}): Set<string> | null {
+	if (!highlightedBranchId || focusMode === "off") return null;
+	const focused = new Set([highlightedBranchId]);
+	if (focusMode === "direct") {
+		for (const path of paths) {
+			if (path.fromBranchId === highlightedBranchId)
+				focused.add(path.toBranchId);
+			if (path.toBranchId === highlightedBranchId)
+				focused.add(path.fromBranchId);
+		}
+		return focused;
+	}
+
+	let branch = branchById.get(highlightedBranchId);
+	while (branch?.parentBranchId) {
+		focused.add(branch.parentBranchId);
+		branch = branchById.get(branch.parentBranchId);
+	}
+	return focused;
+}
+
+/**
+ * Applies lightweight, non-highlighted rendering to graph edges during dragging.
+ *
+ * @param edges - Current controlled React Flow edges.
+ * @param dragging - Whether a branch node is being moved.
+ * @returns Edges configured for normal or drag-time rendering.
+ *
+ * @example
+ * const lightweightEdges = setGraphEdgesDragging(edges, true);
+ */
+function setGraphEdgesDragging(
+	edges: PathEditorEdge[],
+	dragging: boolean,
+): PathEditorEdge[] {
+	if (!dragging) return edges;
+	return edges.map((edge) => ({
+		...edge,
+		data: edge.data ? { ...edge.data, dragging: true } : edge.data,
+		markerEnd:
+			edge.markerEnd && typeof edge.markerEnd === "object"
+				? {
+						...edge.markerEnd,
+						color: getPathStrokeColor(edge.data?.pathType ?? "choice"),
+					}
+				: edge.markerEnd,
+	}));
 }
 
 /**
@@ -720,6 +910,7 @@ function compileBranchEditorGraph({
 function BranchEditorNodeView({
 	data,
 }: NodeProps<BranchEditorNode>): React.JSX.Element {
+	const updateNodeInternals = useUpdateNodeInternals();
 	const { isOver, setNodeRef } = useDroppable({
 		id: `branch-drop-${data.branch.id}`,
 		data: {
@@ -728,19 +919,31 @@ function BranchEditorNodeView({
 		} satisfies DroppableBranchData,
 	});
 	const blocksVisible = data.blocksExpanded && !data.descendantsCollapsed;
+	const pathHandleLayoutRevision = `${data.graphDirection}:${[
+		...data.incomingPaths.map((path) => `target:${path.id}:${path.type}`),
+		...data.outgoingPaths.map((path) => `source:${path.id}:${path.type}`),
+	].join("|")}`;
+
+	useEffect(() => {
+		if (pathHandleLayoutRevision) updateNodeInternals(data.branch.id);
+	}, [data.branch.id, pathHandleLayoutRevision, updateNodeInternals]);
 
 	return (
 		<div
 			data-reader-component="BranchEditorNodeView"
 			data-reader-role="branch-node"
-			className={`relative rounded-lg border bg-black/88 p-3 text-white shadow-xl backdrop-blur transition-[width,border-color,box-shadow] hover:border-fuchsia-300 hover:shadow-fuchsia-300/15 ${
-				data.descendantsCollapsed ? "w-64" : "w-72"
-			} ${
-				data.selectedBranchId === data.branch.id || data.hasSelectedBlock
-					? "border-[#d9b56f] shadow-[#d9b56f]/15"
-					: data.active
-						? "border-violet-300 shadow-violet-300/15"
-						: "border-white/12"
+			className={`relative rounded-lg border bg-background/88 p-3 text-foreground ${
+				data.graphDragging
+					? "shadow-none"
+					: "shadow-xl backdrop-blur transition-[width,border-color,box-shadow] hover:border-fuchsia-300 hover:shadow-fuchsia-300/15"
+			} ${data.descendantsCollapsed ? "w-64" : "w-72"} ${
+				data.graphDragging
+					? "border-foreground/12"
+					: data.selectedBranchId === data.branch.id || data.hasSelectedBlock
+						? "border-primary shadow-[#d9b56f]/15"
+						: data.active
+							? "border-violet-300 shadow-violet-300/15"
+							: "border-foreground/12"
 			}`}
 			tabIndex={-1}
 			onClick={() => data.onSelectBranch(data.branch.id)}
@@ -749,8 +952,12 @@ function BranchEditorNodeView({
 				event.preventDefault();
 				data.onSelectBranch(data.branch.id);
 			}}
-			onMouseEnter={() => data.onHover(data.branch.id)}
-			onMouseLeave={() => data.onHover(null)}
+			onMouseEnter={() => {
+				if (!data.graphDragging) data.onHover(data.branch.id);
+			}}
+			onMouseLeave={() => {
+				if (!data.graphDragging) data.onHover(null);
+			}}
 		>
 			{data.incomingPaths.map((path) => (
 				<PathHandle
@@ -778,12 +985,16 @@ function BranchEditorNodeView({
 						? Position.Right
 						: Position.Bottom
 				}
-				className="!h-2.5 !w-2.5 !border-2 !border-black/80 !bg-white/35 hover:!scale-150 hover:!bg-white transition-transform"
+				className={`!h-2.5 !w-2.5 !border-2 !border-background/80 !bg-foreground/35 transition-transform ${
+					data.graphDragging
+						? "pointer-events-none"
+						: "hover:!scale-150 hover:!bg-foreground"
+				}`}
 			/>
 			<header className="flex items-start gap-2">
 				<button
 					type="button"
-					className="mt-0.5 grid h-7 w-7 place-items-center rounded border border-white/10 text-white/70 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-25"
+					className="mt-0.5 grid h-7 w-7 place-items-center rounded border border-foreground/10 text-foreground/70 hover:bg-foreground/8 disabled:cursor-not-allowed disabled:opacity-25"
 					aria-label={
 						data.descendantsCollapsed
 							? "Show descendant branches"
@@ -806,22 +1017,24 @@ function BranchEditorNodeView({
 					}}
 				>
 					<p className="truncate font-semibold text-sm">{data.branch.title}</p>
-					<p className="truncate text-white/45 text-xs">{data.branch.path}</p>
+					<p className="truncate text-foreground/45 text-xs">
+						{data.branch.path}
+					</p>
 				</button>
 				<button
 					type="button"
-					className="branch-node-drag-handle grid h-7 w-7 cursor-grab place-items-center rounded border border-white/10 text-white/60 hover:bg-white/8 hover:text-white active:cursor-grabbing"
+					className="branch-node-drag-handle grid h-7 w-7 cursor-grab place-items-center rounded border border-foreground/10 text-foreground/60 hover:bg-foreground/8 hover:text-foreground active:cursor-grabbing"
 					title="Move branch"
 					onClick={(event) => event.stopPropagation()}
 				>
 					<GripVertical size={14} />
 				</button>
 			</header>
-			<div className="mt-3 flex items-center justify-between rounded border border-white/8 bg-white/[0.025] px-2 py-1.5 text-white/45 text-xs">
+			<div className="mt-3 flex items-center justify-between rounded border border-foreground/8 bg-foreground/[0.025] px-2 py-1.5 text-foreground/45 text-xs">
 				<span>{data.blocks.length} blocks</span>
 				<button
 					type="button"
-					className="grid h-6 w-6 place-items-center rounded text-white/65 hover:bg-white/8 hover:text-white disabled:opacity-25"
+					className="grid h-6 w-6 place-items-center rounded text-foreground/65 hover:bg-foreground/8 hover:text-foreground disabled:opacity-25"
 					aria-label={blocksVisible ? "Collapse blocks" : "Expand blocks"}
 					disabled={data.descendantsCollapsed}
 					onClick={(event) => {
@@ -840,7 +1053,9 @@ function BranchEditorNodeView({
 				<ul
 					ref={setNodeRef}
 					className={`nodrag nowheel mt-3 max-h-64 space-y-1 overflow-y-auto rounded-md border border-transparent p-1 ${
-						isOver ? "border-cyan-300/55 bg-cyan-300/8" : ""
+						isOver && !data.graphDragging
+							? "border-cyan-300/55 bg-cyan-300/8"
+							: ""
 					}`}
 					onWheel={(event) => event.stopPropagation()}
 				>
@@ -855,6 +1070,7 @@ function BranchEditorNodeView({
 								branchId={data.branch.id}
 								index={index}
 								active={data.activeBlockId === block.id}
+								graphDragging={data.graphDragging}
 								selected={data.selectedBlockId === block.id}
 								onHoverBlock={data.onHoverBlock}
 								onSelectBlock={data.onSelectBlock}
@@ -868,7 +1084,7 @@ function BranchEditorNodeView({
 					>
 						<button
 							type="button"
-							className="flex w-full items-center justify-center gap-2 rounded border border-white/16 border-dashed bg-white/[0.025] px-2 py-1.5 text-white/55 text-xs hover:border-[#d9b56f]/60 hover:bg-[#d9b56f]/10 hover:text-[#f4d99b]"
+							className="flex w-full items-center justify-center gap-2 rounded border border-foreground/16 border-dashed bg-foreground/[0.025] px-2 py-1.5 text-foreground/55 text-xs hover:border-primary/60 hover:bg-primary/10 hover:text-primary"
 							onClick={(event) => {
 								event.stopPropagation();
 								data.onAddBlock(data.branch.id);
@@ -927,7 +1143,7 @@ function PathHandle({
 			id={`${type}-path-${path.id}`}
 			type={type}
 			position={position}
-			className="!h-3.5 !w-3.5 !border-2 !border-black/80 hover:!scale-150 hover:!brightness-125 transition-transform duration-150"
+			className="!h-3.5 !w-3.5 !border-2 !border-background/80 hover:!scale-150 hover:!brightness-125 transition-transform duration-150"
 			style={{
 				...style,
 				background: getPathStrokeColor(path.type),
@@ -982,8 +1198,10 @@ function getPathHandleOffset(index: number, total: number): number {
  * Renders one sortable block row inside a branch node list.
  *
  * @param props - Sortable block row props.
+ * @param props.active - Whether the preview currently displays this block.
  * @param props.block - Block represented by the row.
  * @param props.branchId - Branch containing the block.
+ * @param props.graphDragging - Whether a branch node is currently moving.
  * @param props.index - Current block index inside its branch.
  * @param props.onHoverBlock - Receives hovered block id for preview highlighting.
  * @param props.onSelectBlock - Receives selected block id.
@@ -998,6 +1216,7 @@ function SortableBlockRow({
 	branchId,
 	index,
 	active,
+	graphDragging,
 	onHoverBlock,
 	onSelectBlock,
 	onTravelToBlock,
@@ -1006,6 +1225,7 @@ function SortableBlockRow({
 	active: boolean;
 	block: ResolvedTaleBlock;
 	branchId: string;
+	graphDragging: boolean;
 	index: number;
 	onHoverBlock: (blockId: string | null) => void;
 	onSelectBlock: (blockId: string) => void;
@@ -1042,22 +1262,31 @@ function SortableBlockRow({
 		>
 			<button
 				type="button"
-				className={blockRowClassName(selected, active, isDragging)}
+				className={blockRowClassName(
+					selected,
+					active,
+					isDragging,
+					graphDragging,
+				)}
 				onClick={(event) => {
 					event.stopPropagation();
 					onSelectBlock(block.id);
 				}}
-				onMouseEnter={() => onHoverBlock(block.id)}
-				onMouseLeave={() => onHoverBlock(null)}
+				onMouseEnter={() => {
+					if (!graphDragging) onHoverBlock(block.id);
+				}}
+				onMouseLeave={() => {
+					if (!graphDragging) onHoverBlock(null);
+				}}
 				{...attributes}
 				{...listeners}
 			>
 				<span className="min-w-0 flex-1 truncate">{block.title}</span>
-				<span className="ml-2 text-white/38">#{index + 1}</span>
+				<span className="ml-2 text-foreground/38">#{index + 1}</span>
 			</button>
 			<button
 				type="button"
-				className="grid h-7 w-7 shrink-0 place-items-center rounded border border-white/10 text-white/55 hover:bg-white/10 hover:text-white"
+				className="grid h-7 w-7 shrink-0 place-items-center rounded border border-foreground/10 text-foreground/55 hover:bg-foreground/10 hover:text-foreground"
 				title="Travel to block"
 				onPointerDown={(event) => event.stopPropagation()}
 				onClick={(event) => {
@@ -1090,7 +1319,7 @@ function DraggedBlockOverlay({
 		<div
 			data-reader-component="DraggedBlockOverlay"
 			data-reader-role="drag-preview"
-			className="w-64 rounded border border-cyan-300 bg-black/92 px-2 py-1.5 text-left text-white text-xs shadow-2xl shadow-cyan-300/20"
+			className="w-64 rounded border border-cyan-300 bg-background/92 px-2 py-1.5 text-left text-foreground text-xs shadow-2xl shadow-cyan-300/20"
 		>
 			<p className="truncate">{block.title}</p>
 		</div>
@@ -1101,7 +1330,9 @@ function DraggedBlockOverlay({
  * Resolves sortable block row classes.
  *
  * @param selected - Whether the row is selected.
+ * @param active - Whether the preview currently displays the row's block.
  * @param dragging - Whether the row is actively being dragged.
+ * @param graphDragging - Whether a branch node is currently moving.
  * @returns Class name for a sortable block row.
  *
  * @example
@@ -1111,7 +1342,11 @@ function blockRowClassName(
 	selected: boolean,
 	active: boolean,
 	dragging: boolean,
+	graphDragging: boolean,
 ): string {
+	if (graphDragging) {
+		return "flex min-w-0 flex-1 cursor-default items-center justify-between rounded border border-foreground/8 bg-foreground/[0.035] px-2 py-1.5 text-left text-xs";
+	}
 	if (selected) {
 		return "flex min-w-0 flex-1 cursor-grab items-center justify-between rounded border border-cyan-300 bg-cyan-300/12 px-2 py-1.5 text-left text-xs hover:border-emerald-300/80 hover:bg-emerald-300/10 active:cursor-grabbing";
 	}
@@ -1121,7 +1356,7 @@ function blockRowClassName(
 	if (dragging) {
 		return "flex min-w-0 flex-1 cursor-grabbing items-center justify-between rounded border border-cyan-300/70 bg-cyan-300/10 px-2 py-1.5 text-left text-xs";
 	}
-	return "flex min-w-0 flex-1 cursor-grab items-center justify-between rounded border border-white/8 bg-white/[0.035] px-2 py-1.5 text-left text-xs hover:border-emerald-300/80 hover:bg-emerald-300/10 active:cursor-grabbing";
+	return "flex min-w-0 flex-1 cursor-grab items-center justify-between rounded border border-foreground/8 bg-foreground/[0.035] px-2 py-1.5 text-left text-xs hover:border-emerald-300/80 hover:bg-emerald-300/10 active:cursor-grabbing";
 }
 
 /**

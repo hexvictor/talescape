@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useTaleStore } from "../../../../contexts/TaleStoreContext";
+import { useTaleReaderStore } from "../../../../contexts/TaleReaderStoreContext";
 import type {
 	Anchor,
 	ResolvedTaleBlock,
@@ -121,7 +121,7 @@ export function NavigationPanel({
  * @returns Progress diagnostic cards.
  */
 export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
-	const progress = useTaleStore((state) => state.progress.data);
+	const progress = useTaleReaderStore((state) => state.progress.data);
 	return (
 		<div
 			data-reader-component="ProgressDebugPanel"
@@ -191,15 +191,15 @@ export function SegmentsPanel({
 					className={clsx(
 						"grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded border px-3 py-2 text-xs",
 						segment.index === activeIndex
-							? "border-[#d9b56f]/50 bg-[#d9b56f]/10"
-							: "border-white/8 bg-white/[0.035]",
+							? "border-primary/50 bg-primary/10"
+							: "border-foreground/8 bg-foreground/[0.035]",
 					)}
 				>
-					<span className="font-bold text-white/42">{segment.index}</span>
-					<span className="truncate text-white/76">
+					<span className="font-bold text-foreground/42">{segment.index}</span>
+					<span className="truncate text-foreground/76">
 						{getSegmentLabel(segment)}
 					</span>
-					<span className="text-white/42">
+					<span className="text-foreground/42">
 						{segment.type} / {Math.round(segment.length)}
 					</span>
 				</div>
@@ -233,12 +233,14 @@ export function AnchorsPanel({
 					className={clsx(
 						"rounded border px-3 py-2 text-xs",
 						anchor.block.id === activeBlockId
-							? "border-[#d9b56f]/50 bg-[#d9b56f]/10"
-							: "border-white/8 bg-white/[0.035]",
+							? "border-primary/50 bg-primary/10"
+							: "border-foreground/8 bg-foreground/[0.035]",
 					)}
 				>
-					<p className="font-semibold text-white/78">{anchor.block.title}</p>
-					<p className="mt-1 text-white/43">
+					<p className="font-semibold text-foreground/78">
+						{anchor.block.title}
+					</p>
+					<p className="mt-1 text-foreground/43">
 						{Math.round(anchor.point.x)}, {Math.round(anchor.point.y)} /{" "}
 						{Math.round(anchor.width)} x {Math.round(anchor.height)} / scroll{" "}
 						{Math.round(anchor.scroll)}

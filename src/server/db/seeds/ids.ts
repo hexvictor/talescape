@@ -29,7 +29,7 @@ const selectedUserIds = seedUserIds[seedTarget];
 
 export const userId1 = process.env.SEED_USER_1_ID ?? selectedUserIds.userId1;
 
-export const userId2 = process.env.SEED_USER_2_ID ?? selectedUserIds.userId2;
+const userId2 = process.env.SEED_USER_2_ID ?? selectedUserIds.userId2;
 
 export const seedUserRecords = [
 	{
