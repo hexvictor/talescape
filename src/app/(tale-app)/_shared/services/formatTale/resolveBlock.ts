@@ -123,6 +123,9 @@ export function resolveBlock(
 			transitionAnimations: {
 				entering: resolveAnimations(block.transition.animations.entering),
 				leaving: resolveAnimations(block.transition.animations.leaving),
+				previousVisible: resolveAnimations(
+					block.transition.animations.previousVisible,
+				),
 			},
 		},
 	};

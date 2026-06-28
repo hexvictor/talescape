@@ -1,6 +1,6 @@
 "use client";
 
-import type { Anchor, ResolvedTaleFragment, TalePath } from "../../../types";
+import type { Anchor, ResolvedTaleFragment } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { positionedStyle } from "./positionedStyle";
 
@@ -15,10 +15,8 @@ import { positionedStyle } from "./positionedStyle";
  */
 export function FixedFragments({
 	anchor,
-	onChoosePath,
 }: {
 	anchor: Anchor;
-	onChoosePath: (path: TalePath) => void;
 }): React.JSX.Element | null {
 	if (anchor.block.fixedFragments.length === 0) return null;
 	const clipped = anchor.block.fixedFragments.filter(
@@ -35,7 +33,6 @@ export function FixedFragments({
 					anchor={anchor}
 					fragments={clipped}
 					overflow="hidden"
-					onChoosePath={onChoosePath}
 				/>
 			) : null}
 			{overflowing.length > 0 ? (
@@ -43,7 +40,6 @@ export function FixedFragments({
 					anchor={anchor}
 					fragments={overflowing}
 					overflow="visible"
-					onChoosePath={onChoosePath}
 				/>
 			) : null}
 		</>
@@ -62,12 +58,10 @@ export function FixedFragments({
 function FixedFragmentLayer({
 	anchor,
 	fragments,
-	onChoosePath,
 	overflow,
 }: {
 	anchor: Anchor;
 	fragments: ResolvedTaleFragment[];
-	onChoosePath: (path: TalePath) => void;
 	overflow: "hidden" | "visible";
 }): React.JSX.Element {
 	return (
@@ -106,11 +100,7 @@ function FixedFragmentLayer({
 						data-reader-role="fixed-fragment-content"
 						className="w-full"
 					>
-						<TaleFragment
-							fragment={fragment}
-							index={index}
-							onChoosePath={onChoosePath}
-						/>
+						<TaleFragment fragment={fragment} index={index} />
 					</div>
 				</div>
 			))}

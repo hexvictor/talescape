@@ -1,10 +1,14 @@
 "use client";
 
+import clsx from "clsx";
 import { Bug, X } from "lucide-react";
 import { useState } from "react";
 import { EditorDebugHeaderActions } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorDebugHeaderActions";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
-import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
+import {
+	useTaleReaderStore,
+	useTaleReaderStoreShallow,
+} from "../../../contexts/TaleReaderStoreContext";
 import { useTaleDebugState } from "../../../hooks/store/useReaderDebugSelectors";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { DebugLocationDetails } from "./DebugLocationDetails";
@@ -72,6 +76,9 @@ function TaleDebugContent(): React.JSX.Element {
 	} = useTaleDebugState();
 	const tale = useTaleAppStore((state) => state.document.tale);
 	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
+	const readerStatusVisible = useTaleReaderStore(
+		(state) => state.ui.readerStatusVisible,
+	);
 	const [activeTab, setActiveTab] = useState<DebugTab>("summary");
 
 	const currentContentsBlock = compiled?.contents
@@ -91,7 +98,10 @@ function TaleDebugContent(): React.JSX.Element {
 				data-reader-role="compact-debug-status"
 				type="button"
 				aria-label="Open reader debug"
-				className="pointer-events-auto absolute top-4 left-4 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100"
+				className={clsx(
+					"pointer-events-auto absolute right-2 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					readerStatusVisible ? "bottom-12" : "bottom-2",
+				)}
 				onClick={toggleDebug}
 			>
 				<Bug size={18} />

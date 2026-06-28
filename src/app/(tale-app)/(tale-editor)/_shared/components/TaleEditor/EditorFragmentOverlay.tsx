@@ -28,16 +28,21 @@ export function EditorFragmentOverlay({
 	if (!inspectorControlsOpen) return null;
 
 	return (
-		<InspectorButton
-			label={`Edit fragment ${fragment.id}`}
-			revealOnHover
-			onClick={() =>
-				openInspector({
-					blockId: fragment.blockId,
-					id: fragment.id,
-					type: "fragment",
-				})
-			}
-		/>
+		<>
+			<div
+				className="pointer-events-none absolute inset-0 z-[28] rounded-[inherit] border border-emerald-300/0 bg-emerald-300/0 transition group-hover/fragment:border-emerald-300 group-hover/fragment:bg-emerald-300/8"
+			/>
+			<InspectorButton
+				label={`Edit fragment ${fragment.id}`}
+				position="fragment"
+				onClick={() => {
+					openInspector({
+						blockId: fragment.blockId,
+						id: fragment.id,
+						type: "fragment",
+					});
+				}}
+			/>
+		</>
 	);
 }

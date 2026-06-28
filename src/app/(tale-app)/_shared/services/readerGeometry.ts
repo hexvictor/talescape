@@ -4,6 +4,7 @@ import type {
 	Direction,
 	Point,
 	ResolvedTaleBlock,
+	StackPlacementPosition,
 	ViewportSize,
 } from "../types";
 import { clamp, lerpPoint } from "./readerMath";
@@ -41,7 +42,29 @@ export function getNextPoint(
 	const flow = nextBlock.transition.flow;
 	const exitCamera = getReadingCamera(previous, 1, viewport);
 	if (flow.type === "stack") {
-		return { ...previous.point };
+		const placement = flow.placement ?? "blockEdge";
+		const referenceCenter =
+			placement === "cameraEdge" ||
+			placement === "blockEdgeWithViewportAlignment"
+				? exitCamera
+				: previous.point;
+		const referenceSize =
+			placement === "cameraEdge" ||
+			placement === "blockEdgeWithViewportAlignment"
+				? { height: viewport.height, width: viewport.width }
+				: { height: previous.height, width: previous.width };
+		return getStackedBlockPoint(
+			referenceCenter,
+			referenceSize,
+			nextSize,
+			{
+				fallback: flow.alignment,
+				horizontalPlacement: flow.horizontalPlacement,
+				horizontalPosition: flow.horizontalPosition,
+				verticalPlacement: flow.verticalPlacement,
+				verticalPosition: flow.verticalPosition,
+			},
+		);
 	}
 
 	const spacing = resolveSpacing(flow.spacing, viewport);
@@ -74,6 +97,80 @@ export function getNextPoint(
 		spacing,
 		flow.alignment,
 	);
+}
+
+/**
+ * Places a stacked block over a reference block or camera rectangle.
+ *
+ * @param referenceCenter - Center point of the block or camera rectangle.
+ * @param referenceSize - Size of the reference rectangle.
+ * @param nextSize - Destination block dimensions.
+ * @param alignment - How the destination aligns inside the reference rectangle.
+ * @returns Destination block center in world coordinates.
+ *
+ * @example
+ * const point = getStackedBlockPoint(camera, viewport, size, { horizontalPlacement: "end", verticalPlacement: "start" });
+ */
+function getStackedBlockPoint(
+	referenceCenter: Point,
+	referenceSize: { height: number; width: number },
+	nextSize: { height: number; width: number },
+	alignment: {
+		fallback?: StackPlacementPosition;
+		horizontalPlacement?: StackPlacementPosition;
+		horizontalPosition?: number;
+		verticalPlacement?: StackPlacementPosition;
+		verticalPosition?: number;
+	} = {},
+): Point {
+	return {
+		x: alignWithinReferenceAxis(
+			referenceCenter.x,
+			referenceSize.width,
+			nextSize.width,
+			resolveStackPlacementPosition(
+				alignment.horizontalPlacement,
+				alignment.horizontalPosition,
+				alignment.fallback,
+			),
+		),
+		y: alignWithinReferenceAxis(
+			referenceCenter.y,
+			referenceSize.height,
+			nextSize.height,
+			resolveStackPlacementPosition(
+				alignment.verticalPlacement,
+				alignment.verticalPosition,
+				alignment.fallback,
+			),
+		),
+	};
+}
+
+/**
+ * Resolves one stacked placement axis to a normalized position inside the
+ * reference rectangle.
+ *
+ * @param placement - Named start, center, or end placement.
+ * @param position - Explicit normalized placement from 0 to 1.
+ * @param fallback - Legacy single-axis placement used by older data.
+ * @returns Normalized placement along one reference axis.
+ *
+ * @example
+ * const x = resolveStackPlacementPosition("end", undefined, "center");
+ */
+function resolveStackPlacementPosition(
+	placement?: StackPlacementPosition,
+	position?: number,
+	fallback: StackPlacementPosition = "center",
+): number {
+	if (typeof position === "number" && Number.isFinite(position)) {
+		return clamp(position, 0, 1);
+	}
+	const resolved = placement ?? fallback;
+	if (resolved === "start") return 0;
+	if (resolved === "end") return 1;
+	return 0.5;
 }
 
 /**
@@ -200,6 +297,31 @@ function alignCrossAxis(
 		return previousCenter + previousSize / 2 - nextSize / 2;
 	}
 	return previousCenter;
+}
+
+/**
+ * Aligns a stacked block inside a reference rectangle using a normalized
+ * position from 0 to 1.
+ *
+ * @param referenceCenter - Reference rectangle center on one axis.
+ * @param referenceSize - Reference rectangle size on one axis.
+ * @param nextSize - Destination block size on one axis.
+ * @param position - Normalized destination position inside the reference.
+ * @returns Destination center on one world axis.
+ *
+ * @example
+ * const x = alignWithinReferenceAxis(0, 1000, 200, 1);
+ */
+function alignWithinReferenceAxis(
+	referenceCenter: number,
+	referenceSize: number,
+	nextSize: number,
+	position: number,
+): number {
+	const available = Math.max(referenceSize - nextSize, 0);
+	return (
+		referenceCenter - referenceSize / 2 + nextSize / 2 + available * position
+	);
 }
 
 /**

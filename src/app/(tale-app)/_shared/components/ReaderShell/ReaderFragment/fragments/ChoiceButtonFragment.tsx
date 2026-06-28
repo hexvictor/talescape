@@ -1,8 +1,9 @@
 "use client";
 
+import { useReaderViewportContext } from "~/app/(tale-app)/_shared/contexts/ReaderViewportContext";
 import { useTaleAppStore } from "../../../../contexts/TaleAppStoreContext";
 import { getBranchColor } from "../../../../services/branchColors";
-import type { ResolvedTaleFragment, TalePath } from "../../../../types";
+import type { ResolvedTaleFragment } from "../../../../types";
 
 /**
  * Resolves authored visual overrides for a choice button fragment.
@@ -27,12 +28,12 @@ function getChoiceButtonStyle(
 
 export function ChoiceButtonFragment({
 	fragment,
-	onChoosePath,
 }: {
 	fragment: ResolvedTaleFragment;
-	onChoosePath: (path: TalePath) => void;
 }): React.JSX.Element | null {
 	const tale = useTaleAppStore((state) => state.document.tale);
+	const { onChoosePath } = useReaderViewportContext();
+
 	const path = fragment.pathId
 		? tale.indexMap.pathsById[fragment.pathId]
 		: null;

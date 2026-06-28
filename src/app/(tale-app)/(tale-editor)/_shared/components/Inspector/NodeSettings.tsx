@@ -20,14 +20,17 @@ import { StyleSettings } from "./StyleSettings";
  *
  * @param props - Component props.
  * @param props.block - Current block.
+ * @param props.initialNodeId - Optional node id selected by a preview inspector click.
  * @param props.onChange - Receives updated nodes and root id.
  * @returns Node tree controls.
  */
 export function NodeSettings({
 	block,
+	initialNodeId,
 	onChange,
 }: {
 	block: ResolvedTaleBlock;
+	initialNodeId?: string;
 	onChange: (nodes: TaleNode[], rootNodeId: string) => void;
 }): React.JSX.Element {
 	const rootNode = block.nodesById[block.rootNodeId] ?? block.nodes[0];
@@ -35,9 +38,10 @@ export function NodeSettings({
 		(child) => child.type === "node",
 	);
 	const [selectedNodeId, setSelectedNodeId] = useState(
-		firstEditableNode?.type === "node"
-			? firstEditableNode.nodeId
-			: block.rootNodeId,
+		initialNodeId ??
+			(firstEditableNode?.type === "node"
+				? firstEditableNode.nodeId
+				: block.rootNodeId),
 	);
 	const selectedNode =
 		block.nodesById[selectedNodeId] ??
@@ -152,7 +156,7 @@ function NodeEditor({
 					{node.children.length} children
 				</span>
 			</div>
-			<div className="grid grid-cols-2 gap-2">
+			<div className="@container/inspector-group grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2">
 				<Setting label="Display mode">
 					<select
 						className={settingClassName}

@@ -95,6 +95,7 @@ export function formatTale(raw: RawTaleRecord): Tale {
 
 	return {
 		book: null,
+		breakpoints: raw.breakpoints,
 		creator: null,
 		id: raw.id,
 		slug: raw.slug,

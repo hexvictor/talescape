@@ -9,18 +9,13 @@ const jsonRecordSchema = z.record(z.string(), z.unknown());
 const requiredJsonSchema = z.any();
 const nullableJsonSchema = z.any().nullable();
 const animationConfigSchema = z.any();
-const pathTypeSchema = z.enum([
-	"choice",
-	"convergence",
-	"ending",
-	"return",
-	"teleport",
-]);
+const pathTypeSchema = z.enum(["choice", "linear", "return", "teleport"]);
 
 export const taleEditorRouter = createTRPCRouter({
 	saveDraft: protectedProcedure
 		.input(
 			z.object({
+				breakpointConfig: requiredJsonSchema,
 				branches: z.array(
 					z.object({
 						description: z.string().nullable(),
@@ -38,6 +33,7 @@ export const taleEditorRouter = createTRPCRouter({
 						isChoiceBlock: z.boolean(),
 						order: z.number(),
 						readingConfig: requiredJsonSchema,
+						responsiveConfig: requiredJsonSchema,
 						sizeConfig: requiredJsonSchema,
 						sizeMode: z.enum(["contentResponsive", "fixed"]),
 						snap: z.boolean(),
@@ -57,6 +53,7 @@ export const taleEditorRouter = createTRPCRouter({
 						nodeId: z.number().nullable(),
 						order: z.number(),
 						placementConfig: requiredJsonSchema,
+						responsiveConfig: requiredJsonSchema,
 						styleConfig: nullableJsonSchema,
 						type: z.string(),
 						visibleRange: nullableJsonSchema,

@@ -25,6 +25,22 @@ export async function seedTales(): Promise<void> {
 			slug: "branched",
 			status: "published",
 			title: "Forked Fates",
+			breakpointConfig: [
+				{
+					id: "mobile-portrait",
+					label: "Mobile Portrait",
+					maxWidth: 768,
+					orientation: "portrait",
+					order: 0,
+				},
+				{
+					id: "mobile-landscape",
+					label: "Mobile Landscape",
+					maxWidth: 1024,
+					orientation: "landscape",
+					order: 1,
+				},
+			],
 			firstBlockTransitionMode: "fromPlacement",
 			transitionFirstBlock: false,
 			type: "story",

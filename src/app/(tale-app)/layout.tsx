@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "~/components/layout/Header";
 
 export const metadata: Metadata = {
 	title: "Taleviewer | Talescape",
@@ -7,13 +6,8 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function TaleviewerLayout({
+export default function TaleAppLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
-	return (
-		<>
-			<Header autoHide />
-			{children}
-		</>
-	);
+	return <>{children}</>;
 }

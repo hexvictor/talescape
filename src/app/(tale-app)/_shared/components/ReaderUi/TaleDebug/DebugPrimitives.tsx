@@ -91,11 +91,13 @@ export function DebugField({
 
 export function Setting({
 	children,
+	className,
 	componentName = "Setting",
 	label,
 	readerRole = "setting-field",
 }: {
 	children: ReactNode;
+	className?: string;
 	componentName?: string;
 	label: string;
 	readerRole?: string;
@@ -104,7 +106,10 @@ export function Setting({
 		<div
 			data-reader-component={componentName}
 			data-reader-role={readerRole}
-			className="grid gap-1 text-[11px] text-foreground/52"
+			className={clsx(
+				"@container/setting grid min-w-0 gap-1 text-[11px] text-foreground/52",
+				className,
+			)}
 		>
 			<span className="font-bold uppercase">{label}</span>
 			{children}

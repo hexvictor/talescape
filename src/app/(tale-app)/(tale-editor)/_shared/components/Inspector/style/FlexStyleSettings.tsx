@@ -24,7 +24,7 @@ export function FlexStyleSettings({
 	style: ReaderStyle;
 }): React.JSX.Element {
 	return (
-		<div className="col-span-2 grid grid-cols-2 gap-2 rounded border border-foreground/8 bg-background/15 p-2">
+		<div className="@container/inspector-group col-span-2 grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2 rounded border border-foreground/8 bg-background/15 p-2">
 			<StyleSelect
 				label="Flex direction"
 				value={style.flexDirection ?? "row"}

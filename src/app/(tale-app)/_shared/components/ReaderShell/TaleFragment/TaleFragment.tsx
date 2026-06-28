@@ -2,7 +2,7 @@
 
 import { EditorFragment } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorFragment";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
-import type { ResolvedTaleFragment, TalePath } from "../../../types";
+import type { ResolvedTaleFragment } from "../../../types";
 import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
 
 /**
@@ -22,12 +22,10 @@ export function TaleFragment({
 	contentSized = false,
 	fragment,
 	index,
-	onChoosePath,
 }: {
 	contentSized?: boolean;
 	fragment: ResolvedTaleFragment;
 	index: number;
-	onChoosePath?: (path: TalePath) => void;
 }): React.JSX.Element {
 	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
 
@@ -37,7 +35,6 @@ export function TaleFragment({
 				contentSized={contentSized}
 				fragment={fragment}
 				index={index}
-				onChoosePath={onChoosePath}
 			/>
 		);
 	}
@@ -47,7 +44,6 @@ export function TaleFragment({
 			contentSized={contentSized}
 			fragment={fragment}
 			index={index}
-			onChoosePath={onChoosePath}
 		/>
 	);
 }

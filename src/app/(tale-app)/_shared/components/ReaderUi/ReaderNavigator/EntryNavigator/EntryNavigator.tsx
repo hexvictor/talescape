@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
 import { useRecentReaderActivity } from "../../../../hooks/useRecentReaderActivity";
@@ -52,7 +53,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 		scrollApi: state.scroll.api,
 	}));
-	const navigatorVisibility = usePinnedHoverPanel(true);
+	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
+	const navigatorVisibility = usePinnedHoverPanel(!isPreviewing);
 	const [manualBrowseIndex, setManualBrowseIndex] = useState<number | null>(
 		null,
 	);

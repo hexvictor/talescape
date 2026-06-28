@@ -2,6 +2,21 @@ import type { StateCreator } from "zustand/vanilla";
 import type { CompiledReader } from "../../types";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
+/**
+ * Checks whether two block id lists represent the same measurement request.
+ *
+ * @param left - First block id list.
+ * @param right - Second block id list.
+ * @returns Whether both lists contain the same ids in the same order.
+ *
+ * @example
+ * const unchanged = blockIdListsMatch(previousIds, nextIds);
+ */
+function blockIdListsMatch(left: string[], right: string[]): boolean {
+	if (left.length !== right.length) return false;
+	return left.every((id, index) => id === right[index]);
+}
+
 export type ReaderSlice = {
 	reader: {
 		compiled: CompiledReader | null;
@@ -32,6 +47,13 @@ export const createReaderSlice: StateCreator<
 		setCompiled: (compiled) =>
 			set((state) => ({ reader: { ...state.reader, compiled } })),
 		setMeasurementBlockIds: (measurementBlockIds) =>
-			set((state) => ({ reader: { ...state.reader, measurementBlockIds } })),
+			set((state) => {
+				if (
+					blockIdListsMatch(state.reader.measurementBlockIds, measurementBlockIds)
+				) {
+					return state;
+				}
+				return { reader: { ...state.reader, measurementBlockIds } };
+			}),
 	},
 });

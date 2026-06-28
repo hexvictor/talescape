@@ -40,6 +40,7 @@ type FragmentAnimationPlan = {
 
 type BlockAnimationPlan = {
 	ambient: CompiledAnimationSelection;
+	previousVisibleDuringEnter: CompiledAnimationSelection;
 	scrolling: CompiledAnimationSelection;
 	transitionEntering: CompiledAnimationSelection;
 	transitionLeaving: CompiledAnimationSelection;
@@ -168,6 +169,11 @@ function compileBlockAnimations(
 			`block:${block.id}:scrolling`,
 			viewport,
 		),
+		previousVisibleDuringEnter: compileTracks(
+			block.resolved.transitionAnimations.previousVisible,
+			`block:${block.id}:previous-visible`,
+			viewport,
+		),
 		transitionEntering: compileTracks(
 			block.resolved.transitionAnimations.entering,
 			`block:${block.id}:entering`,
@@ -183,6 +189,7 @@ function compileBlockAnimations(
 		hasAmbient: plan.ambient.length > 0,
 		hasAnimation: [
 			plan.ambient,
+			plan.previousVisibleDuringEnter,
 			plan.scrolling,
 			plan.transitionEntering,
 			plan.transitionLeaving,
@@ -307,6 +314,7 @@ export function evaluateBlockAnimation(
 	const destinationAnimations = plan.blockAnimationsById.get(
 		segment.to.block.id,
 	);
+	const currentBlockAnimations = plan.blockAnimationsById.get(blockId);
 	const transition = segment.to.block.transition;
 	const configuredLength = isEntering
 		? transition.enteringLength
@@ -318,9 +326,37 @@ export function evaluateBlockAnimation(
 		: clamp(traveled / phaseLength, 0, 1);
 	const tracks = isEntering
 		? (destinationAnimations?.transitionEntering ?? [])
-		: (destinationAnimations?.transitionLeaving ?? []);
+		: (currentBlockAnimations?.transitionLeaving ?? []);
 	evaluateTracks(tracks, phaseProgress, target, committedAnimationIds);
 	evaluateAmbient(blockAnimations?.ambient ?? [], timeMs, progress, target);
+	return true;
+}
+
+/**
+ * Evaluates the destination block's custom takeover tracks onto one previous
+ * visible block while that destination block is entering.
+ *
+ * @param plan - Compiled animation plan.
+ * @param destinationBlockId - Incoming block that owns the takeover policy.
+ * @param progress - Normalized destination entering progress.
+ * @param committedAnimationIds - Completed one-way animation track ids.
+ * @param target - Mutable values object reused by the caller.
+ * @returns Whether any custom previous-visible tracks were applied.
+ *
+ * @example
+ * evaluatePreviousVisibleBlockAnimation(plan, segment.to.block.id, 0.5, committedIds, values);
+ */
+export function evaluatePreviousVisibleBlockAnimation(
+	plan: ReaderAnimationPlan,
+	destinationBlockId: string,
+	progress: number,
+	committedAnimationIds: ReadonlySet<string>,
+	target: AnimationValues,
+): boolean {
+	const destinationAnimations = plan.blockAnimationsById.get(destinationBlockId);
+	const tracks = destinationAnimations?.previousVisibleDuringEnter ?? [];
+	if (tracks.length === 0) return false;
+	evaluateTracks(tracks, progress, target, committedAnimationIds);
 	return true;
 }
 

@@ -13,7 +13,6 @@ export type ReaderUiVisibilityMode =
 export type UiSlice = {
 	ui: {
 		activityFadeDelaySeconds: number;
-		contentsOpen: boolean;
 		debugVisible: boolean;
 		hiddenVisibilityMode: Exclude<ReaderUiVisibilityMode, "all">;
 		navigationPinsVisible: boolean;
@@ -22,16 +21,16 @@ export type UiSlice = {
 		readerStatusVisible: boolean;
 		setActivityFadeDelaySeconds: (seconds: number) => void;
 		setDebugVisible: (visible: boolean) => void;
-		setViewportSize: (viewport: ViewportSize) => void;
+		setViewportSize: (viewport: ViewportSize, viewportFrame?: ViewportSize) => void;
 		setNavigationPinsVisible: (visible: boolean) => void;
 		setNavigationUsesSelectedPart: (enabled: boolean) => void;
 		setReduceInactiveUiOpacity: (enabled: boolean) => void;
 		setReaderStatusVisible: (visible: boolean) => void;
 		setVisibilityMode: (mode: ReaderUiVisibilityMode) => void;
-		toggleContents: () => void;
 		toggleReaderUi: () => void;
 		visibilityMode: ReaderUiVisibilityMode;
 		viewport: ViewportSize;
+		viewportFrame: ViewportSize;
 	};
 };
 
@@ -51,7 +50,6 @@ export const createUiSlice =
 	(set) => ({
 		ui: {
 			activityFadeDelaySeconds: 4,
-			contentsOpen: false,
 			debugVisible: runtime.application === "editor",
 			hiddenVisibilityMode: "hidden",
 			navigationPinsVisible: true,
@@ -64,16 +62,18 @@ export const createUiSlice =
 				})),
 			setDebugVisible: (debugVisible) =>
 				set((state) => ({ ui: { ...state.ui, debugVisible } })),
-			setViewportSize: (viewport) =>
+			setViewportSize: (viewport, viewportFrame = viewport) =>
 				set((state) => {
 					if (
 						state.ui.viewport.width === viewport.width &&
-						state.ui.viewport.height === viewport.height
+						state.ui.viewport.height === viewport.height &&
+						state.ui.viewportFrame.width === viewportFrame.width &&
+						state.ui.viewportFrame.height === viewportFrame.height
 					) {
 						return state;
 					}
 					return {
-						ui: { ...state.ui, viewport },
+						ui: { ...state.ui, viewport, viewportFrame },
 					};
 				}),
 			setNavigationPinsVisible: (navigationPinsVisible) =>
@@ -95,10 +95,6 @@ export const createUiSlice =
 						visibilityMode,
 					},
 				})),
-			toggleContents: () =>
-				set((state) => ({
-					ui: { ...state.ui, contentsOpen: !state.ui.contentsOpen },
-				})),
 			toggleReaderUi: () =>
 				set((state) => ({
 					ui: {
@@ -111,5 +107,6 @@ export const createUiSlice =
 				})),
 			visibilityMode: "all",
 			viewport: viewportFallback,
+			viewportFrame: viewportFallback,
 		},
 	});

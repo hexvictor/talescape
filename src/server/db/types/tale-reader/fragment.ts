@@ -42,9 +42,16 @@ export type ChoiceButtonFragmentData = {
 	description?: string;
 };
 
+export type CodexEntryFragmentData = {
+	entryId?: string;
+	label: string;
+	description?: string;
+};
+
 export type FragmentDataMap = {
 	audio: AudioFragmentData;
 	choiceButton: ChoiceButtonFragmentData;
+	codexEntry: CodexEntryFragmentData;
 	video: VideoFragmentData;
 	image: ImageFragmentData;
 	quote: QuoteFragmentData;

@@ -27,7 +27,7 @@ export function AnimationTrackFields({
 			data-reader-role="animation-track-settings"
 			className="col-span-2 space-y-3 rounded border border-foreground/8 bg-foreground/[0.025] p-3"
 		>
-			<div className="grid grid-cols-[1fr_auto] items-end gap-2">
+			<div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
 				<Setting label="Property">
 					<select
 						className={settingClassName}
@@ -253,7 +253,7 @@ export function AnimationTrackFields({
 					</>
 				) : null}
 				{track.property === "motionPath" ? (
-					<div className="col-span-2">
+					<div className="@min-[28rem]/track-section:col-span-2">
 						<Setting label="SVG path">
 							<textarea
 								className={`${settingClassName} min-h-20 py-2`}
@@ -314,7 +314,7 @@ function TrackFieldSection({
 	title: string;
 }): React.JSX.Element {
 	return (
-		<fieldset className="grid grid-cols-2 gap-2 rounded border border-foreground/7 p-2">
+		<fieldset className="@container/track-section grid min-w-0 @min-[28rem]/track-section:grid-cols-2 grid-cols-1 gap-2 rounded border border-foreground/7 p-2">
 			<legend className="px-1 font-medium text-[10px] text-foreground/42 uppercase tracking-wide">
 				{title}
 			</legend>

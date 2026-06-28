@@ -11,6 +11,7 @@ import type {
 	ReadingConfig,
 	TransitionConfig,
 } from "~/server/db/types/tale-reader/readerConfig";
+import type { TaleBlockResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import { users } from "../../users";
 import { entries } from "../narrative-structure/entries";
 import { pages } from "../narrative-structure/pages";
@@ -88,6 +89,11 @@ export const blocks = createTable("block", (d) => ({
 			leavingLength: null,
 		}),
 	styleConfig: d.json().$type<ReaderStyleConfig>(),
+	responsiveConfig: d
+		.json()
+		.notNull()
+		.$type<Record<string, TaleBlockResponsiveOverride>>()
+		.default({}),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	createdAt: d

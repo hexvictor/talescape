@@ -12,7 +12,10 @@ export type HubSlice = {
 	hub: {
 		activePanel: ReaderHubPanel;
 		open: boolean;
+		openCodex: () => void;
+		panelWidthPx: number;
 		setActivePanel: (panel: ReaderHubPanel) => void;
+		setPanelWidthPx: (width: number) => void;
 		toggleOpen: () => void;
 	};
 };
@@ -32,8 +35,15 @@ export const createHubSlice: StateCreator<TaleReaderState, [], [], HubSlice> = (
 	hub: {
 		activePanel: "community",
 		open: false,
+		openCodex: () =>
+			set((state) => ({
+				hub: { ...state.hub, activePanel: "codex", open: true },
+			})),
+		panelWidthPx: 360,
 		setActivePanel: (activePanel) =>
 			set((state) => ({ hub: { ...state.hub, activePanel } })),
+		setPanelWidthPx: (panelWidthPx) =>
+			set((state) => ({ hub: { ...state.hub, panelWidthPx } })),
 		toggleOpen: () =>
 			set((state) => ({ hub: { ...state.hub, open: !state.hub.open } })),
 	},

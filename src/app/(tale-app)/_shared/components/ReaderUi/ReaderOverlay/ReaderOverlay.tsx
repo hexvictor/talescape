@@ -1,4 +1,3 @@
-import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { ReaderNavigator } from "../ReaderNavigator/ReaderNavigator";
 import { ReaderProgress } from "../ReaderProgress/ReaderProgress";
 import { ReaderScrollCue } from "../ReaderScrollCue/ReaderScrollCue";
@@ -14,10 +13,6 @@ import { TaleDebug } from "../TaleDebug/TaleDebug";
  * <ReaderOverlay />
  */
 export function ReaderOverlay(): React.JSX.Element | null {
-	const showsFullReaderUi = useTaleAppStore(
-		(state) => state.derived.showsFullReaderUi,
-	);
-	if (!showsFullReaderUi) return null;
 	return (
 		<div
 			data-reader-component="ReaderOverlay"

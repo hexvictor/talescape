@@ -1,16 +1,9 @@
 "use client";
 
-import { ChoiceButtonFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/fragments/ChoiceButtonFragment";
-import { DefaultFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/fragments/DefaultFragment";
-import { ImageFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/fragments/ImageFragment";
-import { QuoteFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/fragments/QuoteFragment";
-import { SoundCueFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/fragments/SoundCueFragment";
-import type {
-	ResolvedTaleFragment,
-	TalePath,
-} from "~/app/(tale-app)/_shared/types";
+import { ReaderFragment } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderFragment/ReaderFragment";
+import type { ResolvedTaleFragment } from "~/app/(tale-app)/_shared/types";
+import { useTaleEditorStoreShallow } from "../../hooks/useTaleEditorStore";
 import { EditorFragmentOverlay } from "./EditorFragmentOverlay";
-import { EditorTextFragmentContent } from "./EditorTextFragmentContent";
 
 /**
  * Renders a fragment with editor-only overlays and inline text editing.
@@ -29,38 +22,49 @@ export function EditorFragment({
 	contentSized = false,
 	fragment,
 	index,
-	onChoosePath,
 }: {
 	contentSized?: boolean;
 	fragment: ResolvedTaleFragment;
 	index: number;
-	onChoosePath?: (path: TalePath) => void;
 }): React.JSX.Element {
+	const { inspectorControlsOpen, openInspector } = useTaleEditorStoreShallow(
+		(state) => ({
+			inspectorControlsOpen: state.editor.inspectorControlsOpen,
+			openInspector: state.editor.openInspector,
+		}),
+	);
+
 	return (
 		<div
-			data-reader-component="EditorFragment"
-			data-reader-fragment-id={fragment.id}
-			data-reader-fragment-type={fragment.type}
-			data-reader-role="fragment-container"
-			className="group/fragment relative h-full w-full"
+			onClickCapture={(event) => {
+				if (!inspectorControlsOpen) return;
+				event.preventDefault();
+				event.stopPropagation();
+				openInspector({
+					blockId: fragment.blockId,
+					id: fragment.id,
+					type: "fragment",
+				});
+			}}
+			onDoubleClick={(event) => {
+				if (!inspectorControlsOpen || fragment.type === "text") return;
+				event.preventDefault();
+				event.stopPropagation();
+				openInspector({
+					blockId: fragment.blockId,
+					id: fragment.id,
+					initialTab: "content",
+					type: "fragment",
+				});
+			}}
 		>
-			<EditorFragmentOverlay fragment={fragment} />
-			{fragment.type === "choiceButton" ? (
-				<ChoiceButtonFragment
-					fragment={fragment}
-					onChoosePath={onChoosePath ?? (() => undefined)}
-				/>
-			) : fragment.type === "image" ? (
-				<ImageFragment contentSized={contentSized} fragment={fragment} />
-			) : fragment.type === "quote" ? (
-				<QuoteFragment fragment={fragment} />
-			) : fragment.type === "soundCue" ? (
-				<SoundCueFragment fragment={fragment} />
-			) : fragment.type === "text" ? (
-				<EditorTextFragmentContent fragment={fragment} index={index} />
-			) : (
-				<DefaultFragment fragment={fragment} index={index} />
-			)}
+			<ReaderFragment
+				contentSized={contentSized}
+				fragment={fragment}
+				index={index}
+			>
+				<EditorFragmentOverlay fragment={fragment} />
+			</ReaderFragment>
 		</div>
 	);
 }

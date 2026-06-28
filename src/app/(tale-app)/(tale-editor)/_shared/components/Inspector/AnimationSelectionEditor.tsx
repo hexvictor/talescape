@@ -76,7 +76,7 @@ export function AnimationSelectionEditor({
 			readerRole="animation-selection"
 			title={title}
 		>
-			<div className="col-span-2 grid grid-cols-[1fr_auto] gap-2">
+			<div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
 				<select
 					aria-label={`${title} official animation`}
 					className={settingClassName}

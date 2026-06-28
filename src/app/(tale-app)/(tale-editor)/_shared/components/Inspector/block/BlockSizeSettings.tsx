@@ -173,11 +173,13 @@ function SizeSettingsSection({
 	title: string;
 }): React.JSX.Element {
 	return (
-		<section className="rounded border border-foreground/8 bg-background/15 p-3">
+		<section className="@container/size-section min-w-0 rounded border border-foreground/8 bg-background/15 p-3">
 			<h4 className="mb-2 font-bold text-[10px] text-foreground/42 uppercase">
 				{title}
 			</h4>
-			<div className="grid grid-cols-1 gap-3 xl:grid-cols-2">{children}</div>
+			<div className="grid min-w-0 @min-[38rem]/size-section:grid-cols-2 grid-cols-1 gap-3">
+				{children}
+			</div>
 		</section>
 	);
 }

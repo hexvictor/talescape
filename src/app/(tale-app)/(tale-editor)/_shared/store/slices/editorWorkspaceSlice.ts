@@ -3,9 +3,13 @@ import type { TaleEditorState } from "../taleEditorStore";
 
 export type EditorWorkspaceSlice = {
 	editorWorkspace: {
+		autoSelectActiveBlock: boolean;
+		graphOpen: boolean;
 		previewWidth: number;
 		rightPanelOpen: boolean;
 		rightPanelWidth: number;
+		setAutoSelectActiveBlock: (enabled: boolean) => void;
+		setGraphOpen: (open: boolean) => void;
 		setPreviewWidth: (width: number) => void;
 		setRightPanelOpen: (open: boolean) => void;
 		setRightPanelWidth: (width: number) => void;
@@ -28,9 +32,22 @@ export const createEditorWorkspaceSlice: StateCreator<
 	EditorWorkspaceSlice
 > = (set) => ({
 	editorWorkspace: {
+		autoSelectActiveBlock: false,
+		graphOpen: true,
 		previewWidth: 40,
-		rightPanelOpen: true,
+		rightPanelOpen: false,
 		rightPanelWidth: 360,
+		setAutoSelectActiveBlock: (autoSelectActiveBlock) =>
+			set((state) => ({
+				editorWorkspace: {
+					...state.editorWorkspace,
+					autoSelectActiveBlock,
+				},
+			})),
+		setGraphOpen: (graphOpen) =>
+			set((state) => ({
+				editorWorkspace: { ...state.editorWorkspace, graphOpen },
+			})),
 		setPreviewWidth: (previewWidth) =>
 			set((state) => ({
 				editorWorkspace: { ...state.editorWorkspace, previewWidth },

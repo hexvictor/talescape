@@ -9,7 +9,9 @@ import {
 	Settings,
 	Sparkles,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import {
 	useTaleReaderStore,
 	useTaleReaderStoreShallow,
@@ -43,18 +45,55 @@ const contextPanels: HubPanelOption[] = [
  */
 export function ReaderHub(): React.JSX.Element {
 	const { page } = useReaderLocationContext();
-	const { activePanel, open, setActivePanel, toggleOpen } =
+	const asideRef = useRef<HTMLElement | null>(null);
+	const [dragPanelWidthPx, setDragPanelWidthPx] = useState<number | null>(null);
+	const {
+		activePanel,
+		open,
+		panelWidthPx,
+		setActivePanel,
+		setPanelWidthPx,
+		toggleOpen,
+	} =
 		useTaleReaderStoreShallow((state) => ({
 			activePanel: state.hub.activePanel,
 			open: state.hub.open,
+			panelWidthPx: state.hub.panelWidthPx,
 			setActivePanel: state.hub.setActivePanel,
+			setPanelWidthPx: state.hub.setPanelWidthPx,
 			toggleOpen: state.hub.toggleOpen,
 		}));
+	const dockedHubWidthPx = useTaleReaderStore(
+		(state) => state.derived.dockedHubWidthPx,
+	);
 	const layout = useTaleReaderStore((state) => state.derived.viewportLayout);
 	const pageTitle = page?.title ?? page?.type ?? "Current page";
 	const content = getReaderHubContent(page?.id ?? "unknown", pageTitle);
 	const mobilePortrait = layout === "mobile-portrait";
 	const mobileLandscape = layout === "mobile-landscape";
+	const sidePanelWidthPx = mobilePortrait
+		? null
+		: mobileLandscape
+			? panelWidthPx
+			: dockedHubWidthPx;
+	const visiblePanelWidthPx = dragPanelWidthPx ?? sidePanelWidthPx;
+
+	/**
+	 * Calculates the reader hub width for one pointer x-coordinate.
+	 *
+	 * @param clientX - Current pointer x-coordinate.
+	 * @returns Clamped panel width in pixels.
+	 *
+	 * @example
+	 * const width = getPanelWidthFromPointer(600);
+	 */
+	const getPanelWidthFromPointer = (clientX: number): number | null => {
+		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
+		if (!bounds) return null;
+		const maximumWidth = Math.floor(bounds.width * 0.5);
+		const rawWidth = bounds.right - clientX;
+		return Math.max(320, Math.min(maximumWidth, rawWidth));
+	};
 
 	return (
 		<>
@@ -74,6 +113,7 @@ export function ReaderHub(): React.JSX.Element {
 			<AnimatePresence>
 				{open ? (
 					<motion.aside
+						ref={asideRef}
 						data-reader-ui="true"
 						data-reader-component="ReaderHub"
 						data-reader-role="reader-hub-sidebar"
@@ -81,14 +121,34 @@ export function ReaderHub(): React.JSX.Element {
 							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 shadow-2xl backdrop-blur-xl",
 							mobilePortrait
 								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
-								: "inset-y-0 right-0 w-[min(28rem,42vw)] border-l",
-							!mobileLandscape && !mobilePortrait && "w-[min(28rem,42vw)]",
+								: "inset-y-0 right-0 border-l",
 						)}
+						style={
+							visiblePanelWidthPx === null
+								? undefined
+								: { width: `${visiblePanelWidthPx}px` }
+						}
 						initial={mobilePortrait ? { y: "100%" } : { x: "100%" }}
 						animate={mobilePortrait ? { y: 0 } : { x: 0 }}
 						exit={mobilePortrait ? { y: "100%" } : { x: "100%" }}
 						transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
 					>
+						{!mobilePortrait ? (
+							<div className="absolute inset-y-0 left-0 flex">
+								<VerticalPaneResizeHandle
+									label="Resize Reader Hub"
+									onDrag={(clientX) => {
+										const width = getPanelWidthFromPointer(clientX);
+										if (width !== null) setDragPanelWidthPx(width);
+									}}
+									onDragEnd={(clientX) => {
+										const width = getPanelWidthFromPointer(clientX);
+										setDragPanelWidthPx(null);
+										if (width !== null) setPanelWidthPx(width);
+									}}
+								/>
+							</div>
+						) : null}
 						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
 							<BookMarked size={17} className="text-primary" />
 							<div className="min-w-0 flex-1">

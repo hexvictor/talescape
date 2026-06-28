@@ -6,7 +6,9 @@ import {
 	useTaleAppStore,
 	useTaleAppStoreShallow,
 } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { resolveTaleBreakpoint } from "~/app/(tale-app)/_shared/services/resolveTaleBreakpoint";
 import type { ResolvedTaleFragment } from "~/app/(tale-app)/_shared/types";
+import { useTaleEditorStore } from "../../hooks/useTaleEditorStore";
 import { editFragment } from "../../services/taleDraftEdits";
 
 /**
@@ -28,25 +30,45 @@ export function EditorTextFragmentContent({
 	index: number;
 }): React.JSX.Element {
 	const isEditing = useTaleAppStore((state) => state.derived.isEditing);
+	const activeBreakpointId = useTaleAppStore(
+		(state) => state.runtime.breakpointId,
+	);
+	const openInspector = useTaleEditorStore((state) => state.editor.openInspector);
 	const { setTale, tale } = useTaleAppStoreShallow((state) => ({
 		setTale: state.document.setTale,
 		tale: state.document.tale,
 	}));
 	const [editing, setEditing] = useState(false);
+	const resolvedFragment =
+		resolveTaleBreakpoint(tale, activeBreakpointId).indexMap.fragmentsById[
+			fragment.id
+		] ?? fragment;
 
 	return (
 		<DefaultFragment
 			editing={editing}
-			fragment={fragment}
+			fragment={resolvedFragment}
 			index={index}
 			onRequestEdit={() => {
-				if (isEditing) setEditing(true);
+				if (!isEditing) return;
+				openInspector({
+					blockId: fragment.blockId,
+					id: fragment.id,
+					initialTab: "content",
+					type: "fragment",
+				});
+				setEditing(true);
 			}}
 			onCommit={(text) => {
 				setEditing(false);
-				if (text === fragment.text) return;
+				if (text === resolvedFragment.text) return;
 				setTale(
-					editFragment(tale, fragment.id, (item) => ({ ...item, text })),
+					editFragment(
+						tale,
+						fragment.id,
+						(item) => ({ ...item, text }),
+						activeBreakpointId,
+					),
 					{
 						invalidation: "measurement",
 						reason: "inline-fragment-text",

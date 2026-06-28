@@ -103,9 +103,9 @@ export function UnitNumberSetting({
 			label={label}
 			readerRole="dimension-input"
 		>
-			<div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(5rem,1fr)_7.5rem]">
+			<div className="grid min-w-0 @min-[18rem]/setting:grid-cols-[minmax(0,1fr)_7.5rem] grid-cols-1 gap-2">
 				<input
-					className={settingClassName}
+					className={`${settingClassName} w-full`}
 					min={0}
 					step={unit === "px" ? 25 : 0.25}
 					type="number"
@@ -114,7 +114,7 @@ export function UnitNumberSetting({
 				/>
 				<select
 					aria-label={`${label} unit`}
-					className={settingClassName}
+					className={`${settingClassName} w-full`}
 					value={unit}
 					onChange={(event) =>
 						onChange(value, event.target.value as "px" | "viewport")
@@ -159,9 +159,9 @@ export function OptionalUnitNumberSetting({
 			label={label}
 			readerRole="optional-dimension-input"
 		>
-			<div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(5rem,1fr)_7.5rem]">
+			<div className="grid min-w-0 @min-[18rem]/setting:grid-cols-[minmax(0,1fr)_7.5rem] grid-cols-1 gap-2">
 				<input
-					className={settingClassName}
+					className={`${settingClassName} w-full`}
 					placeholder="No limit"
 					step={resolvedUnit === "px" ? 25 : 0.25}
 					type="number"
@@ -176,7 +176,7 @@ export function OptionalUnitNumberSetting({
 				/>
 				<select
 					aria-label={`${label} unit`}
-					className={settingClassName}
+					className={`${settingClassName} w-full`}
 					disabled={value === undefined}
 					value={resolvedUnit}
 					onChange={(event) =>

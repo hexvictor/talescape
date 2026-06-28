@@ -31,7 +31,23 @@ export function formatPaths(rows: unknown[]): TalePath[] {
 			order: item.order ?? 0,
 			toBlockId: String(item.toBlockId ?? ""),
 			toBranchId: String(item.toBranchId),
-			type: item.type as TalePath["type"],
+			type: normalizePathType(item.type),
 		};
 	});
+}
+
+/**
+ * Normalizes legacy persisted path categories into the current path model.
+ *
+ * @param type - Persisted path category.
+ * @returns Current reader path type.
+ *
+ * @example
+ * const type = normalizePathType("convergence");
+ */
+function normalizePathType(type: string): TalePath["type"] {
+	if (type === "convergence" || type === "ending") return "linear";
+	if (type === "return" || type === "teleport" || type === "choice")
+		return type;
+	return "linear";
 }

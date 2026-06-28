@@ -1,8 +1,3 @@
-export type PathType =
-	| "choice"
-	| "convergence"
-	| "ending"
-	| "return"
-	| "teleport";
+export type PathType = "choice" | "linear" | "return" | "teleport";
 
 export type PathPermissionType = "viewer" | "collaborator";

@@ -8,6 +8,8 @@ export type Direction =
 	| "up-left"
 	| "up-right";
 
+export type StackPlacementPosition = "center" | "end" | "start";
+
 export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
@@ -16,12 +18,26 @@ export type BlockFlow =
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
-	| { type: "stack" };
+	| {
+			alignment?: "center" | "end" | "start";
+			horizontalPosition?: number;
+			horizontalPlacement?: StackPlacementPosition;
+			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			type: "stack";
+			verticalPosition?: number;
+			verticalPlacement?: StackPlacementPosition;
+	  };
 
 export type ReaderSpacing = {
 	unit: ReaderSizeUnit;
 	value: number;
 };
+
+export type PreviousBlocksDuringEnter =
+	| "fadeActivePrevious"
+	| "fadeAllVisiblePrevious"
+	| "customAllVisiblePrevious"
+	| "keep";
 
 export type CameraPathPoint = { x: number; y: number };
 
@@ -206,10 +222,12 @@ export type TransitionConfig = {
 	animationConfig: {
 		entering: AnimationSelection;
 		leaving: AnimationSelection;
+		previousVisible?: AnimationSelection;
 	};
 	enteringLength: number | null;
 	flow: BlockFlow;
 	leavingLength: number | null;
+	previousBlocksDuringEnter?: PreviousBlocksDuringEnter;
 };
 
 export type NodeChild =

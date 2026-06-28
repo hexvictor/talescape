@@ -1,6 +1,7 @@
 import type {
 	FragmentPlacement,
 	ReaderStyle,
+	TaleFragmentResponsiveOverride,
 	TaleFragment,
 } from "~/app/(tale-app)/_shared/types";
 import type { AnimationSelection as DbAnimationSelection } from "~/server/db/types/tale-reader/readerConfig";
@@ -33,6 +34,7 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 			placementConfig?: FragmentPlacement;
 			order?: number;
 			styleConfig?: ReaderStyle | null;
+			responsiveConfig?: Record<string, TaleFragmentResponsiveOverride>;
 			type: string;
 			visibleRange?: TaleFragment["visibleRange"];
 		};
@@ -73,6 +75,7 @@ export function formatFragments(rows: unknown[]): TaleFragment[] {
 			style: item.styleConfig ?? undefined,
 			text: getString(content.text) ?? getString(content.content),
 			type,
+			responsiveOverrides: item.responsiveConfig ?? undefined,
 			visibleRange: item.visibleRange,
 		};
 	});
@@ -94,6 +97,7 @@ function formatFragmentType(
 ): TaleFragment["type"] {
 	if (type === "audio") return "soundCue";
 	if (type === "choiceButton") return "choiceButton";
+	if (type === "codexEntry") return "codexEntry";
 	if (type === "quote") return "quote";
 	if (type === "image") return "image";
 	if (type === "soundCue") return "soundCue";

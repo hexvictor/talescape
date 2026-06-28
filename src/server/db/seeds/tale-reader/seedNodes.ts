@@ -24,7 +24,7 @@ type NodeSeed = {
 };
 
 /**
- * Inserts a flex root and flex content node for every seeded block.
+ * Inserts one root layout node for every seeded block.
  *
  * @returns Nothing.
  */
@@ -47,16 +47,22 @@ export async function seedNodes(): Promise<void> {
 		const page = pageByOrder.get(block.order);
 		if (!page) throw new Error(`Missing page blueprint ${block.order}.`);
 		const rootStableId = stableNodeId(block.id, "root");
-		const contentStableId = stableNodeId(block.id, "content");
-		const style = rootNodeStyle(page.layout);
+		const style = rootNodeStyle(page);
 		return {
 			animationConfig: emptyNodeAnimations(),
 			blockId: block.id,
 			config: {
 				align: "stretch",
-				children: [{ nodeId: contentStableId, type: "node" }],
-				direction: "column",
-				gap: 0,
+				children: [],
+				direction:
+					page.readingDirection === "right"
+						? "row-reverse"
+						: page.readingDirection === "left"
+							? "row"
+							: page.readingDirection === "up"
+								? "column-reverse"
+								: "column",
+				gap: page.layout === "fullscreen" ? 20 : 40,
 				id: rootStableId,
 				justify: "center",
 				mode: "flex",
@@ -74,53 +80,7 @@ export async function seedNodes(): Promise<void> {
 			taleId: tale.id,
 		};
 	});
-	const createdRoots = await db
-		.insert(nodes)
-		.values(rootSeeds.map(toNodeInsert))
-		.returning({ blockId: nodes.blockId, id: nodes.id });
-	const rootIdByBlockId = new Map(
-		createdRoots.map((node) => [node.blockId, node.id]),
-	);
-
-	const contentSeeds = allBlocks.map((block): NodeSeed => {
-		const page = pageByOrder.get(block.order);
-		const rootId = rootIdByBlockId.get(block.id);
-		if (!page || !rootId) throw new Error(`Missing root node for ${block.id}.`);
-		const style = contentNodeStyle(page);
-		return {
-			animationConfig: emptyNodeAnimations(),
-			blockId: block.id,
-			config: {
-				align: "center",
-				children: [],
-				direction:
-					page.readingDirection === "right"
-						? "row-reverse"
-						: page.readingDirection === "left"
-							? "row"
-							: page.readingDirection === "up"
-								? "column-reverse"
-								: "column",
-				gap: page.layout === "fullscreen" ? 20 : 40,
-				id: stableNodeId(block.id, "content"),
-				justify: "center",
-				mode: "flex",
-				overflow: "visible",
-				parentNodeId: stableNodeId(block.id, "root"),
-				style,
-				wrap: false,
-			},
-			isRoot: false,
-			name: "content",
-			order: 1,
-			parentNodeId: rootId,
-			stableId: stableNodeId(block.id, "content"),
-			styleConfig: style,
-			taleId: tale.id,
-		};
-	});
-
-	await db.insert(nodes).values(contentSeeds.map(toNodeInsert));
+	await db.insert(nodes).values(rootSeeds.map(toNodeInsert));
 	logSeedComplete("Nodes");
 }
 
@@ -174,26 +134,6 @@ function stableNodeId(blockId: number, role: string): string {
  * @returns Root node style.
  */
 function rootNodeStyle(
-	layout: (typeof readerPageBlueprints)[number]["layout"],
-): ReaderStyleConfig {
-	return {
-		alignItems: "stretch",
-		display: "flex",
-		flexDirection: "column",
-		justifyContent: "center",
-		height: "100%",
-		overflow: "visible",
-		width: "100%",
-	};
-}
-
-/**
- * Creates content flex styling for a page layout.
- *
- * @param layout - Authored page layout.
- * @returns Content node style.
- */
-function contentNodeStyle(
 	page: (typeof readerPageBlueprints)[number],
 ): ReaderStyleConfig {
 	if (page.layout === "horizontal") {

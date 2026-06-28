@@ -4,14 +4,12 @@ import ThemeToggle from "~/components/ui/ThemeToggle";
 import Separator from "~/components/ui/separator";
 import { AuthStatus } from "~/features/auth/components";
 import cn from "~/lib/utils/cn";
-import AutoHideHeader from "../AutoHideTopBar/AutoHideTopBar";
 import MainNav from "../MainNav";
 
 type HeaderProps = HTMLAttributes<HTMLElement> & {
 	leftProps?: HTMLAttributes<HTMLDivElement>;
 	rightProps?: HTMLAttributes<HTMLDivElement>;
 	children?: ReactNode;
-	autoHide?: boolean;
 };
 
 /**
@@ -24,7 +22,6 @@ type HeaderProps = HTMLAttributes<HTMLElement> & {
  * <Header />
  */
 export default function Header({
-	autoHide = false,
 	leftProps,
 	rightProps,
 	children,
@@ -32,37 +29,32 @@ export default function Header({
 	...mainProps
 }: HeaderProps): React.JSX.Element {
 	return (
-		<AutoHideHeader
-			overlaySelector=".cl-userButtonPopoverCard, .cl-userButtonPopoverMain, [data-clerk-portal]"
-			pinOnBackgroundClick
+		<nav
+			className={cn(
+				"sticky top-0 z-40 w-full border-border/70 border-b bg-background/90 text-foreground shadow-xs backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
+				className,
+			)}
+			{...mainProps}
 		>
-			<nav
-				className={cn(
-					"sticky top-0 z-40 w-full border-border/70 border-b bg-background/90 text-foreground shadow-xs backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
-					className,
-				)}
-				{...mainProps}
-			>
-				<div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 py-2 sm:px-5">
-					<div
-						className="flex min-w-0 items-center gap-4 font-medium text-lg"
-						{...leftProps}
-					>
-						<Logo />
-						<Separator className="hidden h-8 sm:block" />
-						<div className="hidden sm:block">
-							<MainNav />
-						</div>
+			<div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 py-2 sm:px-5">
+				<div
+					className="flex min-w-0 items-center gap-4 font-medium text-lg"
+					{...leftProps}
+				>
+					<Logo />
+					<Separator className="hidden h-8 sm:block" />
+					<div className="hidden sm:block">
+						<MainNav />
 					</div>
-
-					<div className="flex shrink-0 items-center gap-1.5" {...rightProps}>
-						<ThemeToggle />
-						<AuthStatus />
-					</div>
-
-					{children}
 				</div>
-			</nav>
-		</AutoHideHeader>
+
+				<div className="flex shrink-0 items-center gap-1.5" {...rightProps}>
+					<ThemeToggle />
+					<AuthStatus />
+				</div>
+
+				{children}
+			</div>
+		</nav>
 	);
 }

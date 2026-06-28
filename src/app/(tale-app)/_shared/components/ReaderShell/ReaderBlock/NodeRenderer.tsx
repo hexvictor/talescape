@@ -1,11 +1,8 @@
 "use client";
 
-import type {
-	Anchor,
-	ResolvedTaleFragment,
-	TaleNode,
-	TalePath,
-} from "../../../types";
+import { EditorNodeOverlay } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorNodeOverlay";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import type { Anchor, ResolvedTaleFragment, TaleNode } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { getNodeFragmentStyle, getNodeStyle } from "./nodeStyles";
 
@@ -25,13 +22,12 @@ export function NodeRenderer({
 	anchor,
 	measurement = false,
 	nodeId,
-	onChoosePath,
 }: {
 	anchor: Anchor;
 	measurement?: boolean;
 	nodeId: string;
-	onChoosePath: (path: TalePath) => void;
 }): React.JSX.Element | null {
+	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
 	const node = anchor.block.nodesById[nodeId];
 	if (!node) return null;
 
@@ -40,8 +36,12 @@ export function NodeRenderer({
 			data-reader-component="NodeRenderer"
 			data-reader-node-id={node.id}
 			data-reader-role="layout-node"
+			className="group/node relative"
 			style={getNodeStyle(node, measurement)}
 		>
+			{isEditor ? (
+				<EditorNodeOverlay blockId={anchor.block.id} nodeId={node.id} />
+			) : null}
 			{node.children.map((child, index) => {
 				if (child.type === "node") {
 					return (
@@ -50,7 +50,6 @@ export function NodeRenderer({
 							anchor={anchor}
 							measurement={measurement}
 							nodeId={child.nodeId}
-							onChoosePath={onChoosePath}
 						/>
 					);
 				}
@@ -63,7 +62,6 @@ export function NodeRenderer({
 						index={index}
 						anchor={anchor}
 						parentNode={node}
-						onChoosePath={onChoosePath}
 					/>
 				);
 			})}
@@ -78,7 +76,6 @@ export function NodeRenderer({
  * @param props.anchor - Current block anchor.
  * @param props.fragment - Fragment to render.
  * @param props.index - Fragment index within the parent node.
- * @param props.onChoosePath - Callback used by choice button fragments.
  * @param props.parentNode - Node that owns the fragment.
  * @returns The styled fragment frame.
  *
@@ -89,13 +86,11 @@ function FragmentFrame({
 	anchor,
 	fragment,
 	index,
-	onChoosePath,
 	parentNode,
 }: {
 	anchor: Anchor;
 	fragment: ResolvedTaleFragment;
 	index: number;
-	onChoosePath: (path: TalePath) => void;
 	parentNode: TaleNode;
 }) {
 	return (
@@ -110,7 +105,6 @@ function FragmentFrame({
 				contentSized={anchor.block.size.mode === "content"}
 				fragment={fragment}
 				index={index}
-				onChoosePath={onChoosePath}
 			/>
 		</div>
 	);

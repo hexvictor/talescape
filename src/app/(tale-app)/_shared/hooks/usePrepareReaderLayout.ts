@@ -4,7 +4,6 @@ import type { RefObject } from "react";
 import { useEffect, useRef } from "react";
 import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
 import { useTaleReaderStoreShallow } from "../contexts/TaleReaderStoreContext";
-import { useTaleAppStoreInstance } from "../contexts/TaleAppStoreContext";
 import { compileReader, getCompiledBlockIds } from "../services/readerCompiler";
 import {
 	countReaderDiagnostic,
@@ -16,8 +15,9 @@ import {
 } from "../services/readerMeasurement";
 import type {
 	CompiledReader,
-	ResolvedBlockSize,
 	ResolvedTaleBlock,
+	ResolvedBlockSize,
+	Tale,
 	ViewportSize,
 } from "../types";
 
@@ -47,11 +47,13 @@ function getMeasurementCacheKey(
  * const key = getCompiledRouteCacheKey(viewport, revision, ["branch-1"]);
  */
 function getCompiledRouteCacheKey(
+	layoutVariantKey: string,
 	viewport: ViewportSize,
 	revision: number,
 	selectedBranchIds: string[],
 ): string {
 	return [
+		layoutVariantKey,
 		revision,
 		viewport.width,
 		viewport.height,
@@ -61,10 +63,11 @@ function getCompiledRouteCacheKey(
 
 export function usePrepareReaderLayout(
 	measurementRef: RefObject<HTMLDivElement | null>,
+	tale: Tale,
+	layoutVariantKey: string,
 	viewport: ViewportSize,
 ) {
 	const store = useTaleReaderStoreInstance();
-	const documentStore = useTaleAppStoreInstance();
 	const measurementCacheRef = useRef<Record<string, ResolvedBlockSize>>({});
 	const compiledCacheRef = useRef<Record<string, CompiledReader>>({});
 	const {
@@ -92,11 +95,11 @@ export function usePrepareReaderLayout(
 		let cancelled = false;
 		const prepare = async () => {
 			const currentState = store.getState();
-			const tale = documentStore.getState().document.tale;
+			const resolvedTale = tale;
 			if (!currentState.reader.compiled) setReady(false);
 			setStatus("measuring");
-			const routeBlockIds = getCompiledBlockIds(tale, selectedBranchIds);
-			const allBlockIds = tale.structure.blocks.map((block) => block.id);
+			const routeBlockIds = getCompiledBlockIds(resolvedTale, selectedBranchIds);
+			const allBlockIds = resolvedTale.structure.blocks.map((block) => block.id);
 			countReaderDiagnostic("layout preparation started", {
 				blockCount: routeBlockIds.length,
 				revision,
@@ -108,13 +111,15 @@ export function usePrepareReaderLayout(
 				viewport,
 			});
 			const contentBlockIds = allBlockIds.filter(
-				(blockId) => tale.indexMap.blocksById[blockId]?.size.mode === "content",
+				(blockId) =>
+					resolvedTale.indexMap.blocksById[blockId]?.size.mode === "content",
 			);
 			const manualBlockIds = allBlockIds.filter(
-				(blockId) => tale.indexMap.blocksById[blockId]?.size.mode !== "content",
+				(blockId) =>
+					resolvedTale.indexMap.blocksById[blockId]?.size.mode !== "content",
 			);
 			const missingContentBlockIds = contentBlockIds.filter((blockId) => {
-				const block = tale.indexMap.blocksById[blockId];
+				const block = resolvedTale.indexMap.blocksById[blockId];
 				if (!block) return false;
 				return !measurementCacheRef.current[
 					getMeasurementCacheKey(block, viewport, revision)
@@ -137,16 +142,16 @@ export function usePrepareReaderLayout(
 
 			setPhase("measuring-layout");
 			setProgress(68);
-			const sizes = measureBlocks(tale, manualBlockIds, viewport, null);
+			const sizes = measureBlocks(resolvedTale, manualBlockIds, viewport, null);
 			if (missingContentBlockIds.length > 0) {
 				const measuredContentSizes = measureBlocks(
-					tale,
+					resolvedTale,
 					missingContentBlockIds,
 					viewport,
 					measurementRef.current,
 				);
 				for (const blockId of missingContentBlockIds) {
-					const block = tale.indexMap.blocksById[blockId];
+					const block = resolvedTale.indexMap.blocksById[blockId];
 					const size = measuredContentSizes[blockId];
 					if (!block || !size) continue;
 					measurementCacheRef.current[
@@ -155,7 +160,7 @@ export function usePrepareReaderLayout(
 				}
 			}
 			for (const blockId of contentBlockIds) {
-				const block = tale.indexMap.blocksById[blockId];
+				const block = resolvedTale.indexMap.blocksById[blockId];
 				if (!block) continue;
 				const cachedSize =
 					measurementCacheRef.current[
@@ -170,13 +175,14 @@ export function usePrepareReaderLayout(
 			setProgress(82);
 			setStatus("compiling");
 			const compiledCacheKey = getCompiledRouteCacheKey(
+				layoutVariantKey,
 				viewport,
 				revision,
 				selectedBranchIds,
 			);
 			const compiled =
 				compiledCacheRef.current[compiledCacheKey] ??
-				compileReader(tale, selectedBranchIds, sizes, viewport);
+				compileReader(resolvedTale, selectedBranchIds, sizes, viewport);
 			compiledCacheRef.current[compiledCacheKey] = compiled;
 			setCompiled(compiled);
 			setPhase("restoring-progress");
@@ -198,7 +204,6 @@ export function usePrepareReaderLayout(
 		};
 	}, [
 		measurementRef,
-		documentStore,
 		revision,
 		selectedBranchIds,
 		setCompiled,
@@ -208,6 +213,8 @@ export function usePrepareReaderLayout(
 		setReady,
 		setStatus,
 		store,
+		tale,
+		layoutVariantKey,
 		viewport,
 	]);
 }

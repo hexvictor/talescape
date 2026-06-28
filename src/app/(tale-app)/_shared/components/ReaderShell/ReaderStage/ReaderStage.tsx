@@ -23,8 +23,9 @@ export function ReaderStage(): React.JSX.Element {
 			scrollApi: state.scroll.api,
 		}));
 	const requestedIds = new Set(renderedBlockIds);
-	const renderedAnchors =
-		renderedBlockIds.length === 0
+	const renderedAnchors = !compiled
+		? []
+		: renderedBlockIds.length === 0
 			? compiled.anchors.slice(0, 3)
 			: compiled.anchors.filter((anchor) => requestedIds.has(anchor.block.id));
 	countReaderDiagnostic("ReaderStage React render", {

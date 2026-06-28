@@ -58,6 +58,7 @@ export function formatTaleStructure(
 			officialPresets.blockStylePresets ?? [],
 			"official",
 		),
+		breakpoints: record.breakpointConfig ?? [],
 		branches: formatBranches(record.branches ?? []),
 		entries: formatEntries(record.entries ?? []),
 		fragments: formatFragments(record.fragments ?? []),
@@ -85,6 +86,7 @@ export function formatTaleStructure(
 	return {
 		...record,
 		...tale,
+		breakpoints: raw.breakpoints,
 		book: record.book ?? null,
 		creator: record.creatorById ?? null,
 		id: record.id,

@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Grid3X3, Pin, PinOff } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
 import { useRecentReaderActivity } from "../../../../hooks/useRecentReaderActivity";
@@ -34,9 +35,10 @@ export function PageNavigator(): React.JSX.Element | null {
 		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 		scrollApi: state.scroll.api,
 	}));
+	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
 	const [open, setOpen] = useState(false);
 	const pendingPageIndexRef = useRef<number | null>(null);
-	const navigatorVisibility = usePinnedHoverPanel(true);
+	const navigatorVisibility = usePinnedHoverPanel(!isPreviewing);
 	const recentlyActive = useRecentReaderActivity(
 		location?.pageId ?? null,
 		activityFadeDelaySeconds * 1000,

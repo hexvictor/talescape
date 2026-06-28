@@ -19,6 +19,7 @@ import type {
  */
 export function createTaleEditorDraftPayload(tale: Tale) {
 	return {
+		breakpointConfig: tale.breakpoints,
 		branches: tale.structure.branches
 			.filter((branch) => Number.isFinite(Number(branch.id)))
 			.map((branch) => ({
@@ -43,6 +44,7 @@ export function createTaleEditorDraftPayload(tale: Tale) {
 					? "fixed"
 					: "contentResponsive") as "fixed" | "contentResponsive",
 				snap: block.snap,
+				responsiveConfig: block.responsiveOverrides ?? {},
 				styleConfig: block.style ?? null,
 				title: block.title,
 				transitionConfig: serializeTransitionConfig(block),
@@ -58,9 +60,10 @@ export function createTaleEditorDraftPayload(tale: Tale) {
 				id: Number(fragment.id),
 				nodeId: fragment.nodeId === null ? null : Number(fragment.nodeId),
 				order: fragment.order,
-				placementConfig: fragment.placement,
-				styleConfig: fragment.style ?? null,
-				type: fragment.type,
+						placementConfig: fragment.placement,
+						responsiveConfig: fragment.responsiveOverrides ?? {},
+						styleConfig: fragment.style ?? null,
+						type: fragment.type,
 				visibleRange: fragment.visibleRange ?? null,
 			})),
 		nodes: tale.structure.nodes
@@ -171,10 +174,14 @@ function serializeTransitionConfig(block: TaleBlock) {
 		animationConfig: {
 			entering: serializeSelection(block.transition.animations.entering),
 			leaving: serializeSelection(block.transition.animations.leaving),
+			previousVisible: serializeSelection(
+				block.transition.animations.previousVisible,
+			),
 		},
 		enteringLength: block.transition.enteringLength,
 		flow: block.transition.flow,
 		leavingLength: block.transition.leavingLength,
+		previousBlocksDuringEnter: block.transition.previousBlocksDuringEnter,
 	};
 }
 

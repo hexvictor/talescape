@@ -14,6 +14,7 @@ import type {
 	ReaderStyleConfig,
 	TimelineRange,
 } from "~/server/db/types/tale-reader/readerConfig";
+import type { TaleFragmentResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import { users } from "../../users";
 import { fragmentPermissions } from "../permissions/fragmentPermissions";
 import { tales } from "../tales";
@@ -54,6 +55,11 @@ export const fragments = createTable("fragment", (d) => ({
 		.$type<FragmentPlacementConfig>()
 		.default({ mode: "normal" }),
 	styleConfig: d.json().$type<ReaderStyleConfig>(),
+	responsiveConfig: d
+		.json()
+		.notNull()
+		.$type<Record<string, TaleFragmentResponsiveOverride>>()
+		.default({}),
 	visibleRange: d.json().$type<TimelineRange>(),
 	animationConfig: d
 		.json()

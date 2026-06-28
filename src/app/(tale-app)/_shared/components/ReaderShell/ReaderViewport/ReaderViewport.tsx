@@ -1,8 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ReaderViewportProvider } from "../../../contexts/ReaderViewportContext";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type ReaderViewportContextValue,
+	ReaderViewportProvider,
+} from "../../../contexts/ReaderViewportContext";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import { useChooseReaderPath } from "../../../hooks/useChooseReaderPath";
@@ -10,62 +13,111 @@ import { usePrepareReaderLayout } from "../../../hooks/usePrepareReaderLayout";
 import { useReaderScrollEngine } from "../../../hooks/useReaderScrollEngine";
 import { useViewportSize } from "../../../hooks/useViewportSize";
 import { countReaderDiagnostic } from "../../../services/readerDiagnostics";
+import {
+	resolveTaleBreakpoint,
+	selectViewportBreakpointId,
+} from "../../../services/resolveTaleBreakpoint";
 import { ReaderHub } from "../../ReaderUi/ReaderHub/ReaderHub";
 import { ReaderLoading } from "../../ReaderUi/ReaderLoading/ReaderLoading";
 import { ReaderMotionReadiness } from "../../ReaderUi/ReaderLoading/ReaderMotionReadiness";
+import { ReaderContents } from "../../ReaderUi/ReaderNavigator/ReaderContents";
 import { ReaderOverlay } from "../../ReaderUi/ReaderOverlay/ReaderOverlay";
 import { ReaderMeasurementLayer } from "../ReaderMeasurementLayer/ReaderMeasurementLayer";
 import { ReaderStage } from "../ReaderStage/ReaderStage";
 
-type ReaderViewportProps = { additionalOverlay?: ReactNode };
+type ReaderViewportProps = {
+	additionalOverlay?: ReactNode;
+};
 
 /**
- * Renders the reader camera either as the full page reader or inside an editor pane.
- *
- * @param props - Reader viewport props.
- * @param props.additionalOverlay - Optional route-owned overlay rendered over the viewport.
- * @returns Reader viewport and scroll spacer.
- *
- * @example
- * <ReaderViewport />
- */
+
+* Renders the reader camera either as the full page reader or inside an editor pane.
+*
+* @param props - Reader viewport props.
+* @param props.additionalOverlay - Optional route-owned overlay rendered over the viewport.
+* @returns Reader viewport and scroll spacer.
+*
+* @example
+* <ReaderViewport />
+
+*/
 export function ReaderViewport({
 	additionalOverlay,
 }: ReaderViewportProps = {}): React.JSX.Element {
 	countReaderDiagnostic("ReaderViewport React render");
+
 	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
+	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
 	const [viewportRoot, setViewportRoot] = useState<HTMLDivElement | null>(null);
+
 	const {
 		compiled,
-		hubDocked: readerHubDocked,
-		hubOpen,
+		contentsDocked,
+		dockedContentsWidthPx,
+		dockedHubWidthPx,
+		hubDocked,
+		readerContentsOpen,
+		readerHubOpen,
 		measurementBlockIds,
 		setPhase,
 		setProgress,
 		showsNavigation,
 	} = useTaleReaderStoreShallow((state) => ({
 		compiled: state.reader.compiled,
+		contentsDocked: state.derived.contentsDocked,
+		dockedContentsWidthPx: state.derived.dockedContentsWidthPx,
+		dockedHubWidthPx: state.derived.dockedHubWidthPx,
 		hubDocked: state.derived.hubDocked,
-		hubOpen: state.derived.isHubOpen,
+		readerContentsOpen: state.derived.readerContentsOpen,
+		readerHubOpen: state.derived.isHubOpen,
 		measurementBlockIds: state.reader.measurementBlockIds,
 		setPhase: state.engine.setPhase,
 		setProgress: state.engine.setProgress,
 		showsNavigation: state.derived.showsNavigation,
 	}));
+
 	const tale = useTaleAppStore((state) => state.document.tale);
-	const hubDocked = !isPreviewing && readerHubDocked;
-	const readerHubOpen = !isPreviewing && hubOpen;
-	const readerHubVisible = !isPreviewing && showsNavigation;
+	const selectedBreakpointId = useTaleAppStore(
+		(state) => state.runtime.breakpointId,
+	);
+
 	const viewport = useViewportSize({
-		maximumRightInsetPx: hubDocked ? 448 : 0,
-		rightInsetRatio: hubDocked ? 0.42 : 0,
+		leftInsetRatio: contentsDocked ? 1 : 0,
+		maximumLeftInsetPx: contentsDocked ? dockedContentsWidthPx : 0,
+		maximumRightInsetPx: hubDocked ? dockedHubWidthPx : 0,
+		rightInsetRatio: hubDocked ? 1 : 0,
 		root: isPreviewing ? viewportRoot : null,
 	});
+
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
 	const choosePath = useChooseReaderPath();
+	const resolvedTale = useMemo(() => {
+		const breakpointId = isEditor
+			? selectedBreakpointId
+			: selectViewportBreakpointId(tale, viewport);
+		return resolveTaleBreakpoint(tale, breakpointId);
+	}, [isEditor, selectedBreakpointId, tale, viewport]);
+	const layoutVariantKey = isEditor
+		? `editor:${selectedBreakpointId ?? "base"}`
+		: `reader:${selectViewportBreakpointId(tale, viewport) ?? "base"}`;
 
-	usePrepareReaderLayout(measurementRef, viewport);
+	const viewportContextValue = useMemo<ReaderViewportContextValue>(
+		() => ({
+			compiled,
+			onChoosePath: choosePath,
+			stageRef,
+			viewport,
+		}),
+		[choosePath, compiled, viewport],
+	);
+
+	usePrepareReaderLayout(
+		measurementRef,
+		resolvedTale,
+		layoutVariantKey,
+		viewport,
+	);
 
 	const finishRestoring = useCallback(() => {
 		setProgress(97);
@@ -83,8 +135,10 @@ export function ReaderViewport({
 
 	useEffect(() => {
 		if (isPreviewing) return;
+
 		document.documentElement.classList.add("scrollbar-none");
 		document.body.classList.add("scrollbar-none");
+
 		return () => {
 			document.documentElement.classList.remove("scrollbar-none");
 			document.body.classList.remove("scrollbar-none");
@@ -97,44 +151,40 @@ export function ReaderViewport({
 				data-reader-runtime-root="true"
 				data-reader-component="ReaderViewport"
 				data-reader-role="camera-viewport"
-				className="absolute inset-y-0 left-0 overflow-hidden transition-[right] duration-300 ease-out"
+				className="absolute inset-y-0 left-0 overflow-hidden transition-[left,right] duration-180 ease-out"
 				style={{
-					right: readerHubOpen && hubDocked ? "min(28rem, 42vw)" : 0,
+					left:
+						readerContentsOpen && contentsDocked
+							? `${dockedContentsWidthPx}px`
+							: 0,
+					right: readerHubOpen && hubDocked ? `${dockedHubWidthPx}px` : 0,
 				}}
 			>
 				<div className="absolute inset-0">
-					{compiled ? (
-						<ReaderViewportProvider
-							value={{
-								compiled,
-								onChoosePath: choosePath,
-								stageRef,
-								viewport,
-							}}
-						>
-							<ReaderStage />
-						</ReaderViewportProvider>
-					) : null}
+					{compiled ? <ReaderStage /> : null}
 				</div>
 				<ReaderOverlay />
 				{additionalOverlay}
 			</div>
-			{readerHubVisible ? <ReaderHub /> : null}
+			{showsNavigation ? <ReaderHub /> : null}
+			{showsNavigation ? <ReaderContents /> : null}
+
 			<ReaderMotionReadiness />
 			<ReaderLoading />
 		</>
 	);
 
 	return (
-		<>
+		<ReaderViewportProvider value={viewportContextValue}>
 			{measurementBlockIds.length > 0 ? (
 				<ReaderMeasurementLayer
 					blockIds={measurementBlockIds}
 					rootRef={measurementRef}
-					tale={tale}
+					tale={resolvedTale}
 					viewport={viewport}
 				/>
 			) : null}
+
 			{isPreviewing ? (
 				<div
 					ref={setViewportRoot}
@@ -169,10 +219,12 @@ export function ReaderViewport({
 						aria-hidden="true"
 						data-reader-component="ReaderViewport"
 						data-reader-role="scroll-spacer"
-						style={{ height: (compiled?.totalScroll ?? 1) + viewport.height }}
+						style={{
+							height: (compiled?.totalScroll ?? 1) + viewport.height,
+						}}
 					/>
 				</>
 			)}
-		</>
+		</ReaderViewportProvider>
 	);
 }

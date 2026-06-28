@@ -1,7 +1,6 @@
 import { useTaleReaderStore } from "../../../contexts/TaleReaderStoreContext";
 import { EntryNavigator } from "./EntryNavigator/EntryNavigator";
 import { PageNavigator } from "./PageNavigator/PageNavigator";
-import { ReaderNavigationModal } from "./ReaderNavigationModal";
 
 /**
  * Owns the visibility boundary for reader navigation features.
@@ -20,7 +19,6 @@ export function ReaderNavigator(): React.JSX.Element | null {
 	if (!visible) return null;
 	return (
 		<>
-			<ReaderNavigationModal />
 			<EntryNavigator />
 			<PageNavigator />
 		</>

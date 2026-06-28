@@ -3,6 +3,7 @@ import { type StoreApi, createStore } from "zustand/vanilla";
 import type { SavedReaderProgress, Tale } from "../types";
 import type { TaleAppRuntime } from "./createTaleAppStore";
 import {
+	selectIsReaderContentsOpen,
 	selectIsReaderHubOpen,
 	selectReaderViewportLayout,
 	selectShowsReaderNavigation,
@@ -10,6 +11,10 @@ import {
 	selectShowsReaderTools,
 } from "./selectors/readerUiSelectors";
 import { type DebugSlice, createDebugSlice } from "./slices/debugSlice";
+import {
+	type ContentsSlice,
+	createContentsSlice,
+} from "./slices/contentsSlice";
 import { type EngineSlice, createEngineSlice } from "./slices/engineSlice";
 import { type HubSlice, createHubSlice } from "./slices/hubSlice";
 import {
@@ -24,7 +29,8 @@ import { type ReaderSlice, createReaderSlice } from "./slices/readerSlice";
 import { type ScrollSlice, createScrollSlice } from "./slices/scrollSlice";
 import { type UiSlice, createUiSlice } from "./slices/uiSlice";
 
-export type TaleReaderState = DebugSlice &
+export type TaleReaderState = ContentsSlice &
+	DebugSlice &
 	EngineSlice &
 	HubSlice &
 	NavigationSlice &
@@ -34,8 +40,12 @@ export type TaleReaderState = DebugSlice &
 	UiSlice;
 
 export type TaleReaderDerivedState = {
+	readonly contentsDocked: boolean;
+	readonly dockedContentsWidthPx: number;
+	readonly dockedHubWidthPx: number;
 	readonly hubDocked: boolean;
 	readonly isHubOpen: boolean;
+	readonly readerContentsOpen: boolean;
 	readonly showsNavigation: boolean;
 	readonly showsProgress: boolean;
 	readonly showsTools: boolean;
@@ -64,6 +74,7 @@ export function createTaleReaderStore(
 	return createStore<TaleReaderState>()(
 		devtools(
 			(set, get, api) => ({
+				...createContentsSlice(set, get, api),
 				...createDebugSlice(set, get, api),
 				...createEngineSlice(set, get, api),
 				...createHubSlice(set, get, api),
@@ -96,6 +107,19 @@ export function createTaleReaderDerivedState(
 	state: TaleReaderState,
 ): TaleReaderDerivedState {
 	return {
+		get contentsDocked() {
+			return (
+				selectIsReaderContentsOpen(state) &&
+				selectShowsReaderNavigation(state) &&
+				selectReaderViewportLayout(state) === "desktop"
+			);
+		},
+		get dockedContentsWidthPx() {
+			return Math.max(320, state.contents.panelWidthPx);
+		},
+		get dockedHubWidthPx() {
+			return Math.max(320, state.hub.panelWidthPx);
+		},
 		get hubDocked() {
 			return (
 				selectIsReaderHubOpen(state) &&
@@ -104,6 +128,9 @@ export function createTaleReaderDerivedState(
 		},
 		get isHubOpen() {
 			return selectIsReaderHubOpen(state);
+		},
+		get readerContentsOpen() {
+			return selectIsReaderContentsOpen(state);
 		},
 		get showsNavigation() {
 			return selectShowsReaderNavigation(state);

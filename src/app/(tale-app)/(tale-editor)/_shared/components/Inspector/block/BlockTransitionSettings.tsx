@@ -8,6 +8,7 @@ import {
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
+import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
 import { FlowSettings, MotionNumber } from "./MotionControls";
 import type { BlockChangeHandler } from "./blockMotionTypes";
 
@@ -51,7 +52,7 @@ export function BlockTransitionSettings({
 			readerRole="block-transition-settings"
 			title="Transition"
 		>
-			<div className="col-span-2 grid grid-cols-[1fr_auto] gap-2">
+			<div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
 				<select
 					aria-label="Official transition template"
 					className={settingClassName}
@@ -87,6 +88,8 @@ export function BlockTransitionSettings({
 											(id) => animationPresetsById[id]?.tracks ?? [],
 										),
 									},
+									previousVisible:
+										item.transition.animations.previousVisible,
 								},
 								flow: structuredClone(preset.flow),
 							},
@@ -132,6 +135,54 @@ export function BlockTransitionSettings({
 					}))
 				}
 			/>
+			<div className="col-span-2 grid min-w-0 gap-2 rounded border border-foreground/8 bg-foreground/[0.025] p-2">
+				<Setting label="Previous blocks during enter">
+					<select
+						className={settingClassName}
+						value={
+							block.transition.previousBlocksDuringEnter ===
+							"customAllVisiblePrevious"
+								? "customAllVisiblePrevious"
+								: "keep"
+						}
+						onChange={(event) =>
+							onChange((item) => ({
+								...item,
+								transition: {
+									...item.transition,
+									previousBlocksDuringEnter: event.target.value as
+										| "customAllVisiblePrevious"
+										| "keep",
+								},
+							}))
+						}
+					>
+						<option value="keep">None</option>
+						<option value="customAllVisiblePrevious">
+							All previous blocks
+						</option>
+					</select>
+				</Setting>
+				{block.transition.previousBlocksDuringEnter ===
+				"customAllVisiblePrevious" ? (
+					<AnimationSelectionEditor
+						title="Previous block takeover transition"
+						selection={block.transition.animations.previousVisible}
+						onChange={(previousVisible) =>
+							onChange((item) => ({
+								...item,
+								transition: {
+									...item.transition,
+									animations: {
+										...item.transition.animations,
+										previousVisible,
+									},
+								},
+							}))
+						}
+					/>
+				) : null}
+			</div>
 			<Setting label="Snap">
 				<input
 					className="h-9 w-5 accent-[#d9b56f]"

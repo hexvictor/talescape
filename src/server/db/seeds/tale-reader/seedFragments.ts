@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { LoremIpsum } from "lorem-ipsum";
 import { db } from "~/server/db";
 import {
 	blocks,
@@ -33,6 +34,11 @@ const externalImages = [
 ] as const;
 
 type FragmentSeed = typeof fragments.$inferInsert;
+
+const lorem = new LoremIpsum({
+	sentencesPerParagraph: { max: 5, min: 3 },
+	wordsPerSentence: { max: 12, min: 8 },
+});
 
 /**
  * Inserts text, quote, image, choice, and return fragments for every block.
@@ -113,9 +119,9 @@ export async function seedFragments(): Promise<void> {
 		const page = pageById.get(block.pageId);
 		const blueprint = page && pageBlueprintByOrder.get(page.order);
 		const entry = page && entryById.get(page.entryId);
-		const contentNode = nodesByBlockId
-			.get(block.id)
-			?.find((node) => node.name === "content");
+		const contentNode =
+			nodesByBlockId.get(block.id)?.find((node) => node.name === "root") ??
+			nodesByBlockId.get(block.id)?.[0];
 		if (!page || !blueprint || !entry || !contentNode) {
 			throw new Error(`Incomplete fragment parents for block ${block.id}.`);
 		}
@@ -202,25 +208,40 @@ function createBlockFragments(
 			throw new Error(`Choice block ${block.id} has no outgoing paths.`);
 		}
 		return [
-			textFragment(base, contentNodeId, title, 0, true),
+			headlineTextFragment(base, contentNodeId, title, 0, true),
+			bodyTextFragment(base, contentNodeId, seedLoremIpsum(block.order, 1), 1, true),
 			...blockPaths.map((path, index) =>
-				choiceFragment(base, contentNodeId, path, index + 1),
+				choiceFragment(base, contentNodeId, path, index + 2),
 			),
 		];
 	}
 	if (entry.type !== "chapter") {
+		const storyText = seedLoremIpsum(block.order, 2);
+		const codexOrder = title === "The Bell That Rang Below" ? 2 : 3;
 		return [
 			imageFragment(base, contentNodeId, title, page.order, 0, false),
-			textFragment(base, contentNodeId, title, 1, true),
+			title === "The Bell That Rang Below"
+				? quoteFragment(base, contentNodeId, title, 1, false)
+				: headlineTextFragment(base, contentNodeId, title, 1, true),
+			...(title === "The Bell That Rang Below"
+				? []
+				: [bodyTextFragment(base, contentNodeId, storyText, 2, true)]),
+			codexEntryFragment(
+				base,
+				contentNodeId,
+				`Codex: ${title}`,
+				`Open codex notes related to ${title}.`,
+				codexOrder,
+			),
 			...blockPaths.map((path, index) =>
-				choiceFragment(base, contentNodeId, path, index + 2),
+				choiceFragment(base, contentNodeId, path, index + codexOrder + 1),
 			),
 		];
 	}
 
 	const horizontal = pageBlueprint.layout === "horizontal";
 	return [
-		textFragment(base, contentNodeId, title, 0, false),
+		headlineTextFragment(base, contentNodeId, title, 0, false),
 		quoteFragment(
 			base,
 			contentNodeId,
@@ -229,23 +250,34 @@ function createBlockFragments(
 			horizontal,
 		),
 		imageFragment(base, contentNodeId, title, page.order, 2, horizontal),
+		...(block.order % 4 === 0
+			? [
+					codexEntryFragment(
+						base,
+						contentNodeId,
+						`Codex: ${branchName}`,
+						`Field notes about ${branchName} and the passage ahead.`,
+						3,
+					),
+				]
+			: []),
 		...blockPaths.map((path, index) =>
-			choiceFragment(base, contentNodeId, path, index + 3),
+			choiceFragment(base, contentNodeId, path, index + (block.order % 4 === 0 ? 4 : 3)),
 		),
 	];
 }
 
 /**
- * Creates a normal text fragment.
+ * Creates a title-sized text fragment.
  *
  * @param base - Shared fragment fields.
  * @param nodeId - Parent content node id.
  * @param text - Fragment text.
  * @param order - Fragment order.
  * @param centered - Whether text should be centered.
- * @returns Text fragment seed.
+ * @returns Title text fragment seed.
  */
-function textFragment(
+function headlineTextFragment(
 	base: ReturnType<typeof fragmentBase>,
 	nodeId: number,
 	text: string,
@@ -264,6 +296,41 @@ function textFragment(
 			fontWeight: 800,
 			lineHeight: 1.05,
 			maxWidth: "52rem",
+			textAlign: centered ? "center" : "left",
+		},
+		type: "text",
+	};
+}
+
+/**
+ * Creates a body-copy text fragment for seeded prose and supporting text.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Fragment text.
+ * @param order - Fragment order.
+ * @param centered - Whether text should be centered.
+ * @returns Body text fragment seed.
+ */
+function bodyTextFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	centered: boolean,
+): FragmentSeed {
+	return {
+		...base,
+		content: { content: text },
+		data: { content: text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			fontSize: "clamp(1rem, 1.8vw, 1.25rem)",
+			fontWeight: 500,
+			lineHeight: 1.8,
+			maxWidth: "56rem",
 			textAlign: centered ? "center" : "left",
 		},
 		type: "text",
@@ -397,6 +464,35 @@ function choiceFragment(
 }
 
 /**
+ * Creates a codex launcher fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param label - Visible codex button label.
+ * @param text - Supporting codex teaser.
+ * @param order - Fragment order.
+ * @returns Codex entry fragment seed.
+ */
+function codexEntryFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	label: string,
+	text: string,
+	order: number,
+): FragmentSeed {
+	return {
+		...base,
+		content: { description: text, label },
+		data: { label, text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: { maxWidth: "34rem", width: "100%" },
+		type: "codexEntry",
+	};
+}
+
+/**
  * Creates common fragment insert values.
  *
  * @param blockId - Actual owning block id.
@@ -443,6 +539,19 @@ function emptyAnimationConfig(): FragmentAnimationConfig {
 		leaving: { tracks: [] },
 		scrolling: { tracks: [] },
 	};
+}
+
+/**
+ * Creates deterministic lorem ipsum used by seeded text fragments.
+ *
+ * @param order - Stable page or block order.
+ * @param salt - Small offset to diversify nearby fragments.
+ * @returns Paragraph text for seeded fragment content.
+ */
+function seedLoremIpsum(order: number, salt: number): string {
+	const paragraphCount = ((order + salt) % 3) + 1;
+	return Array.from({ length: paragraphCount }, () => lorem.generateParagraphs(1))
+		.join("\n\n");
 }
 
 /**

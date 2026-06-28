@@ -1,12 +1,11 @@
 "use client";
 
-import clsx from "clsx";
 import { useRef } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { useTaleEditorStore } from "../../hooks/useTaleEditorStore";
 import { EditorModeToolbar } from "./EditorModeToolbar";
 import { TaleBranchGraph } from "./TaleBranchGraph";
 import { TaleEditorPreview } from "./TaleEditorPreview";
-import { TaleEditorPreviewToggle } from "./TaleEditorPreviewToggle";
 import { TaleEditorSelectionSidebar } from "./TaleEditorSelectionSidebar";
 
 /**
@@ -19,7 +18,14 @@ import { TaleEditorSelectionSidebar } from "./TaleEditorSelectionSidebar";
  */
 export function TaleEditorEditingSurface(): React.JSX.Element {
 	const editorBodyRef = useRef<HTMLDivElement>(null);
-	const activity = useTaleAppStore((state) => state.runtime.activity);
+	const graphOpen = useTaleEditorStore(
+		(state) => state.editorWorkspace.graphOpen,
+	);
+	const previewOpen = useTaleAppStore((state) => state.runtime.previewOpen);
+	const rightPanelOpen = useTaleEditorStore(
+		(state) => state.editorWorkspace.rightPanelOpen,
+	);
+	const effectiveGraphOpen = graphOpen || (!previewOpen && !rightPanelOpen);
 
 	return (
 		<div
@@ -28,21 +34,16 @@ export function TaleEditorEditingSurface(): React.JSX.Element {
 			className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
 		>
 			<EditorModeToolbar />
-			<div
-				ref={editorBodyRef}
-				className={clsx(
-					activity === "editing" && "mt-14",
-					"flex min-h-0 flex-1",
-				)}
-			>
+			<div ref={editorBodyRef} className="mt-16 flex min-h-0 flex-1">
 				<TaleEditorPreview />
-				<main className="relative flex min-w-0 flex-1">
-					<TaleEditorPreviewToggle />
-
-					<TaleBranchGraph />
-
+				{effectiveGraphOpen ? (
+					<main className="relative flex min-w-0 flex-1">
+						<TaleBranchGraph />
+						<TaleEditorSelectionSidebar editorBodyRef={editorBodyRef} />
+					</main>
+				) : rightPanelOpen ? (
 					<TaleEditorSelectionSidebar editorBodyRef={editorBodyRef} />
-				</main>
+				) : null}
 			</div>
 		</div>
 	);

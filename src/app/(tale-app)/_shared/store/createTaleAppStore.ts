@@ -27,7 +27,9 @@ export type TaleActivity = "editing" | "reading";
 export type TaleAppRuntime = {
 	activity: TaleActivity;
 	application: TaleApplication;
+	breakpointId: string | null;
 	previewOpen: boolean;
+	setBreakpointId: (breakpointId: string | null) => void;
 	setActivity: (activity: TaleActivity) => void;
 	setPreviewOpen: (open: boolean) => void;
 };
@@ -51,7 +53,6 @@ export type TaleAppDerivedState = {
 	readonly isReader: boolean;
 	readonly isReading: boolean;
 	readonly showsEditorDebug: boolean;
-	readonly showsFullReaderUi: boolean;
 };
 
 /**
@@ -108,7 +109,12 @@ export function createTaleAppStore(
 				runtime: {
 					activity: application === "editor" ? "editing" : "reading",
 					application,
+					breakpointId: null,
 					previewOpen: application === "editor",
+					setBreakpointId: (breakpointId) =>
+						set((state) => ({
+							runtime: { ...state.runtime, breakpointId },
+						})),
 					setActivity: (activity) =>
 						set((state) => ({
 							runtime: { ...state.runtime, activity },
@@ -164,12 +170,6 @@ export function createTaleAppDerivedState(
 		get showsEditorDebug() {
 			return (
 				state.runtime.application === "editor" &&
-				state.runtime.activity === "reading"
-			);
-		},
-		get showsFullReaderUi() {
-			return (
-				state.runtime.application === "reader" ||
 				state.runtime.activity === "reading"
 			);
 		},

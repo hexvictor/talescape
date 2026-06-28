@@ -17,12 +17,15 @@ import type { TalePath } from "~/app/(tale-app)/_shared/types";
 type PathType = TalePath["type"];
 
 export type PathEditorEdgeData = {
+	activeConnected: boolean;
 	animated: boolean;
 	dragging?: boolean;
 	edgeType: string;
 	fromBranchTitle: string;
 	label: string;
 	pathType: PathType;
+	previewAvailable: boolean;
+	previewReachable: boolean;
 	selected: boolean;
 	toBranchTitle: string;
 };
@@ -55,11 +58,18 @@ export function TaleBranchGraphEdge(
 	} = props;
 	const [hovered, setHovered] = useState(false);
 	const dragging = Boolean(data?.dragging);
-	const emphasized = !dragging && (hovered || Boolean(data?.selected));
+	const activeConnected = Boolean(data?.activeConnected);
+	const emphasized =
+		!dragging && (hovered || activeConnected || Boolean(data?.selected));
 	const edgeColor = emphasized
 		? "#67e8f9"
-		: getPathStrokeColor(data?.pathType ?? "choice");
-	const animated = !dragging && (hovered || Boolean(data?.animated));
+		: getPreviewEdgeColor({
+				available: Boolean(data?.previewAvailable),
+				pathType: data?.pathType ?? "choice",
+				reachable: data?.previewReachable ?? true,
+			});
+	const animated =
+		!dragging && (hovered || activeConnected || Boolean(data?.animated));
 	const secondaryPath =
 		data?.pathType === "return" || data?.pathType === "teleport";
 	const focusOpacity = typeof style?.opacity === "number" ? style.opacity : 1;
@@ -138,6 +148,31 @@ export function TaleBranchGraphEdge(
 }
 
 /**
+ * Resolves edge color after preview-route reachability is applied.
+ *
+ * @param options - Preview visibility and path type inputs.
+ * @param options.available - Whether the edge leaves the currently visible route.
+ * @param options.pathType - Tale path type.
+ * @param options.reachable - Whether both edge endpoints are visible in preview.
+ * @returns CSS color for the rendered edge.
+ *
+ * @example
+ * const color = getPreviewEdgeColor({ available: true, pathType: "choice", reachable: false });
+ */
+function getPreviewEdgeColor({
+	available,
+	pathType,
+	reachable,
+}: {
+	available: boolean;
+	pathType: PathType;
+	reachable: boolean;
+}): string {
+	if (reachable || available) return getPathStrokeColor(pathType);
+	return "var(--muted-foreground)";
+}
+
+/**
  * Resolves the graph color for a tale path type.
  *
  * @param type - Tale path type.
@@ -149,8 +184,7 @@ export function TaleBranchGraphEdge(
 export function getPathStrokeColor(type: PathType): string {
 	const colors: Record<PathType, string> = {
 		choice: "#d9b56f",
-		convergence: "#a78bfa",
-		ending: "#f97316",
+		linear: "#a78bfa",
 		return: "#22c55e",
 		teleport: "#38bdf8",
 	};

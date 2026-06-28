@@ -1,6 +1,7 @@
 import type {
 	RawTaleRecord,
 	ReaderStyle,
+	TaleBlockResponsiveOverride,
 	TaleBlock,
 } from "~/app/(tale-app)/_shared/types";
 import type {
@@ -39,6 +40,7 @@ type RawBlockRow = {
 	sizeConfig?: ReaderSizeConfig;
 	sizeMode?: ReaderSizeMode;
 	styleConfig?: ReaderStyle | null;
+	responsiveConfig?: Record<string, TaleBlockResponsiveOverride>;
 	title?: string | null;
 	transitionConfig?: TransitionConfig;
 };
@@ -98,6 +100,7 @@ function formatBlockRow(
 		pageNumber: null,
 		partId: ownership.partId,
 		reading: formatReadingConfig(block),
+		responsiveOverrides: block.responsiveConfig ?? undefined,
 		size: formatSize(block.sizeMode, block.sizeConfig),
 		snap: block.isSnap ?? true,
 		style: block.styleConfig ?? undefined,
@@ -197,10 +200,15 @@ function formatTransitionConfig(
 		animations: {
 			entering: formatAnimationSelection(transition?.animationConfig.entering),
 			leaving: formatAnimationSelection(transition?.animationConfig.leaving),
+			previousVisible: formatAnimationSelection(
+				transition?.animationConfig.previousVisible,
+			),
 		},
 		enteringLength: transition?.enteringLength ?? null,
 		flow: normalizeFlow(transition?.flow),
 		leavingLength: transition?.leavingLength ?? null,
+		previousBlocksDuringEnter:
+			transition?.previousBlocksDuringEnter ?? "keep",
 		scrollLength: null,
 	};
 }

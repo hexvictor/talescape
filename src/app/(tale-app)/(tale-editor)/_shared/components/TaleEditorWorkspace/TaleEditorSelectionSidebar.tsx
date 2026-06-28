@@ -1,6 +1,5 @@
 "use client";
 
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { RefObject } from "react";
 import { useTaleEditorStoreShallow } from "../../hooks/useTaleEditorStore";
 import { EditorPaneResizeHandle } from "./EditorPaneResizeHandle";
@@ -23,40 +22,15 @@ type TaleEditorSelectionSidebarProps = {
 export function TaleEditorSelectionSidebar({
 	editorBodyRef,
 }: TaleEditorSelectionSidebarProps): React.JSX.Element {
-	const { rightPanelOpen, setRightPanelOpen, setRightPanelWidth } =
-		useTaleEditorStoreShallow((state) => ({
+	const { rightPanelOpen, setRightPanelWidth } = useTaleEditorStoreShallow(
+		(state) => ({
 			rightPanelOpen: state.editorWorkspace.rightPanelOpen,
-			setRightPanelOpen: state.editorWorkspace.setRightPanelOpen,
 			setRightPanelWidth: state.editorWorkspace.setRightPanelWidth,
-		}));
+		}),
+	);
 
 	return (
 		<>
-			<button
-				data-reader-component="TaleEditorSelectionSidebar"
-				data-reader-role="selection-sidebar-toggle"
-				type="button"
-				aria-expanded={rightPanelOpen}
-				aria-label={
-					rightPanelOpen
-						? "Hide editor selection sidebar"
-						: "Show editor selection sidebar"
-				}
-				className="absolute top-14 right-3 z-30 grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/72 text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
-				title={
-					rightPanelOpen
-						? "Hide editor selection sidebar"
-						: "Show editor selection sidebar"
-				}
-				onClick={() => setRightPanelOpen(!rightPanelOpen)}
-			>
-				{rightPanelOpen ? (
-					<PanelRightClose size={15} />
-				) : (
-					<PanelRightOpen size={15} />
-				)}
-			</button>
-
 			{rightPanelOpen ? (
 				<>
 					<EditorPaneResizeHandle

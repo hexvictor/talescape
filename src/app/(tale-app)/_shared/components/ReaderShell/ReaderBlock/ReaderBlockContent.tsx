@@ -1,6 +1,6 @@
 "use client";
 
-import type { Anchor, ResolvedTaleFragment, TalePath } from "../../../types";
+import type { Anchor, ResolvedTaleFragment } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { NodeRenderer } from "./NodeRenderer";
 import { positionedStyle } from "./positionedStyle";
@@ -18,11 +18,9 @@ import { positionedStyle } from "./positionedStyle";
 export function ReaderBlockContent({
 	anchor,
 	mode = "render",
-	onChoosePath,
 }: {
 	anchor: Anchor;
 	mode?: "measure" | "render";
-	onChoosePath: (path: TalePath) => void;
 }): React.JSX.Element {
 	if (mode === "measure") {
 		return (
@@ -35,7 +33,6 @@ export function ReaderBlockContent({
 					measurement
 					anchor={anchor}
 					nodeId={anchor.block.rootNodeId}
-					onChoosePath={onChoosePath}
 				/>
 			</div>
 		);
@@ -59,17 +56,12 @@ export function ReaderBlockContent({
 					data-reader-role="node-content-layer"
 					className="relative h-full w-full overflow-hidden"
 				>
-					<NodeRenderer
-						anchor={anchor}
-						nodeId={anchor.block.rootNodeId}
-						onChoosePath={onChoosePath}
-					/>
+					<NodeRenderer anchor={anchor} nodeId={anchor.block.rootNodeId} />
 				</div>
 				{anchor.block.clippedFragments.length > 0 ? (
 					<PositionedFragments
 						anchor={anchor}
 						fragments={anchor.block.clippedFragments}
-						onChoosePath={onChoosePath}
 					/>
 				) : null}
 			</div>
@@ -77,7 +69,6 @@ export function ReaderBlockContent({
 				<PositionedFragments
 					anchor={anchor}
 					fragments={anchor.block.overflowingFragments}
-					onChoosePath={onChoosePath}
 				/>
 			) : null}
 		</>
@@ -96,11 +87,9 @@ export function ReaderBlockContent({
 function PositionedFragments({
 	anchor,
 	fragments,
-	onChoosePath,
 }: {
 	anchor: Anchor;
 	fragments: ResolvedTaleFragment[];
-	onChoosePath: (path: TalePath) => void;
 }): React.JSX.Element[] {
 	return fragments.map((fragment, index) => (
 		<div
@@ -131,7 +120,6 @@ function PositionedFragments({
 					contentSized={anchor.block.size.mode === "content"}
 					fragment={fragment}
 					index={index}
-					onChoosePath={onChoosePath}
 				/>
 			</div>
 		</div>

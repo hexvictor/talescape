@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
 import type { Anchor } from "../../../types";
 import { FixedFragments } from "./FixedFragments";
 import { ReaderBlockContent } from "./ReaderBlockContent";
@@ -22,8 +21,6 @@ export function ReaderBlock({
 	anchor: Anchor;
 	children?: ReactNode;
 }): React.JSX.Element {
-	const { onChoosePath } = useReaderViewportContext();
-
 	return (
 		<article
 			data-reader-block-id={anchor.block.id}
@@ -48,8 +45,8 @@ export function ReaderBlock({
 			}
 		>
 			{children}
-			<ReaderBlockContent anchor={anchor} onChoosePath={onChoosePath} />
-			<FixedFragments anchor={anchor} onChoosePath={onChoosePath} />
+			<ReaderBlockContent anchor={anchor} />
+			<FixedFragments anchor={anchor} />
 		</article>
 	);
 }

@@ -105,7 +105,7 @@ export function StyleSettings({
 					<summary className="cursor-pointer font-semibold text-[10px] text-foreground/52 uppercase">
 						Advanced layout and CSS
 					</summary>
-					<div className="mt-3 grid grid-cols-2 gap-2">
+					<div className="@container/inspector-group mt-3 grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2">
 						{layoutMode ? null : (
 							<Setting label="Display">
 								<select

@@ -54,11 +54,7 @@ export function ReaderMeasurementLayer({
 							...getMeasurementBlockStyle(anchor.block.size, viewport),
 						}}
 					>
-						<ReaderBlockContent
-							anchor={anchor}
-							mode="measure"
-							onChoosePath={() => {}}
-						/>
+						<ReaderBlockContent anchor={anchor} mode="measure" />
 					</article>,
 				];
 			})}

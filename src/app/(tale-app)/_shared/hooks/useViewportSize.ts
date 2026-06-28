@@ -9,6 +9,8 @@ import {
 const resizeDebounceMs = 180;
 
 type ViewportSizeOptions = {
+	leftInsetRatio?: number;
+	maximumLeftInsetPx?: number;
 	maximumRightInsetPx?: number;
 	rightInsetRatio?: number;
 	root?: HTMLElement | null;
@@ -29,7 +31,9 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 	const size = useTaleReaderStore((state) => state.ui.viewport);
 	const store = useTaleReaderStoreInstance();
 	const timerRef = useRef<number | null>(null);
+	const maximumLeftInsetPx = options.maximumLeftInsetPx ?? 0;
 	const maximumRightInsetPx = options.maximumRightInsetPx ?? 0;
+	const leftInsetRatio = options.leftInsetRatio ?? 0;
 	const rightInsetRatio = options.rightInsetRatio ?? 0;
 	const root = options.root ?? null;
 
@@ -37,22 +41,29 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 		const update = () => {
 			const sourceWidth = root?.clientWidth ?? window.innerWidth;
 			const sourceHeight = root?.clientHeight ?? window.innerHeight;
+			const leftInset = Math.min(maximumLeftInsetPx, sourceWidth * leftInsetRatio);
 			const rightInset = Math.min(
 				maximumRightInsetPx,
 				sourceWidth * rightInsetRatio,
 			);
 			const nextViewport = {
 				height: sourceHeight,
-				width: Math.max(1, sourceWidth - rightInset),
+				width: Math.max(1, sourceWidth - leftInset - rightInset),
+			};
+			const nextViewportFrame = {
+				height: sourceHeight,
+				width: sourceWidth,
 			};
 			const current = store.getState().ui;
 			if (
 				current.viewport.width === nextViewport.width &&
-				current.viewport.height === nextViewport.height
+				current.viewport.height === nextViewport.height &&
+				current.viewportFrame.width === nextViewportFrame.width &&
+				current.viewportFrame.height === nextViewportFrame.height
 			) {
 				return;
 			}
-			setViewportSize(nextViewport);
+			setViewportSize(nextViewport, nextViewportFrame);
 		};
 		const debouncedUpdate = () => {
 			window.clearTimeout(timerRef.current ?? undefined);
@@ -71,7 +82,15 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 			window.removeEventListener("resize", debouncedUpdate);
 			window.clearTimeout(timerRef.current ?? undefined);
 		};
-	}, [maximumRightInsetPx, rightInsetRatio, root, setViewportSize, store]);
+	}, [
+		leftInsetRatio,
+		maximumLeftInsetPx,
+		maximumRightInsetPx,
+		rightInsetRatio,
+		root,
+		setViewportSize,
+		store,
+	]);
 
 	return size;
 }

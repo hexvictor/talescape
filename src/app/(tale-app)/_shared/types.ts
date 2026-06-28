@@ -13,6 +13,8 @@ export type Direction =
 	| "up-left"
 	| "up-right";
 
+export type StackPlacementPosition = "center" | "end" | "start";
+
 export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
@@ -21,9 +23,23 @@ export type BlockFlow =
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
-	| { type: "stack" };
+	| {
+			alignment?: "center" | "end" | "start";
+			horizontalPosition?: number;
+			horizontalPlacement?: StackPlacementPosition;
+			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			type: "stack";
+			verticalPosition?: number;
+			verticalPlacement?: StackPlacementPosition;
+	  };
 
 export type FirstBlockTransitionMode = "fromPlacement" | "inPlace";
+
+export type PreviousBlocksDuringEnter =
+	| "fadeActivePrevious"
+	| "fadeAllVisiblePrevious"
+	| "customAllVisiblePrevious"
+	| "keep";
 
 export type HorizontalCameraFraming = "auto" | "center" | "left" | "right";
 
@@ -350,7 +366,8 @@ export type TaleFragment = {
 	src?: string | null;
 	style?: ReaderStyle;
 	text?: string;
-	type: "choiceButton" | "image" | "quote" | "soundCue" | "text";
+	type: "choiceButton" | "codexEntry" | "image" | "quote" | "soundCue" | "text";
+	responsiveOverrides?: Record<string, TaleFragmentResponsiveOverride>;
 	visibleRange?: TimelineRange;
 };
 
@@ -413,14 +430,17 @@ export type TaleBlock = {
 	snap: boolean;
 	style?: ReaderStyle;
 	title: string;
+	responsiveOverrides?: Record<string, TaleBlockResponsiveOverride>;
 	transition: {
 		animations: {
 			entering: AnimationSelection;
 			leaving: AnimationSelection;
+			previousVisible: AnimationSelection;
 		};
 		enteringLength: number | null;
 		flow: BlockFlow;
 		leavingLength: number | null;
+		previousBlocksDuringEnter: PreviousBlocksDuringEnter;
 		scrollLength: number | null;
 	};
 };
@@ -480,6 +500,7 @@ export type ResolvedTaleBlock = TaleBlock & {
 		transitionAnimations: {
 			entering: AnimationTrack[];
 			leaving: AnimationTrack[];
+			previousVisible: AnimationTrack[];
 		};
 	};
 };
@@ -638,7 +659,7 @@ export type TalePath = {
 	order: number;
 	toBlockId: string;
 	toBranchId: string;
-	type: "choice" | "convergence" | "ending" | "return" | "teleport";
+	type: "choice" | "linear" | "return" | "teleport";
 };
 
 export type ResolvedTalePath = TalePath & {
@@ -747,6 +768,7 @@ export type TaleBounds = {
 
 export type Tale = Partial<Omit<TaleSchema, "id">> &
 	TaleContent & {
+		breakpoints: TaleBreakpoint[];
 		book: Book | null;
 		creator: PublicUserInfo | null;
 		id: number;
@@ -757,6 +779,7 @@ export type RawTaleRecord = {
 	animationPresets: AnimationPreset[];
 	blocks: TaleBlock[];
 	blockStylePresets: BlockStylePreset[];
+	breakpoints: TaleBreakpoint[];
 	branches: TaleBranch[];
 	entries: TaleEntry[];
 	fragments: TaleFragment[];
@@ -838,8 +861,10 @@ export type CompiledReader = {
 	contents: ReaderContentsPart[];
 	entries: ReaderContentsEntry[];
 	entryIndexById: Record<string, number>;
+	heldPreviousTakeoverBlockIdByAnchorIndex: Array<string | null>;
 	pageIndexById: Record<string, number>;
 	pages: ReaderContentsPage[];
+	previousVisibleBlockIdsByEnteringBlockId: Record<string, string[]>;
 	segmentIndexByBlockId: Record<string, number>;
 	segments: TimelineSegment[];
 	segmentStarts: number[];
@@ -909,7 +934,13 @@ export type ReaderLocation = {
 
 export type TaleInspectorTarget =
 	| { id: string; type: "block" }
-	| { blockId: string; id: string; type: "fragment" };
+	| {
+			blockId: string;
+			id: string;
+			initialTab?: "content" | "motion" | "placement" | "style" | "summary";
+			type: "fragment";
+	  }
+	| { blockId: string; id: string; type: "node" };
 
 export type SavedReaderProgress = {
 	blockId: string | null;
@@ -931,3 +962,44 @@ export type ReaderViewportLayout =
 	| "mobile-portrait";
 
 export type ViewportSize = { height: number; width: number };
+
+export type TaleBreakpointOrientation = "landscape" | "portrait";
+
+export type TaleBreakpoint = {
+	id: string;
+	label: string;
+	maxHeight?: number;
+	maxWidth?: number;
+	minHeight?: number;
+	minWidth?: number;
+	orientation?: TaleBreakpointOrientation;
+	order: number;
+};
+
+export type TaleBlockResponsiveOverride = Partial<
+	Pick<
+		TaleBlock,
+		"description" | "nodes" | "reading" | "rootNodeId" | "size" | "style" | "title" | "transition"
+	>
+>;
+
+export type TaleFragmentResponsiveOverride = Partial<
+	Pick<
+		TaleFragment,
+		| "alt"
+		| "animations"
+		| "attribution"
+		| "caption"
+		| "fallbackSrc"
+		| "label"
+		| "mood"
+		| "pathId"
+		| "pathIds"
+		| "placement"
+		| "prompt"
+		| "src"
+		| "style"
+		| "text"
+		| "visibleRange"
+	>
+>;

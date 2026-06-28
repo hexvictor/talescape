@@ -11,8 +11,7 @@ import type { TaleEditorState } from "../taleEditorStore";
 
 const allPathTypes: EditorPathType[] = [
 	"choice",
-	"convergence",
-	"ending",
+	"linear",
 	"return",
 	"teleport",
 ];

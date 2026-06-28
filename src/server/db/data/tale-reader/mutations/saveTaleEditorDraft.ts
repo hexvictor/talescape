@@ -2,6 +2,11 @@ import "server-only";
 
 import { and, eq } from "drizzle-orm";
 import type { FirstBlockTransitionMode } from "~/app/(tale-app)/_shared/types";
+import type {
+	TaleBlockResponsiveOverride,
+	TaleBreakpoint,
+	TaleFragmentResponsiveOverride,
+} from "~/app/(tale-app)/_shared/types";
 import { db } from "~/server/db";
 import {
 	blocks,
@@ -30,6 +35,7 @@ import type {
 } from "~/server/db/types/tale-reader/readerConfig";
 
 export type SaveTaleEditorDraftInput = {
+	breakpointConfig: unknown;
 	branches: Array<{
 		description: string | null;
 		id: number;
@@ -44,6 +50,7 @@ export type SaveTaleEditorDraftInput = {
 		isChoiceBlock: boolean;
 		order: number;
 		readingConfig: unknown;
+		responsiveConfig: unknown;
 		sizeConfig: unknown;
 		sizeMode: ReaderSizeMode;
 		snap: boolean;
@@ -61,6 +68,7 @@ export type SaveTaleEditorDraftInput = {
 		nodeId: number | null;
 		order: number;
 		placementConfig: unknown;
+		responsiveConfig: unknown;
 		styleConfig: unknown;
 		type: string;
 		visibleRange: unknown;
@@ -109,6 +117,7 @@ export async function saveTaleEditorDraft(
 		await tx
 			.update(tales)
 			.set({
+				breakpointConfig: input.breakpointConfig as TaleBreakpoint[],
 				description: input.description,
 				firstBlockTransitionMode: input.firstBlockTransitionMode,
 				title: input.title,
@@ -140,6 +149,11 @@ export async function saveTaleEditorDraft(
 					isSnap: block.snap,
 					order: block.order,
 					readingConfig: block.readingConfig as ReadingConfig,
+					responsiveConfig:
+						block.responsiveConfig as Record<
+							string,
+							TaleBlockResponsiveOverride
+						>,
 					sizeConfig: block.sizeConfig as ReaderSizeConfig,
 					sizeMode: block.sizeMode,
 					styleConfig: block.styleConfig as ReaderStyleConfig | null,
@@ -173,6 +187,11 @@ export async function saveTaleEditorDraft(
 					nodeId: fragment.nodeId,
 					order: fragment.order,
 					placementConfig: fragment.placementConfig as FragmentPlacementConfig,
+					responsiveConfig:
+						fragment.responsiveConfig as Record<
+							string,
+							TaleFragmentResponsiveOverride
+						>,
 					styleConfig: fragment.styleConfig as ReaderStyleConfig | null,
 					type: fragment.type as FragmentType,
 					visibleRange: fragment.visibleRange as TimelineRange | null,

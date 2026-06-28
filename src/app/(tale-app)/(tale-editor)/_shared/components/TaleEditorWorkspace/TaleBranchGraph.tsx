@@ -60,10 +60,7 @@ import type {
 	ResolvedTaleBranch,
 	TalePath,
 } from "~/app/(tale-app)/_shared/types";
-import {
-	useTaleEditorStore,
-	useTaleEditorStoreShallow,
-} from "../../hooks/useTaleEditorStore";
+import { useTaleEditorStoreShallow } from "../../hooks/useTaleEditorStore";
 import type {
 	GraphFocusMode,
 	GraphPosition,
@@ -93,6 +90,7 @@ type BranchEditorNodeData = {
 	activeBlockId: string | null;
 	graphDirection: "horizontal" | "vertical";
 	graphDragging: boolean;
+	previewReachable: boolean;
 	incomingPaths: TalePath[];
 	onAddBlock: (branchId: string) => void;
 	onHoverBlock: (blockId: string | null) => void;
@@ -119,7 +117,10 @@ type DroppableBranchData = {
 };
 const nodeTypes = { branchEditor: BranchEditorNodeView };
 const edgeTypes = { pathEditor: TaleBranchGraphEdge };
-const primaryPathTypes = new Set<PathType>(["choice", "convergence", "ending"]);
+const linearPathTypes = new Set<PathType>(["choice", "linear"]);
+const returnPathTypes = new Set<PathType>(["return"]);
+const teleportPathTypes = new Set<PathType>(["teleport"]);
+const emptySelectedBranchIds: string[] = [];
 
 /**
  * Renders the branch and path graph used by the editing surface.
@@ -148,7 +149,7 @@ export function TaleBranchGraph(): React.JSX.Element {
 	const showActiveState = useTaleAppStore(
 		(state) => state.derived.isPreviewing,
 	);
-	const { activeBlockId, activeBranchId, scrollApi } =
+	const { activeBlockId, activeBranchId, scrollApi, selectedBranchIds } =
 		useTaleReaderStoreShallow((state) => ({
 			activeBlockId: showActiveState
 				? (state.navigation.current?.blockId ?? null)
@@ -157,6 +158,9 @@ export function TaleBranchGraph(): React.JSX.Element {
 				? (state.navigation.current?.branchId ?? null)
 				: null,
 			scrollApi: state.scroll.api,
+			selectedBranchIds: showActiveState
+				? state.navigation.selectedBranchIds
+				: emptySelectedBranchIds,
 		}));
 	const {
 		branchPositions,
@@ -218,6 +222,14 @@ export function TaleBranchGraph(): React.JSX.Element {
 			),
 		[graphBranchIds, tale.structure.paths],
 	);
+	const previewVisibleBranchIds = useMemo(() => {
+		if (!showActiveState) return null;
+		return new Set(
+			[tale.bounds.rootBranchId, ...selectedBranchIds].filter(
+				(branchId): branchId is string => typeof branchId === "string",
+			),
+		);
+	}, [selectedBranchIds, showActiveState, tale.bounds.rootBranchId]);
 	const branchTopologyKey = tale.structure.branches
 		.map(
 			(branch) =>
@@ -374,6 +386,7 @@ export function TaleBranchGraph(): React.JSX.Element {
 				onTravelToBlock: (blockId) =>
 					scrollApi?.scrollToBlock(blockId, { motion: "travel" }),
 				paths: graphPaths,
+				previewVisibleBranchIds,
 				selectedBlockId,
 				selectedBranchId,
 				selectedPathId,
@@ -396,6 +409,7 @@ export function TaleBranchGraph(): React.JSX.Element {
 			handleAddBlock,
 			highlightedBranchId,
 			layoutPositions,
+			previewVisibleBranchIds,
 			selectBlockForEditing,
 			selectBranchForEditing,
 			scrollApi,
@@ -483,26 +497,32 @@ export function TaleBranchGraph(): React.JSX.Element {
 				onDragEnd={handleDragEnd}
 				onDragStart={handleDragStart}
 			>
-				<button
-					type="button"
+				<div
 					data-reader-component="TaleBranchGraph"
-					data-reader-role="add-branch-control"
-					className="absolute top-3 right-3 z-20 flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/76 px-3 text-foreground/72 text-xs hover:bg-foreground/8 hover:text-foreground"
-					onClick={handleAddBranch}
+					data-reader-role="graph-controls"
+					className="absolute top-3 right-3 z-20 flex flex-wrap justify-end gap-2"
 				>
-					<Plus size={14} />
-					Add Branch
-				</button>
-				<button
-					type="button"
-					data-reader-component="TaleBranchGraph"
-					data-reader-role="reset-layout-control"
-					className="absolute top-3 right-32 z-20 grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
-					title="Reorganize branches"
-					onClick={resetLayout}
-				>
-					<RefreshCcw size={14} />
-				</button>
+					<button
+						type="button"
+						data-reader-component="TaleBranchGraph"
+						data-reader-role="reset-layout-control"
+						className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+						title="Reorganize branches"
+						onClick={resetLayout}
+					>
+						<RefreshCcw size={14} />
+					</button>
+					<button
+						type="button"
+						data-reader-component="TaleBranchGraph"
+						data-reader-role="add-branch-control"
+						className="flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/76 px-3 text-foreground/72 text-xs hover:bg-foreground/8 hover:text-foreground"
+						onClick={handleAddBranch}
+					>
+						<Plus size={14} />
+						Add Branch
+					</button>
+				</div>
 				<ReactFlow<BranchEditorNode, PathEditorEdge>
 					fitView
 					edgesReconnectable
@@ -649,6 +669,7 @@ function compileBranchEditorGraph({
 	onToggleDescendants,
 	onTravelToBlock,
 	paths,
+	previewVisibleBranchIds,
 	selectedBlockId,
 	selectedBranchId,
 	selectedPathId,
@@ -679,6 +700,7 @@ function compileBranchEditorGraph({
 	onToggleDescendants: (branchId: string) => void;
 	onTravelToBlock: (blockId: string) => void;
 	paths: TalePath[];
+	previewVisibleBranchIds: Set<string> | null;
 	selectedBlockId: string | null;
 	selectedBranchId: string | null;
 	selectedPathId: string | null;
@@ -726,6 +748,12 @@ function compileBranchEditorGraph({
 	const nodes = branches.map((branch, index): BranchEditorNode => {
 		const depth = getBranchDepth(branch, branchById);
 		const branchBlocks = blocksByBranchId.get(branch.id) ?? [];
+		const previewReachable =
+			!previewVisibleBranchIds || previewVisibleBranchIds.has(branch.id);
+		const focusOpacity =
+			focusActive && !focusedBranchIds?.has(branch.id)
+				? unfocusedNodeOpacity
+				: 1;
 		const fallbackPosition =
 			graphDirection === "horizontal"
 				? { x: depth * 380, y: index * 175 }
@@ -754,15 +782,13 @@ function compileBranchEditorGraph({
 				onToggleDescendants,
 				onTravelToBlock,
 				outgoingPaths: outgoingPathsByBranchId.get(branch.id) ?? [],
+				previewReachable,
 				selectedBlockId,
 				selectedBranchId,
 			},
 			id: branch.id,
 			style: {
-				opacity:
-					focusActive && !focusedBranchIds?.has(branch.id)
-						? unfocusedNodeOpacity
-						: 1,
+				opacity: Math.min(focusOpacity, previewReachable ? 1 : 0.3),
 				transition: "opacity 140ms ease",
 			},
 			position:
@@ -785,8 +811,28 @@ function compileBranchEditorGraph({
 				!focusActive ||
 				(Boolean(focusedBranchIds?.has(path.fromBranchId)) &&
 					Boolean(focusedBranchIds?.has(path.toBranchId)));
+			const fromPreviewVisible =
+				!previewVisibleBranchIds ||
+				previewVisibleBranchIds.has(path.fromBranchId);
+			const toPreviewVisible =
+				!previewVisibleBranchIds ||
+				previewVisibleBranchIds.has(path.toBranchId);
+			const previewReachable = fromPreviewVisible && toPreviewVisible;
+			const previewAvailable = fromPreviewVisible && !toPreviewVisible;
+			const previewOpacity = previewReachable
+				? 1
+				: previewAvailable
+					? 0.42
+					: 0.16;
+			const pathColor =
+				previewReachable || previewAvailable
+					? getPathStrokeColor(path.type)
+					: "var(--muted-foreground)";
 			return {
 				data: {
+					activeConnected:
+						activeBlockId === path.fromBlockId ||
+						activeBlockId === path.toBlockId,
 					animated:
 						highlightedBranchId === path.fromBranchId ||
 						highlightedBranchId === path.toBranchId,
@@ -795,16 +841,15 @@ function compileBranchEditorGraph({
 						branchById.get(path.fromBranchId)?.title ?? path.fromBranchId,
 					label: path.label,
 					pathType: path.type,
+					previewAvailable,
+					previewReachable,
 					selected: path.id === selectedPathId,
 					toBranchTitle:
 						branchById.get(path.toBranchId)?.title ?? path.toBranchId,
 				},
 				id: path.id,
 				markerEnd: {
-					color:
-						path.id === selectedPathId
-							? "#67e8f9"
-							: getPathStrokeColor(path.type),
+					color: path.id === selectedPathId ? "#67e8f9" : pathColor,
 					type: MarkerType.ArrowClosed,
 					height: 22,
 					width: 22,
@@ -812,11 +857,8 @@ function compileBranchEditorGraph({
 				source: path.fromBranchId,
 				sourceHandle: `source-path-${path.id}`,
 				style: {
-					opacity: focused ? 1 : unfocusedEdgeOpacity,
-					stroke:
-						path.id === selectedPathId
-							? "#67e8f9"
-							: getPathStrokeColor(path.type),
+					opacity: Math.min(focused ? 1 : unfocusedEdgeOpacity, previewOpacity),
+					stroke: path.id === selectedPathId ? "#67e8f9" : pathColor,
 					strokeWidth: path.id === selectedPathId ? 3 : 2,
 					transition: "opacity 140ms ease",
 				},
@@ -936,7 +978,9 @@ function BranchEditorNodeView({
 				data.graphDragging
 					? "shadow-none"
 					: "shadow-xl backdrop-blur transition-[width,border-color,box-shadow] hover:border-fuchsia-300 hover:shadow-fuchsia-300/15"
-			} ${data.descendantsCollapsed ? "w-64" : "w-72"} ${
+			} ${data.previewReachable ? "" : "grayscale"} ${
+				data.descendantsCollapsed ? "w-64" : "w-72"
+			} ${
 				data.graphDragging
 					? "border-foreground/12"
 					: data.selectedBranchId === data.branch.id || data.hasSelectedBlock
@@ -1368,7 +1412,7 @@ function blockRowClassName(
  * @returns Whether the path should be shown.
  *
  * @example
- * const visible = isPathVisible(path, "primary", new Set());
+ * const visible = isPathVisible(path, "linear", new Set());
  */
 function isPathVisible(
 	path: TalePath,
@@ -1376,6 +1420,8 @@ function isPathVisible(
 	customTypes: Set<PathType>,
 ): boolean {
 	if (mode === "all") return true;
-	if (mode === "primary") return primaryPathTypes.has(path.type);
+	if (mode === "linear") return linearPathTypes.has(path.type);
+	if (mode === "return") return returnPathTypes.has(path.type);
+	if (mode === "teleport") return teleportPathTypes.has(path.type);
 	return customTypes.has(path.type);
 }

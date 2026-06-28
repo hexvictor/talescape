@@ -12,16 +12,28 @@ import {
 	resolveEditedBlock,
 	resolveEditedFragment,
 } from "~/app/(tale-app)/_shared/services/formatTale";
+import {
+	resolveTaleBreakpoint,
+	writeBlockBreakpointOverride,
+	writeFragmentBreakpointOverride,
+} from "~/app/(tale-app)/_shared/services/resolveTaleBreakpoint";
 
 export function editBlock(
 	tale: Tale,
 	blockId: string,
 	update: (block: ResolvedTaleBlock) => TaleBlock,
+	breakpointId: string | null = null,
 ): Tale {
-	const current = tale.indexMap.blocksById[blockId];
+	const current = resolveTaleBreakpoint(tale, breakpointId).indexMap.blocksById[blockId];
 	if (!current) return tale;
 
-	const block = resolveEditedBlock(tale, update(current));
+	const nextBlock = update(current);
+	const baseBlock = tale.indexMap.blocksById[blockId];
+	if (!baseBlock) return tale;
+	const block = resolveEditedBlock(
+		tale,
+		writeBlockBreakpointOverride(baseBlock, nextBlock, breakpointId),
+	);
 	const blocks = tale.structure.blocks.map((item) =>
 		item.id === blockId ? block : item,
 	);
@@ -40,11 +52,20 @@ export function editFragment(
 	tale: Tale,
 	fragmentId: string,
 	update: (fragment: ResolvedTaleFragment) => TaleFragment,
+	breakpointId: string | null = null,
 ): Tale {
-	const current = tale.indexMap.fragmentsById[fragmentId];
+	const current = resolveTaleBreakpoint(tale, breakpointId).indexMap.fragmentsById[
+		fragmentId
+	];
 	if (!current) return tale;
 
-	const fragment = resolveEditedFragment(tale, update(current));
+	const nextFragment = update(current);
+	const baseFragment = tale.indexMap.fragmentsById[fragmentId];
+	if (!baseFragment) return tale;
+	const fragment = resolveEditedFragment(
+		tale,
+		writeFragmentBreakpointOverride(baseFragment, nextFragment, breakpointId),
+	);
 	const updatedTale = {
 		...tale,
 		indexMap: {

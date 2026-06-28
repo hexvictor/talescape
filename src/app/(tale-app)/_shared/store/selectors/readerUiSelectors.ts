@@ -57,6 +57,19 @@ export function selectIsReaderHubOpen(state: TaleReaderState): boolean {
 }
 
 /**
+ * Determines whether the reader contents sidebar is open and available.
+ *
+ * @param state - Complete reader runtime state.
+ * @returns Whether the open contents sidebar affects viewport layout.
+ *
+ * @example
+ * const open = selectIsReaderContentsOpen(store.getState());
+ */
+export function selectIsReaderContentsOpen(state: TaleReaderState): boolean {
+	return state.contents.open && selectShowsReaderNavigation(state);
+}
+
+/**
  * Derives responsive reader layout from canonical viewport dimensions.
  *
  * @param state - Complete reader runtime state.
@@ -68,7 +81,7 @@ export function selectIsReaderHubOpen(state: TaleReaderState): boolean {
 export function selectReaderViewportLayout(
 	state: TaleReaderState,
 ): ReaderViewportLayout {
-	const { height, width } = state.ui.viewport;
+	const { height, width } = state.ui.viewportFrame;
 	if (width >= 768) return "desktop";
 	return height > width ? "mobile-portrait" : "mobile-landscape";
 }

@@ -21,7 +21,17 @@ export function TaleInspectorPanel({
 }) {
 	return target.type === "block" ? (
 		<BlockInspectorPanel blockId={target.id} />
+	) : target.type === "node" ? (
+		<BlockInspectorPanel
+			blockId={target.blockId}
+			initialNodeId={target.id}
+			initialTab="layout"
+		/>
 	) : (
-		<FragmentInspectorPanel blockId={target.blockId} fragmentId={target.id} />
+		<FragmentInspectorPanel
+			blockId={target.blockId}
+			fragmentId={target.id}
+			initialTab={target.initialTab}
+		/>
 	);
 }

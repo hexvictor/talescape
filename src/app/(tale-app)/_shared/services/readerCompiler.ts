@@ -71,7 +71,11 @@ export function compileReader(
 		if (previous) {
 			point = getNextPoint(previous, block, size, viewport);
 			const flow = block.transition.flow;
-			if (flow.type === "linear" && flow.placement !== "cameraEdge") {
+			if (
+				flow.type === "linear" &&
+				flow.placement !== "cameraEdge" &&
+				shouldResolveNonOverlappingBlockPoint(flow.placement)
+			) {
 				point = resolveNonOverlappingBlockPoint(
 					point,
 					size,
@@ -230,6 +234,7 @@ export function compileReader(
 		scroll += transitionLength;
 	}
 	const navigation = compileReaderContents(tale, anchors);
+	const previousVisibleTakeover = compilePreviousVisibleTakeoverMetadata(anchors);
 
 	return {
 		anchorIndexByBlockId: Object.fromEntries(
@@ -242,8 +247,12 @@ export function compileReader(
 		contents: navigation.contents,
 		entries: navigation.entries,
 		entryIndexById: navigation.entryIndexById,
+		heldPreviousTakeoverBlockIdByAnchorIndex:
+			previousVisibleTakeover.heldBlockIdByAnchorIndex,
 		pageIndexById: navigation.pageIndexById,
 		pages: navigation.pages,
+		previousVisibleBlockIdsByEnteringBlockId:
+			previousVisibleTakeover.blockIdsByEnteringBlockId,
 		segmentIndexByBlockId,
 		segments,
 		segmentStarts: segments.map((segment) => segment.start),
@@ -253,6 +262,67 @@ export function compileReader(
 		transitionIntoByBlockId,
 		transitionOutOfByBlockId,
 	};
+}
+
+type PreviousVisibleTakeoverMetadata = {
+	blockIdsByEnteringBlockId: Record<string, string[]>;
+	heldBlockIdByAnchorIndex: Array<string | null>;
+};
+
+/**
+ * Precomputes previous-visible takeover lists and held takeover ownership for
+ * every anchor position in the route.
+ *
+ * @param anchors - Ordered route anchors for the compiled reader path.
+ * @returns Takeover metadata consumed by the frame painter.
+ *
+ * @example
+ * const metadata = compilePreviousVisibleTakeoverMetadata(anchors);
+ */
+function compilePreviousVisibleTakeoverMetadata(
+	anchors: readonly Anchor[],
+): PreviousVisibleTakeoverMetadata {
+	const blockIdsByEnteringBlockId: Record<string, string[]> = {};
+	const heldBlockIdByAnchorIndex: Array<string | null> = [];
+	const previousBlockIds: string[] = [];
+	let heldBlockId: string | null = null;
+	for (const anchor of anchors) {
+		if (
+			anchor.block.transition.previousBlocksDuringEnter ===
+				"customAllVisiblePrevious" ||
+			anchor.block.transition.previousBlocksDuringEnter ===
+				"fadeAllVisiblePrevious"
+		) {
+			blockIdsByEnteringBlockId[anchor.block.id] = [...previousBlockIds];
+			heldBlockId = anchor.block.id;
+		}
+		heldBlockIdByAnchorIndex.push(heldBlockId);
+		previousBlockIds.push(anchor.block.id);
+	}
+	return { blockIdsByEnteringBlockId, heldBlockIdByAnchorIndex };
+}
+
+/**
+ * Determines whether a linear block placement should avoid all previous route
+ * geometry after its initial point is resolved.
+ *
+ * Previous block edge is an explicit local placement mode, so it should not be
+ * corrected by unrelated older geometry.
+ *
+ * @param placement - Current linear placement reference.
+ * @returns Whether global non-overlap adjustment should run.
+ *
+ * @example
+ * const shouldAdjust = shouldResolveNonOverlappingBlockPoint("blockEdge");
+ */
+function shouldResolveNonOverlappingBlockPoint(
+	placement:
+		| "blockEdge"
+		| "blockEdgeWithViewportAlignment"
+		| "cameraEdge"
+		| undefined,
+): boolean {
+	return (placement ?? "blockEdge") !== "blockEdge";
 }
 
 /**

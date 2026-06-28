@@ -43,6 +43,13 @@
       "when": 1781538197204,
       "tag": "0005_watery_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782424460763,
+      "tag": "0006_nasty_guardian",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,8 @@ import {
 	type CSSProperties,
 	type MouseEvent,
 	type PropsWithChildren,
+	type ReactNode,
+	useCallback,
 	useEffect,
 	useState,
 } from "react";
@@ -12,21 +14,50 @@ import {
 const INTERACTIVE_SELECTOR =
 	"a, button, input, select, textarea, [role='button'], [role='menuitem']";
 
+const CLERK_MENU_SELECTOR =
+	".cl-userButtonPopoverCard, .cl-userButtonPopoverMain, [data-clerk-portal]";
+
 type AutoHideTopBarProps = PropsWithChildren<{
+	clerkMenu?: boolean;
+	collapsedContent?: ReactNode;
+	collapsedContentClassName?: string;
 	contentClassName?: string;
+	forceVisible?: boolean;
+	onEnterCallback?: () => void;
+	onLeaveCallback?: () => void;
 	overlaySelector?: string;
 	pinOnBackgroundClick?: boolean;
-	forceVisible?: boolean;
 	revealZoneHeight?: CSSProperties["height"];
 	wrapperClassName?: string;
 }>;
 
+/**
+
+* Renders a top bar that reveals on hover and can swap to collapsed content
+* after the main header exits.
+*
+* @param props - Auto-hiding top bar props.
+* @param props.children - Expanded header content.
+* @param props.collapsedContent - Content shown while the expanded header is hidden.
+* @returns Animated top bar composition.
+*
+* @example
+* <AutoHideTopBar collapsedContent={<CompactHeader />}>
+* <Header />
+* </AutoHideTopBar>
+
+*/
 export default function AutoHideTopBar({
 	children,
+	clerkMenu = false,
+	collapsedContent,
+	collapsedContentClassName,
 	contentClassName = "shadow-md",
+	forceVisible = false,
+	onEnterCallback,
+	onLeaveCallback,
 	overlaySelector,
 	pinOnBackgroundClick = false,
-	forceVisible = false,
 	revealZoneHeight = "0.5rem",
 	wrapperClassName = "fixed top-0 left-0 z-1000 w-full",
 }: AutoHideTopBarProps): React.JSX.Element {
@@ -34,17 +65,53 @@ export default function AutoHideTopBar({
 	const [overlayActive, setOverlayActive] = useState(false);
 	const [pinned, setPinned] = useState(false);
 
-	const visible = forceVisible || hovered || overlayActive || pinned;
+	const isVisible = forceVisible || hovered || overlayActive || pinned;
+
+	const closeFloatingMenus = useCallback((): void => {
+		if (!clerkMenu) return;
+
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				bubbles: true,
+				cancelable: true,
+				key: "Escape",
+			}),
+		);
+	}, [clerkMenu]);
+
+	const onMouseEnter = (): void => {
+		if (!forceVisible) {
+			onEnterCallback?.();
+		}
+
+		setHovered(true);
+	};
+
+	const onMouseLeave = (): void => {
+		if (!forceVisible && !overlayActive && !pinned) {
+			closeFloatingMenus();
+			onLeaveCallback?.();
+		}
+
+		setHovered(false);
+	};
 
 	useEffect(() => {
-		if (!overlaySelector) return;
+		const selectors = [
+			clerkMenu ? CLERK_MENU_SELECTOR : null,
+			overlaySelector ?? null,
+		].filter((selector): selector is string => Boolean(selector));
+
+		if (selectors.length === 0) return;
 
 		const updateOverlayActivity = (event: Event): void => {
 			const target = event.target;
 
-			setOverlayActive(
-				target instanceof Element && target.closest(overlaySelector) !== null,
-			);
+			const nextOverlayActive =
+				target instanceof Element &&
+				selectors.some((selector) => target.closest(selector) !== null);
+
+			setOverlayActive(nextOverlayActive);
 		};
 
 		document.addEventListener("pointerover", updateOverlayActivity);
@@ -54,7 +121,7 @@ export default function AutoHideTopBar({
 			document.removeEventListener("pointerover", updateOverlayActivity);
 			document.removeEventListener("focusin", updateOverlayActivity);
 		};
-	}, [overlaySelector]);
+	}, [clerkMenu, overlaySelector]);
 
 	const handleContentClick = (event: MouseEvent<HTMLDivElement>): void => {
 		if (!pinOnBackgroundClick) return;
@@ -71,31 +138,43 @@ export default function AutoHideTopBar({
 	return (
 		<>
 			<div
-				aria-hidden="true"
-				className="fixed top-0 left-0 z-999 w-full"
-				style={{ height: revealZoneHeight }}
-				onMouseEnter={() => setHovered(true)}
-			/>
-			<div
 				className={`pointer-events-none ${wrapperClassName}`}
-				onMouseEnter={() => setHovered(true)}
-				onMouseLeave={() => setHovered(false)}
+				onMouseLeave={onMouseLeave}
 			>
-				<AnimatePresence>
-					{visible ? (
+				<AnimatePresence mode="wait">
+					{isVisible ? (
 						<motion.div
+							key="expanded-content"
 							className={`pointer-events-auto ${contentClassName}`}
 							initial={{ opacity: 0, y: "-100%" }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: "-100%" }}
-							transition={{ duration: 0.24 }}
+							transition={{ duration: 0.14 }}
 							onClick={handleContentClick}
+							onMouseEnter={onMouseEnter}
 						>
 							{children}
+						</motion.div>
+					) : collapsedContent ? (
+						<motion.div
+							key="collapsed-content"
+							className={`pointer-events-auto ${collapsedContentClassName ?? ""}`}
+							initial={{ y: "-100%" }}
+							animate={{ y: 0 }}
+							exit={{ y: "-100%" }}
+							transition={{ duration: 0.14 }}
+						>
+							{collapsedContent}
 						</motion.div>
 					) : null}
 				</AnimatePresence>
 			</div>
+			<div
+				aria-hidden="true"
+				className="fixed top-0 left-0 z-[1001] w-full"
+				style={{ height: revealZoneHeight }}
+				onMouseEnter={onMouseEnter}
+			/>
 		</>
 	);
 }
