@@ -1,6 +1,5 @@
 import { countReaderDiagnostic } from "../../services/readerDiagnostics";
 import { clamp } from "../../services/readerMath";
-import { NEW_READER_INPUT_SETTINGS } from "../readerInputSettings";
 import type { ScrollDirection } from "../scrollSnapModel";
 import { shouldLetElementHandleInput } from "./inputTarget";
 import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
@@ -16,6 +15,7 @@ import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
  */
 export function attachKeyboardInput({
 	driver,
+	getInputSettings,
 	scheduleSnap,
 	setDirection,
 	scrollToTimelineEdge,
@@ -32,27 +32,31 @@ export function attachKeyboardInput({
 	let tapResetTimer: number | null = null;
 
 	const animateBy = (amount: number) => {
+		const settings = getInputSettings();
 		setDirection(amount >= 0 ? 1 : -1);
 		driver.scrollTo(
 			clamp(driver.getTargetScroll() + amount, 0, totalScroll),
 			"smooth",
-			{ duration: NEW_READER_INPUT_SETTINGS.keyboardDuration },
+			{
+				duration: settings.keyboardDuration,
+			},
 		);
-		scheduleSnap();
+		scheduleSnap(settings.keyboardDuration * 1000 + settings.snapDelayMs);
 	};
 
 	const startDecay = () => {
+		const settings = getInputSettings();
 		window.clearTimeout(decayTimer ?? undefined);
 		decayTimer = window.setTimeout(() => {
 			const decay = () => {
 				multiplier = Math.max(
 					1,
-					multiplier - NEW_READER_INPUT_SETTINGS.keyboardDecayStep,
+					multiplier - getInputSettings().keyboardDecayStep,
 				);
 				if (multiplier > 1) {
 					decayTimer = window.setTimeout(
 						decay,
-						NEW_READER_INPUT_SETTINGS.keyboardDecayIntervalMs,
+						getInputSettings().keyboardDecayIntervalMs,
 					);
 					return;
 				}
@@ -60,7 +64,7 @@ export function attachKeyboardInput({
 				if (tapCount === 0) target = null;
 			};
 			decay();
-		}, NEW_READER_INPUT_SETTINGS.keyboardDecayDelayMs);
+		}, settings.keyboardDecayDelayMs);
 	};
 
 	const resetTapBurst = (resetTarget = true) => {
@@ -72,7 +76,7 @@ export function attachKeyboardInput({
 	};
 
 	const getTapStep = (direction: ScrollDirection, now: number) => {
-		const settings = NEW_READER_INPUT_SETTINGS;
+		const settings = getInputSettings();
 		const continuesBurst =
 			tapDirection === direction &&
 			now - tapLastAt <= settings.keyboardTapBurstWindowMs;
@@ -103,7 +107,7 @@ export function attachKeyboardInput({
 
 		const pageStep = Math.max(
 			120,
-			window.innerHeight * NEW_READER_INPUT_SETTINGS.pageStepRatio,
+			window.innerHeight * getInputSettings().pageStepRatio,
 		);
 		const direction =
 			event.key === "ArrowDown" || event.key === "ArrowRight"
@@ -142,24 +146,26 @@ export function attachKeyboardInput({
 		setDirection(direction);
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + direction * step, 0, totalScroll);
+		const settings = getInputSettings();
 		driver.scrollTo(target, "smooth", {
-			duration: NEW_READER_INPUT_SETTINGS.keyboardDuration,
+			duration: settings.keyboardDuration,
 		});
 		scheduleSnap(
 			event.repeat
-				? NEW_READER_INPUT_SETTINGS.snapDelayMs
-				: NEW_READER_INPUT_SETTINGS.keyboardTapBurstWindowMs,
+				? settings.keyboardDuration * 1000 + settings.snapDelayMs
+				: settings.keyboardTapBurstWindowMs,
 		);
 	};
 
 	const getHeldStep = () => {
+		const settings = getInputSettings();
 		resetTapBurst(false);
 		multiplier = Math.min(
-			NEW_READER_INPUT_SETTINGS.keyboardMaxMultiplier,
-			multiplier + NEW_READER_INPUT_SETTINGS.keyboardHoldBoost,
+			settings.keyboardMaxMultiplier,
+			multiplier + settings.keyboardHoldBoost,
 		);
 		startDecay();
-		return NEW_READER_INPUT_SETTINGS.keyboardBaseStepPx * multiplier;
+		return settings.keyboardBaseStepPx * multiplier;
 	};
 
 	inputTarget.addEventListener("keydown", onKeyDown as EventListener);

@@ -137,11 +137,15 @@ export function ReaderViewport({
 		if (isPreviewing) return;
 
 		document.documentElement.classList.add("scrollbar-none");
+		document.documentElement.classList.add("overflow-hidden");
 		document.body.classList.add("scrollbar-none");
+		document.body.classList.add("overflow-hidden");
 
 		return () => {
 			document.documentElement.classList.remove("scrollbar-none");
+			document.documentElement.classList.remove("overflow-hidden");
 			document.body.classList.remove("scrollbar-none");
+			document.body.classList.remove("overflow-hidden");
 		};
 	}, [isPreviewing]);
 
@@ -190,7 +194,7 @@ export function ReaderViewport({
 					ref={setViewportRoot}
 					data-reader-component="ReaderViewport"
 					data-reader-role="preview-scroll-root"
-					className="scrollbar-none h-full overflow-y-auto bg-background outline-none"
+					className="scrollbar-none h-full overflow-hidden overscroll-contain bg-background outline-none"
 				>
 					<main
 						data-reader-component="ReaderViewport"
@@ -203,7 +207,7 @@ export function ReaderViewport({
 						aria-hidden="true"
 						data-reader-component="ReaderViewport"
 						data-reader-role="preview-scroll-spacer"
-						style={{ height: compiled?.totalScroll ?? 1 }}
+						style={{ height: 1 }}
 					/>
 				</div>
 			) : (
@@ -219,9 +223,7 @@ export function ReaderViewport({
 						aria-hidden="true"
 						data-reader-component="ReaderViewport"
 						data-reader-role="scroll-spacer"
-						style={{
-							height: (compiled?.totalScroll ?? 1) + viewport.height,
-						}}
+						style={{ height: 1 }}
 					/>
 				</>
 			)}

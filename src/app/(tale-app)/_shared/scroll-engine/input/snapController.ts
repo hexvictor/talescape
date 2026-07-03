@@ -1,5 +1,5 @@
 import { countReaderDiagnostic } from "../../services/readerDiagnostics";
-import { NEW_READER_INPUT_SETTINGS } from "../readerInputSettings";
+import type { ReaderInputSettings } from "../readerInputSettings";
 import type { ReaderScrollDriver } from "../scrollDriver";
 import type { ReaderSnapModel, ScrollDirection } from "../scrollSnapModel";
 
@@ -14,6 +14,7 @@ export type ReaderSnapController = {
  * @param driver - Reader scroll driver.
  * @param snapModel - Compiled snap-point resolver.
  * @param getDirection - Reads the latest input direction.
+ * @param getInputSettings - Reads current input tuning values.
  * @returns Snap scheduling and cleanup methods.
  *
  * @example
@@ -23,22 +24,25 @@ export function createSnapController(
 	driver: ReaderScrollDriver,
 	snapModel: ReaderSnapModel,
 	getDirection: () => ScrollDirection,
+	getInputSettings: () => ReaderInputSettings,
 ): ReaderSnapController {
 	let timer: number | null = null;
 
 	return {
 		cleanup: () => window.clearTimeout(timer ?? undefined),
-		schedule: (delayMs = NEW_READER_INPUT_SETTINGS.snapDelayMs) => {
+		schedule: (delayMs = getInputSettings().snapDelayMs) => {
 			countReaderDiagnostic("scheduleSnap()");
 			window.clearTimeout(timer ?? undefined);
 			timer = window.setTimeout(() => {
+				const settings = getInputSettings();
 				const target = snapModel.getNearbyTarget(
 					driver.getScroll(),
 					getDirection(),
+					settings.snapCapturePx,
 				);
 				if (target === null) return;
 				driver.scrollTo(target, "smooth", {
-					duration: NEW_READER_INPUT_SETTINGS.snapDuration,
+					duration: settings.snapDuration,
 				});
 			}, delayMs);
 		},

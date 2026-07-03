@@ -35,7 +35,10 @@ export function useReaderScrollEngine({
 			totalScroll: compiled.totalScroll,
 			viewport,
 		});
-		const driver = createReaderScrollDriver({ scrollRoot });
+		const driver = createReaderScrollDriver({
+			maxScroll: compiled.totalScroll,
+			scrollRoot,
+		});
 		const cleanup = createReaderScrollEngine({
 			compiled,
 			driver,
