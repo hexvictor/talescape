@@ -22,7 +22,7 @@ export function attachWheelInput({
 	totalScroll,
 }: ReaderInputControllerOptions): () => void {
 	let accumulatedDelta = 0;
-	let burstCount = 0;
+	let burstScore = 0;
 	let burstEnergy = 0;
 	let direction: ScrollDirection | null = null;
 	let frameId: number | null = null;
@@ -38,20 +38,27 @@ export function attachWheelInput({
 		const nextDirection: ScrollDirection = accumulatedDelta >= 0 ? 1 : -1;
 		if (direction !== nextDirection) {
 			direction = nextDirection;
-			burstCount = 0;
+			burstScore = 0;
 			burstEnergy = 0;
 			target = null;
 		}
 		const elapsed = lastEventAt === 0 ? 0 : now - lastEventAt;
-		burstCount =
+		const normalizedMagnitude = Math.min(Math.abs(accumulatedDelta), 220);
+		const retainedBurstScore =
 			elapsed === 0 || elapsed < settings.wheelBurstDecayMs
-				? burstCount + 1
-				: 1;
+				? burstScore * (1 - elapsed / settings.wheelBurstDecayMs)
+				: 0;
+		const weightedBurstStep =
+			(normalizedMagnitude / settings.wheelBurstCountStepPx) **
+			settings.wheelBurstCountMagnitudeExponent;
+		burstScore = Math.min(
+			settings.wheelBurstCountLimit,
+			retainedBurstScore + weightedBurstStep,
+		);
 		const retainedEnergy =
 			elapsed >= settings.wheelBurstDecayMs
 				? 0
 				: burstEnergy * (1 - elapsed / settings.wheelBurstDecayMs);
-		const normalizedMagnitude = Math.min(Math.abs(accumulatedDelta), 220);
 		burstEnergy = Math.min(
 			settings.wheelBurstEnergyLimit,
 			retainedEnergy + normalizedMagnitude * normalizedMagnitude,
@@ -60,19 +67,19 @@ export function attachWheelInput({
 		lastEventAt = now;
 		setDirection(nextDirection);
 		const burstRatio = Math.sqrt(burstEnergy / settings.wheelBurstEnergyLimit);
-		const cappedBurstCount = Math.min(
-			burstCount,
-			settings.wheelBurstCountLimit,
+		const accelerationRatio = clamp(
+			(burstScore - 1) / Math.max(1, settings.wheelBurstCountLimit - 1),
+			0,
+			1,
 		);
 		const streakBoost =
 			settings.wheelBurstCountBoostPx *
-			(settings.wheelBurstCountMultiplier ** Math.max(0, cappedBurstCount - 1) -
-				1);
+			(settings.wheelBurstCountMultiplier ** Math.max(0, burstScore - 1) - 1);
 		const amount = Math.min(
 			settings.wheelMaxStepPx,
 			settings.wheelBaseStepPx +
 				normalizedMagnitude * settings.wheelDeltaRatio +
-				burstRatio * settings.wheelAccelerationPx +
+				burstRatio * accelerationRatio * settings.wheelAccelerationPx +
 				streakBoost,
 		);
 		const from = target ?? driver.getTargetScroll();
@@ -80,7 +87,7 @@ export function attachWheelInput({
 		driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
 		window.clearTimeout(resetTimer ?? undefined);
 		resetTimer = window.setTimeout(() => {
-			burstCount = 0;
+			burstScore = 0;
 			burstEnergy = 0;
 			direction = null;
 			lastEventAt = 0;

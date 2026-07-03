@@ -127,18 +127,32 @@ const readerInputSettingGroups: Array<{
 				step: 0.01,
 			},
 			{
-				description: "Flat boost added from accumulated wheel energy.",
+				description: "Flat boost unlocked as weighted wheel streak grows.",
 				key: "wheelAccelerationPx",
 				label: "Energy boost",
 				min: 0,
 				step: 1,
 			},
 			{
-				description: "Extra boost scale from repeated wheel batches.",
+				description: "Compounding boost unlocked by repeated wheel streaks.",
 				key: "wheelBurstCountBoostPx",
 				label: "Streak boost",
 				min: 0,
 				step: 1,
+			},
+			{
+				description: "Wheel distance that counts as one full streak step.",
+				key: "wheelBurstCountStepPx",
+				label: "Streak step size",
+				min: 1,
+				step: 1,
+			},
+			{
+				description: "How much bigger wheel turns outweigh tiny wheel turns.",
+				key: "wheelBurstCountMagnitudeExponent",
+				label: "Streak weight",
+				min: 0.1,
+				step: 0.05,
 			},
 			{
 				description: "How aggressively each wheel streak compounds.",
@@ -148,7 +162,7 @@ const readerInputSettingGroups: Array<{
 				step: 0.01,
 			},
 			{
-				description: "Maximum wheel batches used by streak growth.",
+				description: "Maximum weighted streak score used by acceleration.",
 				key: "wheelBurstCountLimit",
 				label: "Streak cap",
 				min: 1,
@@ -169,7 +183,8 @@ const readerInputSettingGroups: Array<{
 				step: 0.01,
 			},
 			{
-				description: "How long wheel burst energy takes to cool off.",
+				description:
+					"How long the weighted streak cools off between wheel turns.",
 				key: "wheelBurstDecayMs",
 				label: "Burst decay",
 				min: 0,
@@ -183,7 +198,7 @@ const readerInputSettingGroups: Array<{
 				step: 1000,
 			},
 			{
-				description: "Time before wheel burst state fully resets.",
+				description: "Pause length before wheel acceleration fully resets.",
 				key: "wheelResetDelayMs",
 				label: "Reset delay",
 				min: 0,
