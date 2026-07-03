@@ -1,8 +1,10 @@
 import { logReaderDiagnostic } from "../services/readerDiagnostics";
 import { attachKeyboardInput } from "./input/keyboardInput";
+import { attachMiddleDragInput } from "./input/middleDragInput";
 import { createSnapController } from "./input/snapController";
 import { attachTouchInput } from "./input/touchInput";
 import { attachWheelInput } from "./input/wheelInput";
+import type { ReaderInputSettings } from "./readerInputSettings";
 import type { ReaderScrollDriver } from "./scrollDriver";
 import type { ReaderSnapModel, ScrollDirection } from "./scrollSnapModel";
 
@@ -18,6 +20,7 @@ export type ReaderInputBindings = {
  * @param driver - Scroll driver receiving normalized input.
  * @param snapModel - Model used to resolve nearby snap points.
  * @param scrollToTimelineEdge - Accelerated Home and End navigation.
+ * @param getInputSettings - Reads current input behavior settings.
  * @returns Input cleanup and pending-snap cancellation controls.
  *
  * @example
@@ -28,6 +31,7 @@ export function attachReaderInputBindings(
 	driver: ReaderScrollDriver,
 	snapModel: ReaderSnapModel,
 	scrollToTimelineEdge: (edge: "end" | "start") => void,
+	getInputSettings: () => ReaderInputSettings,
 	target: HTMLElement | Window = window,
 ): ReaderInputBindings {
 	logReaderDiagnostic("input bindings attached", { totalScroll });
@@ -39,10 +43,12 @@ export function attachReaderInputBindings(
 		driver,
 		snapModel,
 		() => direction,
+		getInputSettings,
 	);
 	const cleanups = [
 		attachWheelInput({
 			driver,
+			getInputSettings,
 			scheduleSnap: snapController.schedule,
 			setDirection,
 			target,
@@ -50,14 +56,24 @@ export function attachReaderInputBindings(
 		}),
 		attachKeyboardInput({
 			driver,
+			getInputSettings,
 			scheduleSnap: snapController.schedule,
 			setDirection,
 			scrollToTimelineEdge,
 			target: window,
 			totalScroll,
 		}),
+		attachMiddleDragInput({
+			driver,
+			getInputSettings,
+			scheduleSnap: snapController.schedule,
+			setDirection,
+			target,
+			totalScroll,
+		}),
 		attachTouchInput({
 			driver,
+			getInputSettings,
 			scheduleSnap: snapController.schedule,
 			setDirection,
 			target,

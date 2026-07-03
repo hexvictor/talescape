@@ -179,8 +179,7 @@ function getPreviousTakeoverAnchorsByOwner(
 	owner: Anchor,
 ): Anchor[] {
 	if (
-		owner.block.transition.previousBlocksDuringEnter ===
-		"fadeActivePrevious"
+		owner.block.transition.previousBlocksDuringEnter === "fadeActivePrevious"
 	) {
 		const ownerIndex = compiled.anchorIndexByBlockId[owner.block.id];
 		const previousAnchor =
@@ -238,21 +237,14 @@ function getPreviousBlockTakeoverFrame(
 				null);
 	const owner = heldBlockId ? compiled.anchorsByBlockId[heldBlockId] : null;
 	if (!owner) {
-		return getPendingPreviousBlockTakeoverFrame(
-			compiled,
-			activeAnchorIndex,
-		);
+		return getPendingPreviousBlockTakeoverFrame(compiled, activeAnchorIndex);
 	}
 	return (
 		createPreviousBlockTakeoverFrame(
 			getPreviousTakeoverAnchorsByOwner(compiled, owner),
 			owner,
 			1,
-		) ??
-		getPendingPreviousBlockTakeoverFrame(
-			compiled,
-			activeAnchorIndex,
-		)
+		) ?? getPendingPreviousBlockTakeoverFrame(compiled, activeAnchorIndex)
 	);
 }
 
@@ -898,6 +890,22 @@ export function createReaderScrollEngine({
 		});
 	};
 
+	/**
+	 * Renders a scroll-driver frame immediately from GSAP's virtual scroll tick.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * driver.setUpdateListener(renderDriverFrame);
+	 */
+	const renderDriverFrame = () => {
+		if (animationFrame !== null) {
+			window.cancelAnimationFrame(animationFrame);
+			animationFrame = null;
+		}
+		renderReaderAtScroll(driver.getScroll(), performance.now());
+	};
+
 	const getRestoreTarget = () => {
 		const pendingRestoreBlockId = store.getState().scroll.pendingRestoreBlockId;
 		if (
@@ -952,15 +960,15 @@ export function createReaderScrollEngine({
 		previousScroll = target;
 		currentIndex = compiled.segmentIndexByBlockId[progress.blockId ?? ""] ?? 0;
 		renderReaderAtScroll(target, performance.now());
-		driver.setUpdateListener(requestPaint);
+		driver.setUpdateListener(renderDriverFrame);
 		const inputTarget = scrollRoot ?? window;
-		inputTarget.addEventListener("scroll", requestPaint, { passive: true });
-		logReaderDiagnostic("native scroll listener attached");
+		logReaderDiagnostic("virtual scroll input target attached");
 		const inputBindings = attachReaderInputBindings(
 			compiled.totalScroll,
 			driver,
 			snapModel,
 			navigationMotion.scrollToTimelineEdge,
+			() => store.getState().inputSettings.values,
 			inputTarget,
 		);
 		cancelPendingSnap = inputBindings.cancelPendingSnap;
@@ -975,7 +983,6 @@ export function createReaderScrollEngine({
 		logReaderDiagnostic("scroll engine destroyed");
 		cleanupInput();
 		driver.setUpdateListener(null);
-		(scrollRoot ?? window).removeEventListener("scroll", requestPaint);
 		window.cancelAnimationFrame(animationFrame ?? 0);
 		statePublisher.flush();
 		statePublisher.cancel();

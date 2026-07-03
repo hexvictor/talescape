@@ -10,13 +10,17 @@ import {
 	selectShowsReaderProgress,
 	selectShowsReaderTools,
 } from "./selectors/readerUiSelectors";
-import { type DebugSlice, createDebugSlice } from "./slices/debugSlice";
 import {
 	type ContentsSlice,
 	createContentsSlice,
 } from "./slices/contentsSlice";
+import { type DebugSlice, createDebugSlice } from "./slices/debugSlice";
 import { type EngineSlice, createEngineSlice } from "./slices/engineSlice";
 import { type HubSlice, createHubSlice } from "./slices/hubSlice";
+import {
+	type InputSettingsSlice,
+	createInputSettingsSlice,
+} from "./slices/inputSettingsSlice";
 import {
 	type NavigationSlice,
 	createNavigationSlice,
@@ -33,6 +37,7 @@ export type TaleReaderState = ContentsSlice &
 	DebugSlice &
 	EngineSlice &
 	HubSlice &
+	InputSettingsSlice &
 	NavigationSlice &
 	ProgressSlice &
 	ReaderSlice &
@@ -78,6 +83,7 @@ export function createTaleReaderStore(
 				...createDebugSlice(set, get, api),
 				...createEngineSlice(set, get, api),
 				...createHubSlice(set, get, api),
+				...createInputSettingsSlice(set, get, api),
 				...createNavigationSlice(tale, progress)(set, get, api),
 				...createProgressSlice(tale, progress)(set, get, api),
 				...createReaderSlice(set, get, api),

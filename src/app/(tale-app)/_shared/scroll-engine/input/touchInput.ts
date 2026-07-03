@@ -1,5 +1,4 @@
 import { clamp } from "../../services/readerMath";
-import { NEW_READER_INPUT_SETTINGS } from "../readerInputSettings";
 import { shouldLetElementHandleInput } from "./inputTarget";
 import type { ReaderInputControllerOptions } from "./inputTypes";
 
@@ -14,6 +13,7 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
  */
 export function attachTouchInput({
 	driver,
+	getInputSettings,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
@@ -24,6 +24,7 @@ export function attachTouchInput({
 	let lastTouchEndAt = 0;
 	let burstStartedAt = 0;
 	let burstEnergy = 0;
+	let lastScrollVelocity = 0;
 	let target: number | null = null;
 	let active = false;
 
@@ -32,16 +33,18 @@ export function attachTouchInput({
 		if (!active) return;
 		lastTouchY = event.touches[0]?.clientY ?? null;
 		lastTouchAt = performance.now();
+		const settings = getInputSettings();
+		driver.cancelMotion();
 		const elapsedSinceGesture = lastTouchAt - lastTouchEndAt;
-		if (elapsedSinceGesture >= NEW_READER_INPUT_SETTINGS.touchBurstDecayMs) {
+		if (elapsedSinceGesture >= settings.touchBurstDecayMs) {
 			burstEnergy = 0;
-			driver.cancelMotion();
+			burstStartedAt = lastTouchAt;
 		} else if (lastTouchEndAt > 0) {
-			burstEnergy *=
-				1 - elapsedSinceGesture / NEW_READER_INPUT_SETTINGS.touchBurstDecayMs;
+			burstEnergy *= 1 - elapsedSinceGesture / settings.touchBurstDecayMs;
 		}
-		burstStartedAt = lastTouchAt;
-		target = driver.getTargetScroll();
+		if (burstStartedAt === 0) burstStartedAt = lastTouchAt;
+		lastScrollVelocity = 0;
+		target = driver.getScroll();
 	};
 	const onTouchMove = (event: TouchEvent) => {
 		if (!active || lastTouchY === null) return;
@@ -50,47 +53,74 @@ export function attachTouchInput({
 		event.preventDefault();
 		const delta = lastTouchY - touchY;
 		const now = performance.now();
+		const settings = getInputSettings();
 		const elapsed = Math.max(now - lastTouchAt, 1);
 		const velocity = Math.abs(delta) / elapsed;
 		burstEnergy = Math.min(
-			NEW_READER_INPUT_SETTINGS.touchBurstEnergyLimit,
+			settings.touchBurstEnergyLimit,
 			burstEnergy + Math.abs(delta),
 		);
 		const sustainedMultiplier = Math.min(
-			NEW_READER_INPUT_SETTINGS.touchAccelerationLimit,
-			1 + (now - burstStartedAt) / NEW_READER_INPUT_SETTINGS.touchBurstWindowMs,
+			settings.touchAccelerationLimit,
+			1 + (now - burstStartedAt) / settings.touchBurstWindowMs,
 		);
 		const velocityMultiplier = Math.min(
 			2,
-			1 + velocity / NEW_READER_INPUT_SETTINGS.touchVelocityRatio,
+			1 + velocity / settings.touchVelocityRatio,
 		);
 		const burstMultiplier =
 			1 +
-			Math.sqrt(burstEnergy / NEW_READER_INPUT_SETTINGS.touchBurstEnergyLimit) *
-				(NEW_READER_INPUT_SETTINGS.touchAccelerationLimit - 1);
+			Math.sqrt(burstEnergy / settings.touchBurstEnergyLimit) *
+				(settings.touchAccelerationLimit - 1);
+		const acceleration = Math.min(
+			settings.touchAccelerationLimit,
+			1 +
+				(sustainedMultiplier - 1) * 0.35 +
+				(velocityMultiplier - 1) * 0.45 +
+				(burstMultiplier - 1) * 0.5,
+		);
+		const scrollDelta = delta * settings.touchDeltaRatio * acceleration;
 		setDirection(delta >= 0 ? 1 : -1);
 		target = clamp(
-			(target ?? driver.getTargetScroll()) +
-				delta *
-					NEW_READER_INPUT_SETTINGS.touchDeltaRatio *
-					Math.min(
-						NEW_READER_INPUT_SETTINGS.touchAccelerationLimit,
-						sustainedMultiplier * velocityMultiplier * burstMultiplier,
-					),
+			(target ?? driver.getScroll()) + scrollDelta,
 			0,
 			totalScroll,
 		);
-		driver.scrollTo(target, "smooth", { duration: 0.08 });
+		driver.scrollTo(target, "smooth", {
+			duration: settings.touchDuration,
+		});
+		lastScrollVelocity = scrollDelta / elapsed;
 		lastTouchY = touchY;
 		lastTouchAt = now;
 	};
 	const onTouchEnd = () => {
 		lastTouchY = null;
 		lastTouchAt = 0;
-		burstStartedAt = 0;
 		lastTouchEndAt = performance.now();
 		if (!active) return;
 		active = false;
+		const settings = getInputSettings();
+		if (Math.abs(lastScrollVelocity) >= settings.touchMomentumMinVelocity) {
+			const momentumDistance = clamp(
+				lastScrollVelocity * settings.touchMomentumMultiplier,
+				-settings.touchMomentumMaxPx,
+				settings.touchMomentumMaxPx,
+			);
+			const momentumTarget = clamp(
+				(target ?? driver.getScroll()) + momentumDistance,
+				0,
+				totalScroll,
+			);
+			setDirection(momentumDistance >= 0 ? 1 : -1);
+			driver.scrollTo(momentumTarget, "smooth", {
+				duration: settings.touchMomentumDuration,
+			});
+			target = momentumTarget;
+			scheduleSnap(
+				settings.touchMomentumDuration * 1000 + settings.snapDelayMs,
+			);
+			return;
+		}
 		scheduleSnap();
 	};
 

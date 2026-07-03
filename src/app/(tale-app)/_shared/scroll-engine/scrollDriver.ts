@@ -1,5 +1,6 @@
 "use client";
 
+import { gsap } from "gsap";
 import { clamp } from "../services/readerMath";
 
 type ScrollMotion = { cancel: () => void };
@@ -11,74 +12,85 @@ type TravelEasing = "ease-out" | "linear";
 export type ReaderScrollDriver = ReturnType<typeof createReaderScrollDriver>;
 
 type ReaderScrollDriverOptions = {
+	maxScroll?: number;
 	scrollRoot?: HTMLElement | null;
 };
 
-const smoothSettledPx = 0.35;
-const smoothFollowStrength = 0.15;
-const smoothMaximumFollowStrength = 0.28;
-const smoothBaseMaxFrameStepPx = 360;
-const smoothMaximumFrameStepPx = 3000;
-const backlogAccelerationDistancePx = 14000;
+const smoothScrollMinimumDurationSeconds = 0.18;
+const smoothScrollMaximumDurationSeconds = 0.56;
+const smoothScrollDistanceForMaximumDurationPx = 2200;
 
 /**
- * Resolves adaptive virtual-scroll movement from the remaining target backlog.
+ * Resolves ordinary smooth-scroll tween duration from requested duration and distance.
  *
- * @param distance - Signed distance between rendered and requested scroll.
- * @returns Signed pixels to advance during the next frame.
+ * @param distancePx - Absolute distance between current and target scroll.
+ * @param requestedDurationSeconds - Optional duration requested by the input adapter.
+ * @returns Duration in seconds for a non-travel smooth scroll tween.
  *
  * @example
- * const step = getSmoothFrameStep(4200);
+ * const duration = getSmoothScrollDuration(420, 0.18);
  */
-function getSmoothFrameStep(distance: number): number {
-	const backlogRatio = clamp(
-		Math.abs(distance) / backlogAccelerationDistancePx,
+function getSmoothScrollDuration(
+	distancePx: number,
+	requestedDurationSeconds?: number,
+): number {
+	const distanceRatio = clamp(
+		distancePx / smoothScrollDistanceForMaximumDurationPx,
 		0,
 		1,
 	);
-	const followStrength =
-		smoothFollowStrength +
-		(smoothMaximumFollowStrength - smoothFollowStrength) * backlogRatio;
-	const maximumFrameStep =
-		smoothBaseMaxFrameStepPx +
-		(smoothMaximumFrameStepPx - smoothBaseMaxFrameStepPx) * backlogRatio;
-	return clamp(distance * followStrength, -maximumFrameStep, maximumFrameStep);
+	const distanceDuration =
+		smoothScrollMinimumDurationSeconds +
+		(smoothScrollMaximumDurationSeconds - smoothScrollMinimumDurationSeconds) *
+			distanceRatio;
+	const maximumDuration = Math.max(
+		smoothScrollMaximumDurationSeconds,
+		requestedDurationSeconds ?? 0,
+	);
+	return clamp(
+		Math.max(requestedDurationSeconds ?? 0, distanceDuration),
+		smoothScrollMinimumDurationSeconds,
+		maximumDuration,
+	);
 }
 
 /**
- * Creates a virtual scroll driver that eases rendered scroll toward a target.
+ * Creates the GSAP-backed virtual scroll driver used by the reader camera.
  *
+ * The driver owns one virtual scroll value. Native document scrolling is not
+ * allowed to drive the reader camera, which prevents native-scroll correction
+ * from fighting the timeline engine.
+ *
+ * @param options - Driver options.
+ * @param options.maxScroll - Maximum compiled timeline scroll.
+ * @param options.scrollRoot - Optional reader root used only for initial native-position recovery.
  * @returns A reader scroll driver used by the input bindings and camera engine.
  *
  * @example
- * const driver = createReaderScrollDriver();
+ * const driver = createReaderScrollDriver({ maxScroll: compiled.totalScroll });
  * driver.setUpdateListener(() => renderAt(driver.getScroll()));
  */
 export function createReaderScrollDriver({
+	maxScroll: initialMaxScroll = 0,
 	scrollRoot = null,
 }: ReaderScrollDriverOptions = {}) {
 	let activeMotion: ScrollMotion | null = null;
-	let currentScroll = getNativeScroll(scrollRoot);
-	let frameId: number | null = null;
-	let targetScroll = getNativeScroll(scrollRoot);
+	let activeTween: gsap.core.Tween | null = null;
+	let maxScroll = Math.max(0, initialMaxScroll);
+	let currentScroll = clamp(getNativeScroll(scrollRoot), 0, maxScroll);
+	let targetScroll = currentScroll;
 	let updateListener: ScrollDriverUpdateListener | null = null;
+	const virtualScroll = { value: currentScroll };
 
 	/**
-	 * Reads the maximum scrollable timeline distance from the document spacer.
+	 * Reads the maximum virtual timeline distance.
 	 *
 	 * @returns The maximum scroll value allowed by the current reader layout.
 	 *
 	 * @example
 	 * const max = getMaxScroll();
 	 */
-	const getMaxScroll = (): number =>
-		scrollRoot
-			? Math.max(0, scrollRoot.scrollHeight - scrollRoot.clientHeight)
-			: Math.max(
-					0,
-					document.documentElement.scrollHeight -
-						(window.innerHeight || document.documentElement.clientHeight),
-				);
+	const getMaxScroll = (): number => maxScroll;
 
 	/**
 	 * Notifies the reader engine that the virtual scroll value changed.
@@ -93,43 +105,31 @@ export function createReaderScrollDriver({
 	};
 
 	/**
-	 * Stops the current virtual easing loop.
+	 * Stops the active GSAP tween without changing the virtual scroll value.
 	 *
 	 * @returns Nothing.
 	 *
 	 * @example
-	 * stopFrameLoop();
+	 * stopTween();
 	 */
-	const stopFrameLoop = (): void => {
-		if (frameId === null) return;
-		window.cancelAnimationFrame(frameId);
-		frameId = null;
+	const stopTween = (): void => {
+		activeTween?.kill();
+		activeTween = null;
 	};
 
 	/**
-	 * Starts the virtual easing loop when the target differs from current scroll.
+	 * Applies a virtual scroll value and notifies the reader engine.
 	 *
+	 * @param value - Next virtual scroll value.
 	 * @returns Nothing.
 	 *
 	 * @example
-	 * startFrameLoop();
+	 * setCurrentScroll(120);
 	 */
-	const startFrameLoop = (): void => {
-		if (frameId !== null) return;
-		const advance = () => {
-			const distance = targetScroll - currentScroll;
-			if (Math.abs(distance) <= smoothSettledPx) {
-				currentScroll = targetScroll;
-				frameId = null;
-				notifyUpdate();
-				return;
-			}
-			const frameStep = getSmoothFrameStep(distance);
-			currentScroll = clamp(currentScroll + frameStep, 0, getMaxScroll());
-			notifyUpdate();
-			frameId = window.requestAnimationFrame(advance);
-		};
-		frameId = window.requestAnimationFrame(advance);
+	const setCurrentScroll = (value: number): void => {
+		currentScroll = clamp(value, 0, getMaxScroll());
+		virtualScroll.value = currentScroll;
+		notifyUpdate();
 	};
 
 	/**
@@ -163,11 +163,11 @@ export function createReaderScrollDriver({
 	 */
 	const setScroll = (value: number): void => {
 		const next = clamp(value, 0, getMaxScroll());
-		stopFrameLoop();
-		currentScroll = next;
+		activeMotion?.cancel();
+		activeMotion = null;
+		stopTween();
 		targetScroll = next;
-		setNativeScroll(scrollRoot, next);
-		notifyUpdate();
+		setCurrentScroll(next);
 	};
 
 	/**
@@ -182,14 +182,15 @@ export function createReaderScrollDriver({
 		activeMotion?.cancel();
 		activeMotion = null;
 		targetScroll = currentScroll;
-		stopFrameLoop();
+		stopTween();
 	};
 
 	/**
-	 * Moves the target scroll, either instantly or through eased virtual follow.
+	 * Moves the target scroll, either instantly or through GSAP easing.
 	 *
 	 * @param nextTargetScroll - The scroll target requested by input or navigation.
 	 * @param behavior - Whether the movement should be instant or eased.
+	 * @param options - Optional smooth movement duration.
 	 * @returns A cancelable motion handle, or null when no movement is needed.
 	 *
 	 * @example
@@ -198,24 +199,50 @@ export function createReaderScrollDriver({
 	const scrollTo = (
 		nextTargetScroll: number,
 		behavior: ScrollBehavior,
-		_options?: { duration?: number },
+		options?: { duration?: number },
 	): ScrollMotion | null => {
 		const next = clamp(nextTargetScroll, 0, getMaxScroll());
 		activeMotion?.cancel();
+		activeMotion = null;
 		if (behavior !== "smooth") {
 			setScroll(next);
 			return null;
 		}
 		targetScroll = next;
 		if (Math.abs(targetScroll - currentScroll) < 1) return null;
+
+		const durationSeconds = getSmoothScrollDuration(
+			Math.abs(targetScroll - currentScroll),
+			options?.duration,
+		);
+		let cancelled = false;
 		const motion = {
 			cancel: () => {
+				if (cancelled) return;
+				cancelled = true;
 				targetScroll = currentScroll;
-				stopFrameLoop();
+				stopTween();
+				if (activeMotion === motion) activeMotion = null;
 			},
 		};
+
 		activeMotion = motion;
-		startFrameLoop();
+		stopTween();
+		virtualScroll.value = currentScroll;
+		activeTween = gsap.to(virtualScroll, {
+			duration: durationSeconds,
+			ease: "power2.out",
+			onComplete: () => {
+				if (cancelled) return;
+				activeTween = null;
+				if (activeMotion === motion) activeMotion = null;
+				targetScroll = next;
+				setCurrentScroll(next);
+			},
+			onUpdate: () => setCurrentScroll(virtualScroll.value),
+			overwrite: true,
+			value: next,
+		});
 		return motion;
 	};
 
@@ -240,47 +267,40 @@ export function createReaderScrollDriver({
 		easing: TravelEasing = "ease-out",
 	): ScrollMotion => {
 		activeMotion?.cancel();
-		stopFrameLoop();
-		const start = currentScroll;
+		activeMotion = null;
+		stopTween();
 		const next = clamp(nextTargetScroll, 0, getMaxScroll());
-		const distance = next - start;
-		const durationMs = Math.max(durationSeconds * 1000, 1);
-		const startedAt = performance.now();
-		let travelFrame: number | null = null;
 		let cancelled = false;
 
 		const motion: ScrollMotion = {
 			cancel: () => {
 				if (cancelled) return;
 				cancelled = true;
-				window.cancelAnimationFrame(travelFrame ?? 0);
-				travelFrame = null;
+				stopTween();
 				targetScroll = currentScroll;
+				if (activeMotion === motion) activeMotion = null;
 				onCancel?.();
 			},
 		};
+
 		activeMotion = motion;
 		targetScroll = next;
-
-		const advance = (now: number): void => {
-			if (cancelled) return;
-			const progress = clamp((now - startedAt) / durationMs, 0, 1);
-			const eased = easing === "linear" ? progress : 1 - (1 - progress) ** 3;
-			currentScroll = clamp(start + distance * eased, 0, getMaxScroll());
-			notifyUpdate();
-			if (progress < 1) {
-				travelFrame = window.requestAnimationFrame(advance);
-				return;
-			}
-			travelFrame = null;
-			activeMotion = null;
-			currentScroll = next;
-			targetScroll = next;
-			notifyUpdate();
-			onComplete?.();
-		};
-
-		travelFrame = window.requestAnimationFrame(advance);
+		virtualScroll.value = currentScroll;
+		activeTween = gsap.to(virtualScroll, {
+			duration: Math.max(durationSeconds, 0.01),
+			ease: easing === "linear" ? "none" : "power3.out",
+			onComplete: () => {
+				if (cancelled) return;
+				activeTween = null;
+				if (activeMotion === motion) activeMotion = null;
+				targetScroll = next;
+				setCurrentScroll(next);
+				onComplete?.();
+			},
+			onUpdate: () => setCurrentScroll(virtualScroll.value),
+			overwrite: true,
+			value: next,
+		});
 		return motion;
 	};
 
@@ -294,21 +314,26 @@ export function createReaderScrollDriver({
 		getScroll,
 		getTargetScroll,
 		scrollTo,
+		setMaxScroll: (value: number) => {
+			maxScroll = Math.max(0, value);
+			targetScroll = clamp(targetScroll, 0, getMaxScroll());
+			setCurrentScroll(clamp(currentScroll, 0, getMaxScroll()));
+		},
 		setScroll,
 		setUpdateListener: (listener: ScrollDriverUpdateListener | null) => {
 			updateListener = listener;
 		},
 		syncLayout: () => {
 			targetScroll = clamp(targetScroll, 0, getMaxScroll());
-			currentScroll = clamp(currentScroll, 0, getMaxScroll());
-			notifyUpdate();
+			setCurrentScroll(clamp(currentScroll, 0, getMaxScroll()));
 		},
 		travelTo,
 	};
 }
 
 /**
- * Reads native scroll from either the window or a scoped scroll container.
+ * Reads native scroll once so refresh/browser restore does not produce a jump
+ * before the engine applies the saved virtual reader position.
  *
  * @param scrollRoot - Optional scoped scroll element.
  * @returns Current native scroll offset.
@@ -318,22 +343,4 @@ export function createReaderScrollDriver({
  */
 function getNativeScroll(scrollRoot: HTMLElement | null): number {
 	return scrollRoot ? scrollRoot.scrollTop : window.scrollY;
-}
-
-/**
- * Writes native scroll to either the window or a scoped scroll container.
- *
- * @param scrollRoot - Optional scoped scroll element.
- * @param value - Scroll position to apply.
- * @returns Nothing.
- *
- * @example
- * setNativeScroll(scrollRoot, 1200);
- */
-function setNativeScroll(scrollRoot: HTMLElement | null, value: number): void {
-	if (scrollRoot) {
-		scrollRoot.scrollTop = value;
-		return;
-	}
-	window.scrollTo({ behavior: "auto", top: value });
 }

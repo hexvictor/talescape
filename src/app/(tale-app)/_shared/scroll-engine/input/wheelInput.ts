@@ -1,6 +1,5 @@
 import { countReaderDiagnostic } from "../../services/readerDiagnostics";
 import { clamp } from "../../services/readerMath";
-import { NEW_READER_INPUT_SETTINGS } from "../readerInputSettings";
 import type { ScrollDirection } from "../scrollSnapModel";
 import { shouldLetElementHandleInput } from "./inputTarget";
 import type { ReaderInputControllerOptions } from "./inputTypes";
@@ -16,12 +15,14 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
  */
 export function attachWheelInput({
 	driver,
+	getInputSettings,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
 	totalScroll,
 }: ReaderInputControllerOptions): () => void {
 	let accumulatedDelta = 0;
+	let burstScore = 0;
 	let burstEnergy = 0;
 	let direction: ScrollDirection | null = null;
 	let frameId: number | null = null;
@@ -32,44 +33,67 @@ export function attachWheelInput({
 	const applyAccumulatedWheelInput = (): void => {
 		frameId = null;
 		if (Math.abs(accumulatedDelta) < 0.01) return;
-		const settings = NEW_READER_INPUT_SETTINGS;
+		const settings = getInputSettings();
 		const now = performance.now();
 		const nextDirection: ScrollDirection = accumulatedDelta >= 0 ? 1 : -1;
 		if (direction !== nextDirection) {
 			direction = nextDirection;
+			burstScore = 0;
 			burstEnergy = 0;
 			target = null;
 		}
 		const elapsed = lastEventAt === 0 ? 0 : now - lastEventAt;
+		const normalizedMagnitude = Math.min(Math.abs(accumulatedDelta), 220);
+		const retainedBurstScore =
+			elapsed === 0 || elapsed < settings.wheelBurstDecayMs
+				? burstScore * (1 - elapsed / settings.wheelBurstDecayMs)
+				: 0;
+		const weightedBurstStep =
+			(normalizedMagnitude / settings.wheelBurstCountStepPx) **
+			settings.wheelBurstCountMagnitudeExponent;
+		burstScore = Math.min(
+			settings.wheelBurstCountLimit,
+			retainedBurstScore + weightedBurstStep,
+		);
 		const retainedEnergy =
 			elapsed >= settings.wheelBurstDecayMs
 				? 0
 				: burstEnergy * (1 - elapsed / settings.wheelBurstDecayMs);
-		const normalizedMagnitude = Math.min(Math.abs(accumulatedDelta), 160);
 		burstEnergy = Math.min(
 			settings.wheelBurstEnergyLimit,
-			retainedEnergy + normalizedMagnitude,
+			retainedEnergy + normalizedMagnitude * normalizedMagnitude,
 		);
 		accumulatedDelta = 0;
 		lastEventAt = now;
 		setDirection(nextDirection);
+		const burstRatio = Math.sqrt(burstEnergy / settings.wheelBurstEnergyLimit);
+		const accelerationRatio = clamp(
+			(burstScore - 1) / Math.max(1, settings.wheelBurstCountLimit - 1),
+			0,
+			1,
+		);
+		const streakBoost =
+			settings.wheelBurstCountBoostPx *
+			(settings.wheelBurstCountMultiplier ** Math.max(0, burstScore - 1) - 1);
 		const amount = Math.min(
 			settings.wheelMaxStepPx,
 			settings.wheelBaseStepPx +
 				normalizedMagnitude * settings.wheelDeltaRatio +
-				Math.sqrt(burstEnergy) * settings.wheelAccelerationPx,
+				burstRatio * accelerationRatio * settings.wheelAccelerationPx +
+				streakBoost,
 		);
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + nextDirection * amount, 0, totalScroll);
 		driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
 		window.clearTimeout(resetTimer ?? undefined);
 		resetTimer = window.setTimeout(() => {
+			burstScore = 0;
 			burstEnergy = 0;
 			direction = null;
 			lastEventAt = 0;
 			target = null;
 		}, settings.wheelResetDelayMs);
-		scheduleSnap();
+		scheduleSnap(settings.wheelDuration * 1000 + settings.snapDelayMs);
 	};
 
 	const onWheel = (event: WheelEvent): void => {
