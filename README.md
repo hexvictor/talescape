@@ -1,6 +1,12 @@
 # talescape
  The community-driven hub of interactive tales
 
+## License
+
+Talescape is source-available, not open source.
+
+See [LICENSE.md](LICENSE.md) for the source-available license terms and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules.
+
 ## TODO
 
 - [x] Make it deploy (Vercel)
