@@ -5,6 +5,8 @@ import type {
 	ResolvedBlockSize,
 	SnapPoint,
 	Tale,
+	TaleBlock,
+	TaleBlockSnapMode,
 	TimelineSegment,
 	ViewportSize,
 } from "../types";
@@ -23,6 +25,7 @@ import {
 	getReadingTravelDistance,
 } from "./readerGeometry";
 import { clamp, lerpPoint } from "./readerMath";
+import { isBlockSnapEnabled } from "./readerSnapSettings";
 
 function getVisibleBlockIds(tale: Tale, selectedBranchIds: string[]) {
 	const branchIds = [tale.bounds.rootBranchId, ...selectedBranchIds]
@@ -40,11 +43,64 @@ export function getCompiledBlockIds(tale: Tale, selectedBranchIds: string[]) {
 	return getVisibleBlockIds(tale, selectedBranchIds);
 }
 
+/**
+ * Resolves the block snap mode after applying an optional debug override.
+ *
+ * @param block - Block being compiled.
+ * @param override - Runtime debug override, or null for authored settings.
+ * @returns Effective snap mode.
+ *
+ * @example
+ * const mode = getEffectiveSnapMode(block, "snap");
+ */
+function getEffectiveSnapMode(
+	block: TaleBlock,
+	override: TaleBlockSnapMode | null,
+): TaleBlockSnapMode {
+	return override ?? block.snap.mode;
+}
+
+/**
+ * Resolves block snap settings only when the authored block mode is active.
+ *
+ * @param block - Block being compiled.
+ * @param override - Runtime debug override, or null for authored settings.
+ * @returns Block-specific snap settings, or null while debug-overridden.
+ *
+ * @example
+ * const settings = getEffectiveSnapSettings(block, null);
+ */
+function getEffectiveSnapSettings(
+	block: TaleBlock,
+	override: TaleBlockSnapMode | null,
+) {
+	return override ? null : (block.snap.settings ?? null);
+}
+
+/**
+ * Returns whether a block participates in snapping after debug overrides.
+ *
+ * @param block - Block being compiled.
+ * @param override - Runtime debug override, or null for authored settings.
+ * @returns True when snap points should be emitted.
+ *
+ * @example
+ * if (isEffectiveSnapEnabled(block, override)) emitSnapPoints();
+ */
+function isEffectiveSnapEnabled(
+	block: TaleBlock,
+	override: TaleBlockSnapMode | null,
+): boolean {
+	if (override) return override !== "snap-off";
+	return isBlockSnapEnabled(block);
+}
+
 export function compileReader(
 	tale: Tale,
 	selectedBranchIds: string[],
 	sizes: Record<string, ResolvedBlockSize>,
 	viewport: ViewportSize,
+	snapModeOverride: TaleBlockSnapMode | null = null,
 ): CompiledReader {
 	countReaderDiagnostic("compileReader()", {
 		selectedBranches: selectedBranchIds.length,
@@ -176,19 +232,36 @@ export function compileReader(
 			start: scroll,
 			type: "reading",
 		});
-		if (anchor.block.snap) {
+		const snapMode = getEffectiveSnapMode(anchor.block, snapModeOverride);
+		const blockEndScroll = scroll + readingLength;
+		if (snapMode === "scroll-snap") {
 			snapPoints.push({
 				blockId: anchor.block.id,
 				id: `${anchor.block.id}-start`,
+				mode: snapMode,
 				scroll: anchor.scroll,
+				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
 				type: "block-start",
 			});
+			snapPoints.push({
+				blockId: anchor.block.id,
+				id: `${anchor.block.id}-end`,
+				mode: snapMode,
+				scroll: blockEndScroll,
+				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				type: "block-end",
+			});
 		}
-		if (anchor.block.isChoiceBlock) {
+		if (
+			anchor.block.isChoiceBlock &&
+			isEffectiveSnapEnabled(anchor.block, snapModeOverride)
+		) {
 			snapPoints.push({
 				blockId: anchor.block.id,
 				id: `${anchor.block.id}-choice-end`,
-				scroll: scroll + readingLength,
+				mode: snapMode,
+				scroll: blockEndScroll,
+				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
 				type: "choice-end",
 			});
 		}
@@ -229,12 +302,37 @@ export function compileReader(
 			to: next,
 			type: "transition",
 		});
+		if (getEffectiveSnapMode(anchor.block, snapModeOverride) === "snap") {
+			snapPoints.push({
+				blockId: anchor.block.id,
+				id: `${anchor.block.id}-transition-end`,
+				mode: "snap",
+				scroll,
+				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				transitionEnd: scroll + transitionLength,
+				transitionStart: scroll,
+				type: "block-end",
+			});
+		}
+		if (getEffectiveSnapMode(next.block, snapModeOverride) === "snap") {
+			snapPoints.push({
+				blockId: next.block.id,
+				id: `${next.block.id}-transition-start`,
+				mode: "snap",
+				scroll: scroll + transitionLength,
+				settings: getEffectiveSnapSettings(next.block, snapModeOverride),
+				transitionEnd: scroll + transitionLength,
+				transitionStart: scroll,
+				type: "block-start",
+			});
+		}
 		transitionOutOfByBlockId[anchor.block.id] = transitionIndex;
 		transitionIntoByBlockId[next.block.id] = transitionIndex;
 		scroll += transitionLength;
 	}
 	const navigation = compileReaderContents(tale, anchors);
-	const previousVisibleTakeover = compilePreviousVisibleTakeoverMetadata(anchors);
+	const previousVisibleTakeover =
+		compilePreviousVisibleTakeoverMetadata(anchors);
 
 	return {
 		anchorIndexByBlockId: Object.fromEntries(
@@ -256,6 +354,7 @@ export function compileReader(
 		segmentIndexByBlockId,
 		segments,
 		segmentStarts: segments.map((segment) => segment.start),
+		snapConfig: tale.snapConfig,
 		snapPoints,
 		startsWithTransition: Boolean(tale.transitionFirstBlock),
 		totalScroll: Math.max(scroll, 1),

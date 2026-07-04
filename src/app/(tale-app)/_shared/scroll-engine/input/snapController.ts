@@ -1,5 +1,5 @@
 import { countReaderDiagnostic } from "../../services/readerDiagnostics";
-import type { ReaderInputSettings } from "../readerInputSettings";
+import type { TaleSnapConfig } from "../../types";
 import type { ReaderScrollDriver } from "../scrollDriver";
 import type { ReaderSnapModel, ScrollDirection } from "../scrollSnapModel";
 
@@ -24,27 +24,30 @@ export function createSnapController(
 	driver: ReaderScrollDriver,
 	snapModel: ReaderSnapModel,
 	getDirection: () => ScrollDirection,
-	getInputSettings: () => ReaderInputSettings,
+	getSnapConfig: () => TaleSnapConfig,
 ): ReaderSnapController {
 	let timer: number | null = null;
 
 	return {
 		cleanup: () => window.clearTimeout(timer ?? undefined),
-		schedule: (delayMs = getInputSettings().snapDelayMs) => {
+		schedule: (delayMs) => {
 			countReaderDiagnostic("scheduleSnap()");
 			window.clearTimeout(timer ?? undefined);
-			timer = window.setTimeout(() => {
-				const settings = getInputSettings();
-				const target = snapModel.getNearbyTarget(
-					driver.getScroll(),
-					getDirection(),
-					settings.snapCapturePx,
-				);
-				if (target === null) return;
-				driver.scrollTo(target, "smooth", {
-					duration: settings.snapDuration,
-				});
-			}, delayMs);
+			const settings = getSnapConfig();
+			const target = snapModel.getSnapTarget(
+				driver.getTargetScroll(),
+				getDirection(),
+				settings,
+			);
+			if (target === null) return;
+			timer = window.setTimeout(
+				() => {
+					driver.scrollTo(target.scroll, "smooth", {
+						duration: target.durationSeconds,
+					});
+				},
+				(delayMs ?? 0) + target.delayMs,
+			);
 		},
 	};
 }

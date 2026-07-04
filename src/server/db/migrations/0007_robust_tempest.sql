@@ -1,0 +1,2 @@
+ALTER TABLE "talescape_tale" ADD COLUMN "snapConfig" json DEFAULT '{"scrollSnap":{"captureDistancePx":96,"delayMs":240,"durationSeconds":0.22,"minViewportFraction":0},"snap":{"captureDistancePx":96,"delayMs":0,"durationSeconds":0.22,"minViewportFraction":0}}'::json NOT NULL;--> statement-breakpoint
+ALTER TABLE "talescape_block" DROP COLUMN "isSnap";

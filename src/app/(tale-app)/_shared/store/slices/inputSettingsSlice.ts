@@ -3,17 +3,21 @@ import {
 	DEFAULT_READER_INPUT_SETTINGS,
 	type ReaderInputSettings,
 } from "../../scroll-engine/readerInputSettings";
+import type { TaleBlockSnapMode } from "../../types";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ReaderInputSettingsKey = keyof ReaderInputSettings;
+export type ReaderSnapModeOverride = TaleBlockSnapMode | "default";
 
 export type InputSettingsSlice = {
 	inputSettings: {
 		reset: () => void;
+		setSnapModeOverride: (mode: ReaderSnapModeOverride) => void;
 		setValue: <Key extends ReaderInputSettingsKey>(
 			key: Key,
 			value: ReaderInputSettings[Key],
 		) => void;
+		snapModeOverride: ReaderSnapModeOverride;
 		values: ReaderInputSettings;
 	};
 };
@@ -41,6 +45,17 @@ export const createInputSettingsSlice: StateCreator<
 					values: { ...DEFAULT_READER_INPUT_SETTINGS },
 				},
 			})),
+		setSnapModeOverride: (mode) =>
+			set((state) => ({
+				engine: {
+					...state.engine,
+					revision: state.engine.revision + 1,
+				},
+				inputSettings: {
+					...state.inputSettings,
+					snapModeOverride: mode,
+				},
+			})),
 		setValue: (key, value) =>
 			set((state) => ({
 				inputSettings: {
@@ -48,6 +63,7 @@ export const createInputSettingsSlice: StateCreator<
 					values: { ...state.inputSettings.values, [key]: value },
 				},
 			})),
+		snapModeOverride: "default",
 		values: { ...DEFAULT_READER_INPUT_SETTINGS },
 	},
 });

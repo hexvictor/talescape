@@ -179,7 +179,6 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				pageId: createdPage.id,
 				partId: createdPart.id,
 				title,
-				isSnap: false,
 				order: 0,
 				sizeMode: "fixed",
 				sizeConfig: {

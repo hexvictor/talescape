@@ -409,7 +409,7 @@ export function createReaderScrollEngine({
 	let lightweightTravelActive = false;
 	let cancelPendingSnap = (): void => undefined;
 	const committedAnimationIds = new Set(progress.committedAnimationIds);
-	const snapModel = createReaderSnapModel(compiled.snapPoints);
+	const snapModel = createReaderSnapModel(compiled.snapPoints, viewport);
 	const progressRoot =
 		stage.closest<HTMLElement>("[data-reader-runtime-root='true']") ??
 		stage.parentElement;
@@ -969,6 +969,7 @@ export function createReaderScrollEngine({
 			snapModel,
 			navigationMotion.scrollToTimelineEdge,
 			() => store.getState().inputSettings.values,
+			() => compiled.snapConfig,
 			inputTarget,
 		);
 		cancelPendingSnap = inputBindings.cancelPendingSnap;

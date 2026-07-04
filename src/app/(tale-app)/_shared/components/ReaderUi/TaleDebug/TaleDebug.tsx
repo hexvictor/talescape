@@ -79,6 +79,9 @@ function TaleDebugContent(): React.JSX.Element {
 	const readerStatusVisible = useTaleReaderStore(
 		(state) => state.ui.readerStatusVisible,
 	);
+	const reduceInactiveUiOpacity = useTaleReaderStore(
+		(state) => state.ui.reduceInactiveUiOpacity,
+	);
 	const [activeTab, setActiveTab] = useState<DebugTab>("summary");
 
 	const currentContentsBlock = compiled?.contents
@@ -99,7 +102,10 @@ function TaleDebugContent(): React.JSX.Element {
 				type="button"
 				aria-label="Open reader debug"
 				className={clsx(
-					"pointer-events-auto absolute right-2 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					"pointer-events-auto absolute right-2 z-40 flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary shadow-2xl backdrop-blur-md transition-opacity duration-200",
+					reduceInactiveUiOpacity
+						? "opacity-25 hover:opacity-100"
+						: "opacity-100",
 					readerStatusVisible ? "bottom-12" : "bottom-2",
 				)}
 				onClick={toggleDebug}

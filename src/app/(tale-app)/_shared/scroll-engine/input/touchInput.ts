@@ -14,6 +14,7 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
 export function attachTouchInput({
 	driver,
 	getInputSettings,
+	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
@@ -80,14 +81,17 @@ export function attachTouchInput({
 				(burstMultiplier - 1) * 0.5,
 		);
 		const scrollDelta = delta * settings.touchDeltaRatio * acceleration;
-		setDirection(delta >= 0 ? 1 : -1);
+		const direction = delta >= 0 ? 1 : -1;
+		setDirection(direction);
 		target = clamp(
 			(target ?? driver.getScroll()) + scrollDelta,
 			0,
 			totalScroll,
 		);
+		const snapTarget = resolveImmediateSnapTarget(target, direction);
+		if (snapTarget) target = snapTarget.scroll;
 		driver.scrollTo(target, "smooth", {
-			duration: settings.touchDuration,
+			duration: snapTarget?.durationSeconds ?? settings.touchDuration,
 		});
 		lastScrollVelocity = scrollDelta / elapsed;
 		lastTouchY = touchY;
@@ -111,14 +115,16 @@ export function attachTouchInput({
 				0,
 				totalScroll,
 			);
-			setDirection(momentumDistance >= 0 ? 1 : -1);
-			driver.scrollTo(momentumTarget, "smooth", {
-				duration: settings.touchMomentumDuration,
+			const direction = momentumDistance >= 0 ? 1 : -1;
+			const snapTarget = resolveImmediateSnapTarget(momentumTarget, direction);
+			setDirection(direction);
+			target = snapTarget?.scroll ?? momentumTarget;
+			driver.scrollTo(target, "smooth", {
+				duration: snapTarget?.durationSeconds ?? settings.touchMomentumDuration,
 			});
-			target = momentumTarget;
-			scheduleSnap(
-				settings.touchMomentumDuration * 1000 + settings.snapDelayMs,
-			);
+			if (!snapTarget) {
+				scheduleSnap(settings.touchMomentumDuration * 1000);
+			}
 			return;
 		}
 		scheduleSnap();

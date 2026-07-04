@@ -16,6 +16,7 @@ import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
 export function attachKeyboardInput({
 	driver,
 	getInputSettings,
+	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
 	scrollToTimelineEdge,
@@ -33,15 +34,16 @@ export function attachKeyboardInput({
 
 	const animateBy = (amount: number) => {
 		const settings = getInputSettings();
-		setDirection(amount >= 0 ? 1 : -1);
-		driver.scrollTo(
-			clamp(driver.getTargetScroll() + amount, 0, totalScroll),
-			"smooth",
-			{
-				duration: settings.keyboardDuration,
-			},
-		);
-		scheduleSnap(settings.keyboardDuration * 1000 + settings.snapDelayMs);
+		const direction: ScrollDirection = amount >= 0 ? 1 : -1;
+		const nextTarget = clamp(driver.getTargetScroll() + amount, 0, totalScroll);
+		const snapTarget = resolveImmediateSnapTarget(nextTarget, direction);
+		setDirection(direction);
+		driver.scrollTo(snapTarget?.scroll ?? nextTarget, "smooth", {
+			duration: snapTarget?.durationSeconds ?? settings.keyboardDuration,
+		});
+		if (!snapTarget) {
+			scheduleSnap(settings.keyboardDuration * 1000);
+		}
 	};
 
 	const startDecay = () => {
@@ -147,14 +149,22 @@ export function attachKeyboardInput({
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + direction * step, 0, totalScroll);
 		const settings = getInputSettings();
-		driver.scrollTo(target, "smooth", {
-			duration: settings.keyboardDuration,
-		});
-		scheduleSnap(
-			event.repeat
-				? settings.keyboardDuration * 1000 + settings.snapDelayMs
-				: settings.keyboardTapBurstWindowMs,
-		);
+		const snapTarget = resolveImmediateSnapTarget(target, direction);
+		if (snapTarget) {
+			target = snapTarget.scroll;
+			driver.scrollTo(target, "smooth", {
+				duration: snapTarget.durationSeconds,
+			});
+		} else {
+			driver.scrollTo(target, "smooth", {
+				duration: settings.keyboardDuration,
+			});
+			scheduleSnap(
+				event.repeat
+					? settings.keyboardDuration * 1000
+					: settings.keyboardTapBurstWindowMs,
+			);
+		}
 	};
 
 	const getHeldStep = () => {

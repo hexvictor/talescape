@@ -1,8 +1,9 @@
+import { normalizeBlockSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
 import type {
 	RawTaleRecord,
 	ReaderStyle,
-	TaleBlockResponsiveOverride,
 	TaleBlock,
+	TaleBlockResponsiveOverride,
 } from "~/app/(tale-app)/_shared/types";
 import type {
 	AmbientAnimationSelection as DbAmbientAnimationSelection,
@@ -22,7 +23,6 @@ type RawBlockRow = {
 	fragments?: { id: number }[];
 	id: number;
 	isChoiceBlock?: boolean;
-	isSnap?: boolean;
 	nodes?: { id: number }[];
 	order?: number;
 	pageId?: number | null;
@@ -102,7 +102,7 @@ function formatBlockRow(
 		reading: formatReadingConfig(block),
 		responsiveOverrides: block.responsiveConfig ?? undefined,
 		size: formatSize(block.sizeMode, block.sizeConfig),
-		snap: block.isSnap ?? true,
+		snap: normalizeBlockSnapConfig(block.transitionConfig?.snap ?? true),
 		style: block.styleConfig ?? undefined,
 		title: block.title ?? `Block ${block.id}`,
 		transition: formatTransitionConfig(block.transitionConfig),
@@ -207,8 +207,7 @@ function formatTransitionConfig(
 		enteringLength: transition?.enteringLength ?? null,
 		flow: normalizeFlow(transition?.flow),
 		leavingLength: transition?.leavingLength ?? null,
-		previousBlocksDuringEnter:
-			transition?.previousBlocksDuringEnter ?? "keep",
+		previousBlocksDuringEnter: transition?.previousBlocksDuringEnter ?? "keep",
 		scrollLength: null,
 	};
 }

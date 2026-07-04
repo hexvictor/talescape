@@ -15,8 +15,8 @@ import {
 } from "../services/readerMeasurement";
 import type {
 	CompiledReader,
-	ResolvedTaleBlock,
 	ResolvedBlockSize,
+	ResolvedTaleBlock,
 	Tale,
 	ViewportSize,
 } from "../types";
@@ -51,6 +51,7 @@ function getCompiledRouteCacheKey(
 	viewport: ViewportSize,
 	revision: number,
 	selectedBranchIds: string[],
+	snapModeOverride: string,
 ): string {
 	return [
 		layoutVariantKey,
@@ -58,6 +59,7 @@ function getCompiledRouteCacheKey(
 		viewport.width,
 		viewport.height,
 		selectedBranchIds.join(">"),
+		snapModeOverride,
 	].join("|");
 }
 
@@ -79,7 +81,9 @@ export function usePrepareReaderLayout(
 		setProgress,
 		setReady,
 		setStatus,
+		snapModeOverride,
 	} = useTaleReaderStoreShallow((state) => ({
+		snapModeOverride: state.inputSettings.snapModeOverride,
 		revision: state.engine.revision,
 		selectedBranchIds: state.navigation.selectedBranchIds,
 		setCompiled: state.reader.setCompiled,
@@ -98,8 +102,13 @@ export function usePrepareReaderLayout(
 			const resolvedTale = tale;
 			if (!currentState.reader.compiled) setReady(false);
 			setStatus("measuring");
-			const routeBlockIds = getCompiledBlockIds(resolvedTale, selectedBranchIds);
-			const allBlockIds = resolvedTale.structure.blocks.map((block) => block.id);
+			const routeBlockIds = getCompiledBlockIds(
+				resolvedTale,
+				selectedBranchIds,
+			);
+			const allBlockIds = resolvedTale.structure.blocks.map(
+				(block) => block.id,
+			);
 			countReaderDiagnostic("layout preparation started", {
 				blockCount: routeBlockIds.length,
 				revision,
@@ -179,10 +188,17 @@ export function usePrepareReaderLayout(
 				viewport,
 				revision,
 				selectedBranchIds,
+				snapModeOverride,
 			);
 			const compiled =
 				compiledCacheRef.current[compiledCacheKey] ??
-				compileReader(resolvedTale, selectedBranchIds, sizes, viewport);
+				compileReader(
+					resolvedTale,
+					selectedBranchIds,
+					sizes,
+					viewport,
+					snapModeOverride === "default" ? null : snapModeOverride,
+				);
 			compiledCacheRef.current[compiledCacheKey] = compiled;
 			setCompiled(compiled);
 			setPhase("restoring-progress");
@@ -212,6 +228,7 @@ export function usePrepareReaderLayout(
 		setProgress,
 		setReady,
 		setStatus,
+		snapModeOverride,
 		store,
 		tale,
 		layoutVariantKey,

@@ -7,7 +7,11 @@ import {
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
-import type { ResolvedTaleBlock } from "~/app/(tale-app)/_shared/types";
+import type {
+	ResolvedTaleBlock,
+	TaleBlockSnapMode,
+	TaleBlockSnapSettings,
+} from "~/app/(tale-app)/_shared/types";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
 import { FlowSettings, MotionNumber } from "./MotionControls";
 import type { BlockChangeHandler } from "./blockMotionTypes";
@@ -88,8 +92,7 @@ export function BlockTransitionSettings({
 											(id) => animationPresetsById[id]?.tracks ?? [],
 										),
 									},
-									previousVisible:
-										item.transition.animations.previousVisible,
+									previousVisible: item.transition.animations.previousVisible,
 								},
 								flow: structuredClone(preset.flow),
 							},
@@ -183,16 +186,7 @@ export function BlockTransitionSettings({
 					/>
 				) : null}
 			</div>
-			<Setting label="Snap">
-				<input
-					className="h-9 w-5 accent-[#d9b56f]"
-					type="checkbox"
-					checked={block.snap}
-					onChange={(event) =>
-						onChange((item) => ({ ...item, snap: event.target.checked }))
-					}
-				/>
-			</Setting>
+			<BlockSnapSettings block={block} onChange={onChange} />
 			{block.position.isFirst ? (
 				<Setting label="Transition first block">
 					<input
@@ -228,5 +222,137 @@ export function BlockTransitionSettings({
 				</Setting>
 			) : null}
 		</DebugCard>
+	);
+}
+
+/**
+ * Edits the block snap mode and optional timing/capture overrides.
+ *
+ * @param props - Current block and update callback.
+ * @returns Snap mode and override controls.
+ *
+ * @example
+ * <BlockSnapSettings block={block} onChange={commitBlockChange} />
+ */
+function BlockSnapSettings({
+	block,
+	onChange,
+}: {
+	block: ResolvedTaleBlock;
+	onChange: BlockChangeHandler;
+}): React.JSX.Element {
+	const updateSnapSettings = (
+		key: keyof TaleBlockSnapSettings,
+		value: number | null,
+	): void => {
+		onChange((item) => ({
+			...item,
+			snap: {
+				...item.snap,
+				settings: {
+					...(item.snap.settings ?? {}),
+					[key]: value,
+				},
+			},
+		}));
+	};
+
+	return (
+		<div
+			data-reader-component="BlockSnapSettings"
+			data-reader-role="block-snap-settings"
+			className="col-span-2 grid grid-cols-2 gap-2 rounded border border-foreground/8 bg-foreground/[0.025] p-2"
+		>
+			<Setting label="Snap mode">
+				<select
+					className={settingClassName}
+					value={block.snap.mode}
+					onChange={(event) =>
+						onChange((item) => ({
+							...item,
+							snap: {
+								...item.snap,
+								mode: event.target.value as TaleBlockSnapMode,
+							},
+						}))
+					}
+				>
+					<option value="scroll-snap">Scroll snap</option>
+					<option value="snap">Snap</option>
+					<option value="snap-off">Snap off</option>
+				</select>
+			</Setting>
+			<div className="rounded border border-foreground/8 bg-background/30 p-2 text-[0.68rem] text-foreground/45 leading-4">
+				{block.snap.mode === "scroll-snap"
+					? "Captures nearby block starts and ends after free scrolling."
+					: block.snap.mode === "snap"
+						? "Free inside the block, then snaps at transition boundaries."
+						: "This block does not create snap targets."}
+			</div>
+			<SnapOverrideNumber
+				label="Capture px"
+				value={block.snap.settings?.captureDistancePx ?? null}
+				onChange={(value) => updateSnapSettings("captureDistancePx", value)}
+			/>
+			<SnapOverrideNumber
+				label="Min viewport fraction"
+				step={0.01}
+				value={block.snap.settings?.minViewportFraction ?? null}
+				onChange={(value) => updateSnapSettings("minViewportFraction", value)}
+			/>
+			<SnapOverrideNumber
+				label="Delay ms"
+				value={block.snap.settings?.delayMs ?? null}
+				onChange={(value) => updateSnapSettings("delayMs", value)}
+			/>
+			<SnapOverrideNumber
+				label="Duration seconds"
+				step={0.01}
+				value={block.snap.settings?.durationSeconds ?? null}
+				onChange={(value) => updateSnapSettings("durationSeconds", value)}
+			/>
+		</div>
+	);
+}
+
+/**
+ * Renders one optional numeric block snap override.
+ *
+ * @param props - Label, numeric value, step, and update callback.
+ * @returns Optional number input that stores null when empty.
+ *
+ * @example
+ * <SnapOverrideNumber label="Delay" value={null} onChange={setDelay} />
+ */
+function SnapOverrideNumber({
+	label,
+	onChange,
+	step = 1,
+	value,
+}: {
+	label: string;
+	onChange: (value: number | null) => void;
+	step?: number;
+	value: number | null;
+}): React.JSX.Element {
+	return (
+		<Setting label={label}>
+			<input
+				className={settingClassName}
+				min={0}
+				placeholder="Global"
+				step={step}
+				type="number"
+				value={value ?? ""}
+				onChange={(event) => {
+					if (event.target.value === "") {
+						onChange(null);
+						return;
+					}
+					const nextValue = Number(event.target.value);
+					if (Number.isFinite(nextValue)) onChange(nextValue);
+				}}
+			/>
+		</Setting>
 	);
 }

@@ -324,33 +324,6 @@ const readerInputSettingGroups: Array<{
 		],
 		title: "Middle drag",
 	},
-	{
-		description: "After-input snapping to nearby reader anchors.",
-		settings: [
-			{
-				description: "Distance where a nearby snap point can capture scroll.",
-				key: "snapCapturePx",
-				label: "Capture distance",
-				min: 0,
-				step: 1,
-			},
-			{
-				description: "Delay before snap is attempted after input.",
-				key: "snapDelayMs",
-				label: "Snap delay",
-				min: 0,
-				step: 10,
-			},
-			{
-				description: "Easing duration for the snap movement.",
-				key: "snapDuration",
-				label: "Snap duration",
-				min: 0,
-				step: 0.01,
-			},
-		],
-		title: "Snap",
-	},
 ];
 
 /**

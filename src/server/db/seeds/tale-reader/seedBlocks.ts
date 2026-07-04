@@ -57,7 +57,6 @@ export async function seedBlocks(): Promise<void> {
 				entryId: page.entryId,
 				isChoiceBlock: blueprint.isChoice,
 				isOfficial: true,
-				isSnap: blueprint.layout === "fullscreen",
 				isVerified: true,
 				order: page.order,
 				pageId: page.id,

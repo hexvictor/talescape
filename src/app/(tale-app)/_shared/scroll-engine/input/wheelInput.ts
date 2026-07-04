@@ -16,6 +16,7 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
 export function attachWheelInput({
 	driver,
 	getInputSettings,
+	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
@@ -84,7 +85,16 @@ export function attachWheelInput({
 		);
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + nextDirection * amount, 0, totalScroll);
-		driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
+		const snapTarget = resolveImmediateSnapTarget(target, nextDirection);
+		if (snapTarget) {
+			target = snapTarget.scroll;
+			driver.scrollTo(target, "smooth", {
+				duration: snapTarget.durationSeconds,
+			});
+		} else {
+			driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
+			scheduleSnap(settings.wheelDuration * 1000);
+		}
 		window.clearTimeout(resetTimer ?? undefined);
 		resetTimer = window.setTimeout(() => {
 			burstScore = 0;
@@ -93,7 +103,6 @@ export function attachWheelInput({
 			lastEventAt = 0;
 			target = null;
 		}, settings.wheelResetDelayMs);
-		scheduleSnap(settings.wheelDuration * 1000 + settings.snapDelayMs);
 	};
 
 	const onWheel = (event: WheelEvent): void => {

@@ -11,6 +11,7 @@ import {
 	useTaleEditorStoreShallow,
 } from "../../hooks/useTaleEditorStore";
 import { TaleInspectorPanel } from "../Inspector/TaleInspectorPanel";
+import { TaleSettingsPanel } from "./TaleSettingsPanel";
 
 type PathType = TalePath["type"];
 
@@ -61,9 +62,7 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 						onChange={setData}
 					/>
 				) : (
-					<p className="text-foreground/45 text-sm">
-						Select a branch or block to edit it.
-					</p>
+					<TaleSettingsPanel />
 				)}
 			</div>
 		</aside>

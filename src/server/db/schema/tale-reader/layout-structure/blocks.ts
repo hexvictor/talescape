@@ -1,4 +1,5 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
+import type { TaleBlockResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
@@ -11,7 +12,6 @@ import type {
 	ReadingConfig,
 	TransitionConfig,
 } from "~/server/db/types/tale-reader/readerConfig";
-import type { TaleBlockResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import { users } from "../../users";
 import { entries } from "../narrative-structure/entries";
 import { pages } from "../narrative-structure/pages";
@@ -54,7 +54,6 @@ export const blocks = createTable("block", (d) => ({
 	title: d.text(),
 	description: d.text(),
 	isChoiceBlock: d.boolean().notNull().default(false),
-	isSnap: d.boolean().notNull().default(false),
 	order: d.integer().notNull(),
 	pageOrder: d.integer().notNull().default(0),
 	sizeMode: d

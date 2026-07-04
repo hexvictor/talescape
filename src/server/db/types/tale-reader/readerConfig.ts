@@ -218,6 +218,20 @@ export type ReadingConfig = {
 	readingLengthMode: "content" | "manual";
 };
 
+export type BlockSnapMode = "scroll-snap" | "snap" | "snap-off";
+
+export type BlockSnapSettings = {
+	captureDistancePx?: number | null;
+	durationSeconds?: number | null;
+	delayMs?: number | null;
+	minViewportFraction?: number | null;
+};
+
+export type BlockSnapConfig = {
+	mode: BlockSnapMode;
+	settings?: BlockSnapSettings | null;
+};
+
 export type TransitionConfig = {
 	animationConfig: {
 		entering: AnimationSelection;
@@ -228,6 +242,7 @@ export type TransitionConfig = {
 	flow: BlockFlow;
 	leavingLength: number | null;
 	previousBlocksDuringEnter?: PreviousBlocksDuringEnter;
+	snap?: BlockSnapConfig;
 };
 
 export type NodeChild =
