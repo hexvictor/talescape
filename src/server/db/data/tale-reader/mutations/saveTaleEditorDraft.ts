@@ -1,11 +1,13 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
+import { normalizeBlockSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
 import type { FirstBlockTransitionMode } from "~/app/(tale-app)/_shared/types";
 import type {
 	TaleBlockResponsiveOverride,
 	TaleBreakpoint,
 	TaleFragmentResponsiveOverride,
+	TaleSnapConfig,
 } from "~/app/(tale-app)/_shared/types";
 import { db } from "~/server/db";
 import {
@@ -22,6 +24,7 @@ import type {
 } from "~/server/db/types/tale-reader/fragment";
 import type { PathType } from "~/server/db/types/tale-reader/path";
 import type {
+	BlockSnapConfig,
 	FragmentAnimationConfig,
 	FragmentPlacementConfig,
 	NodeAnimationConfig,
@@ -53,7 +56,7 @@ export type SaveTaleEditorDraftInput = {
 		responsiveConfig: unknown;
 		sizeConfig: unknown;
 		sizeMode: ReaderSizeMode;
-		snap: boolean;
+		snap: boolean | BlockSnapConfig;
 		styleConfig: unknown;
 		title: string;
 		transitionConfig: unknown;
@@ -93,6 +96,7 @@ export type SaveTaleEditorDraftInput = {
 		toBranchId: number;
 		type: PathType;
 	}>;
+	snapConfig: TaleSnapConfig;
 	taleId: number;
 	title: string;
 	transitionFirstBlock: boolean;
@@ -120,6 +124,7 @@ export async function saveTaleEditorDraft(
 				breakpointConfig: input.breakpointConfig as TaleBreakpoint[],
 				description: input.description,
 				firstBlockTransitionMode: input.firstBlockTransitionMode,
+				snapConfig: input.snapConfig,
 				title: input.title,
 				transitionFirstBlock: input.transitionFirstBlock,
 			})
@@ -140,25 +145,28 @@ export async function saveTaleEditorDraft(
 		}
 
 		for (const block of input.blocks.filter(hasValidId)) {
+			const snap = normalizeBlockSnapConfig(block.snap);
+			const transitionConfig = {
+				...(block.transitionConfig as TransitionConfig),
+				snap,
+			};
 			await tx
 				.update(blocks)
 				.set({
 					description: block.description,
 					branchId: block.branchId,
 					isChoiceBlock: block.isChoiceBlock,
-					isSnap: block.snap,
 					order: block.order,
 					readingConfig: block.readingConfig as ReadingConfig,
-					responsiveConfig:
-						block.responsiveConfig as Record<
-							string,
-							TaleBlockResponsiveOverride
-						>,
+					responsiveConfig: block.responsiveConfig as Record<
+						string,
+						TaleBlockResponsiveOverride
+					>,
 					sizeConfig: block.sizeConfig as ReaderSizeConfig,
 					sizeMode: block.sizeMode,
 					styleConfig: block.styleConfig as ReaderStyleConfig | null,
 					title: block.title,
-					transitionConfig: block.transitionConfig as TransitionConfig,
+					transitionConfig,
 				})
 				.where(and(eq(blocks.id, block.id), eq(blocks.taleId, input.taleId)));
 		}
@@ -187,11 +195,10 @@ export async function saveTaleEditorDraft(
 					nodeId: fragment.nodeId,
 					order: fragment.order,
 					placementConfig: fragment.placementConfig as FragmentPlacementConfig,
-					responsiveConfig:
-						fragment.responsiveConfig as Record<
-							string,
-							TaleFragmentResponsiveOverride
-						>,
+					responsiveConfig: fragment.responsiveConfig as Record<
+						string,
+						TaleFragmentResponsiveOverride
+					>,
 					styleConfig: fragment.styleConfig as ReaderStyleConfig | null,
 					type: fragment.type as FragmentType,
 					visibleRange: fragment.visibleRange as TimelineRange | null,

@@ -1,7 +1,8 @@
 "use client";
 
+import clsx from "clsx";
 import { X } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
 	useTaleAppStore,
 	useTaleAppStoreShallow,
@@ -14,6 +15,7 @@ import type {
 	GraphFocusMode,
 	PathVisibilityMode,
 } from "../../store/editorStoreTypes";
+import { TaleSettingsPanel } from "./TaleSettingsPanel";
 
 type PathType = TalePath["type"];
 
@@ -37,6 +39,7 @@ export function EditorSettingsModal({
 	onClose: () => void;
 	open: boolean;
 }): React.JSX.Element | null {
+	const [activeTab, setActiveTab] = useState<"graph" | "tale">("tale");
 	const {
 		edgeType,
 		focusMode,
@@ -80,7 +83,7 @@ export function EditorSettingsModal({
 							Editor Settings
 						</p>
 						<p className="mt-1 text-foreground/45 text-xs">
-							Flow graph display and focus behavior
+							Tale metadata, snap defaults, breakpoints, and graph behavior
 						</p>
 					</div>
 					<button
@@ -92,43 +95,97 @@ export function EditorSettingsModal({
 						<X size={16} />
 					</button>
 				</header>
-				<div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-4">
-					<EditorGraphSettings
-						edgeType={edgeType}
-						focusMode={focusMode}
-						graphDirection={graphDirection}
-						pathVisibilityMode={pathVisibilityMode}
-						visiblePathTypes={visiblePathTypes}
-						onEdgeTypeChange={setEdgeType}
-						onFocusModeChange={setFocusMode}
-						onGraphDirectionChange={setGraphDirection}
-						onPathVisibilityModeChange={setPathVisibilityMode}
-						onVisiblePathTypesChange={setVisiblePathTypes}
-						onUnfocusedEdgeOpacityChange={setUnfocusedEdgeOpacity}
-						onUnfocusedNodeOpacityChange={setUnfocusedNodeOpacity}
-						unfocusedEdgeOpacity={unfocusedEdgeOpacity}
-						unfocusedNodeOpacity={unfocusedNodeOpacity}
-					/>
-					<BreakpointSettings
-						activeBreakpointId={breakpointId}
-						breakpoints={tale.breakpoints}
-						onActiveBreakpointChange={setBreakpointId}
-						onChange={(breakpoints) =>
-							setTale(
-								{
-									...tale,
-									breakpoints,
-								},
-								{
-									invalidation: "compilation",
-									reason: "editor-breakpoints",
-								},
-							)
-						}
-					/>
+				<div className="border-foreground/10 border-b px-4 py-2">
+					<div className="inline-flex rounded border border-foreground/10 bg-foreground/[0.03] p-1">
+						<SettingsTabButton
+							active={activeTab === "tale"}
+							label="Tale"
+							onClick={() => setActiveTab("tale")}
+						/>
+						<SettingsTabButton
+							active={activeTab === "graph"}
+							label="Graph"
+							onClick={() => setActiveTab("graph")}
+						/>
+					</div>
+				</div>
+				<div className="max-h-[calc(100vh-13rem)] overflow-y-auto p-4">
+					{activeTab === "tale" ? (
+						<>
+							<TaleSettingsPanel />
+							<BreakpointSettings
+								activeBreakpointId={breakpointId}
+								breakpoints={tale.breakpoints}
+								onActiveBreakpointChange={setBreakpointId}
+								onChange={(breakpoints) =>
+									setTale(
+										{
+											...tale,
+											breakpoints,
+										},
+										{
+											invalidation: "compilation",
+											reason: "editor-breakpoints",
+										},
+									)
+								}
+							/>
+						</>
+					) : (
+						<EditorGraphSettings
+							edgeType={edgeType}
+							focusMode={focusMode}
+							graphDirection={graphDirection}
+							pathVisibilityMode={pathVisibilityMode}
+							visiblePathTypes={visiblePathTypes}
+							onEdgeTypeChange={setEdgeType}
+							onFocusModeChange={setFocusMode}
+							onGraphDirectionChange={setGraphDirection}
+							onPathVisibilityModeChange={setPathVisibilityMode}
+							onVisiblePathTypesChange={setVisiblePathTypes}
+							onUnfocusedEdgeOpacityChange={setUnfocusedEdgeOpacity}
+							onUnfocusedNodeOpacityChange={setUnfocusedNodeOpacity}
+							unfocusedEdgeOpacity={unfocusedEdgeOpacity}
+							unfocusedNodeOpacity={unfocusedNodeOpacity}
+						/>
+					)}
 				</div>
 			</section>
 		</div>
+	);
+}
+
+/**
+ * Renders one editor settings tab button.
+ *
+ * @param props - Tab button props.
+ * @returns Settings tab button.
+ *
+ * @example
+ * <SettingsTabButton active label="Tale" onClick={selectTale} />
+ */
+function SettingsTabButton({
+	active,
+	label,
+	onClick,
+}: {
+	active: boolean;
+	label: string;
+	onClick: () => void;
+}): React.JSX.Element {
+	return (
+		<button
+			type="button"
+			className={clsx(
+				"rounded px-3 py-1.5 font-semibold text-xs",
+				active
+					? "bg-primary text-primary-foreground"
+					: "text-foreground/54 hover:bg-foreground/8 hover:text-foreground",
+			)}
+			onClick={onClick}
+		>
+			{label}
+		</button>
 	);
 }
 
@@ -260,9 +317,7 @@ function BreakpointSettings({
 												orientation:
 													event.target.value === ""
 														? undefined
-														: (event.target.value as
-																| "landscape"
-																| "portrait"),
+														: (event.target.value as "landscape" | "portrait"),
 											}),
 										)
 									}
@@ -374,9 +429,7 @@ function SettingsNumber({
 				value={value ?? ""}
 				onChange={(event) =>
 					onChange(
-						event.target.value === ""
-							? undefined
-							: Number(event.target.value),
+						event.target.value === "" ? undefined : Number(event.target.value),
 					)
 				}
 			/>
@@ -387,9 +440,7 @@ function SettingsNumber({
 /**
  * Replaces one breakpoint inside an ordered breakpoint collection.
  */
-function replaceBreakpoint<
-	Breakpoint extends { id: string; order: number },
->(
+function replaceBreakpoint<Breakpoint extends { id: string; order: number }>(
 	breakpoints: Breakpoint[],
 	id: string,
 	next: Breakpoint,

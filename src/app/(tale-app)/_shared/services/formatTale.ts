@@ -99,6 +99,7 @@ export function formatTale(raw: RawTaleRecord): Tale {
 		creator: null,
 		id: raw.id,
 		slug: raw.slug,
+		snapConfig: raw.snapConfig,
 		synopsis: raw.synopsis,
 		title: raw.title,
 		bounds: {

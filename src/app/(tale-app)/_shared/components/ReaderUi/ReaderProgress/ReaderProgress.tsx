@@ -13,13 +13,13 @@ import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreCont
  * <ReaderProgress />
  */
 export function ReaderProgress(): React.JSX.Element | null {
-	const { compiled, statusVisible, visible } = useTaleReaderStoreShallow(
-		(state) => ({
+	const { compiled, reduceInactiveUiOpacity, statusVisible, visible } =
+		useTaleReaderStoreShallow((state) => ({
 			compiled: state.reader.compiled,
+			reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 			statusVisible: state.ui.readerStatusVisible,
 			visible: state.ui.visibilityMode !== "hidden",
-		}),
-	);
+		}));
 	if (!compiled) return null;
 	return (
 		<div
@@ -32,7 +32,10 @@ export function ReaderProgress(): React.JSX.Element | null {
 				data-reader-component="ReaderProgress"
 				data-reader-role="compact-progress-status"
 				className={clsx(
-					"pointer-events-auto absolute right-2 bottom-1 rounded border border-foreground/10 bg-background/64 px-2.5 py-1.5 font-medium text-[10px] text-foreground/54 uppercase opacity-25 backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
+					"pointer-events-auto absolute right-2 bottom-1 rounded border border-foreground/10 bg-background/64 px-2.5 py-1.5 font-medium text-[10px] text-foreground/54 uppercase backdrop-blur-md transition-opacity duration-200",
+					reduceInactiveUiOpacity
+						? "opacity-25 hover:opacity-100"
+						: "opacity-100",
 					!statusVisible && "hidden",
 				)}
 			>

@@ -1,5 +1,8 @@
 import type { Tale } from "~/app/(tale-app)/_shared/types";
-import type { TaleBreakpoint } from "~/app/(tale-app)/_shared/types";
+import type {
+	TaleBreakpoint,
+	TaleSnapConfig,
+} from "~/app/(tale-app)/_shared/types";
 
 /**
  * Database tale query shape accepted by the tale reader formatter.
@@ -21,6 +24,7 @@ export type DbTaleRecord = {
 	parts?: unknown[];
 	paths?: unknown[];
 	breakpointConfig?: TaleBreakpoint[];
+	snapConfig?: TaleSnapConfig;
 	slug: string;
 	title: string;
 	firstBlockTransitionMode?: Tale["firstBlockTransitionMode"];

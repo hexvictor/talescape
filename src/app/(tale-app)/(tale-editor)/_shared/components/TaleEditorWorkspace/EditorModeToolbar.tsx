@@ -62,8 +62,7 @@ export function EditorModeToolbar(): React.JSX.Element {
 		graphOpen: state.editorWorkspace.graphOpen,
 		rightPanelOpen: state.editorWorkspace.rightPanelOpen,
 		selectBlockForEditing: state.editor.selectBlockForEditing,
-		setAutoSelectActiveBlock:
-			state.editorWorkspace.setAutoSelectActiveBlock,
+		setAutoSelectActiveBlock: state.editorWorkspace.setAutoSelectActiveBlock,
 		setGraphOpen: state.editorWorkspace.setGraphOpen,
 		setRightPanelOpen: state.editorWorkspace.setRightPanelOpen,
 	}));
@@ -142,9 +141,9 @@ export function EditorModeToolbar(): React.JSX.Element {
 			<header
 				data-reader-component="EditorModeToolbar"
 				data-reader-role="editor-toolbar"
-				className="relative z-60 flex h-16 items-center justify-between gap-4 border-foreground/10 border-b bg-background/95 px-4 text-foreground backdrop-blur-md"
+				className="relative z-60 flex min-h-16 flex-wrap items-center justify-between gap-3 border-foreground/10 border-b bg-background/95 px-3 py-2 text-foreground backdrop-blur-md sm:px-4"
 			>
-				<div className="flex min-w-0 items-center gap-3">
+				<div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
 					<div className="hidden shrink-0 sm:block">
 						<Logo />
 					</div>
@@ -156,7 +155,7 @@ export function EditorModeToolbar(): React.JSX.Element {
 					</Link>
 					<EditorActivitySwitcher />
 				</div>
-				<div className="flex shrink-0 items-center gap-3">
+				<div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
 					{tale.breakpoints.length > 1 ? (
 						<BreakpointSelect
 							breakpointId={breakpointId}
@@ -262,17 +261,19 @@ function EditorToolbarHeader({
 		<header
 			data-reader-component="EditorModeToolbar"
 			data-reader-role="editor-toolbar"
-			className="relative z-60 flex h-16 items-center justify-between gap-4 border-foreground/10 border-b bg-background/95 px-4 text-foreground shadow-sm backdrop-blur-md"
+			className="relative z-60 flex min-h-16 flex-wrap items-center justify-between gap-3 border-foreground/10 border-b bg-background/95 px-3 py-2 text-foreground shadow-sm backdrop-blur-md sm:px-4"
 		>
-			<div className="flex min-w-0 items-center gap-4 font-medium text-lg">
-				<Logo />
+			<div className="flex min-w-0 flex-wrap items-center gap-2 font-medium text-lg sm:gap-4">
+				<div className="hidden sm:block">
+					<Logo />
+				</div>
 				<Separator className="hidden h-8 sm:block" />
-				<div className="flex min-w-0 items-center gap-3">
+				<div className="flex min-w-0 items-center gap-2 sm:gap-3">
 					<EditorActivitySwitcher />
 				</div>
 				{previewOpen ? <EditorPreviewSelectionControls /> : null}
 			</div>
-			<div className="flex min-w-0 shrink-0 items-center gap-3">
+			<div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
 				{previewOpen ? (
 					<button
 						type="button"
@@ -308,7 +309,7 @@ function EditorToolbarHeader({
 					onRightPanelOpenChange={onRightPanelOpenChange}
 				/>
 
-				<span className="text-foreground/42 text-xs">{dirtyStatus}</span>
+				<span className="text-foreground/55 text-xs">{dirtyStatus}</span>
 				<button
 					type="button"
 					disabled={savePending}
@@ -347,10 +348,10 @@ function BreakpointSelect({
 	onChange: (breakpointId: string | null) => void;
 }): React.JSX.Element {
 	return (
-		<label className="flex items-center gap-2 text-foreground/52 text-xs">
+		<label className="flex min-w-0 items-center gap-2 text-foreground/62 text-xs">
 			<span className="font-medium">Breakpoint</span>
 			<select
-				className="h-9 min-w-36 rounded border border-foreground/12 bg-background px-2 text-foreground text-xs outline-none"
+				className="h-9 min-w-0 max-w-36 rounded border border-foreground/12 bg-background px-2 text-foreground text-xs outline-none"
 				value={breakpointId ?? ""}
 				onChange={(event) => onChange(event.target.value || null)}
 			>
@@ -406,7 +407,7 @@ function EditorSurfaceVisibilityControls({
 		<div
 			data-reader-component="EditorSurfaceVisibilityControls"
 			data-reader-role="editor-pane-visibility"
-			className="flex overflow-hidden rounded border border-foreground/12 bg-background/72"
+			className="flex min-w-0 overflow-hidden rounded border border-foreground/12 bg-background/90"
 		>
 			<VisibilityButton
 				active={previewOpen}
@@ -476,7 +477,7 @@ function VisibilityButton({
 			className={`grid h-9 w-10 place-items-center border-foreground/10 border-r text-xs transition last:border-r-0 disabled:cursor-not-allowed disabled:opacity-45 ${
 				active
 					? "bg-primary/16 text-primary"
-					: "text-foreground/45 hover:bg-foreground/8 hover:text-foreground"
+					: "text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
 			}`}
 			onClick={onClick}
 		>

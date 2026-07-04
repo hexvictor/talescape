@@ -9,9 +9,8 @@ import {
 	Settings,
 	Sparkles,
 } from "lucide-react";
-import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
+import { useRef, useState } from "react";
 import {
 	useTaleReaderStore,
 	useTaleReaderStoreShallow,
@@ -19,6 +18,7 @@ import {
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { getReaderHubContent } from "../../../services/readerHubContent";
 import type { ReaderHubPanel } from "../../../store/slices/hubSlice";
+import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import { ReaderHubSettings } from "./ReaderHubSettings";
 
 type HubPanelOption = {
@@ -54,15 +54,14 @@ export function ReaderHub(): React.JSX.Element {
 		setActivePanel,
 		setPanelWidthPx,
 		toggleOpen,
-	} =
-		useTaleReaderStoreShallow((state) => ({
-			activePanel: state.hub.activePanel,
-			open: state.hub.open,
-			panelWidthPx: state.hub.panelWidthPx,
-			setActivePanel: state.hub.setActivePanel,
-			setPanelWidthPx: state.hub.setPanelWidthPx,
-			toggleOpen: state.hub.toggleOpen,
-		}));
+	} = useTaleReaderStoreShallow((state) => ({
+		activePanel: state.hub.activePanel,
+		open: state.hub.open,
+		panelWidthPx: state.hub.panelWidthPx,
+		setActivePanel: state.hub.setActivePanel,
+		setPanelWidthPx: state.hub.setPanelWidthPx,
+		toggleOpen: state.hub.toggleOpen,
+	}));
 	const dockedHubWidthPx = useTaleReaderStore(
 		(state) => state.derived.dockedHubWidthPx,
 	);
@@ -91,8 +90,9 @@ export function ReaderHub(): React.JSX.Element {
 		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
 		if (!bounds) return null;
 		const maximumWidth = Math.floor(bounds.width * 0.5);
+		const minimumWidth = Math.min(320, Math.max(260, bounds.width - 24));
 		const rawWidth = bounds.right - clientX;
-		return Math.max(320, Math.min(maximumWidth, rawWidth));
+		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
 
 	return (
@@ -104,7 +104,7 @@ export function ReaderHub(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open Reader Hub"
-					className="pointer-events-auto absolute top-4 right-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/12 bg-background/78 text-foreground/72 opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
+					className="pointer-events-auto absolute top-4 right-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
 					onClick={toggleOpen}
 				>
 					<BookMarked size={18} />
@@ -118,10 +118,10 @@ export function ReaderHub(): React.JSX.Element {
 						data-reader-component="ReaderHub"
 						data-reader-role="reader-hub-sidebar"
 						className={clsx(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 shadow-2xl backdrop-blur-xl",
+							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 text-foreground shadow-2xl backdrop-blur-xl",
 							mobilePortrait
 								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
-								: "inset-y-0 right-0 border-l",
+								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l",
 						)}
 						style={
 							visiblePanelWidthPx === null

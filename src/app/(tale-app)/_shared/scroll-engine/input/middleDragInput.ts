@@ -15,6 +15,9 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
 export function attachMiddleDragInput({
 	driver,
 	getInputSettings,
+	getSnapDuration,
+	registerSnapInput,
+	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
@@ -48,6 +51,7 @@ export function attachMiddleDragInput({
 		if (!active) return;
 		event.preventDefault();
 		const delta = lastY - event.clientY;
+		registerSnapInput(Math.min(Math.abs(delta) / 100, 2));
 		const now = performance.now();
 		const settings = getInputSettings();
 		const elapsed = Math.max(now - lastAt, 1);
@@ -56,14 +60,22 @@ export function attachMiddleDragInput({
 			settings.middleDragAccelerationLimit,
 			1 + velocity / settings.middleDragVelocityRatio,
 		);
-		setDirection(delta >= 0 ? 1 : -1);
+		const direction = delta >= 0 ? 1 : -1;
+		setDirection(direction);
 		targetScroll = clamp(
 			targetScroll + delta * settings.middleDragDeltaRatio * multiplier,
 			0,
 			totalScroll,
 		);
+		const snapTarget = resolveImmediateSnapTarget(targetScroll, direction);
+		const durationSeconds = snapTarget
+			? getSnapDuration(snapTarget.durationSeconds)
+			: null;
+		if (snapTarget && durationSeconds !== null) {
+			targetScroll = snapTarget.scroll;
+		}
 		driver.scrollTo(targetScroll, "smooth", {
-			duration: settings.middleDragDuration,
+			duration: durationSeconds ?? settings.middleDragDuration,
 		});
 		lastY = event.clientY;
 		lastAt = now;
@@ -77,6 +89,7 @@ export function attachMiddleDragInput({
 		if (event.button !== 1) return;
 		if (shouldLetElementHandleInput(event.target)) return;
 		event.preventDefault();
+		registerSnapInput(0.8);
 		countReaderDiagnostic("middle drag input");
 		active = true;
 		lastY = event.clientY;

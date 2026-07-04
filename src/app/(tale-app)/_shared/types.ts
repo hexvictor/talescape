@@ -19,7 +19,12 @@ export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			groupHorizontalAlignment?: "center" | "end" | "start";
+			placement?:
+				| "blockEdge"
+				| "blockEdgeWithViewportAlignment"
+				| "cameraEdge"
+				| "groupEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -427,7 +432,7 @@ export type TaleBlock = {
 		};
 	};
 	size: BlockSize;
-	snap: boolean;
+	snap: TaleBlockSnapConfig;
 	style?: ReaderStyle;
 	title: string;
 	responsiveOverrides?: Record<string, TaleBlockResponsiveOverride>;
@@ -443,6 +448,28 @@ export type TaleBlock = {
 		previousBlocksDuringEnter: PreviousBlocksDuringEnter;
 		scrollLength: number | null;
 	};
+};
+
+export type TaleBlockSnapMode = "scroll-snap" | "snap" | "snap-off";
+
+export type TaleBlockSnapDirection = "both" | "fromNext" | "fromPrevious";
+
+export type TaleBlockSnapSettings = {
+	captureDistancePx?: number | null;
+	durationSeconds?: number | null;
+	delayMs?: number | null;
+	minViewportFraction?: number | null;
+};
+
+export type TaleBlockSnapConfig = {
+	direction?: TaleBlockSnapDirection;
+	mode: TaleBlockSnapMode;
+	settings?: TaleBlockSnapSettings | null;
+};
+
+export type TaleSnapConfig = {
+	scrollSnap: TaleBlockSnapSettings;
+	snap: TaleBlockSnapSettings;
 };
 
 export type ResolvedTaleBlock = TaleBlock & {
@@ -772,6 +799,7 @@ export type Tale = Partial<Omit<TaleSchema, "id">> &
 		book: Book | null;
 		creator: PublicUserInfo | null;
 		id: number;
+		snapConfig: TaleSnapConfig;
 		synopsis?: string;
 	};
 
@@ -789,6 +817,7 @@ export type RawTaleRecord = {
 	parts: TalePart[];
 	paths: TalePath[];
 	slug: string;
+	snapConfig: TaleSnapConfig;
 	synopsis: string;
 	title: string;
 	firstBlockTransitionMode: FirstBlockTransitionMode;
@@ -842,9 +871,14 @@ export type TimelineSegment =
 
 export type SnapPoint = {
 	blockId: string;
+	direction?: TaleBlockSnapDirection;
 	id: string;
+	mode: TaleBlockSnapMode;
 	scroll: number;
-	type: "block-start" | "choice-end";
+	settings?: TaleBlockSnapSettings | null;
+	transitionEnd?: number;
+	transitionStart?: number;
+	type: "block-end" | "block-start" | "choice-end";
 };
 
 export type ReaderScrollTargetOptions = {
@@ -868,6 +902,7 @@ export type CompiledReader = {
 	segmentIndexByBlockId: Record<string, number>;
 	segments: TimelineSegment[];
 	segmentStarts: number[];
+	snapConfig: TaleSnapConfig;
 	snapPoints: SnapPoint[];
 	startsWithTransition: boolean;
 	totalScroll: number;
@@ -979,7 +1014,14 @@ export type TaleBreakpoint = {
 export type TaleBlockResponsiveOverride = Partial<
 	Pick<
 		TaleBlock,
-		"description" | "nodes" | "reading" | "rootNodeId" | "size" | "style" | "title" | "transition"
+		| "description"
+		| "nodes"
+		| "reading"
+		| "rootNodeId"
+		| "size"
+		| "style"
+		| "title"
+		| "transition"
 	>
 >;
 

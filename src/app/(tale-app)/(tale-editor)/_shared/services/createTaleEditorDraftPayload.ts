@@ -60,10 +60,10 @@ export function createTaleEditorDraftPayload(tale: Tale) {
 				id: Number(fragment.id),
 				nodeId: fragment.nodeId === null ? null : Number(fragment.nodeId),
 				order: fragment.order,
-						placementConfig: fragment.placement,
-						responsiveConfig: fragment.responsiveOverrides ?? {},
-						styleConfig: fragment.style ?? null,
-						type: fragment.type,
+				placementConfig: fragment.placement,
+				responsiveConfig: fragment.responsiveOverrides ?? {},
+				styleConfig: fragment.style ?? null,
+				type: fragment.type,
 				visibleRange: fragment.visibleRange ?? null,
 			})),
 		nodes: tale.structure.nodes
@@ -92,6 +92,7 @@ export function createTaleEditorDraftPayload(tale: Tale) {
 				type: path.type,
 			})),
 		taleId: tale.id,
+		snapConfig: tale.snapConfig,
 		title: tale.title ?? "Untitled Tale",
 		transitionFirstBlock: tale.transitionFirstBlock ?? false,
 	};
@@ -182,6 +183,7 @@ function serializeTransitionConfig(block: TaleBlock) {
 		flow: block.transition.flow,
 		leavingLength: block.transition.leavingLength,
 		previousBlocksDuringEnter: block.transition.previousBlocksDuringEnter,
+		snap: block.snap,
 	};
 }
 

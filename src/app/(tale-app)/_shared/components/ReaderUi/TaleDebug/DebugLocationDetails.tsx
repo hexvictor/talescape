@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import type { CompiledReader, ReaderLocation, Tale } from "../../../types";
 
 type DebugLocationDetailsProps = {
@@ -22,6 +23,8 @@ export function DebugLocationDetails({
 }: DebugLocationDetailsProps): React.JSX.Element | null {
 	if (!location) return null;
 
+	const snapMode =
+		compiled?.anchorsByBlockId[location.blockId]?.block.snap.mode ?? "snap-off";
 	const blockNumber =
 		(compiled?.anchorIndexByBlockId[location.blockId] ?? -1) + 1;
 	const pageNumber = (compiled?.pageIndexById[location.pageId] ?? -1) + 1;
@@ -53,6 +56,19 @@ export function DebugLocationDetails({
 					{label} {number > 0 ? number : "?"} · #{id}
 				</span>
 			))}
+			<span
+				className={clsx(
+					"w-fit rounded px-1.5 py-0.5 font-semibold uppercase",
+					snapMode === "snap" &&
+						"border border-emerald-300/35 bg-emerald-400/18 text-emerald-100",
+					snapMode === "scroll-snap" &&
+						"border border-sky-300/35 bg-sky-400/18 text-sky-100",
+					snapMode === "snap-off" &&
+						"border border-foreground/10 bg-foreground/8 text-foreground/46",
+				)}
+			>
+				{snapMode}
+			</span>
 		</span>
 	);
 }

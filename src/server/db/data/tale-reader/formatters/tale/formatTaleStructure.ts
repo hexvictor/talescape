@@ -1,4 +1,5 @@
 import { formatTale } from "~/app/(tale-app)/_shared/services/formatTale";
+import { normalizeTaleSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
 import type { RawTaleRecord, Tale } from "~/app/(tale-app)/_shared/types";
 import { formatBlocks } from "../blocks/formatBlocks";
 import { formatBranches } from "../branches/formatBranches";
@@ -68,6 +69,7 @@ export function formatTaleStructure(
 		parts: formatParts(record.parts ?? []),
 		paths: formatPaths(record.paths ?? []),
 		slug: record.slug,
+		snapConfig: normalizeTaleSnapConfig(record.snapConfig),
 		synopsis: record.description ?? "",
 		title: record.title,
 		firstBlockTransitionMode:
@@ -90,5 +92,6 @@ export function formatTaleStructure(
 		book: record.book ?? null,
 		creator: record.creatorById ?? null,
 		id: record.id,
+		snapConfig: raw.snapConfig,
 	};
 }

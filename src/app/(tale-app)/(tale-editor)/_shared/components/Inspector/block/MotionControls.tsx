@@ -103,7 +103,8 @@ export function FlowSettings({
 									placement: event.target.value as
 										| "blockEdge"
 										| "blockEdgeWithViewportAlignment"
-										| "cameraEdge",
+										| "cameraEdge"
+										| "groupEdge",
 								})
 							}
 						>
@@ -111,9 +112,31 @@ export function FlowSettings({
 							<option value="blockEdgeWithViewportAlignment">
 								Block edge + camera alignment
 							</option>
+							<option value="groupEdge">Smart group edge</option>
 							<option value="cameraEdge">Previous camera viewport</option>
 						</select>
 					</Setting>
+					{flow.placement === "groupEdge" ? (
+						<Setting label="Smart horizontal alignment">
+							<select
+								className={settingClassName}
+								value={flow.groupHorizontalAlignment ?? "center"}
+								onChange={(event) =>
+									onChange({
+										...flow,
+										groupHorizontalAlignment: event.target.value as
+											| "center"
+											| "end"
+											| "start",
+									})
+								}
+							>
+								<option value="start">Left</option>
+								<option value="center">Center</option>
+								<option value="end">Right</option>
+							</select>
+						</Setting>
+					) : null}
 					<MotionNumber
 						label="Block spacing"
 						value={flow.spacing?.value ?? 0}
@@ -451,7 +474,9 @@ type StackPreset =
  * @example
  * const preset = getStackPreset(flow);
  */
-function getStackPreset(flow: Extract<BlockFlow, { type: "stack" }>): StackPreset {
+function getStackPreset(
+	flow: Extract<BlockFlow, { type: "stack" }>,
+): StackPreset {
 	const horizontal = getStackAxisPosition(
 		flow.horizontalPosition,
 		flow.horizontalPlacement,

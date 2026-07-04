@@ -50,6 +50,13 @@
       "when": 1782424460763,
       "tag": "0006_nasty_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783126081812,
+      "tag": "0007_robust_tempest",
+      "breakpoints": true
     }
   ]
 }

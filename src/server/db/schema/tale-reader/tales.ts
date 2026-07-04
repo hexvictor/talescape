@@ -1,5 +1,9 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import type { FirstBlockTransitionMode } from "~/app/(tale-app)/_shared/types";
+import type {
+	FirstBlockTransitionMode,
+	TaleSnapConfig,
+} from "~/app/(tale-app)/_shared/types";
+import type { TaleBreakpoint } from "~/app/(tale-app)/_shared/types";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
@@ -7,7 +11,6 @@ import type {
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
 import type { TaleType } from "~/server/db/types/tale-reader/tale";
-import type { TaleBreakpoint } from "~/app/(tale-app)/_shared/types";
 import { books } from "../library/books";
 import { users } from "../users";
 import { blocks } from "./layout-structure/blocks";
@@ -45,11 +48,25 @@ export const tales = createTable("tale", (d) => ({
 		.notNull()
 		.$type<FirstBlockTransitionMode>()
 		.default("fromPlacement"),
-	breakpointConfig: d
+	breakpointConfig: d.json().notNull().$type<TaleBreakpoint[]>().default([]),
+	snapConfig: d
 		.json()
 		.notNull()
-		.$type<TaleBreakpoint[]>()
-		.default([]),
+		.$type<TaleSnapConfig>()
+		.default({
+			scrollSnap: {
+				captureDistancePx: 96,
+				delayMs: 240,
+				durationSeconds: 0.22,
+				minViewportFraction: null,
+			},
+			snap: {
+				captureDistancePx: 96,
+				delayMs: 0,
+				durationSeconds: 0.22,
+				minViewportFraction: null,
+			},
+		}),
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

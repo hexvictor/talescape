@@ -16,6 +16,9 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
 export function attachWheelInput({
 	driver,
 	getInputSettings,
+	getSnapDuration,
+	registerSnapInput,
+	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
 	target: inputTarget,
@@ -84,7 +87,22 @@ export function attachWheelInput({
 		);
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + nextDirection * amount, 0, totalScroll);
-		driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
+		const snapTarget = resolveImmediateSnapTarget(target, nextDirection);
+		if (snapTarget) {
+			const durationSeconds = getSnapDuration(snapTarget.durationSeconds);
+			if (durationSeconds !== null) {
+				target = snapTarget.scroll;
+				driver.scrollTo(target, "smooth", {
+					duration: durationSeconds,
+				});
+			} else {
+				driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
+				scheduleSnap(settings.wheelDuration * 1000);
+			}
+		} else {
+			driver.scrollTo(target, "smooth", { duration: settings.wheelDuration });
+			scheduleSnap(settings.wheelDuration * 1000);
+		}
 		window.clearTimeout(resetTimer ?? undefined);
 		resetTimer = window.setTimeout(() => {
 			burstScore = 0;
@@ -93,7 +111,6 @@ export function attachWheelInput({
 			lastEventAt = 0;
 			target = null;
 		}, settings.wheelResetDelayMs);
-		scheduleSnap(settings.wheelDuration * 1000 + settings.snapDelayMs);
 	};
 
 	const onWheel = (event: WheelEvent): void => {
@@ -102,6 +119,7 @@ export function attachWheelInput({
 		const delta = normalizeWheelDelta(event);
 		if (Math.abs(delta) < 0.1) return;
 		event.preventDefault();
+		registerSnapInput(Math.min(Math.abs(delta) / 120, 2));
 		countReaderDiagnostic("wheel input");
 		accumulatedDelta += delta;
 		if (frameId === null) {

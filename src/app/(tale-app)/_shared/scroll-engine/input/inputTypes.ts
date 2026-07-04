@@ -1,10 +1,16 @@
 import type { ReaderInputSettings } from "../readerInputSettings";
 import type { ReaderScrollDriver } from "../scrollDriver";
-import type { ScrollDirection } from "../scrollSnapModel";
+import type { ReaderSnapTarget, ScrollDirection } from "../scrollSnapModel";
 
 export type ReaderInputControllerOptions = {
 	driver: ReaderScrollDriver;
 	getInputSettings: () => ReaderInputSettings;
+	getSnapDuration: (durationSeconds: number) => number | null;
+	registerSnapInput: (intensity?: number) => void;
+	resolveImmediateSnapTarget: (
+		targetScroll: number,
+		direction: ScrollDirection,
+	) => ReaderSnapTarget | null;
 	scheduleSnap: (delayMs?: number) => void;
 	setDirection: (direction: ScrollDirection) => void;
 	target: HTMLElement | Window;

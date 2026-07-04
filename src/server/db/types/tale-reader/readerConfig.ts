@@ -14,7 +14,12 @@ export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			groupHorizontalAlignment?: "center" | "end" | "start";
+			placement?:
+				| "blockEdge"
+				| "blockEdgeWithViewportAlignment"
+				| "cameraEdge"
+				| "groupEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -218,6 +223,22 @@ export type ReadingConfig = {
 	readingLengthMode: "content" | "manual";
 };
 
+export type BlockSnapMode = "scroll-snap" | "snap" | "snap-off";
+export type BlockSnapDirection = "both" | "fromNext" | "fromPrevious";
+
+export type BlockSnapSettings = {
+	captureDistancePx?: number | null;
+	durationSeconds?: number | null;
+	delayMs?: number | null;
+	minViewportFraction?: number | null;
+};
+
+export type BlockSnapConfig = {
+	direction?: BlockSnapDirection;
+	mode: BlockSnapMode;
+	settings?: BlockSnapSettings | null;
+};
+
 export type TransitionConfig = {
 	animationConfig: {
 		entering: AnimationSelection;
@@ -228,6 +249,7 @@ export type TransitionConfig = {
 	flow: BlockFlow;
 	leavingLength: number | null;
 	previousBlocksDuringEnter?: PreviousBlocksDuringEnter;
+	snap?: BlockSnapConfig;
 };
 
 export type NodeChild =
