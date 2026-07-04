@@ -86,6 +86,114 @@ export function resolveNonOverlappingBlockPoint(
 }
 
 /**
+ * Places a block at the requested previous edge while searching nearby previous
+ * block edges for the closest non-overlapping cross-axis slot.
+ *
+ * @param point - Candidate point from ordinary block/camera placement.
+ * @param size - Destination block dimensions.
+ * @param direction - Authored placement direction.
+ * @param existingAnchors - Previously compiled route anchors.
+ * @returns Candidate point adjusted into a nearby visible group gap.
+ *
+ * @example
+ * const point = resolveGroupEdgeBlockPoint(candidate, size, "left", anchors);
+ */
+export function resolveGroupEdgeBlockPoint(
+	point: Point,
+	size: ResolvedBlockSize,
+	direction: Direction,
+	existingAnchors: readonly Anchor[],
+	options: {
+		horizontalAlignment?: "center" | "end" | "start";
+		referenceCamera?: Point;
+		viewport?: ViewportSize;
+	} = {},
+): Point {
+	const vector = directionVector(direction);
+	const preferredPoint = {
+		...point,
+		x:
+			options.horizontalAlignment && options.referenceCamera && options.viewport
+				? alignWithinAxis(
+						options.referenceCamera.x,
+						options.viewport.width,
+						size.width,
+						options.horizontalAlignment,
+					)
+				: point.x,
+	};
+	const xCandidates =
+		vector.x !== 0 && vector.y === 0 && !options.horizontalAlignment
+			? [point.x]
+			: [
+					preferredPoint.x,
+					...getEdgeAlignedAxisCandidates(
+						point.x,
+						size.width,
+						existingAnchors,
+						"horizontal",
+					),
+				];
+	const yCandidates =
+		vector.y !== 0 && vector.x === 0
+			? [point.y]
+			: getEdgeAlignedAxisCandidates(
+					point.y,
+					size.height,
+					existingAnchors,
+					"vertical",
+				);
+
+	const candidates = xCandidates.flatMap((x) =>
+		yCandidates.map((y) => ({ x, y })),
+	);
+	return (
+		candidates
+			.filter(
+				(candidate) =>
+					!existingAnchors.some((anchor) =>
+						boundsOverlap(
+							getBlockBounds(candidate, size),
+							getAnchorBounds(anchor),
+						),
+					),
+			)
+			.sort(
+				(left, right) =>
+					getPointDistance(left, preferredPoint) -
+					getPointDistance(right, preferredPoint),
+			)[0] ?? point
+	);
+}
+
+/**
+ * Aligns a size inside a reference span on one world axis.
+ *
+ * @param center - Reference span center.
+ * @param referenceSize - Reference span size.
+ * @param size - Destination size.
+ * @param alignment - Start, center, or end placement inside the span.
+ * @returns Destination center on the same axis.
+ *
+ * @example
+ * const x = alignWithinAxis(camera.x, viewport.width, block.width, "start");
+ */
+function alignWithinAxis(
+	center: number,
+	referenceSize: number,
+	size: number,
+	alignment: "center" | "end" | "start",
+): number {
+	if (alignment === "start") {
+		return center - referenceSize / 2 + size / 2;
+	}
+	if (alignment === "end") {
+		return center + referenceSize / 2 - size / 2;
+	}
+	return center;
+}
+
+/**
  * Resolves a destination camera base while keeping already visible small blocks framed.
  *
  * @param previous - Previous compiled route anchor.
@@ -258,6 +366,54 @@ function getAnchorBounds(anchor: Anchor): BlockBounds {
 		height: anchor.height,
 		width: anchor.width,
 	});
+}
+
+/**
+ * Creates axis coordinates that align the destination edge to previous block
+ * edges, plus the original authored coordinate.
+ *
+ * @param original - Original center coordinate on the axis.
+ * @param size - Destination size on the axis.
+ * @param anchors - Previous route anchors.
+ * @param axis - Axis whose edge candidates are generated.
+ * @returns Candidate center coordinates.
+ *
+ * @example
+ * const yCandidates = getEdgeAlignedAxisCandidates(0, 300, anchors, "vertical");
+ */
+function getEdgeAlignedAxisCandidates(
+	original: number,
+	size: number,
+	anchors: readonly Anchor[],
+	axis: "horizontal" | "vertical",
+): number[] {
+	const candidates = new Set<number>([original]);
+	for (const anchor of anchors) {
+		const bounds = getAnchorBounds(anchor);
+		const start = axis === "horizontal" ? bounds.left : bounds.top;
+		const end = axis === "horizontal" ? bounds.right : bounds.bottom;
+		candidates.add(start + size / 2);
+		candidates.add(end - size / 2);
+		candidates.add(start - size / 2);
+		candidates.add(end + size / 2);
+	}
+	return [...candidates];
+}
+
+/**
+ * Computes squared distance between two points.
+ *
+ * @param first - First point.
+ * @param second - Second point.
+ * @returns Squared distance.
+ *
+ * @example
+ * const distance = getPointDistance(candidate, origin);
+ */
+function getPointDistance(first: Point, second: Point): number {
+	const x = first.x - second.x;
+	const y = first.y - second.y;
+	return x * x + y * y;
 }
 
 /**

@@ -227,6 +227,7 @@ function normalizeFlow(
 	return flow?.type === "stack"
 		? flow
 		: {
+				groupHorizontalAlignment: flow?.groupHorizontalAlignment,
 				alignment: flow?.alignment,
 				direction: flow?.direction ?? "down",
 				placement: flow?.placement,

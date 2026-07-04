@@ -5,6 +5,8 @@ import type { ReaderSnapTarget, ScrollDirection } from "../scrollSnapModel";
 export type ReaderInputControllerOptions = {
 	driver: ReaderScrollDriver;
 	getInputSettings: () => ReaderInputSettings;
+	getSnapDuration: (durationSeconds: number) => number | null;
+	registerSnapInput: (intensity?: number) => void;
 	resolveImmediateSnapTarget: (
 		targetScroll: number,
 		direction: ScrollDirection,

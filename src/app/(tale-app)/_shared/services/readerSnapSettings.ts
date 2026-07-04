@@ -1,13 +1,14 @@
 import type {
 	TaleBlock,
 	TaleBlockSnapConfig,
+	TaleBlockSnapDirection,
 	TaleBlockSnapMode,
 	TaleBlockSnapSettings,
 	TaleSnapConfig,
-	ViewportSize,
 } from "../types";
 
 export const defaultBlockSnapConfig: TaleBlockSnapConfig = {
+	direction: "both",
 	mode: "scroll-snap",
 	settings: null,
 };
@@ -17,13 +18,13 @@ export const defaultTaleSnapConfig: TaleSnapConfig = {
 		captureDistancePx: 96,
 		delayMs: 240,
 		durationSeconds: 0.22,
-		minViewportFraction: 0,
+		minViewportFraction: null,
 	},
 	snap: {
 		captureDistancePx: 96,
 		delayMs: 0,
 		durationSeconds: 0.22,
-		minViewportFraction: 0,
+		minViewportFraction: null,
 	},
 };
 
@@ -47,11 +48,30 @@ export function normalizeBlockSnapConfig(
 		snap.mode === "snap-off"
 	) {
 		return {
+			direction: normalizeBlockSnapDirection(snap.direction),
 			mode: snap.mode,
 			settings: snap.settings ?? null,
 		};
 	}
 	return defaultBlockSnapConfig;
+}
+
+/**
+ * Normalizes optional block snap direction values.
+ *
+ * @param direction - Persisted snap direction.
+ * @returns Valid snap direction with a backwards-compatible default.
+ *
+ * @example
+ * const direction = normalizeBlockSnapDirection(block.snap.direction);
+ */
+export function normalizeBlockSnapDirection(
+	direction: TaleBlockSnapDirection | null | undefined,
+): TaleBlockSnapDirection {
+	if (direction === "fromPrevious" || direction === "fromNext") {
+		return direction;
+	}
+	return "both";
 }
 
 /**
@@ -109,27 +129,29 @@ export function getBlockSnapMode(block: TaleBlock): TaleBlockSnapMode {
  *
  * @param blockSettings - Optional block snap override.
  * @param defaults - Runtime reader snap defaults.
- * @param viewport - Current reader viewport.
  * @returns Effective snap timing and capture values.
  *
  * @example
- * const snap = resolveSnapSettings(block.snap.settings, defaults, viewport);
+ * const snap = resolveSnapSettings(block.snap.settings, defaults);
  */
 export function resolveSnapSettings(
 	blockSettings: TaleBlockSnapSettings | null | undefined,
 	defaults: TaleBlockSnapSettings,
-	viewport: ViewportSize,
-): { capturePx: number; delayMs: number; durationSeconds: number } {
-	const viewportMinimum =
-		Math.min(viewport.width, viewport.height) *
-		Math.max(blockSettings?.minViewportFraction ?? 0, 0);
+): {
+	capturePx: number | null;
+	delayMs: number;
+	durationSeconds: number;
+	minViewportFraction: number | null;
+} {
 	return {
-		capturePx: Math.max(
-			blockSettings?.captureDistancePx ?? defaults.captureDistancePx ?? 0,
-			viewportMinimum,
-		),
+		capturePx:
+			blockSettings?.captureDistancePx ?? defaults.captureDistancePx ?? null,
 		delayMs: blockSettings?.delayMs ?? defaults.delayMs ?? 0,
 		durationSeconds:
 			blockSettings?.durationSeconds ?? defaults.durationSeconds ?? 0,
+		minViewportFraction:
+			blockSettings?.minViewportFraction ??
+			defaults.minViewportFraction ??
+			null,
 	};
 }

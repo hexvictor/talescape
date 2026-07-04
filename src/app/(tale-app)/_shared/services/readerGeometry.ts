@@ -53,18 +53,13 @@ export function getNextPoint(
 			placement === "blockEdgeWithViewportAlignment"
 				? { height: viewport.height, width: viewport.width }
 				: { height: previous.height, width: previous.width };
-		return getStackedBlockPoint(
-			referenceCenter,
-			referenceSize,
-			nextSize,
-			{
-				fallback: flow.alignment,
-				horizontalPlacement: flow.horizontalPlacement,
-				horizontalPosition: flow.horizontalPosition,
-				verticalPlacement: flow.verticalPlacement,
-				verticalPosition: flow.verticalPosition,
-			},
-		);
+		return getStackedBlockPoint(referenceCenter, referenceSize, nextSize, {
+			fallback: flow.alignment,
+			horizontalPlacement: flow.horizontalPlacement,
+			horizontalPosition: flow.horizontalPosition,
+			verticalPlacement: flow.verticalPlacement,
+			verticalPosition: flow.verticalPosition,
+		});
 	}
 
 	const spacing = resolveSpacing(flow.spacing, viewport);
@@ -78,7 +73,10 @@ export function getNextPoint(
 			flow.alignment,
 		);
 	}
-	if (flow.placement === "blockEdgeWithViewportAlignment") {
+	if (
+		flow.placement === "blockEdgeWithViewportAlignment" ||
+		flow.placement === "groupEdge"
+	) {
 		return getBlockEdgeWithViewportAlignmentPoint(
 			previous,
 			exitCamera,

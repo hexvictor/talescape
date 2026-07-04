@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { ListTree, PanelLeftClose, Route } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
-import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import { useTaleAppStoreShallow } from "../../../contexts/TaleAppStoreContext";
 import {
 	useTaleReaderStore,
@@ -12,6 +11,7 @@ import {
 } from "../../../contexts/TaleReaderStoreContext";
 import { useChooseReaderPath } from "../../../hooks/useChooseReaderPath";
 import type { ReaderContentsPart } from "../../../types";
+import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import {
 	ContentsTree,
 	RoutesPanel,
@@ -88,8 +88,9 @@ export function ReaderContents(): React.JSX.Element {
 		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
 		if (!bounds) return null;
 		const maximumWidth = Math.floor(bounds.width * 0.5);
+		const minimumWidth = Math.min(320, Math.max(260, bounds.width - 24));
 		const rawWidth = clientX - bounds.left;
-		return Math.max(320, Math.min(maximumWidth, rawWidth));
+		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
 	const reachableBlockIds = useMemo(
 		() => new Set(compiled?.anchors.map((anchor) => anchor.block.id) ?? []),
@@ -137,7 +138,7 @@ export function ReaderContents(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open story navigation"
-					className="pointer-events-auto absolute top-4 left-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/12 bg-background/78 text-foreground/72 opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
+					className="pointer-events-auto absolute top-4 left-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
 					onClick={toggleOpen}
 				>
 					<ListTree size={18} />
@@ -151,10 +152,10 @@ export function ReaderContents(): React.JSX.Element {
 						data-reader-component="ReaderContents"
 						data-reader-role="contents-sidebar"
 						className={clsx(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 shadow-2xl backdrop-blur-xl",
+							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 text-foreground shadow-2xl backdrop-blur-xl",
 							mobilePortrait
 								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
-								: "inset-y-0 left-0 border-r",
+								: "inset-y-0 left-0 max-w-[calc(100vw-1rem)] border-r",
 						)}
 						style={
 							visiblePanelWidthPx === null

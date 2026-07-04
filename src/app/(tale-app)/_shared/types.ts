@@ -19,7 +19,12 @@ export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			groupHorizontalAlignment?: "center" | "end" | "start";
+			placement?:
+				| "blockEdge"
+				| "blockEdgeWithViewportAlignment"
+				| "cameraEdge"
+				| "groupEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -447,6 +452,8 @@ export type TaleBlock = {
 
 export type TaleBlockSnapMode = "scroll-snap" | "snap" | "snap-off";
 
+export type TaleBlockSnapDirection = "both" | "fromNext" | "fromPrevious";
+
 export type TaleBlockSnapSettings = {
 	captureDistancePx?: number | null;
 	durationSeconds?: number | null;
@@ -455,6 +462,7 @@ export type TaleBlockSnapSettings = {
 };
 
 export type TaleBlockSnapConfig = {
+	direction?: TaleBlockSnapDirection;
 	mode: TaleBlockSnapMode;
 	settings?: TaleBlockSnapSettings | null;
 };
@@ -863,6 +871,7 @@ export type TimelineSegment =
 
 export type SnapPoint = {
 	blockId: string;
+	direction?: TaleBlockSnapDirection;
 	id: string;
 	mode: TaleBlockSnapMode;
 	scroll: number;

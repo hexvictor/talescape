@@ -2861,7 +2861,7 @@
           "type": "json",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{\"scrollSnap\":{\"captureDistancePx\":96,\"delayMs\":240,\"durationSeconds\":0.22,\"minViewportFraction\":0},\"snap\":{\"captureDistancePx\":96,\"delayMs\":0,\"durationSeconds\":0.22,\"minViewportFraction\":0}}'::json"
+          "default": "'{\"scrollSnap\":{\"captureDistancePx\":96,\"delayMs\":240,\"durationSeconds\":0.22,\"minViewportFraction\":null},\"snap\":{\"captureDistancePx\":96,\"delayMs\":0,\"durationSeconds\":0.22,\"minViewportFraction\":null}}'::json"
         },
         "createdAt": {
           "name": "createdAt",

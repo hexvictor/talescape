@@ -55,6 +55,7 @@ export function TaleSettingsPanel(): React.JSX.Element {
 			</section>
 			<SnapSettingsGroup
 				description="Used by strict snap mode before the scroll enters a transition."
+				showCaptureControls={false}
 				settings={tale.snapConfig.snap}
 				title="Snap"
 				onChange={(settings) =>
@@ -69,6 +70,7 @@ export function TaleSettingsPanel(): React.JSX.Element {
 			/>
 			<SnapSettingsGroup
 				description="Used by scroll-snap mode after free scrolling finishes near a snap point."
+				showCaptureControls
 				settings={tale.snapConfig.scrollSnap}
 				title="Scroll Snap"
 				onChange={(settings) =>
@@ -98,11 +100,13 @@ function SnapSettingsGroup({
 	description,
 	onChange,
 	settings,
+	showCaptureControls,
 	title,
 }: {
 	description: string;
 	onChange: (settings: TaleBlockSnapSettings) => void;
 	settings: TaleBlockSnapSettings;
+	showCaptureControls: boolean;
 	title: string;
 }): React.JSX.Element {
 	return (
@@ -114,21 +118,25 @@ function SnapSettingsGroup({
 				<p className="mt-1 text-foreground/42 text-xs">{description}</p>
 			</div>
 			<div className="grid @md:grid-cols-2 gap-3">
-				<SettingsNumber
-					label="Capture px"
-					value={settings.captureDistancePx}
-					onChange={(captureDistancePx) =>
-						onChange({ ...settings, captureDistancePx })
-					}
-				/>
-				<SettingsNumber
-					label="Min viewport fraction"
-					step={0.01}
-					value={settings.minViewportFraction}
-					onChange={(minViewportFraction) =>
-						onChange({ ...settings, minViewportFraction })
-					}
-				/>
+				{showCaptureControls ? (
+					<>
+						<SettingsNumber
+							label="Capture px"
+							value={settings.captureDistancePx}
+							onChange={(captureDistancePx) =>
+								onChange({ ...settings, captureDistancePx })
+							}
+						/>
+						<SettingsNumber
+							label="Min viewport fraction"
+							step={0.01}
+							value={settings.minViewportFraction}
+							onChange={(minViewportFraction) =>
+								onChange({ ...settings, minViewportFraction })
+							}
+						/>
+					</>
+				) : null}
 				<SettingsNumber
 					label="Delay ms"
 					value={settings.delayMs}

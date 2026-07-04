@@ -58,13 +58,13 @@ export const tales = createTable("tale", (d) => ({
 				captureDistancePx: 96,
 				delayMs: 240,
 				durationSeconds: 0.22,
-				minViewportFraction: 0,
+				minViewportFraction: null,
 			},
 			snap: {
 				captureDistancePx: 96,
 				delayMs: 0,
 				durationSeconds: 0.22,
-				minViewportFraction: 0,
+				minViewportFraction: null,
 			},
 		}),
 	createdAt: d

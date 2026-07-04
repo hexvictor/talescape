@@ -16,6 +16,8 @@ import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
 export function attachKeyboardInput({
 	driver,
 	getInputSettings,
+	getSnapDuration,
+	registerSnapInput,
 	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
@@ -38,10 +40,17 @@ export function attachKeyboardInput({
 		const nextTarget = clamp(driver.getTargetScroll() + amount, 0, totalScroll);
 		const snapTarget = resolveImmediateSnapTarget(nextTarget, direction);
 		setDirection(direction);
-		driver.scrollTo(snapTarget?.scroll ?? nextTarget, "smooth", {
-			duration: snapTarget?.durationSeconds ?? settings.keyboardDuration,
-		});
-		if (!snapTarget) {
+		const durationSeconds = snapTarget
+			? getSnapDuration(snapTarget.durationSeconds)
+			: null;
+		driver.scrollTo(
+			durationSeconds !== null && snapTarget ? snapTarget.scroll : nextTarget,
+			"smooth",
+			{
+				duration: durationSeconds ?? settings.keyboardDuration,
+			},
+		);
+		if (!snapTarget || durationSeconds === null) {
 			scheduleSnap(settings.keyboardDuration * 1000);
 		}
 	};
@@ -106,6 +115,7 @@ export function attachKeyboardInput({
 	const onKeyDown = (event: KeyboardEvent) => {
 		if (shouldLetElementHandleInput(event.target)) return;
 		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		registerSnapInput(event.repeat ? 1.2 : 0.8);
 
 		const pageStep = Math.max(
 			120,
@@ -151,10 +161,22 @@ export function attachKeyboardInput({
 		const settings = getInputSettings();
 		const snapTarget = resolveImmediateSnapTarget(target, direction);
 		if (snapTarget) {
-			target = snapTarget.scroll;
-			driver.scrollTo(target, "smooth", {
-				duration: snapTarget.durationSeconds,
-			});
+			const durationSeconds = getSnapDuration(snapTarget.durationSeconds);
+			if (durationSeconds !== null) {
+				target = snapTarget.scroll;
+				driver.scrollTo(target, "smooth", {
+					duration: durationSeconds,
+				});
+			} else {
+				driver.scrollTo(target, "smooth", {
+					duration: settings.keyboardDuration,
+				});
+				scheduleSnap(
+					event.repeat
+						? settings.keyboardDuration * 1000
+						: settings.keyboardTapBurstWindowMs,
+				);
+			}
 		} else {
 			driver.scrollTo(target, "smooth", {
 				duration: settings.keyboardDuration,

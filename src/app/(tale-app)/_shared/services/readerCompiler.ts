@@ -13,6 +13,7 @@ import type {
 import { compileReaderContents } from "./compileReaderContents";
 import {
 	resolveBlockCameraPoint,
+	resolveGroupEdgeBlockPoint,
 	resolveNonOverlappingBlockPoint,
 } from "./readerBlockLayout";
 import { countReaderDiagnostic } from "./readerDiagnostics";
@@ -127,6 +128,19 @@ export function compileReader(
 		if (previous) {
 			point = getNextPoint(previous, block, size, viewport);
 			const flow = block.transition.flow;
+			if (flow.type === "linear" && flow.placement === "groupEdge") {
+				point = resolveGroupEdgeBlockPoint(
+					point,
+					size,
+					flow.direction,
+					anchors,
+					{
+						horizontalAlignment: flow.groupHorizontalAlignment,
+						referenceCamera: getReadingCamera(previous, 1, viewport),
+						viewport,
+					},
+				);
+			}
 			if (
 				flow.type === "linear" &&
 				flow.placement !== "cameraEdge" &&
@@ -197,6 +211,23 @@ export function compileReader(
 			type: "transition",
 		});
 		transitionIntoByBlockId[firstAnchor.block.id] = transitionIndex;
+		const firstSnapMode = getEffectiveSnapMode(
+			firstAnchor.block,
+			snapModeOverride,
+		);
+		if (firstSnapMode === "snap" || firstSnapMode === "scroll-snap") {
+			snapPoints.push({
+				blockId: firstAnchor.block.id,
+				direction: "fromPrevious",
+				id: `${firstAnchor.block.id}-initial-transition-start`,
+				mode: firstSnapMode,
+				scroll: initialLength,
+				settings: getEffectiveSnapSettings(firstAnchor.block, snapModeOverride),
+				transitionEnd: initialLength,
+				transitionStart: 0,
+				type: "block-start",
+			});
+		}
 		scroll = initialLength;
 	}
 
@@ -237,6 +268,7 @@ export function compileReader(
 		if (snapMode === "scroll-snap") {
 			snapPoints.push({
 				blockId: anchor.block.id,
+				direction: "fromPrevious",
 				id: `${anchor.block.id}-start`,
 				mode: snapMode,
 				scroll: anchor.scroll,
@@ -245,6 +277,7 @@ export function compileReader(
 			});
 			snapPoints.push({
 				blockId: anchor.block.id,
+				direction: "fromNext",
 				id: `${anchor.block.id}-end`,
 				mode: snapMode,
 				scroll: blockEndScroll,
@@ -258,6 +291,7 @@ export function compileReader(
 		) {
 			snapPoints.push({
 				blockId: anchor.block.id,
+				direction: "both",
 				id: `${anchor.block.id}-choice-end`,
 				mode: snapMode,
 				scroll: blockEndScroll,
@@ -302,9 +336,14 @@ export function compileReader(
 			to: next,
 			type: "transition",
 		});
-		if (getEffectiveSnapMode(anchor.block, snapModeOverride) === "snap") {
+		const outgoingSnapMode = getEffectiveSnapMode(
+			anchor.block,
+			snapModeOverride,
+		);
+		if (outgoingSnapMode === "snap") {
 			snapPoints.push({
 				blockId: anchor.block.id,
+				direction: "fromNext",
 				id: `${anchor.block.id}-transition-end`,
 				mode: "snap",
 				scroll,
@@ -314,11 +353,39 @@ export function compileReader(
 				type: "block-end",
 			});
 		}
-		if (getEffectiveSnapMode(next.block, snapModeOverride) === "snap") {
+		if (outgoingSnapMode === "scroll-snap") {
+			snapPoints.push({
+				blockId: anchor.block.id,
+				direction: "fromNext",
+				id: `${anchor.block.id}-transition-scroll-end`,
+				mode: "scroll-snap",
+				scroll,
+				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				transitionEnd: scroll + transitionLength,
+				transitionStart: scroll,
+				type: "block-end",
+			});
+		}
+		const incomingSnapMode = getEffectiveSnapMode(next.block, snapModeOverride);
+		if (incomingSnapMode === "snap") {
 			snapPoints.push({
 				blockId: next.block.id,
+				direction: "fromPrevious",
 				id: `${next.block.id}-transition-start`,
 				mode: "snap",
+				scroll: scroll + transitionLength,
+				settings: getEffectiveSnapSettings(next.block, snapModeOverride),
+				transitionEnd: scroll + transitionLength,
+				transitionStart: scroll,
+				type: "block-start",
+			});
+		}
+		if (incomingSnapMode === "scroll-snap") {
+			snapPoints.push({
+				blockId: next.block.id,
+				direction: "fromPrevious",
+				id: `${next.block.id}-transition-scroll-start`,
+				mode: "scroll-snap",
 				scroll: scroll + transitionLength,
 				settings: getEffectiveSnapSettings(next.block, snapModeOverride),
 				transitionEnd: scroll + transitionLength,
@@ -419,9 +486,12 @@ function shouldResolveNonOverlappingBlockPoint(
 		| "blockEdge"
 		| "blockEdgeWithViewportAlignment"
 		| "cameraEdge"
+		| "groupEdge"
 		| undefined,
 ): boolean {
-	return (placement ?? "blockEdge") !== "blockEdge";
+	return (
+		(placement ?? "blockEdge") !== "blockEdge" && placement !== "groupEdge"
+	);
 }
 
 /**

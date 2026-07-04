@@ -111,6 +111,29 @@ function resetReusableAnimationValues(
 }
 
 /**
+ * Composes a takeover animation on top of a block's own animation result.
+ *
+ * @param target - Existing block animation values.
+ * @param takeover - Previous-visible takeover animation values.
+ * @returns Nothing.
+ *
+ * @example
+ * composeTakeoverAnimationValues(blockValues, takeoverValues);
+ */
+function composeTakeoverAnimationValues(
+	target: ReturnType<typeof createAnimationValues>,
+	takeover: ReturnType<typeof createAnimationValues>,
+): void {
+	target.blur += takeover.blur;
+	target.opacity *= takeover.opacity;
+	target.rotate += takeover.rotate;
+	target.scale *= takeover.scale;
+	target.translateX += takeover.translateX;
+	target.translateY += takeover.translateY;
+	target.translateZ += takeover.translateZ;
+}
+
+/**
  * Prevents future stacked blocks from leaking into view before their
  * transition becomes active while still allowing adjacent linear layouts
  * to remain visible inside the same viewport.
@@ -352,6 +375,7 @@ function applyPreviousBlockTakeover(
 	committedAnimationIds: ReadonlySet<string>,
 	takeover: PreviousBlockTakeoverFrame | null,
 	target: ReturnType<typeof createAnimationValues>,
+	takeoverTarget: ReturnType<typeof createAnimationValues>,
 ): boolean {
 	if (!takeover) return false;
 	if (blockId === takeover.owner.block.id) return false;
@@ -372,14 +396,16 @@ function applyPreviousBlockTakeover(
 			target.opacity *= 1 - takeover.progress;
 			return true;
 		}
-		resetReusableAnimationValues(target);
-		return evaluatePreviousVisibleBlockAnimation(
+		resetReusableAnimationValues(takeoverTarget);
+		const applied = evaluatePreviousVisibleBlockAnimation(
 			animationPlan,
 			takeover.owner.block.id,
 			takeover.progress,
 			committedAnimationIds,
-			target,
+			takeoverTarget,
 		);
+		if (applied) composeTakeoverAnimationValues(target, takeoverTarget);
+		return applied;
 	}
 
 	target.opacity *= 1 - takeover.progress;
@@ -409,7 +435,7 @@ export function createReaderScrollEngine({
 	let lightweightTravelActive = false;
 	let cancelPendingSnap = (): void => undefined;
 	const committedAnimationIds = new Set(progress.committedAnimationIds);
-	const snapModel = createReaderSnapModel(compiled.snapPoints, viewport);
+	const snapModel = createReaderSnapModel(compiled.snapPoints);
 	const progressRoot =
 		stage.closest<HTMLElement>("[data-reader-runtime-root='true']") ??
 		stage.parentElement;
@@ -437,6 +463,7 @@ export function createReaderScrollEngine({
 	const debugPublisher = createReaderDebugPublisher(store, 100);
 	const statePublisher = createReaderStatePublisher(compiled, store, 80, 180);
 	const blockAnimationValues = createAnimationValues();
+	const takeoverAnimationValues = createAnimationValues();
 	const fragmentAnimationValues = createAnimationValues();
 	const nodeAnimationValues = createAnimationValues();
 	const takeoverStyledBlockIds = new Set<string>();
@@ -483,6 +510,7 @@ export function createReaderScrollEngine({
 					committedAnimationIds,
 					takeover,
 					blockAnimationValues,
+					takeoverAnimationValues,
 				)
 			) {
 				takeoverStyledBlockIds.add(blockId);
@@ -630,6 +658,7 @@ export function createReaderScrollEngine({
 			committedAnimationIds,
 			takeover,
 			blockAnimationValues,
+			takeoverAnimationValues,
 		);
 		if (previousTakeoverApplied) {
 			takeoverStyledBlockIds.add(anchor.block.id);

@@ -8,6 +8,24 @@ Changelog entries are added when a feature, fix, or meaningful change is finishe
 
 ## Unreleased
 
+## 1.7.0 - 2026-07-04
+
+### Added
+
+- Added directional reader snap behavior so blocks can snap when entered from the previous block, the next block, or both.
+- Added smart group-edge block placement with horizontal alignment controls for left, center, and right placement inside the available viewport space.
+- Added tale and block snap configuration controls for snap and scroll-snap behavior.
+
+### Changed
+
+- Improved snap input handling so extra wheel, keyboard, touch, and drag input can accelerate or bypass active snapping instead of hard-blocking scroll.
+- Updated previous-visible block takeover animations to compose with each block's own animation state instead of replacing it.
+- Improved mobile readability and touch usability for editor toolbars, Reader Hub, and Reader Contents sidebars.
+
+### Fixed
+
+- Fixed smart horizontal alignment being dropped when a saved tale was loaded from the database.
+
 ## 1.6.0 - 2026-07-03
 
 ### Added

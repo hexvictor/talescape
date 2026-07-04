@@ -282,6 +282,30 @@ function BlockSnapSettings({
 					<option value="snap-off">Snap off</option>
 				</select>
 			</Setting>
+			{block.snap.mode !== "snap-off" ? (
+				<Setting label="Snap direction">
+					<select
+						className={settingClassName}
+						value={block.snap.direction ?? "both"}
+						onChange={(event) =>
+							onChange((item) => ({
+								...item,
+								snap: {
+									...item.snap,
+									direction: event.target.value as
+										| "both"
+										| "fromNext"
+										| "fromPrevious",
+								},
+							}))
+						}
+					>
+						<option value="both">Both directions</option>
+						<option value="fromPrevious">Entering from previous</option>
+						<option value="fromNext">Entering from next</option>
+					</select>
+				</Setting>
+			) : null}
 			<div className="rounded border border-foreground/8 bg-background/30 p-2 text-[0.68rem] text-foreground/45 leading-4">
 				{block.snap.mode === "scroll-snap"
 					? "Captures nearby block starts and ends after free scrolling."
@@ -289,17 +313,23 @@ function BlockSnapSettings({
 						? "Free inside the block, then snaps at transition boundaries."
 						: "This block does not create snap targets."}
 			</div>
-			<SnapOverrideNumber
-				label="Capture px"
-				value={block.snap.settings?.captureDistancePx ?? null}
-				onChange={(value) => updateSnapSettings("captureDistancePx", value)}
-			/>
-			<SnapOverrideNumber
-				label="Min viewport fraction"
-				step={0.01}
-				value={block.snap.settings?.minViewportFraction ?? null}
-				onChange={(value) => updateSnapSettings("minViewportFraction", value)}
-			/>
+			{block.snap.mode === "scroll-snap" ? (
+				<>
+					<SnapOverrideNumber
+						label="Capture px"
+						value={block.snap.settings?.captureDistancePx ?? null}
+						onChange={(value) => updateSnapSettings("captureDistancePx", value)}
+					/>
+					<SnapOverrideNumber
+						label="Min viewport fraction"
+						step={0.01}
+						value={block.snap.settings?.minViewportFraction ?? null}
+						onChange={(value) =>
+							updateSnapSettings("minViewportFraction", value)
+						}
+					/>
+				</>
+			) : null}
 			<SnapOverrideNumber
 				label="Delay ms"
 				value={block.snap.settings?.delayMs ?? null}

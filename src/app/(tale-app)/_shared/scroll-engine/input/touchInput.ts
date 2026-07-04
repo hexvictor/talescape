@@ -14,6 +14,8 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
 export function attachTouchInput({
 	driver,
 	getInputSettings,
+	getSnapDuration,
+	registerSnapInput,
 	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
@@ -30,6 +32,7 @@ export function attachTouchInput({
 	let active = false;
 
 	const onTouchStart = (event: TouchEvent) => {
+		registerSnapInput(0.8);
 		active = !shouldLetElementHandleInput(event.target);
 		if (!active) return;
 		lastTouchY = event.touches[0]?.clientY ?? null;
@@ -53,6 +56,7 @@ export function attachTouchInput({
 		if (touchY === undefined) return;
 		event.preventDefault();
 		const delta = lastTouchY - touchY;
+		registerSnapInput(Math.min(Math.abs(delta) / 80, 2));
 		const now = performance.now();
 		const settings = getInputSettings();
 		const elapsed = Math.max(now - lastTouchAt, 1);
@@ -89,9 +93,14 @@ export function attachTouchInput({
 			totalScroll,
 		);
 		const snapTarget = resolveImmediateSnapTarget(target, direction);
-		if (snapTarget) target = snapTarget.scroll;
+		const durationSeconds = snapTarget
+			? getSnapDuration(snapTarget.durationSeconds)
+			: null;
+		if (snapTarget && durationSeconds !== null) {
+			target = snapTarget.scroll;
+		}
 		driver.scrollTo(target, "smooth", {
-			duration: snapTarget?.durationSeconds ?? settings.touchDuration,
+			duration: durationSeconds ?? settings.touchDuration,
 		});
 		lastScrollVelocity = scrollDelta / elapsed;
 		lastTouchY = touchY;
@@ -119,10 +128,14 @@ export function attachTouchInput({
 			const snapTarget = resolveImmediateSnapTarget(momentumTarget, direction);
 			setDirection(direction);
 			target = snapTarget?.scroll ?? momentumTarget;
+			const durationSeconds = snapTarget
+				? getSnapDuration(snapTarget.durationSeconds)
+				: null;
+			if (snapTarget && durationSeconds === null) target = momentumTarget;
 			driver.scrollTo(target, "smooth", {
-				duration: snapTarget?.durationSeconds ?? settings.touchMomentumDuration,
+				duration: durationSeconds ?? settings.touchMomentumDuration,
 			});
-			if (!snapTarget) {
+			if (!snapTarget || durationSeconds === null) {
 				scheduleSnap(settings.touchMomentumDuration * 1000);
 			}
 			return;

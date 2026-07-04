@@ -14,7 +14,12 @@ export type BlockFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
-			placement?: "blockEdge" | "blockEdgeWithViewportAlignment" | "cameraEdge";
+			groupHorizontalAlignment?: "center" | "end" | "start";
+			placement?:
+				| "blockEdge"
+				| "blockEdgeWithViewportAlignment"
+				| "cameraEdge"
+				| "groupEdge";
 			spacing?: ReaderSpacing;
 			type: "linear";
 	  }
@@ -219,6 +224,7 @@ export type ReadingConfig = {
 };
 
 export type BlockSnapMode = "scroll-snap" | "snap" | "snap-off";
+export type BlockSnapDirection = "both" | "fromNext" | "fromPrevious";
 
 export type BlockSnapSettings = {
 	captureDistancePx?: number | null;
@@ -228,6 +234,7 @@ export type BlockSnapSettings = {
 };
 
 export type BlockSnapConfig = {
+	direction?: BlockSnapDirection;
 	mode: BlockSnapMode;
 	settings?: BlockSnapSettings | null;
 };

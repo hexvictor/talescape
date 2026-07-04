@@ -63,6 +63,8 @@ export function attachReaderInputBindings(
 		attachWheelInput({
 			driver,
 			getInputSettings,
+			getSnapDuration: snapController.getDuration,
+			registerSnapInput: snapController.registerInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -72,6 +74,8 @@ export function attachReaderInputBindings(
 		attachKeyboardInput({
 			driver,
 			getInputSettings,
+			getSnapDuration: snapController.getDuration,
+			registerSnapInput: snapController.registerInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -82,6 +86,8 @@ export function attachReaderInputBindings(
 		attachMiddleDragInput({
 			driver,
 			getInputSettings,
+			getSnapDuration: snapController.getDuration,
+			registerSnapInput: snapController.registerInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -91,6 +97,8 @@ export function attachReaderInputBindings(
 		attachTouchInput({
 			driver,
 			getInputSettings,
+			getSnapDuration: snapController.getDuration,
+			registerSnapInput: snapController.registerInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
