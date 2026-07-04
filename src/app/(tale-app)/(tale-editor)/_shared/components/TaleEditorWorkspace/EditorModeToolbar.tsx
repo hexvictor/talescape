@@ -27,6 +27,7 @@ import { useTaleEditorStoreShallow } from "../../hooks/useTaleEditorStore";
 import { EditorActivitySwitcher } from "./EditorActivitySwitcher";
 import { EditorPreviewSelectionControls } from "./EditorPreviewSelectionControls";
 import { EditorSettingsModal } from "./EditorSettingsModal";
+import { TaleJsonTransferControls } from "./TaleJsonTransferControls";
 
 /**
  * Renders editor mode controls and persists the active tale document.
@@ -163,6 +164,7 @@ export function EditorModeToolbar(): React.JSX.Element {
 							onChange={setBreakpointId}
 						/>
 					) : null}
+					<TaleJsonTransferControls />
 					<span className="text-foreground/42 text-xs">{status}</span>
 					<button
 						type="button"
@@ -309,6 +311,7 @@ function EditorToolbarHeader({
 					onRightPanelOpenChange={onRightPanelOpenChange}
 				/>
 
+				<TaleJsonTransferControls />
 				<span className="text-foreground/55 text-xs">{dirtyStatus}</span>
 				<button
 					type="button"
