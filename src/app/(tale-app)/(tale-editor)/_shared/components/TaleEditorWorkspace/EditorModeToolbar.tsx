@@ -1,6 +1,9 @@
 "use client";
 import {
+	ChevronDown,
+	ChevronUp,
 	GitBranch,
+	Menu,
 	PanelRightClose,
 	PanelRightOpen,
 	Save,
@@ -71,6 +74,8 @@ export function EditorModeToolbar(): React.JSX.Element {
 		(state) => state.navigation.current?.blockId ?? null,
 	);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [siteHeaderOpen, setSiteHeaderOpen] = useState(true);
+	const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 	const saveDraft = api.taleReader.editor.saveDraft.useMutation();
 	const status = saveDraft.isPending
 		? "Saving"
@@ -102,31 +107,34 @@ export function EditorModeToolbar(): React.JSX.Element {
 	if (activity === "editing") {
 		return (
 			<>
-				<AutoHideTopBar
-					clerkMenu
-					pinOnBackgroundClick
-					collapsedContent={
-						<EditorToolbarHeader
-							breakpointId={breakpointId}
-							breakpoints={tale.breakpoints}
-							dirtyStatus={status}
-							graphOpen={graphOpen}
-							previewOpen={previewOpen}
-							rightPanelOpen={rightPanelOpen}
-							savePending={saveDraft.isPending}
-							autoSelectActiveBlock={autoSelectActiveBlock}
-							onBreakpointChange={setBreakpointId}
-							onAutoSelectActiveBlockChange={setAutoSelectActiveBlock}
-							onGraphOpenChange={setGraphOpen}
-							onPreviewOpenChange={setPreviewOpen}
-							onRightPanelOpenChange={setRightPanelOpen}
-							onSave={save}
-							onSettingsOpen={() => setSettingsOpen(true)}
-						/>
-					}
+				<div
+					data-reader-component="EditorModeToolbar"
+					data-reader-role="editing-header-stack"
+					className="relative z-60 border-foreground/10 border-b bg-background text-foreground shadow-sm"
 				>
-					<Header />
-				</AutoHideTopBar>
+					{siteHeaderOpen ? <Header /> : null}
+					<EditorToolbarHeader
+						breakpointId={breakpointId}
+						breakpoints={tale.breakpoints}
+						dirtyStatus={status}
+						graphOpen={graphOpen}
+						mobileControlsOpen={mobileControlsOpen}
+						previewOpen={previewOpen}
+						rightPanelOpen={rightPanelOpen}
+						savePending={saveDraft.isPending}
+						siteHeaderOpen={siteHeaderOpen}
+						autoSelectActiveBlock={autoSelectActiveBlock}
+						onBreakpointChange={setBreakpointId}
+						onAutoSelectActiveBlockChange={setAutoSelectActiveBlock}
+						onGraphOpenChange={setGraphOpen}
+						onMobileControlsOpenChange={setMobileControlsOpen}
+						onPreviewOpenChange={setPreviewOpen}
+						onRightPanelOpenChange={setRightPanelOpen}
+						onSave={save}
+						onSettingsOpen={() => setSettingsOpen(true)}
+						onSiteHeaderOpenChange={setSiteHeaderOpen}
+					/>
+				</div>
 
 				<EditorSettingsModal
 					open={settingsOpen}
@@ -230,85 +238,94 @@ function EditorToolbarHeader({
 	dirtyStatus,
 	autoSelectActiveBlock,
 	graphOpen,
+	mobileControlsOpen,
 	onAutoSelectActiveBlockChange,
 	onBreakpointChange,
 	onGraphOpenChange,
+	onMobileControlsOpenChange,
 	onPreviewOpenChange,
 	onRightPanelOpenChange,
 	onSave,
 	onSettingsOpen,
+	onSiteHeaderOpenChange,
 	previewOpen,
 	rightPanelOpen,
 	savePending,
+	siteHeaderOpen,
 }: {
 	autoSelectActiveBlock: boolean;
 	breakpointId: string | null;
 	breakpoints: { id: string; label: string }[];
 	dirtyStatus: string;
 	graphOpen: boolean;
+	mobileControlsOpen: boolean;
 	onAutoSelectActiveBlockChange: (enabled: boolean) => void;
 	onBreakpointChange: (breakpointId: string | null) => void;
 	onGraphOpenChange: (open: boolean) => void;
+	onMobileControlsOpenChange: (open: boolean) => void;
 	onPreviewOpenChange: (open: boolean) => void;
 	onRightPanelOpenChange: (open: boolean) => void;
 	onSave: () => void;
 	onSettingsOpen: () => void;
+	onSiteHeaderOpenChange: (open: boolean) => void;
 	previewOpen: boolean;
 	rightPanelOpen: boolean;
 	savePending: boolean;
+	siteHeaderOpen: boolean;
 }): React.JSX.Element {
+	const advancedControls = (
+		<>
+			<SiteHeaderToggle
+				open={siteHeaderOpen}
+				onToggle={() => onSiteHeaderOpenChange(!siteHeaderOpen)}
+			/>
+			{previewOpen ? (
+				<button
+					type="button"
+					aria-pressed={autoSelectActiveBlock}
+					className={[
+						"flex h-9 items-center justify-center gap-2 rounded border px-2.5 font-semibold text-xs transition",
+						autoSelectActiveBlock
+							? "border-primary/45 bg-primary/14 text-primary"
+							: "border-foreground/12 text-foreground/62 hover:bg-foreground/8 hover:text-foreground",
+					].join(" ")}
+					title="Automatically inspect the active preview block after scrolling settles"
+					onClick={() => onAutoSelectActiveBlockChange(!autoSelectActiveBlock)}
+				>
+					<Target size={14} />
+					Auto select
+				</button>
+			) : null}
+			{breakpoints.length > 1 ? (
+				<BreakpointSelect
+					breakpointId={breakpointId}
+					breakpoints={breakpoints}
+					onChange={onBreakpointChange}
+				/>
+			) : null}
+			<EditorSurfaceVisibilityControls
+				graphOpen={graphOpen}
+				previewOpen={previewOpen}
+				rightPanelOpen={rightPanelOpen}
+				onGraphOpenChange={onGraphOpenChange}
+				onPreviewOpenChange={onPreviewOpenChange}
+				onRightPanelOpenChange={onRightPanelOpenChange}
+			/>
+			{previewOpen ? <EditorPreviewSelectionControls /> : null}
+		</>
+	);
+
 	return (
 		<header
 			data-reader-component="EditorModeToolbar"
 			data-reader-role="editor-toolbar"
-			className="relative z-60 flex min-h-16 flex-wrap items-center justify-between gap-3 border-foreground/10 border-b bg-background/95 px-3 py-2 text-foreground shadow-sm backdrop-blur-md sm:px-4"
+			className="relative z-60 flex min-h-14 flex-wrap items-center justify-between gap-2 bg-background/95 px-3 py-2 text-foreground backdrop-blur-md sm:px-4"
 		>
-			<div className="flex min-w-0 flex-wrap items-center gap-2 font-medium text-lg sm:gap-4">
-				<div className="hidden sm:block">
-					<Logo />
-				</div>
-				<Separator className="hidden h-8 sm:block" />
-				<div className="flex min-w-0 items-center gap-2 sm:gap-3">
-					<EditorActivitySwitcher />
-				</div>
-				{previewOpen ? <EditorPreviewSelectionControls /> : null}
+			<div className="flex min-w-0 items-center gap-2">
+				<EditorActivitySwitcher />
 			</div>
-			<div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-				{previewOpen ? (
-					<button
-						type="button"
-						aria-pressed={autoSelectActiveBlock}
-						className={[
-							"flex h-9 items-center gap-2 rounded border px-2.5 font-semibold text-xs transition",
-							autoSelectActiveBlock
-								? "border-primary/45 bg-primary/14 text-primary"
-								: "border-foreground/12 text-foreground/58 hover:bg-foreground/8 hover:text-foreground",
-						].join(" ")}
-						title="Automatically inspect the active preview block after scrolling settles"
-						onClick={() =>
-							onAutoSelectActiveBlockChange(!autoSelectActiveBlock)
-						}
-					>
-						<Target size={14} />
-						Auto select
-					</button>
-				) : null}
-				{breakpoints.length > 1 ? (
-					<BreakpointSelect
-						breakpointId={breakpointId}
-						breakpoints={breakpoints}
-						onChange={onBreakpointChange}
-					/>
-				) : null}
-				<EditorSurfaceVisibilityControls
-					graphOpen={graphOpen}
-					previewOpen={previewOpen}
-					rightPanelOpen={rightPanelOpen}
-					onGraphOpenChange={onGraphOpenChange}
-					onPreviewOpenChange={onPreviewOpenChange}
-					onRightPanelOpenChange={onRightPanelOpenChange}
-				/>
-
+			<div className="hidden min-w-0 flex-wrap items-center justify-end gap-2 md:flex">
+				{advancedControls}
 				<span className="text-foreground/55 text-xs">{dirtyStatus}</span>
 				<button
 					type="button"
@@ -328,7 +345,70 @@ function EditorToolbarHeader({
 					<Settings size={15} />
 				</button>
 			</div>
+			<div className="flex min-w-0 items-center gap-2 md:hidden">
+				<span className="text-foreground/55 text-xs">{dirtyStatus}</span>
+				<button
+					type="button"
+					disabled={savePending}
+					className="grid h-9 w-9 place-items-center rounded border border-primary/45 bg-primary/14 text-primary disabled:opacity-45"
+					aria-label="Save tale"
+					onClick={onSave}
+				>
+					<Save size={14} />
+				</button>
+				<button
+					type="button"
+					aria-label="Open editor settings"
+					className="grid h-9 w-9 place-items-center rounded border border-foreground/12 text-foreground/70 hover:bg-foreground/8 hover:text-foreground"
+					onClick={onSettingsOpen}
+				>
+					<Settings size={15} />
+				</button>
+				<button
+					type="button"
+					aria-expanded={mobileControlsOpen}
+					aria-label="Toggle editor controls"
+					className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background text-foreground/76 hover:bg-foreground/8 hover:text-foreground"
+					onClick={() => onMobileControlsOpenChange(!mobileControlsOpen)}
+				>
+					<Menu size={16} />
+				</button>
+			</div>
+			{mobileControlsOpen ? (
+				<div className="grid w-full gap-2 border-foreground/10 border-t pt-2 md:hidden">
+					{advancedControls}
+				</div>
+			) : null}
 		</header>
+	);
+}
+
+/**
+ * Toggles the full site header while the editor toolbar remains visible.
+ *
+ * @param props - Header visibility and toggle callback.
+ * @returns Compact editor toolbar button.
+ *
+ * @example
+ * <SiteHeaderToggle open onToggle={toggleHeader} />
+ */
+function SiteHeaderToggle({
+	onToggle,
+	open,
+}: {
+	onToggle: () => void;
+	open: boolean;
+}): React.JSX.Element {
+	return (
+		<button
+			type="button"
+			aria-pressed={open}
+			className="flex h-9 items-center justify-center gap-2 rounded border border-foreground/12 px-2.5 text-foreground/68 text-xs hover:bg-foreground/8 hover:text-foreground"
+			onClick={onToggle}
+		>
+			{open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+			<span>{open ? "Hide header" : "Show header"}</span>
+		</button>
 	);
 }
 

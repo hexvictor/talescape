@@ -34,7 +34,7 @@ export function TaleEditorEditingSurface(): React.JSX.Element {
 			className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
 		>
 			<EditorModeToolbar />
-			<div ref={editorBodyRef} className="mt-16 flex min-h-0 flex-1">
+			<div ref={editorBodyRef} className="flex min-h-0 flex-1">
 				<TaleEditorPreview />
 				{effectiveGraphOpen ? (
 					<main className="relative flex min-w-0 flex-1">
