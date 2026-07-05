@@ -8,6 +8,12 @@ Changelog entries are added when a feature, fix, or meaningful change is finishe
 
 ## Unreleased
 
+## 1.7.1 - 2026-07-05
+
+### Fixed
+
+- Fixed Firefox theme contrast by replacing OKLCH theme tokens with RGB-backed CSS variables and adding Firefox-safe fallbacks for opacity-based UI colors.
+
 ## 1.7.0 - 2026-07-04
 
 ### Added
