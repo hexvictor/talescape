@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import {
 	BookMarked,
+	ChevronDown,
 	Image,
 	MessageCircle,
 	PanelRightClose,
@@ -47,19 +48,24 @@ export function ReaderHub(): React.JSX.Element {
 	const { page } = useReaderLocationContext();
 	const asideRef = useRef<HTMLElement | null>(null);
 	const [dragPanelWidthPx, setDragPanelWidthPx] = useState<number | null>(null);
+	const [mobileHeightVh, setMobileHeightVh] = useState(70);
 	const {
 		activePanel,
+		contentsOpen,
 		open,
 		panelWidthPx,
 		setActivePanel,
 		setPanelWidthPx,
+		toggleContents,
 		toggleOpen,
 	} = useTaleReaderStoreShallow((state) => ({
 		activePanel: state.hub.activePanel,
+		contentsOpen: state.contents.open,
 		open: state.hub.open,
 		panelWidthPx: state.hub.panelWidthPx,
 		setActivePanel: state.hub.setActivePanel,
 		setPanelWidthPx: state.hub.setPanelWidthPx,
+		toggleContents: state.contents.toggleOpen,
 		toggleOpen: state.hub.toggleOpen,
 	}));
 	const dockedHubWidthPx = useTaleReaderStore(
@@ -76,6 +82,43 @@ export function ReaderHub(): React.JSX.Element {
 			? panelWidthPx
 			: dockedHubWidthPx;
 	const visiblePanelWidthPx = dragPanelWidthPx ?? sidePanelWidthPx;
+	/**
+	 * Opens Reader Hub while closing Contents first to avoid competing docked
+	 * viewport insets.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * openHubOnly();
+	 */
+	const openHubOnly = (): void => {
+		if (!open && contentsOpen) toggleContents();
+		toggleOpen();
+	};
+
+	/**
+	 * Starts mobile bottom-sheet height dragging.
+	 *
+	 * @param event - Pointer event from the sheet header.
+	 * @returns Nothing.
+	 */
+	const startMobileHeightDrag = (
+		event: React.PointerEvent<HTMLElement>,
+	): void => {
+		if (!mobilePortrait) return;
+		event.preventDefault();
+		const updateHeight = (moveEvent: PointerEvent): void => {
+			const nextHeight =
+				((window.innerHeight - moveEvent.clientY) / window.innerHeight) * 100;
+			setMobileHeightVh(Math.max(42, Math.min(92, nextHeight)));
+		};
+		const stopDrag = (): void => {
+			window.removeEventListener("pointermove", updateHeight);
+			window.removeEventListener("pointerup", stopDrag);
+		};
+		window.addEventListener("pointermove", updateHeight);
+		window.addEventListener("pointerup", stopDrag);
+	};
 
 	/**
 	 * Calculates the reader hub width for one pointer x-coordinate.
@@ -89,8 +132,8 @@ export function ReaderHub(): React.JSX.Element {
 	const getPanelWidthFromPointer = (clientX: number): number | null => {
 		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
 		if (!bounds) return null;
-		const maximumWidth = Math.floor(bounds.width * 0.5);
-		const minimumWidth = Math.min(320, Math.max(260, bounds.width - 24));
+		const maximumWidth = Math.max(240, Math.floor(bounds.width * 0.5));
+		const minimumWidth = Math.min(320, maximumWidth);
 		const rawWidth = bounds.right - clientX;
 		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
@@ -104,8 +147,8 @@ export function ReaderHub(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open Reader Hub"
-					className="pointer-events-auto absolute top-4 right-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
-					onClick={toggleOpen}
+					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100 md:grid"
+					onClick={openHubOnly}
 				>
 					<BookMarked size={18} />
 				</button>
@@ -124,9 +167,11 @@ export function ReaderHub(): React.JSX.Element {
 								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l",
 						)}
 						style={
-							visiblePanelWidthPx === null
-								? undefined
-								: { width: `${visiblePanelWidthPx}px` }
+							mobilePortrait
+								? { height: `${mobileHeightVh}dvh` }
+								: visiblePanelWidthPx === null
+									? undefined
+									: { width: `${visiblePanelWidthPx}px` }
 						}
 						initial={mobilePortrait ? { y: "100%" } : { x: "100%" }}
 						animate={mobilePortrait ? { y: 0 } : { x: 0 }}
@@ -151,7 +196,13 @@ export function ReaderHub(): React.JSX.Element {
 						) : null}
 						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
 							<BookMarked size={17} className="text-primary" />
-							<div className="min-w-0 flex-1">
+							<div
+								className={clsx(
+									"min-w-0 flex-1",
+									mobilePortrait && "cursor-row-resize touch-none",
+								)}
+								onPointerDown={startMobileHeightDrag}
+							>
 								<p className="font-semibold text-foreground/90 text-sm">
 									Reader Hub
 								</p>
@@ -165,7 +216,11 @@ export function ReaderHub(): React.JSX.Element {
 								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
 								onClick={toggleOpen}
 							>
-								<PanelRightClose size={16} />
+								{mobilePortrait ? (
+									<ChevronDown size={16} />
+								) : (
+									<PanelRightClose size={16} />
+								)}
 							</button>
 						</header>
 						<HubPanelSelector

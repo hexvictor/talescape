@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { ReaderViewport } from "~/app/(tale-app)/_shared/components/ReaderShell/ReaderViewport/ReaderViewport";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { useAppStore } from "~/contexts/AppStoreContext";
 import {
 	useTaleEditorStore,
 	useTaleEditorStoreShallow,
@@ -24,6 +25,7 @@ const maximumPreviewWidthVw = 70;
  * <TaleEditorPreview />
  */
 export function TaleEditorPreview(): React.JSX.Element | null {
+	const isMobile = useAppStore((state) => state.derived.isMobile);
 	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
 	const graphOpen = useTaleEditorStore(
 		(state) => state.editorWorkspace.graphOpen,
@@ -43,16 +45,18 @@ export function TaleEditorPreview(): React.JSX.Element | null {
 				data-reader-component="TaleEditorPreview"
 				data-reader-role="live-preview-pane"
 				className={clsx(
-					"relative border-foreground/10 border-r",
+					"relative h-[45dvh] w-full border-foreground/10 border-b md:h-auto md:border-r md:border-b-0",
 					graphOpen
-						? "min-w-[22rem] max-w-[70vw]"
+						? "md:min-w-[22rem] md:max-w-[70vw]"
 						: "min-w-0 max-w-none flex-1",
 				)}
-				style={graphOpen ? { width: `${previewWidth}vw` } : undefined}
+				style={
+					graphOpen && !isMobile ? { width: `${previewWidth}vw` } : undefined
+				}
 			>
 				<ReaderViewport />
 			</div>
-			{graphOpen ? (
+			{graphOpen && !isMobile ? (
 				<EditorPaneResizeHandle
 					label="Resize preview"
 					onDrag={(clientX) => {

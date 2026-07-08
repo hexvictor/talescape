@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
+import { useAppStore } from "~/contexts/AppStoreContext";
 import { useTaleEditorStoreShallow } from "../../hooks/useTaleEditorStore";
 import { EditorPaneResizeHandle } from "./EditorPaneResizeHandle";
 import { TaleEditorSelectionPanel } from "./TaleEditorSelectionPanel";
@@ -22,6 +23,7 @@ type TaleEditorSelectionSidebarProps = {
 export function TaleEditorSelectionSidebar({
 	editorBodyRef,
 }: TaleEditorSelectionSidebarProps): React.JSX.Element {
+	const isMobile = useAppStore((state) => state.derived.isMobile);
 	const { rightPanelOpen, setRightPanelWidth } = useTaleEditorStoreShallow(
 		(state) => ({
 			rightPanelOpen: state.editorWorkspace.rightPanelOpen,
@@ -33,18 +35,20 @@ export function TaleEditorSelectionSidebar({
 		<>
 			{rightPanelOpen ? (
 				<>
-					<EditorPaneResizeHandle
-						label="Resize editor selection sidebar"
-						onDrag={(clientX) => {
-							const bounds = editorBodyRef.current?.getBoundingClientRect();
+					{!isMobile ? (
+						<EditorPaneResizeHandle
+							label="Resize editor selection sidebar"
+							onDrag={(clientX) => {
+								const bounds = editorBodyRef.current?.getBoundingClientRect();
 
-							if (!bounds) return;
+								if (!bounds) return;
 
-							setRightPanelWidth(
-								Math.max(280, Math.min(640, bounds.right - clientX)),
-							);
-						}}
-					/>
+								setRightPanelWidth(
+									Math.max(280, Math.min(640, bounds.right - clientX)),
+								);
+							}}
+						/>
+					) : null}
 					<TaleEditorSelectionPanel />
 				</>
 			) : null}

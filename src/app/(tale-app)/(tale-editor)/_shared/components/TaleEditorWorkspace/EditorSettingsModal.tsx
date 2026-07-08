@@ -70,15 +70,15 @@ export function EditorSettingsModal({
 		<div
 			data-reader-component="EditorSettingsModal"
 			data-reader-role="editor-settings-dialog"
-			className="fixed inset-0 z-[80] grid place-items-center bg-black/48 p-4"
+			className="fixed inset-0 z-[80] grid place-items-center bg-black/48 p-2 sm:p-4"
 			onMouseDown={onClose}
 		>
 			<section
-				className="max-h-[min(46rem,calc(100vh-3rem))] w-full max-w-xl overflow-hidden rounded-lg border border-foreground/12 bg-background text-foreground shadow-2xl"
+				className="max-h-[calc(100dvh-1rem)] w-full max-w-xl overflow-hidden rounded-lg border border-foreground/12 bg-background text-foreground shadow-2xl"
 				onMouseDown={(event) => event.stopPropagation()}
 			>
-				<header className="flex items-center justify-between border-foreground/10 border-b px-4 py-3">
-					<div>
+				<header className="flex items-start justify-between gap-3 border-foreground/10 border-b px-3 py-3 sm:px-4">
+					<div className="min-w-0">
 						<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
 							Editor Settings
 						</p>
@@ -95,7 +95,7 @@ export function EditorSettingsModal({
 						<X size={16} />
 					</button>
 				</header>
-				<div className="border-foreground/10 border-b px-4 py-2">
+				<div className="border-foreground/10 border-b px-3 py-2 sm:px-4">
 					<div className="inline-flex rounded border border-foreground/10 bg-foreground/[0.03] p-1">
 						<SettingsTabButton
 							active={activeTab === "tale"}
@@ -109,7 +109,7 @@ export function EditorSettingsModal({
 						/>
 					</div>
 				</div>
-				<div className="max-h-[calc(100vh-13rem)] overflow-y-auto p-4">
+				<div className="max-h-[calc(100dvh-10.5rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
 					{activeTab === "tale" ? (
 						<>
 							<TaleSettingsPanel />
@@ -233,8 +233,8 @@ function BreakpointSettings({
 
 	return (
 		<section className="mt-6 border-foreground/10 border-t pt-6">
-			<div className="mb-3 flex items-center justify-between gap-3">
-				<div>
+			<div className="mb-3 grid gap-3 sm:flex sm:items-center sm:justify-between">
+				<div className="min-w-0">
 					<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
 						Tale Breakpoints
 					</p>
@@ -244,7 +244,7 @@ function BreakpointSettings({
 				</div>
 				<button
 					type="button"
-					className="rounded border border-foreground/12 px-3 py-2 text-foreground/72 text-xs hover:bg-foreground/8"
+					className="h-9 rounded border border-foreground/12 px-3 text-foreground/72 text-xs hover:bg-foreground/8 sm:justify-self-end"
 					onClick={() =>
 						onChange([
 							...orderedBreakpoints,
@@ -264,10 +264,10 @@ function BreakpointSettings({
 				{orderedBreakpoints.map((breakpoint, index) => (
 					<div
 						key={breakpoint.id}
-						className="rounded border border-foreground/10 bg-foreground/[0.03] p-3"
+						className="min-w-0 rounded border border-foreground/10 bg-foreground/[0.03] p-3"
 					>
-						<div className="mb-3 flex items-center justify-between gap-3">
-							<label className="flex items-center gap-2 text-foreground/60 text-xs">
+						<div className="mb-3 grid gap-2 sm:flex sm:items-center sm:justify-between">
+							<label className="flex min-w-0 items-center gap-2 text-foreground/60 text-xs">
 								<input
 									type="radio"
 									name="active-breakpoint"
@@ -292,7 +292,7 @@ function BreakpointSettings({
 								Remove
 							</button>
 						</div>
-						<div className="grid grid-cols-2 gap-3">
+						<div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
 							<SettingsInput
 								label="Label"
 								value={breakpoint.label}
@@ -305,10 +305,10 @@ function BreakpointSettings({
 									)
 								}
 							/>
-							<label className="grid gap-1 text-foreground/52 text-xs">
+							<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
 								<span className="font-medium uppercase">Orientation</span>
 								<select
-									className="rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+									className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
 									value={breakpoint.orientation ?? ""}
 									onChange={(event) =>
 										onChange(
@@ -396,10 +396,10 @@ function SettingsInput({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 text-foreground/52 text-xs">
+		<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
 			<span className="font-medium uppercase">{label}</span>
 			<input
-				className="rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
 				type="text"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
@@ -421,10 +421,10 @@ function SettingsNumber({
 	value: number | undefined;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 text-foreground/52 text-xs">
+		<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
 			<span className="font-medium uppercase">{label}</span>
 			<input
-				className="rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
 				type="number"
 				value={value ?? ""}
 				onChange={(event) =>

@@ -52,7 +52,7 @@ export function EditorActivitySwitcher(): React.JSX.Element {
 						onClick={() => setActivity(option.value)}
 					>
 						<Icon size={15} />
-						{option.label}
+						<span className="hidden md:inline">{option.label}</span>
 					</button>
 				);
 			})}

@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import AutoHideTopBar from "~/components/layout/AutoHideTopBar/AutoHideTopBar";
-import { Header } from "~/components/layout/Header";
-
 export const metadata: Metadata = {
 	title: "Taleviewer | Talescape",
 	description: "The community-driven hub of interactive tales",
@@ -11,12 +8,5 @@ export const metadata: Metadata = {
 export default function TaleReaderLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
-	return (
-		<>
-			<AutoHideTopBar clerkMenu pinOnBackgroundClick>
-				<Header />
-			</AutoHideTopBar>
-			{children}
-		</>
-	);
+	return <>{children}</>;
 }

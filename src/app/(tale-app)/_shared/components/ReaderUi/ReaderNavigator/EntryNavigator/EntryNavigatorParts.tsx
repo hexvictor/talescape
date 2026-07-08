@@ -12,11 +12,13 @@ import type {
 import { ReaderTypeIcon } from "./ReaderTypeIcon";
 
 type PartSelectorProps = {
+	className?: string;
 	currentPart: ReaderContentsPart | undefined;
 	onOpenChange: (open: boolean) => void;
 	onSelect: (part: ReaderContentsPart) => void;
 	open: boolean;
 	parts: ReaderContentsPart[];
+	showStepButtons?: boolean;
 };
 
 /**
@@ -26,11 +28,13 @@ type PartSelectorProps = {
  * @returns The part selector.
  */
 export function PartSelector({
+	className,
 	currentPart,
 	onOpenChange,
 	onSelect,
 	open,
 	parts,
+	showStepButtons = true,
 }: PartSelectorProps): React.JSX.Element {
 	const currentIndex = Math.max(
 		parts.findIndex((part) => part.id === currentPart?.id),
@@ -40,20 +44,22 @@ export function PartSelector({
 		<div
 			data-reader-component="PartSelector"
 			data-reader-role="part-selection"
-			className="relative mb-3 flex items-center gap-0.5"
+			className={clsx("relative flex items-center gap-0.5", className)}
 		>
-			<button
-				type="button"
-				aria-label="Previous part"
-				disabled={currentIndex === 0}
-				className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
-				onClick={() => {
-					const previous = parts[currentIndex - 1];
-					if (previous) onSelect(previous);
-				}}
-			>
-				<ChevronLeft size={10} />
-			</button>
+			{showStepButtons ? (
+				<button
+					type="button"
+					aria-label="Previous part"
+					disabled={currentIndex === 0}
+					className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
+					onClick={() => {
+						const previous = parts[currentIndex - 1];
+						if (previous) onSelect(previous);
+					}}
+				>
+					<ChevronLeft size={10} />
+				</button>
+			) : null}
 			<button
 				type="button"
 				aria-label="Select story part"
@@ -63,18 +69,20 @@ export function PartSelector({
 			>
 				<span className="-rotate-45 text-[11px]">{currentIndex + 1}</span>
 			</button>
-			<button
-				type="button"
-				aria-label="Next part"
-				disabled={currentIndex >= parts.length - 1}
-				className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
-				onClick={() => {
-					const next = parts[currentIndex + 1];
-					if (next) onSelect(next);
-				}}
-			>
-				<ChevronRight size={11} />
-			</button>
+			{showStepButtons ? (
+				<button
+					type="button"
+					aria-label="Next part"
+					disabled={currentIndex >= parts.length - 1}
+					className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
+					onClick={() => {
+						const next = parts[currentIndex + 1];
+						if (next) onSelect(next);
+					}}
+				>
+					<ChevronRight size={11} />
+				</button>
+			) : null}
 			{open ? (
 				<div className="absolute top-0 right-[calc(100%+0.5rem)] w-64 rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md">
 					<p className="px-2 py-1 font-semibold text-[10px] text-foreground/45 uppercase">
@@ -199,7 +207,7 @@ export function EntryPageFlyout({
 							page.id === currentPageId
 								? "border-primary bg-primary text-background"
 								: page.hasChoiceBlock
-									? "border-[#8bcf90]/50 bg-[#8bcf90]/12 text-[#d8f5da] hover:border-[#8bcf90]/75 hover:bg-[#8bcf90]/18 hover:text-foreground"
+									? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/70 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 									: "border-foreground/12 bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground",
 						)}
 						onClick={() => onNavigate(page.firstBlockId)}

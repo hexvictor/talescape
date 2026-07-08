@@ -3,6 +3,7 @@ import { ReaderProgress } from "../ReaderProgress/ReaderProgress";
 import { ReaderScrollCue } from "../ReaderScrollCue/ReaderScrollCue";
 import { ReaderUiVisibilityControl } from "../ReaderUiVisibilityControl/ReaderUiVisibilityControl";
 import { TaleDebug } from "../TaleDebug/TaleDebug";
+import { ReaderMobileQuickActions } from "./ReaderMobileQuickActions";
 
 /**
  * Composes reader overlays according to the selected visibility preset.
@@ -20,6 +21,7 @@ export function ReaderOverlay(): React.JSX.Element | null {
 			className="pointer-events-none absolute inset-0 z-50"
 		>
 			<ReaderProgress />
+			<ReaderMobileQuickActions />
 			<ReaderNavigator />
 			<ReaderScrollCue />
 			<TaleDebug />

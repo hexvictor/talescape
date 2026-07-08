@@ -6,6 +6,7 @@ import {
 } from "~/app/(tale-app)/(tale-editor)/_shared/services/taleDraftEdits";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import type { Tale, TalePath } from "~/app/(tale-app)/_shared/types";
+import { useAppStore } from "~/contexts/AppStoreContext";
 import {
 	useTaleEditorStore,
 	useTaleEditorStoreShallow,
@@ -24,6 +25,7 @@ type PathType = TalePath["type"];
  * <TaleEditorSelectionPanel />
  */
 export function TaleEditorSelectionPanel(): React.JSX.Element {
+	const isMobile = useAppStore((state) => state.derived.isMobile);
 	const { selectedBranchId, inspector: selectedTarget } =
 		useTaleEditorStoreShallow((state) => state.editor);
 	const selectedPathId = useTaleEditorStore(
@@ -45,8 +47,8 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 		<aside
 			data-reader-component="TaleEditorSelectionPanel"
 			data-reader-role="editor-right-panel"
-			className="h-full overflow-hidden border-foreground/10 border-l bg-background/84"
-			style={{ width }}
+			className="h-[45dvh] w-full overflow-hidden border-foreground/10 border-t bg-background/84 md:h-full md:border-t-0 md:border-l"
+			style={isMobile ? undefined : { width }}
 		>
 			<div className="h-full min-h-0 overflow-y-auto p-3">
 				{selectedTarget ? (

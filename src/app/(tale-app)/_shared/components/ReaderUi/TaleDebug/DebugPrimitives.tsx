@@ -5,12 +5,14 @@ import type { ReactNode } from "react";
 
 export function DebugTabs<T extends string>({
 	active,
+	iconOnly = false,
 	onChange,
 	tabs,
 }: {
 	active: T;
+	iconOnly?: boolean;
 	onChange: (tab: T) => void;
-	tabs: { id: T; label: string }[];
+	tabs: { icon?: ReactNode; id: T; label: string }[];
 }) {
 	return (
 		<div
@@ -28,9 +30,10 @@ export function DebugTabs<T extends string>({
 							? "bg-primary text-background"
 							: "text-foreground/54 hover:bg-foreground/8 hover:text-foreground",
 					)}
+					title={tab.label}
 					onClick={() => onChange(tab.id)}
 				>
-					{tab.label}
+					{iconOnly && tab.icon ? tab.icon : tab.label}
 				</button>
 			))}
 		</div>
