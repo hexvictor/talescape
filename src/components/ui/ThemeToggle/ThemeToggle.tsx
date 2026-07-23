@@ -29,7 +29,11 @@ function ThemeToggle(): React.JSX.Element {
 				isDarkTheme ? "Switch to light theme" : "Switch to dark theme"
 			}
 			title={isDarkTheme ? "Switch to light theme" : "Switch to dark theme"}
-			onClick={toggleTheme}
+			onPointerDown={(event) => event.stopPropagation()}
+			onClick={(event) => {
+				event.stopPropagation();
+				toggleTheme();
+			}}
 			className="text-muted-foreground hover:text-foreground"
 		>
 			<ThemeIcon className="size-4" />

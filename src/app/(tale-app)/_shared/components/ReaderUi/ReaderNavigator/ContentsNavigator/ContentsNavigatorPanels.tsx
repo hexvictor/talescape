@@ -158,7 +158,7 @@ export function ContentsTree({
 													active
 														? "bg-foreground/10 text-foreground"
 														: entry.hasChoiceBlock
-															? "text-[#d8f5da] hover:bg-[#8bcf90]/10 hover:text-foreground"
+															? "text-emerald-900 hover:bg-emerald-500/12 hover:text-foreground dark:text-[#d8f5da] dark:hover:bg-[#8bcf90]/10"
 															: "text-foreground/58 hover:bg-foreground/6 hover:text-foreground/84",
 												)}
 											>
@@ -202,7 +202,7 @@ export function ContentsTree({
 														{getEntryTypeLabel(entry.type)}
 													</span>
 													{entry.hasChoiceBlock ? (
-														<span className="rounded border border-[#8bcf90]/35 bg-[#8bcf90]/10 px-1.5 py-0.5 text-[#d8f5da] text-[9px] uppercase">
+														<span className="rounded border border-emerald-600/35 bg-emerald-500/12 px-1.5 py-0.5 text-[9px] text-emerald-900 uppercase dark:border-[#8bcf90]/35 dark:bg-[#8bcf90]/10 dark:text-[#d8f5da]">
 															Choice
 														</span>
 													) : null}

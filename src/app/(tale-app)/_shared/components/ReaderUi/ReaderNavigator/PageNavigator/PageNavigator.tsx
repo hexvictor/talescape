@@ -179,7 +179,7 @@ export function PageNavigator(): React.JSX.Element | null {
 										? "Unpin page navigation"
 										: "Pin page navigation"
 								}
-								className="-translate-x-1/2 -translate-y-1/2 -top-3 absolute left-1/2 z-10 grid h-6 w-8 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/40 opacity-0 transition-opacity hover:text-foreground group-hover/page-nav:opacity-100"
+								className="-translate-x-1/2 -translate-y-1/2 -top-4 md:-top-3 absolute left-1/2 z-10 grid h-8 w-10 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/40 opacity-100 transition-opacity hover:text-foreground md:h-6 md:w-8 md:opacity-0 md:group-hover/page-nav:opacity-100"
 								onClick={() => {
 									navigatorVisibility.togglePinned();
 									if (navigatorVisibility.pinned) setOpen(false);
@@ -195,14 +195,14 @@ export function PageNavigator(): React.JSX.Element | null {
 						<div
 							data-reader-component="PageNavigator"
 							data-reader-role="page-controls"
-							className="flex items-end gap-1.5 rounded-t-lg border border-foreground/12 border-b-0 bg-background/82 p-1.5 shadow-2xl backdrop-blur-md"
+							className="relative flex items-end rounded-t-lg border border-foreground/12 border-b-0 bg-background/82 p-1.5 shadow-2xl backdrop-blur-md"
 						>
 							<button
 								data-reader-component="PageNavigator"
 								data-reader-role="previous-page-control"
 								type="button"
 								aria-label="Previous page"
-								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/70 disabled:opacity-25"
+								className="-left-11 absolute bottom-1.5 grid h-9 w-9 place-items-center rounded-full border border-foreground/12 bg-background/86 text-foreground/70 shadow-xl backdrop-blur-md disabled:opacity-25"
 								disabled={!previous}
 								onClick={() => travelToRelativePage(-1)}
 							>
@@ -228,7 +228,7 @@ export function PageNavigator(): React.JSX.Element | null {
 								data-reader-role="next-page-control"
 								type="button"
 								aria-label="Next page"
-								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/70 disabled:opacity-25"
+								className="-right-11 absolute bottom-1.5 grid h-9 w-9 place-items-center rounded-full border border-foreground/12 bg-background/86 text-foreground/70 shadow-xl backdrop-blur-md disabled:opacity-25"
 								disabled={!next}
 								onClick={() => travelToRelativePage(1)}
 							>

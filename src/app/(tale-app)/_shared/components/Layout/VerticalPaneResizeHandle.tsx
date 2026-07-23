@@ -1,9 +1,12 @@
 "use client";
 
+import cn from "~/lib/utils/cn";
+
 /**
  * Renders a draggable vertical separator between adjacent panes.
  *
  * @param props - Resize handle properties.
+ * @param props.className - Optional extra classes for responsive visibility.
  * @param props.label - Accessible control label.
  * @param props.onDrag - Receives the current pointer X coordinate.
  * @param props.onDragEnd - Receives the final pointer X coordinate.
@@ -13,10 +16,12 @@
  * <VerticalPaneResizeHandle label="Resize sidebar" onDrag={resizeSidebar} />
  */
 export function VerticalPaneResizeHandle({
+	className,
 	label,
 	onDrag,
 	onDragEnd,
 }: {
+	className?: string;
 	label: string;
 	onDrag: (clientX: number) => void;
 	onDragEnd?: (clientX: number) => void;
@@ -49,10 +54,13 @@ export function VerticalPaneResizeHandle({
 			aria-label={label}
 			data-reader-component="VerticalPaneResizeHandle"
 			data-reader-role="pane-resizer"
-			className="group relative z-30 w-2 cursor-col-resize bg-foreground/5 hover:bg-primary/20"
+			className={cn(
+				"group relative z-30 w-4 cursor-col-resize bg-foreground/5 hover:bg-primary/20 md:w-2",
+				className,
+			)}
 			onPointerDown={handlePointerDown}
 		>
-			<span className="-translate-x-1/2 absolute top-1/2 left-1/2 h-14 w-1 rounded-full bg-foreground/20 group-hover:bg-primary" />
+			<span className="-translate-x-1/2 absolute top-1/2 left-1/2 h-16 w-1.5 rounded-full bg-foreground/24 group-hover:bg-primary md:h-14 md:w-1" />
 		</button>
 	);
 }

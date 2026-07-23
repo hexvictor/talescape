@@ -4,6 +4,7 @@ import { TaleAppStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleAppS
 import { TaleReaderStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import { readProgress } from "~/app/(tale-app)/_shared/services/readerProgressStorage";
 import type { SavedReaderProgress, Tale } from "~/app/(tale-app)/_shared/types";
+import { TaleEditorFileTransferProvider } from "../../contexts/TaleEditorFileTransferContext";
 import { TaleEditorStoreProvider } from "../../contexts/TaleEditorStoreContext";
 import { TaleEditorWorkspace } from "../TaleEditorWorkspace";
 
@@ -34,7 +35,9 @@ export function TaleEditor({
 					progress={progress ?? readProgress(tale)}
 					tale={tale}
 				>
-					<TaleEditorWorkspace />
+					<TaleEditorFileTransferProvider>
+						<TaleEditorWorkspace />
+					</TaleEditorFileTransferProvider>
 				</TaleReaderStoreProvider>
 			</TaleEditorStoreProvider>
 		</TaleAppStoreProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ListTree, PanelLeftClose, Route } from "lucide-react";
+import { ChevronDown, ListTree, PanelLeftClose, Route } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { useTaleAppStoreShallow } from "../../../contexts/TaleAppStoreContext";
@@ -33,17 +33,20 @@ export function ReaderContents(): React.JSX.Element {
 	const asideRef = useRef<HTMLElement | null>(null);
 	const [activeTab, setActiveTab] = useState<NavigationTab>("contents");
 	const [dragPanelWidthPx, setDragPanelWidthPx] = useState<number | null>(null);
+	const [mobileHeightVh, setMobileHeightVh] = useState(70);
 	const {
 		compiled,
 		contents,
 		currentBlockId,
 		currentBranchId,
 		currentEntryId,
+		hubOpen,
 		open,
 		panelWidthPx,
 		scrollApi,
 		selectedBranchIds,
 		setPanelWidthPx,
+		toggleHub,
 		toggleOpen,
 	} = useTaleReaderStoreShallow((state) => ({
 		compiled: state.reader.compiled,
@@ -51,11 +54,13 @@ export function ReaderContents(): React.JSX.Element {
 		currentBlockId: state.navigation.current?.blockId ?? null,
 		currentBranchId: state.navigation.current?.branchId ?? null,
 		currentEntryId: state.navigation.current?.entryId ?? null,
+		hubOpen: state.hub.open,
 		open: state.contents.open,
 		panelWidthPx: state.contents.panelWidthPx,
 		scrollApi: state.scroll.api,
 		selectedBranchIds: state.navigation.selectedBranchIds,
 		setPanelWidthPx: state.contents.setPanelWidthPx,
+		toggleHub: state.hub.toggleOpen,
 		toggleOpen: state.contents.toggleOpen,
 	}));
 	const { branches, paths } = useTaleAppStoreShallow((state) => ({
@@ -76,6 +81,44 @@ export function ReaderContents(): React.JSX.Element {
 			: dockedContentsWidthPx;
 	const visiblePanelWidthPx = dragPanelWidthPx ?? sidePanelWidthPx;
 	/**
+	 * Opens Contents while closing Reader Hub first to avoid competing docked
+	 * viewport insets.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * openContentsOnly();
+	 */
+	const openContentsOnly = (): void => {
+		if (!open && hubOpen) toggleHub();
+		toggleOpen();
+	};
+
+	/**
+	 * Starts mobile bottom-sheet height dragging.
+	 *
+	 * @param event - Pointer event from the sheet header.
+	 * @returns Nothing.
+	 */
+	const startMobileHeightDrag = (
+		event: React.PointerEvent<HTMLElement>,
+	): void => {
+		if (!mobilePortrait) return;
+		event.preventDefault();
+		const updateHeight = (moveEvent: PointerEvent): void => {
+			const nextHeight =
+				((window.innerHeight - moveEvent.clientY) / window.innerHeight) * 100;
+			setMobileHeightVh(Math.max(42, Math.min(92, nextHeight)));
+		};
+		const stopDrag = (): void => {
+			window.removeEventListener("pointermove", updateHeight);
+			window.removeEventListener("pointerup", stopDrag);
+		};
+		window.addEventListener("pointermove", updateHeight);
+		window.addEventListener("pointerup", stopDrag);
+	};
+
+	/**
 	 * Calculates the contents sidebar width for one pointer x-coordinate.
 	 *
 	 * @param clientX - Current pointer x-coordinate.
@@ -87,8 +130,8 @@ export function ReaderContents(): React.JSX.Element {
 	const getPanelWidthFromPointer = (clientX: number): number | null => {
 		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
 		if (!bounds) return null;
-		const maximumWidth = Math.floor(bounds.width * 0.5);
-		const minimumWidth = Math.min(320, Math.max(260, bounds.width - 24));
+		const maximumWidth = Math.max(240, Math.floor(bounds.width * 0.5));
+		const minimumWidth = Math.min(320, maximumWidth);
 		const rawWidth = clientX - bounds.left;
 		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
@@ -138,8 +181,8 @@ export function ReaderContents(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open story navigation"
-					className="pointer-events-auto absolute top-4 left-4 z-45 grid h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100"
-					onClick={toggleOpen}
+					className="pointer-events-auto absolute top-4 left-4 z-45 hidden h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100 md:grid"
+					onClick={openContentsOnly}
 				>
 					<ListTree size={18} />
 				</button>
@@ -158,9 +201,11 @@ export function ReaderContents(): React.JSX.Element {
 								: "inset-y-0 left-0 max-w-[calc(100vw-1rem)] border-r",
 						)}
 						style={
-							visiblePanelWidthPx === null
-								? undefined
-								: { width: `${visiblePanelWidthPx}px` }
+							mobilePortrait
+								? { height: `${mobileHeightVh}dvh` }
+								: visiblePanelWidthPx === null
+									? undefined
+									: { width: `${visiblePanelWidthPx}px` }
 						}
 						initial={mobilePortrait ? { y: "100%" } : { x: "-100%" }}
 						animate={mobilePortrait ? { y: 0 } : { x: 0 }}
@@ -185,7 +230,13 @@ export function ReaderContents(): React.JSX.Element {
 						) : null}
 						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
 							<ListTree size={17} className="text-primary" />
-							<div className="min-w-0 flex-1">
+							<div
+								className={clsx(
+									"min-w-0 flex-1",
+									mobilePortrait && "cursor-row-resize touch-none",
+								)}
+								onPointerDown={startMobileHeightDrag}
+							>
 								<p className="font-semibold text-foreground/90 text-sm">
 									Story Navigation
 								</p>
@@ -199,7 +250,11 @@ export function ReaderContents(): React.JSX.Element {
 								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
 								onClick={toggleOpen}
 							>
-								<PanelLeftClose size={16} />
+								{mobilePortrait ? (
+									<ChevronDown size={16} />
+								) : (
+									<PanelLeftClose size={16} />
+								)}
 							</button>
 						</header>
 						<div className="flex items-center gap-2 border-foreground/10 border-b px-3 py-2">

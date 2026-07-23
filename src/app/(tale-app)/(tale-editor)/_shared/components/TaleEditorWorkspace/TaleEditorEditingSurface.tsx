@@ -34,10 +34,13 @@ export function TaleEditorEditingSurface(): React.JSX.Element {
 			className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
 		>
 			<EditorModeToolbar />
-			<div ref={editorBodyRef} className="mt-16 flex min-h-0 flex-1">
+			<div
+				ref={editorBodyRef}
+				className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden"
+			>
 				<TaleEditorPreview />
 				{effectiveGraphOpen ? (
-					<main className="relative flex min-w-0 flex-1">
+					<main className="relative flex min-h-[45dvh] min-w-0 flex-1 flex-col md:min-h-0 md:flex-row">
 						<TaleBranchGraph />
 						<TaleEditorSelectionSidebar editorBodyRef={editorBodyRef} />
 					</main>

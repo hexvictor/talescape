@@ -39,6 +39,9 @@ import {
 	GitBranch,
 	GripVertical,
 	LocateFixed,
+	Map as MapIcon,
+	Maximize2,
+	Minimize2,
 	Plus,
 	RefreshCcw,
 } from "lucide-react";
@@ -192,6 +195,8 @@ export function TaleBranchGraph(): React.JSX.Element {
 	const [draggedBlock, setDraggedBlock] = useState<ResolvedTaleBlock | null>(
 		null,
 	);
+	const [minimapVisible, setMinimapVisible] = useState(true);
+	const [minimapCompact, setMinimapCompact] = useState(false);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: { distance: 6 },
@@ -515,6 +520,36 @@ export function TaleBranchGraph(): React.JSX.Element {
 					<button
 						type="button"
 						data-reader-component="TaleBranchGraph"
+						data-reader-role="minimap-visibility-control"
+						aria-pressed={minimapVisible}
+						className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+						title={minimapVisible ? "Hide minimap" : "Show minimap"}
+						onClick={() => setMinimapVisible((visible) => !visible)}
+					>
+						<MapIcon size={14} />
+					</button>
+					{minimapVisible ? (
+						<button
+							type="button"
+							data-reader-component="TaleBranchGraph"
+							data-reader-role="minimap-size-control"
+							aria-pressed={minimapCompact}
+							className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+							title={
+								minimapCompact ? "Use default minimap size" : "Shrink minimap"
+							}
+							onClick={() => setMinimapCompact((compact) => !compact)}
+						>
+							{minimapCompact ? (
+								<Maximize2 size={14} />
+							) : (
+								<Minimize2 size={14} />
+							)}
+						</button>
+					) : null}
+					<button
+						type="button"
+						data-reader-component="TaleBranchGraph"
 						data-reader-role="add-branch-control"
 						className="flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/76 px-3 text-foreground/72 text-xs hover:bg-foreground/8 hover:text-foreground"
 						onClick={handleAddBranch}
@@ -579,19 +614,28 @@ export function TaleBranchGraph(): React.JSX.Element {
 				>
 					<Background color="var(--muted-foreground)" gap={24} />
 					<Controls className="talescape-flow-controls [&_.react-flow__controls-button]:!border-foreground/10 [&_.react-flow__controls-button]:!bg-background [&_.react-flow__controls-button]:!text-foreground" />
-					<MiniMap
-						pannable
-						zoomable
-						bgColor="var(--background)"
-						maskColor="color-mix(in oklab, var(--primary) 16%, transparent)"
-						nodeBorderRadius={8}
-						nodeColor={(node) =>
-							node.id === selectedBranchId ? "var(--chart-2)" : "var(--primary)"
-						}
-						nodeStrokeColor={() => "var(--foreground)"}
-						nodeStrokeWidth={2}
-						className="talescape-flow-minimap !bg-background/80"
-					/>
+					{minimapVisible ? (
+						<MiniMap
+							pannable
+							zoomable
+							bgColor="var(--background)"
+							maskColor="color-mix(in oklab, var(--primary) 16%, transparent)"
+							nodeBorderRadius={8}
+							nodeColor={(node) =>
+								node.id === selectedBranchId
+									? "var(--chart-2)"
+									: "var(--primary)"
+							}
+							nodeStrokeColor={() => "var(--foreground)"}
+							nodeStrokeWidth={2}
+							className="talescape-flow-minimap !bg-background/80"
+							style={
+								minimapCompact
+									? { height: 86, width: 126 }
+									: { height: 150, width: 200 }
+							}
+						/>
+					) : null}
 				</ReactFlow>
 				<DragOverlay>
 					{draggedBlock ? <DraggedBlockOverlay block={draggedBlock} /> : null}

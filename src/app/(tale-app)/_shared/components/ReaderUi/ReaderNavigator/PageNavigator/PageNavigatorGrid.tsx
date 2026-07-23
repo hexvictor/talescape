@@ -100,7 +100,7 @@ export function PageNavigatorGrid({
 							active
 								? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
 								: page.hasChoiceBlock
-									? "border-[#8bcf90]/50 bg-[#8bcf90]/12 text-[#d8f5da] hover:border-[#8bcf90]/75 hover:bg-[#8bcf90]/18 hover:text-foreground"
+									? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 									: "border-foreground/12 bg-foreground/[0.035] text-foreground/62 hover:border-foreground/30 hover:bg-foreground/10 hover:text-foreground",
 						)}
 						onClick={() => {
@@ -114,7 +114,7 @@ export function PageNavigatorGrid({
 								active
 									? "border-background/15 bg-background text-foreground"
 									: page.hasChoiceBlock
-										? "border-[#8bcf90]/35 bg-[#112117] text-[#d8f5da]"
+										? "border-emerald-600/35 bg-emerald-500/12 text-emerald-900 dark:border-[#8bcf90]/35 dark:bg-[#112117] dark:text-[#d8f5da]"
 										: "border-foreground/12 bg-background text-foreground/55",
 							)}
 						>

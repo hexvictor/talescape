@@ -56,7 +56,7 @@ export function ChoiceButtonFragment({
 					isReturn || isTeleport ? "rgba(255,255,255,0.08)" : `${color}2e`,
 				borderColor:
 					isReturn || isTeleport ? "rgba(255,255,255,0.14)" : `${color}96`,
-				color: isReturn || isTeleport ? undefined : color,
+				color: fragment.style?.color ?? "var(--foreground)",
 			}}
 			onClick={() => onChoosePath(path)}
 		>

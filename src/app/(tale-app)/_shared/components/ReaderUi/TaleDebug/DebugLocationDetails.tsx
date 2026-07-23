@@ -60,9 +60,9 @@ export function DebugLocationDetails({
 				className={clsx(
 					"w-fit rounded px-1.5 py-0.5 font-semibold uppercase",
 					snapMode === "snap" &&
-						"border border-emerald-300/35 bg-emerald-400/18 text-emerald-100",
+						"border border-emerald-600/35 bg-emerald-500/12 text-emerald-900 dark:border-emerald-300/35 dark:bg-emerald-400/18 dark:text-emerald-100",
 					snapMode === "scroll-snap" &&
-						"border border-sky-300/35 bg-sky-400/18 text-sky-100",
+						"border border-sky-600/35 bg-sky-500/12 text-sky-900 dark:border-sky-300/35 dark:bg-sky-400/18 dark:text-sky-100",
 					snapMode === "snap-off" &&
 						"border border-foreground/10 bg-foreground/8 text-foreground/46",
 				)}

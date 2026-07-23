@@ -6,6 +6,7 @@ import { TaleAppStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleAppS
 import { TaleReaderStoreProvider } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import { readProgress } from "~/app/(tale-app)/_shared/services/readerProgressStorage";
 import type { SavedReaderProgress, Tale } from "~/app/(tale-app)/_shared/types";
+import { TaleReaderHeader } from "../TaleReaderHeader/TaleReaderHeader";
 
 type TaleReaderProps = {
 	progress: SavedReaderProgress | null;
@@ -33,6 +34,7 @@ export function TaleReader({
 				progress={progress ?? readProgress(tale)}
 				tale={tale}
 			>
+				<TaleReaderHeader />
 				<ReaderProgressPersistence />
 				<ReaderViewport />
 			</TaleReaderStoreProvider>

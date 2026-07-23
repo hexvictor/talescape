@@ -28,6 +28,7 @@ type AutoHideTopBarProps = PropsWithChildren<{
 	overlaySelector?: string;
 	pinOnBackgroundClick?: boolean;
 	revealZoneHeight?: CSSProperties["height"];
+	revealZoneClassName?: string;
 	wrapperClassName?: string;
 }>;
 
@@ -39,6 +40,7 @@ type AutoHideTopBarProps = PropsWithChildren<{
 * @param props - Auto-hiding top bar props.
 * @param props.children - Expanded header content.
 * @param props.collapsedContent - Content shown while the expanded header is hidden.
+* @param props.revealZoneClassName - Optional classes applied to the hover reveal zone.
 * @returns Animated top bar composition.
 *
 * @example
@@ -58,6 +60,7 @@ export default function AutoHideTopBar({
 	onLeaveCallback,
 	overlaySelector,
 	pinOnBackgroundClick = false,
+	revealZoneClassName = "",
 	revealZoneHeight = "0.5rem",
 	wrapperClassName = "fixed top-0 left-0 z-1000 w-full",
 }: AutoHideTopBarProps): React.JSX.Element {
@@ -171,7 +174,7 @@ export default function AutoHideTopBar({
 			</div>
 			<div
 				aria-hidden="true"
-				className="fixed top-0 left-0 z-[1001] w-full"
+				className={`fixed top-0 left-0 z-[1001] w-full ${revealZoneClassName}`}
 				style={{ height: revealZoneHeight }}
 				onMouseEnter={onMouseEnter}
 			/>
