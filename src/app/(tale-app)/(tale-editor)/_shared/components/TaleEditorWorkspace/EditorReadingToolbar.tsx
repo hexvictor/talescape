@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Menu, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import AppMenu, { AppMenuItem } from "~/components/layout/AppMenu/AppMenu";
@@ -13,7 +13,6 @@ import { useAppStore } from "~/contexts/AppStoreContext";
 import { AuthStatus } from "~/features/auth/components";
 import { BreakpointSelect } from "./BreakpointSelect";
 import { EditorActivitySwitcher } from "./EditorActivitySwitcher";
-import { EditorMobileSiteActions } from "./EditorMobileSiteActions";
 import EditorSaveButton from "./EditorSaveButton";
 import { useEditorToolbarActions } from "./EditorToolbarActionsContext";
 import { EditorToolbarSettingsMenuItems } from "./EditorToolbarSettingsMenu";
@@ -109,20 +108,7 @@ function DesktopEditorReadingToolbar(): React.JSX.Element {
  */
 function MobileEditorReadingToolbar(): React.JSX.Element {
 	const rootRef = useRef<HTMLElement | null>(null);
-	const [open, setOpen] = useState(false);
 	const [controlsOpen, setControlsOpen] = useState(false);
-
-	useEffect(() => {
-		if (!open) return;
-		const closeOnOutsidePointer = (event: PointerEvent): void => {
-			if (rootRef.current?.contains(event.target as Node)) return;
-			setOpen(false);
-		};
-		document.addEventListener("pointerdown", closeOnOutsidePointer);
-		return () => {
-			document.removeEventListener("pointerdown", closeOnOutsidePointer);
-		};
-	}, [open]);
 
 	useEffect(() => {
 		if (!controlsOpen) return;
@@ -145,20 +131,19 @@ function MobileEditorReadingToolbar(): React.JSX.Element {
 		>
 			<div className="flex h-11 items-center justify-between gap-2">
 				<EditorActivitySwitcher />
-				<MobileEditorReadingButtons
-					menuOpen={open}
-					onMenuOpenChange={() => {
-						setControlsOpen(false);
-						setOpen((open) => !open);
-					}}
-					controlsOpen={controlsOpen}
-					onControlsOpenChange={() => {
-						setOpen(false);
-						setControlsOpen((open) => !open);
-					}}
-				/>
+				<span className="font-bold text-xl tracking-normal md:hidden">
+					Talescape
+				</span>
+				<div className="flex min-w-0 items-center gap-2 md:hidden">
+					<MobileEditorReadingButtons
+						controlsOpen={controlsOpen}
+						onControlsOpenChange={() => setControlsOpen((open) => !open)}
+					/>
+					<Separator className="h-8" />
+					<ThemeToggle />
+					<AuthStatus />
+				</div>
 			</div>
-			{open ? <MobileEditorReadingPanel /> : null}
 			{controlsOpen ? (
 				<MobileEditorReadingControlsPanel
 					closePanel={() => setControlsOpen(false)}
@@ -172,23 +157,17 @@ function MobileEditorReadingToolbar(): React.JSX.Element {
  * Renders compact mobile reading toolbar action buttons.
  *
  * @param props - Mobile reading menu state.
- * @param props.menuOpen - Whether the extra reading controls are open.
- * @param props.onMenuOpenChange - Receives mobile menu visibility changes.
  * @param props.controlsOpen - Whether the extra reading controls are open.
  * @param props.onControlsOpenChange - Receives mobile controls visibility changes.
  * @returns Mobile reading toolbar buttons.
  *
  * @example
- * <MobileEditorReadingButtons menuOpen={false} onMenuOpenChange={setOpen} />
+ * <MobileEditorReadingButtons controlsOpen={false} onControlsOpenChange={toggle} />
  */
 function MobileEditorReadingButtons({
-	menuOpen,
-	onMenuOpenChange,
 	controlsOpen,
 	onControlsOpenChange,
 }: {
-	menuOpen: boolean;
-	onMenuOpenChange: () => void;
 	controlsOpen: boolean;
 	onControlsOpenChange: () => void;
 }): React.JSX.Element {
@@ -207,39 +186,10 @@ function MobileEditorReadingButtons({
 			>
 				<Settings size={15} />
 			</button>
-			<button
-				type="button"
-				aria-expanded={menuOpen}
-				aria-label="Toggle reading controls"
-				className={clsx(
-					"grid h-9 w-9 place-items-center rounded ",
-					menuOpen
-						? "bg-foreground text-background"
-						: "border border-foreground/10 text-foreground/60 hover:bg-foreground/8 hover:text-foreground",
-				)}
-				onClick={onMenuOpenChange}
-			>
-				<Menu size={16} />
-			</button>
 		</div>
 	);
 }
 
-/**
- * Renders the expanded mobile reading controls panel.
- *
- * @returns Mobile reading controls panel.
- *
- * @example
- * <MobileEditorReadingPanel />
- */
-function MobileEditorReadingPanel(): React.JSX.Element {
-	return (
-		<div className="mt-2 flex max-h-[calc(100dvh-5rem)] flex-col gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl">
-			<EditorMobileSiteActions />
-		</div>
-	);
-}
 /**
  * Renders the expanded mobile reading controls panel.
  *

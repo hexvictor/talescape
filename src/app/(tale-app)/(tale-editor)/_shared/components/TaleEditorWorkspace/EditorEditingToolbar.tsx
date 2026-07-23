@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Menu, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Logo from "~/components/ui/Logo";
@@ -9,7 +9,6 @@ import ThemeToggle from "~/components/ui/ThemeToggle";
 import Separator from "~/components/ui/separator";
 import { AuthStatus } from "~/features/auth/components";
 import { EditorActivitySwitcher } from "./EditorActivitySwitcher";
-import { EditorMobileSiteActions } from "./EditorMobileSiteActions";
 import EditorSaveButton from "./EditorSaveButton";
 import { EditorToolbarMiddleControls } from "./EditorToolbarMiddleControls";
 import {
@@ -28,20 +27,18 @@ import {
 export function EditorEditingToolbar(): React.JSX.Element {
 	const rootRef = useRef<HTMLElement | null>(null);
 	const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
-	const [mobileSiteMenuOpen, setMobileSiteMenuOpen] = useState(false);
 
 	useEffect(() => {
-		if (!mobileControlsOpen && !mobileSiteMenuOpen) return;
+		if (!mobileControlsOpen) return;
 		const closeOnOutsidePointer = (event: PointerEvent): void => {
 			if (rootRef.current?.contains(event.target as Node)) return;
 			setMobileControlsOpen(false);
-			setMobileSiteMenuOpen(false);
 		};
 		document.addEventListener("pointerdown", closeOnOutsidePointer);
 		return () => {
 			document.removeEventListener("pointerdown", closeOnOutsidePointer);
 		};
-	}, [mobileControlsOpen, mobileSiteMenuOpen]);
+	}, [mobileControlsOpen]);
 
 	return (
 		<header
@@ -63,16 +60,19 @@ export function EditorEditingToolbar(): React.JSX.Element {
 			<div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
 				<EditorEditingDesktopActions />
 			</div>
-			<EditorEditingMobileButtons
-				controlsOpen={mobileControlsOpen}
-				siteMenuOpen={mobileSiteMenuOpen}
-				onControlsOpenChange={setMobileControlsOpen}
-				onSiteMenuOpenChange={setMobileSiteMenuOpen}
-			/>
-			<EditorEditingMobilePanels
-				controlsOpen={mobileControlsOpen}
-				siteMenuOpen={mobileSiteMenuOpen}
-			/>
+			<span className="font-bold text-xl tracking-normal md:hidden">
+				Talescape
+			</span>
+			<div className="flex min-w-0 items-center gap-2 md:hidden">
+				<EditorEditingMobileButtons
+					controlsOpen={mobileControlsOpen}
+					onControlsOpenChange={setMobileControlsOpen}
+				/>
+				<Separator className="h-8" />
+				<ThemeToggle />
+				<AuthStatus />
+			</div>
+			<EditorEditingMobilePanel controlsOpen={mobileControlsOpen} />
 		</header>
 	);
 }
@@ -102,23 +102,17 @@ function EditorEditingDesktopActions(): React.JSX.Element {
  * @param props - Mobile menu state and actions.
  * @param props.controlsOpen - Whether editor controls are open.
  * @param props.onControlsOpenChange - Receives editor controls visibility.
- * @param props.onSiteMenuOpenChange - Receives site menu visibility.
- * @param props.siteMenuOpen - Whether the site menu is open.
  * @returns Mobile toolbar buttons.
  *
  * @example
- * <EditorEditingMobileButtons controlsOpen={false} siteMenuOpen={false} />
+ * <EditorEditingMobileButtons controlsOpen={false} onControlsOpenChange={setOpen} />
  */
 function EditorEditingMobileButtons({
 	controlsOpen,
 	onControlsOpenChange,
-	onSiteMenuOpenChange,
-	siteMenuOpen,
 }: {
 	controlsOpen: boolean;
 	onControlsOpenChange: (open: boolean) => void;
-	onSiteMenuOpenChange: (open: boolean) => void;
-	siteMenuOpen: boolean;
 }): React.JSX.Element {
 	return (
 		<div className="flex min-w-0 items-center gap-2 md:hidden">
@@ -132,72 +126,40 @@ function EditorEditingMobileButtons({
 						? "bg-foreground text-background"
 						: "border border-foreground/10 text-foreground/60 hover:bg-foreground/8 hover:text-foreground",
 				)}
-				onClick={() => {
-					onSiteMenuOpenChange(false);
-					onControlsOpenChange(!controlsOpen);
-				}}
+				onClick={() => onControlsOpenChange(!controlsOpen)}
 			>
 				<Settings size={15} />
-			</button>
-			<button
-				type="button"
-				aria-expanded={siteMenuOpen}
-				aria-label="Open site menu"
-				className={clsx(
-					"grid h-9 w-9 place-items-center rounded transition",
-					siteMenuOpen
-						? "bg-foreground text-background"
-						: "border border-foreground/10 text-foreground/60 hover:bg-foreground/8 hover:text-foreground",
-				)}
-				onClick={() => {
-					onControlsOpenChange(false);
-					onSiteMenuOpenChange(!siteMenuOpen);
-				}}
-			>
-				<Menu size={16} />
 			</button>
 		</div>
 	);
 }
 
 /**
- * Renders mobile dropdown panels for editing toolbar menus.
+ * Renders the mobile dropdown panel for editing toolbar controls.
  *
- * @param props - Open state for each mobile panel.
+ * @param props - Mobile panel state.
  * @param props.controlsOpen - Whether editor controls are open.
- * @param props.siteMenuOpen - Whether site actions are open.
- * @returns Mobile dropdown panels.
+ * @returns Mobile dropdown panel when open.
  *
  * @example
- * <EditorEditingMobilePanels controlsOpen siteMenuOpen={false} />
+ * <EditorEditingMobilePanel controlsOpen />
  */
-function EditorEditingMobilePanels({
+function EditorEditingMobilePanel({
 	controlsOpen,
-	siteMenuOpen,
 }: {
 	controlsOpen: boolean;
-	siteMenuOpen: boolean;
 }): React.JSX.Element | null {
-	if (!siteMenuOpen && !controlsOpen) return null;
+	if (!controlsOpen) return null;
 
 	return (
-		<>
-			{siteMenuOpen ? (
-				<div className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl backdrop-blur-xl md:hidden">
-					<EditorMobileSiteActions />
-				</div>
-			) : null}
-			{controlsOpen ? (
-				<div className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl backdrop-blur-xl md:hidden">
-					<div className="flex flex-grow justify-between gap-2">
-						<EditorToolbarMiddleControls />
-					</div>
-					<div className="flex flex-col gap-2">
-						<EditorToolbarInlineSettingsControls />
-					</div>
-					<EditorSaveButton />
-				</div>
-			) : null}
-		</>
+		<div className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl backdrop-blur-xl md:hidden">
+			<div className="flex flex-grow justify-between gap-2">
+				<EditorToolbarMiddleControls />
+			</div>
+			<div className="flex flex-col gap-2">
+				<EditorToolbarInlineSettingsControls />
+			</div>
+			<EditorSaveButton />
+		</div>
 	);
 }
