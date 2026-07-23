@@ -48,7 +48,7 @@ export function EditorEditingToolbar(): React.JSX.Element {
 			ref={rootRef}
 			data-reader-component="EditorModeToolbar"
 			data-reader-role="editor-toolbar"
-			className="relative z-60 grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-2 bg-background/95 px-3 py-2 text-foreground backdrop-blur-md sm:flex sm:justify-between sm:px-4"
+			className="relative z-60 flex min-h-16 items-center justify-between gap-2 bg-background/95 px-3 py-2 text-foreground backdrop-blur-md sm:px-4 md:grid md:grid-cols-[auto_1fr_auto]"
 		>
 			<div className="flex min-w-0 items-center gap-2">
 				<Link href="/" className="hidden min-w-0 items-center gap-2 md:flex">
