@@ -1,189 +1,187 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type PathSchema, branches, paths, tales } from "~/server/db/schema";
+import { blocks, branches, paths, tales } from "~/server/db/schema";
+import { userId1 } from "../ids";
+import { getReaderPageBlueprint } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type PathSeed = Pick<
-	PathSchema,
-	| "taleId"
-	| "fromBranchId"
-	| "toBranchId"
-	| "type"
-	| "label"
-	| "order"
-	| "isOfficial"
-	| "editable"
-	| "visibility"
->;
+type PathBlueprint = {
+	description: string;
+	fromBranch: string;
+	fromEntryOrder: number;
+	fromLocalPage?: number;
+	label: string;
+	toBranch: string;
+	toEntryOrder: number;
+	toLocalPage?: number;
+	type: "choice" | "return" | "teleport";
+};
 
-export async function seedPaths() {
-	const branchedTale = await db
-		.select({
-			id: tales.id,
-			isOfficial: tales.isOfficial,
-			editable: tales.editable,
-			visibility: tales.visibility,
-		})
+const choicePaths: PathBlueprint[] = [
+	choice("main", 4, "lantern", 5, "Follow the keeper's lantern"),
+	choice("main", 4, "river", 7, "Follow the underground river"),
+	choice("main", 4, "belfry", 9, "Climb into the empty belfry"),
+	choice("lantern", 6, "lantern-vault", 11, "Open the sealed vault"),
+	choice("lantern", 6, "lantern-choir", 12, "Follow the dust choir"),
+	choice("river", 8, "river-gate", 13, "Raise the drowned gate"),
+	choice("river", 8, "river-depths", 14, "Descend toward the names"),
+	choice("belfry", 10, "belfry-bells", 15, "Enter the bell chamber"),
+	choice("belfry", 10, "belfry-roof", 16, "Climb above the storm"),
+];
+
+const returnPaths: PathBlueprint[] = [
+	...returns("lantern-vault", 11, 1, "lantern", 6),
+	...returns("lantern-choir", 12, 1, "lantern", 6),
+	...returns("river-gate", 13, 1, "river", 8),
+	...returns("river-depths", 14, 1, "river", 8),
+	...returns("belfry-bells", 15, 1, "belfry", 10),
+	...returns("belfry-roof", 16, 1, "belfry", 10),
+];
+
+/**
+ * Inserts nested choice and return paths using actual branch and block ids.
+ *
+ * @returns Nothing.
+ */
+export async function seedPaths(): Promise<void> {
+	logSeedStart("Paths");
+	const [tale] = await db
+		.select({ id: tales.id })
 		.from(tales)
-		.where(eq(tales.slug, "official-tale-branched"))
-		.limit(1);
+		.where(eq(tales.slug, "branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 
-	const tale = branchedTale[0];
-	if (!tale) {
-		console.log("⚠️ official-tale-branched not found, skipping paths.");
-		return;
-	}
-
-	const taleBranches = await db
-		.select({
-			id: branches.id,
-			name: branches.name,
-			index: branches.index,
-		})
-		.from(branches)
-		.where(eq(branches.taleId, tale.id));
-
+	const [allBranches, allBlocks] = await Promise.all([
+		db
+			.select({ id: branches.id, name: branches.name })
+			.from(branches)
+			.where(eq(branches.taleId, tale.id)),
+		db
+			.select({
+				branchId: blocks.branchId,
+				id: blocks.id,
+				order: blocks.order,
+			})
+			.from(blocks)
+			.where(eq(blocks.taleId, tale.id)),
+	]);
 	const branchByName = new Map(
-		taleBranches.map((b) => [b.name, b.id] as const),
+		allBranches.map((branch) => [branch.name, branch]),
 	);
+	const findBlock = (
+		branchName: string,
+		entryOrder: number,
+		localPage = 0,
+	): { branchId: number; blockId: number } => {
+		const branch = branchByName.get(branchName);
+		const page = getReaderPageBlueprint(entryOrder, localPage);
+		const block = branch
+			? allBlocks.find(
+					(item) => item.branchId === branch.id && item.order === page.order,
+				)
+			: undefined;
+		if (!branch || !block) {
+			throw new Error(
+				`Missing path endpoint ${branchName}:${entryOrder}:${localPage}.`,
+			);
+		}
+		return { blockId: block.id, branchId: branch.id };
+	};
 
-	const beginning = branchByName.get("Beginning");
-	const first = branchByName.get("First Path");
-	const second = branchByName.get("Second Path");
-	const third = branchByName.get("Third Path");
-	const fourth = branchByName.get("Fourth Path");
-	const choice = branchByName.get("The Choice");
-	const good = branchByName.get("The Good Choice");
-	const bad = branchByName.get("The Bad Choice");
-	const ending = branchByName.get("Ending");
+	const values = [...choicePaths, ...returnPaths].map((path, order) => {
+		const from = findBlock(
+			path.fromBranch,
+			path.fromEntryOrder,
+			path.fromLocalPage,
+		);
+		const to = findBlock(path.toBranch, path.toEntryOrder, path.toLocalPage);
+		return {
+			creatorId: userId1,
+			description: path.description,
+			editable: true,
+			fromBlockId: from.blockId,
+			fromBranchId: from.branchId,
+			isOfficial: true,
+			isVerified: true,
+			label: path.label,
+			order,
+			taleId: tale.id,
+			toBlockId: to.blockId,
+			toBranchId: to.branchId,
+			type: path.type,
+			visibility: "public" as const,
+		};
+	});
 
-	if (
-		!beginning ||
-		!first ||
-		!second ||
-		!third ||
-		!fourth ||
-		!choice ||
-		!good ||
-		!bad ||
-		!ending
-	) {
-		console.log("⚠️ Branched tale branches not found, skipping paths.");
-		return;
-	}
+	await db.insert(paths).values(values);
+	logSeedComplete("Paths");
+}
 
-	const seeds: PathSeed[] = [
+/**
+ * Creates one branch-selection path.
+ *
+ * @param fromBranch - Source branch name.
+ * @param fromEntryOrder - Source choice entry order.
+ * @param toBranch - Destination branch name.
+ * @param toEntryOrder - Destination entry order.
+ * @param label - Choice label.
+ * @returns Choice path blueprint.
+ */
+function choice(
+	fromBranch: string,
+	fromEntryOrder: number,
+	toBranch: string,
+	toEntryOrder: number,
+	label: string,
+): PathBlueprint {
+	return {
+		description: `${label} through Thornwick.`,
+		fromBranch,
+		fromEntryOrder,
+		label,
+		toBranch,
+		toEntryOrder,
+		type: "choice",
+	};
+}
+
+/**
+ * Creates a branch-reset return and a route-preserving teleport.
+ *
+ * @param fromBranch - Source leaf branch.
+ * @param fromEntryOrder - Source entry order.
+ * @param fromLocalPage - Source page order.
+ * @param parentBranch - Parent branch.
+ * @param parentChoiceEntry - Parent choice entry order.
+ * @returns Return path blueprints.
+ */
+function returns(
+	fromBranch: string,
+	fromEntryOrder: number,
+	fromLocalPage: number,
+	parentBranch: string,
+	parentChoiceEntry: number,
+): PathBlueprint[] {
+	return [
 		{
-			taleId: tale.id,
-			fromBranchId: beginning,
-			toBranchId: first,
-			type: "choice",
-			label: "First Path",
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
+			description: "Return to the most recent fork.",
+			fromBranch,
+			fromEntryOrder,
+			fromLocalPage,
+			label: "Return to the recent choice",
+			toBranch: parentBranch,
+			toEntryOrder: parentChoiceEntry,
+			type: "return",
 		},
 		{
-			taleId: tale.id,
-			fromBranchId: beginning,
-			toBranchId: second,
-			type: "choice",
-			label: "Second Path",
-			order: 1,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: beginning,
-			toBranchId: third,
-			type: "choice",
-			label: "Third Path",
-			order: 2,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: beginning,
-			toBranchId: fourth,
-			type: "choice",
-			label: "Fourth Path",
-			order: 3,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: first,
-			toBranchId: ending,
-			type: "auto",
-			label: null,
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: third,
-			toBranchId: ending,
-			type: "auto",
-			label: null,
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: fourth,
-			toBranchId: choice,
-			type: "auto",
-			label: null,
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: choice,
-			toBranchId: good,
-			type: "choice",
-			label: "The Good Choice",
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: choice,
-			toBranchId: bad,
-			type: "choice",
-			label: "The Bad Choice",
-			order: 1,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
-		},
-		{
-			taleId: tale.id,
-			fromBranchId: bad,
-			toBranchId: ending,
-			type: "auto",
-			label: null,
-			order: 0,
-			isOfficial: tale.isOfficial,
-			editable: tale.editable,
-			visibility: tale.visibility,
+			description: "Revisit Thornwick's first three-way choice.",
+			fromBranch,
+			fromEntryOrder,
+			fromLocalPage,
+			label: "Teleport to the first choice",
+			toBranch: "main",
+			toEntryOrder: 4,
+			type: "teleport",
 		},
 	];
-
-	await db.insert(paths).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} paths.`);
 }

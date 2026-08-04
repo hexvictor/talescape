@@ -41,6 +41,7 @@ export const authorRouter = createTRPCRouter({
 		.input(createAuthorInputSchema)
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.insert(authors).values({
+				creatorId: ctx.session.userId,
 				fullName: input.fullName,
 				firstName: input.firstName || null,
 				lastName: input.lastName || null,
@@ -60,6 +61,10 @@ export const authorRouter = createTRPCRouter({
 				limit: limit,
 				offset: offset,
 				orderBy: orderByClause,
+				with: {
+					creator: true,
+					image: true,
+				},
 			});
 			return allAuthors;
 		}),
@@ -68,6 +73,10 @@ export const authorRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const author = await ctx.db.query.authors.findFirst({
 				where: (authors, { eq }) => eq(authors.id, input.id),
+				with: {
+					creator: true,
+					image: true,
+				},
 			});
 			return author;
 		}),

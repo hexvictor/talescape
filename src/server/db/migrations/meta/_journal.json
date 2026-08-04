@@ -5,8 +5,57 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776971703631,
-      "tag": "0000_breezy_vivisector",
+      "when": 1780913630678,
+      "tag": "0000_tired_ikaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781277781797,
+      "tag": "0001_mixed_moondragon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781288548585,
+      "tag": "0002_swift_quasar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781362581225,
+      "tag": "0003_many_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781384838514,
+      "tag": "0004_slippery_miss_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781538197204,
+      "tag": "0005_watery_penance",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782424460763,
+      "tag": "0006_nasty_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783126081812,
+      "tag": "0007_robust_tempest",
       "breakpoints": true
     }
   ]

@@ -7,6 +7,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 // /** @type {import("next").NextConfig} */
 const coreConfig = {
 	// build
+	devIndicators: false,
 	typescript: {
 		ignoreBuildErrors: true,
 	},
@@ -24,6 +25,11 @@ const coreConfig = {
 				protocol: "https",
 				hostname: "utfs.io",
 				pathname: "/f/**",
+			},
+			{
+				protocol: "https",
+				hostname: "images.unsplash.com",
+				pathname: "/**",
 			},
 		],
 	},

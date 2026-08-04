@@ -1,123 +1,41 @@
+import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type EntrySchema, entries, parts } from "~/server/db/schema";
+import { entries, parts, tales } from "~/server/db/schema";
+import { readerEntryBlueprints } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type EntrySeed = Pick<
-	EntrySchema,
-	"taleId" | "partId" | "title" | "type" | "index"
->;
-
-export async function seedEntries() {
+/**
+ * Queries real part rows and inserts ordered entry records.
+ *
+ * @returns Nothing.
+ */
+export async function seedEntries(): Promise<void> {
+	logSeedStart("Entries");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 	const allParts = await db
-		.select({
-			id: parts.id,
-			taleId: parts.taleId,
-			index: parts.index,
-		})
-		.from(parts);
+		.select({ id: parts.id, order: parts.order })
+		.from(parts)
+		.where(eq(parts.taleId, tale.id));
+	const partIdByOrder = new Map(allParts.map((part) => [part.order, part.id]));
 
-	const seeds: EntrySeed[] = [];
-
-	for (const part of allParts) {
-		if (part.taleId === 10) {
-			if (part.index === 0) {
-				seeds.push(
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Beginning",
-						type: "prologue",
-						index: 0,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "First Path",
-						type: "chapter",
-						index: 1,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Third Path",
-						type: "chapter",
-						index: 2,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Second Path I",
-						type: "chapter",
-						index: 3,
-					},
-				);
-			} else {
-				seeds.push(
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Second Path II",
-						type: "chapter",
-						index: 0,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Fourth Path I",
-						type: "chapter",
-						index: 1,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Fourth Path II",
-						type: "chapter",
-						index: 2,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "The Choice",
-						type: "chapter",
-						index: 3,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "The Good Choice",
-						type: "chapter",
-						index: 4,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "The Bad Choice",
-						type: "chapter",
-						index: 5,
-					},
-					{
-						taleId: part.taleId,
-						partId: part.id,
-						title: "Ending",
-						type: "chapter",
-						index: 6,
-					},
-				);
-			}
-
-			continue;
-		}
-
-		for (let i = 0; i < 3; i++) {
-			seeds.push({
-				taleId: part.taleId,
-				partId: part.id,
-				title: `Entry ${part.index * 3 + i + 1}`,
-				type: i === 0 && part.index === 0 ? "prologue" : "chapter",
-				index: i,
-			});
-		}
-	}
-
-	await db.insert(entries).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} entries`);
+	await db.insert(entries).values(
+		readerEntryBlueprints.map((entry) => {
+			const partId = partIdByOrder.get(entry.partOrder);
+			if (!partId) throw new Error(`Missing part ${entry.partOrder}.`);
+			return {
+				description: entry.description,
+				isNumbered: entry.type === "chapter",
+				order: entry.order,
+				partId,
+				taleId: tale.id,
+				title: entry.title,
+				type: entry.type,
+			};
+		}),
+	);
+	logSeedComplete("Entries");
 }

@@ -1,4 +1,8 @@
-import type { Appearance } from "@clerk/types";
+import type { ClerkProvider } from "@clerk/nextjs";
+
+type Appearance = NonNullable<
+	Parameters<typeof ClerkProvider>[0]["appearance"]
+>;
 
 export const clerkAppearance = {
 	variables: {
@@ -25,19 +29,45 @@ export const clerkAppearance = {
 			boxShadow: "none",
 			color: "var(--card-foreground)",
 		},
+		userButtonPopoverCard: {
+			backgroundColor: "var(--popover)",
+			border: "1px solid var(--border)",
+			boxShadow: "0 18px 60px rgb(0 0 0 / 0.35)",
+			color: "var(--popover-foreground)",
+		},
+		userButtonPopoverActionButton: {
+			color: "var(--popover-foreground)",
+			"&:hover": {
+				backgroundColor: "var(--accent)",
+				color: "var(--accent-foreground)",
+			},
+		},
+		userButtonPopoverActionButtonText: {
+			color: "inherit",
+		},
+		userButtonPopoverFooter: {
+			backgroundColor: "var(--popover)",
+			color: "var(--muted-foreground)",
+		},
+		userPreviewMainIdentifier: {
+			color: "var(--popover-foreground)",
+		},
+		userPreviewSecondaryIdentifier: {
+			color: "var(--muted-foreground)",
+		},
 		headerTitle: "text-foreground",
 		headerSubtitle: "text-muted-foreground",
 		socialButtonsBlockButton: {
-			backgroundColor: "#fffaf3",
+			backgroundColor: "var(--secondary)",
 			borderColor: "var(--border)",
 			boxShadow: "0 1px 2px rgb(0 0 0 / 0.08)",
-			color: "#1c1209",
+			color: "var(--secondary-foreground)",
 			"&:hover": {
-				backgroundColor: "#fff3e3",
+				backgroundColor: "var(--accent)",
 			},
 		},
 		socialButtonsBlockButtonText: {
-			color: "#1c1209",
+			color: "var(--secondary-foreground)",
 			fontWeight: 600,
 		},
 		socialButtonsProviderIcon: "shrink-0",

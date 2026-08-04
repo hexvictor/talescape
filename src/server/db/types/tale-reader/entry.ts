@@ -8,6 +8,7 @@ export type EntryType =
 	| "flashback"
 	| "quote"
 	| "dream"
+	| "ending"
 	| "letter"
 	| "interlude"
 	| "map"

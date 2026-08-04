@@ -1,6 +1,12 @@
 # talescape
  The community-driven hub of interactive tales
 
+## License
+
+Talescape is source-available, not open source.
+
+See [LICENSE.md](LICENSE.md) for the source-available license terms and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules.
+
 ## TODO
 
 - [x] Make it deploy (Vercel)
@@ -19,6 +25,14 @@
 - [ ] Analytics (PostHog)
 - [ ] Ratelimiting (Upstash)
 - [ ] Re-enable ESLint and TypeScript checks in build
-- [ ] Fix the sign-in/signup modal having issues
-- [ ] Test react-grab
-- [ ] Test million.js text react library solution
+- [x] Fix the sign-in/signup modal having issues
+- [x] Test react-grab
+- [ ] (Iphone) Reader mobile debug input zoom can leave tale layout unadjusted; consider preventing page zoom or forcing reader layout refresh after focus/zoom changes
+- [x] Reader touch dragging scroll still has snapping/positioning bugs
+- [ ] Reader horizontal sections should support same-height progression instead of requiring vertical scroll distance to move left/right through the next section
+- [ ] Reader transition into/out of horizontal sections should linger at the first/last horizontal block before horizontal movement takes over
+- [ ] Reader section-transition boundaries can become very janky when scrolling across the lines between sections
+- [ ] Reader drag direction should account for section direction, including seamless left-direction sections that invert horizontal drag intent
+- [ ] Reader mobile white-space/layout gaps in Chrome and Safari; Firefox looks less affected, likely section measurement or GSAP refresh timing
+
+- [ ] Define proper HTML elements for tale reader components

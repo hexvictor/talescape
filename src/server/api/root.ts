@@ -1,5 +1,6 @@
 import { imageRouter } from "~/server/api/routers/image";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+import { taleEditorRouter } from "./routers/taleEditor";
 import { taleProgressRouter } from "./routers/taleProgress";
 import { authorRouter } from "./routers/author";
 import { bookRouter } from "./routers/book";
@@ -15,7 +16,7 @@ export const appRouter = createTRPCRouter({
 		book: bookRouter,
 	},
 	image: imageRouter,
-	taleReader: { progress: taleProgressRouter },
+	taleReader: { editor: taleEditorRouter, progress: taleProgressRouter },
 });
 
 // export type definition of API

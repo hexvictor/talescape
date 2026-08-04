@@ -1,6 +1,7 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { tales, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
+import { users } from "../users";
+import { tales } from "./tales";
 
 export const taleProgresses = createTable("tale_progress", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -13,10 +14,19 @@ export const taleProgresses = createTable("tale_progress", (d) => ({
 		.notNull()
 		.references(() => tales.id),
 	seenBlockIds: d.integer().array().notNull().default([]),
+	seenPageIds: d.integer().array().notNull().default([]),
+	seenEntryIds: d.integer().array().notNull().default([]),
+	seenPartIds: d.integer().array().notNull().default([]),
 	lastBlockId: d.integer(),
+	lastBlockInnerProgress: d
+		.numeric({ precision: 5, scale: 4 })
+		.notNull()
+		.default("0"),
 	maxBlockIdReached: d.integer(),
 	activePathIds: d.integer().array().notNull().default([]),
+	selectedBranchIds: d.integer().array().notNull().default([]),
 	seenPathIds: d.integer().array().notNull().default([]),
+	committedAnimationIds: d.text().array().notNull().default([]),
 	seenBlockProgress: d
 		.numeric({ precision: 5, scale: 4 })
 		.notNull()

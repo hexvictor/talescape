@@ -1,16 +1,14 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import {
-	branchPermissions,
-	paths,
-	sections,
-	tales,
-	users,
-} from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
+import { users } from "../../users";
+import { branchPermissions } from "../permissions/branchPermissions";
+import { tales } from "../tales";
+import { blocks } from "./blocks";
+import { paths } from "./paths";
 
 export const branches = createTable("branch", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -18,10 +16,17 @@ export const branches = createTable("branch", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-	creatorId: d.text().references(() => users.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
+	parentBranchId: d.integer(),
 	name: d.text().notNull(),
-	index: d.integer().notNull(),
+	title: d.text(),
+	description: d.text(),
+	order: d.integer().notNull(),
 	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
 	editable: d.boolean().notNull().default(true),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
@@ -41,7 +46,7 @@ export const branchesRelations = relations(branches, ({ one, many }) => ({
 		fields: [branches.creatorId],
 		references: [users.id],
 	}),
-	sections: many(sections),
+	blocks: many(blocks),
 	outgoingPaths: many(paths, {
 		relationName: "branch_outgoing_paths",
 	}),

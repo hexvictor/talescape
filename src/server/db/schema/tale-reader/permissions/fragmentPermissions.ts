@@ -1,7 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { fragments, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { AssetPermissionType } from "~/server/db/types/tale-builder/asset";
+import { users } from "../../users";
+import { fragments } from "../layout-structure/fragments";
 
 export const fragmentPermissions = createTable("fragment_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

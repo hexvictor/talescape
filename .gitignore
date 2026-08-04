@@ -7,6 +7,8 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # database
 /prisma/db.sqlite
@@ -50,3 +52,4 @@ yarn-error.log*
 
 # Sentry Config File
 .env.sentry-build-plugin
+.fallow/

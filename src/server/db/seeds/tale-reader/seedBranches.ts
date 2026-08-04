@@ -1,140 +1,59 @@
+import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { type BranchSchema, branches, tales } from "~/server/db/schema";
+import { branches, tales } from "~/server/db/schema";
+import { userId1 } from "../ids";
+import { readerBranchBlueprints } from "./readerStoryBlueprint";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type BranchSeed = Pick<
-	BranchSchema,
-	| "taleId"
-	| "creatorId"
-	| "name"
-	| "index"
-	| "isOfficial"
-	| "editable"
-	| "visibility"
-	| "cloneable"
->;
+/**
+ * Inserts the authored branch tree and resolves parent ids from database rows.
+ *
+ * @returns Nothing.
+ */
+export async function seedBranches(): Promise<void> {
+	logSeedStart("Branches");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 
-export async function seedBranches() {
-	const allTales = await db
-		.select({
-			id: tales.id,
-			creatorId: tales.creatorId,
-			isOfficial: tales.isOfficial,
-			editable: tales.editable,
-			visibility: tales.visibility,
-			cloneable: tales.cloneable,
-		})
-		.from(tales);
+	await db.insert(branches).values(
+		readerBranchBlueprints.map((branch) => ({
+			cloneable: "private" as const,
+			creatorId: userId1,
+			description: branch.description,
+			editable: true,
+			isOfficial: true,
+			isVerified: true,
+			name: branch.name,
+			order: branch.order,
+			parentBranchId: null,
+			taleId: tale.id,
+			title: branch.title,
+			visibility: "public" as const,
+		})),
+	);
 
-	const seeds: BranchSeed[] = allTales.flatMap((tale) => {
-		if (tale.id === 10) {
-			return [
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Beginning",
-					index: 0,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "First Path",
-					index: 1,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Second Path",
-					index: 2,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Third Path",
-					index: 3,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Fourth Path",
-					index: 4,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Choice",
-					index: 5,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Good Choice",
-					index: 6,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "The Bad Choice",
-					index: 7,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-				{
-					taleId: tale.id,
-					creatorId: tale.creatorId,
-					name: "Ending",
-					index: 8,
-					isOfficial: tale.isOfficial,
-					editable: tale.editable,
-					visibility: tale.visibility,
-					cloneable: tale.cloneable,
-				},
-			];
+	const createdBranches = await db
+		.select({ id: branches.id, name: branches.name })
+		.from(branches)
+		.where(eq(branches.taleId, tale.id));
+	const branchIdByName = new Map(
+		createdBranches.map((branch) => [branch.name, branch.id]),
+	);
+
+	for (const blueprint of readerBranchBlueprints) {
+		if (!blueprint.parentName) continue;
+		const branchId = branchIdByName.get(blueprint.name);
+		const parentBranchId = branchIdByName.get(blueprint.parentName);
+		if (!branchId || !parentBranchId) {
+			throw new Error(`Missing branch relationship for ${blueprint.name}.`);
 		}
-
-		return [
-			{
-				taleId: tale.id,
-				creatorId: tale.creatorId,
-				name: "Main",
-				index: 0,
-				isOfficial: tale.isOfficial,
-				editable: tale.editable,
-				visibility: tale.visibility,
-				cloneable: tale.cloneable,
-			},
-		];
-	});
-
-	await db.insert(branches).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} branches.`);
+		await db
+			.update(branches)
+			.set({ parentBranchId })
+			.where(eq(branches.id, branchId));
+	}
+	logSeedComplete("Branches");
 }

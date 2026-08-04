@@ -2,14 +2,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import Script from "next/script";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
+import { AppStoreProvider } from "~/contexts/AppStoreContext";
 import { clerkAppearance } from "~/features/auth/utils/clerkAppearance";
 import "~/styles/globals.css";
 import { TRPCReactProvider } from "~/trpc/react";
-
-const isDev = process.env.NODE_ENV === "development";
 
 export const metadata: Metadata = {
 	title: "Talescape",
@@ -32,7 +30,8 @@ try {
 
 export default function RootLayout({
 	children,
-}: Readonly<{ children: React.ReactNode }>) {
+	auth,
+}: Readonly<{ auth: React.ReactNode; children: React.ReactNode }>) {
 	return (
 		<ClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
 			<html lang="en" className={geist.variable} suppressHydrationWarning>
@@ -43,28 +42,24 @@ export default function RootLayout({
 							__html: themeScript,
 						}}
 					/>
-					{isDev && (
-						<>
-							<Script
-								src="//unpkg.com/react-grab/dist/index.global.js"
-								crossOrigin="anonymous"
-								strategy="beforeInteractive"
-							/>
-							<Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-						</>
-					)}
 				</head>
 				<body className="relative flex flex-col">
-					<NextSSRPlugin
-						/**
-						 * The `extractRouterConfig` will extract **only** the route configs
-						 * from the router to prevent additional information from being
-						 * leaked to the client. The data passed to the client is the same
-						 * as if you were to fetch `/api/uploadthing` directly.
-						 */
-						routerConfig={extractRouterConfig(ourFileRouter)}
-					/>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
+					<AppStoreProvider>
+						<NextSSRPlugin
+							/**
+							 * The `extractRouterConfig` will extract **only** the route configs
+							 * from the router to prevent additional information from being
+							 * leaked to the client. The data passed to the client is the same
+							 * as if you were to fetch `/api/uploadthing` directly.
+							 */
+							routerConfig={extractRouterConfig(ourFileRouter)}
+						/>
+						<TRPCReactProvider>
+							{children}
+							<div id="modal-root" />
+							{auth}
+						</TRPCReactProvider>
+					</AppStoreProvider>
 				</body>
 			</html>
 		</ClerkProvider>

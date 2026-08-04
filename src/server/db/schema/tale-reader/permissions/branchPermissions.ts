@@ -1,7 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { branches, users } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { AssetPermissionType } from "~/server/db/types/tale-builder/asset";
+import { users } from "../../users";
+import { branches } from "../layout-structure/branches";
 
 export const branchPermissions = createTable("branch_permission", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),

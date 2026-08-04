@@ -1,0 +1,4210 @@
+{
+	"kind": "dead-code",
+	"schema_version": 7,
+	"version": "2.88.3",
+	"elapsed_ms": 221,
+	"total_issues": 186,
+	"entry_points": {
+		"total": 68,
+		"sources": {
+			"package.json": 2,
+			"plugin": 66
+		}
+	},
+	"summary": {
+		"total_issues": 186,
+		"unused_files": 43,
+		"unused_exports": 71,
+		"unused_types": 29,
+		"private_type_leaks": 0,
+		"unused_dependencies": 12,
+		"unused_enum_members": 0,
+		"unused_class_members": 0,
+		"unresolved_imports": 0,
+		"unlisted_dependencies": 1,
+		"duplicate_exports": 9,
+		"type_only_dependencies": 0,
+		"test_only_dependencies": 0,
+		"circular_dependencies": 21,
+		"re_export_cycles": 0,
+		"boundary_violations": 0,
+		"stale_suppressions": 0,
+		"unused_catalog_entries": 0,
+		"empty_catalog_groups": 0,
+		"unresolved_catalog_references": 0,
+		"unused_dependency_overrides": 0,
+		"misconfigured_dependency_overrides": 0
+	},
+	"unused_files": [
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/ChoiceGroup/ChoiceGroup.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/ReaderBlock/PageHeader.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/ReaderFragment/index.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderUi/index.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/PageHeader.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/surfaces/ComicPage.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/surfaces/PositionedPage.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/surfaces/StandardPage.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/card.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/drawer.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/dropdown-menu.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/form.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/progress.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/tooltip.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/features/upload-image/components/ImageUploader/ImageUploader.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/features/upload-image/components/ImageUploader/index.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/intersectionObserver.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/array.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/nanoid.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/sort.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/string.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/uploadThing.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/authors/addAuthor.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/authors/getAuthorById.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/authors/getAuthors.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/authors/index.tsx",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/books/addBooks.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/books/getAllPublishedBooks.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/books/getBookById.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/books/getBooksByCurrentUser.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/books/index.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/blocks.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/branches.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/entries.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/fragments.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/indexMap.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/pages.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/parts.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/paths.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/sections.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/shared.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/types/tale-reader/section.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		},
+		{
+			"path": "src/trpc/server.ts",
+			"actions": [
+				{
+					"type": "delete-file",
+					"auto_fixable": false,
+					"description": "Delete this file",
+					"note": "File deletion may remove runtime functionality not visible to static analysis"
+				},
+				{
+					"type": "suppress-file",
+					"auto_fixable": false,
+					"description": "Suppress with a file-level comment at the top of the file",
+					"comment": "// fallow-ignore-file unused-file"
+				}
+			]
+		}
+	],
+	"unused_exports": [
+		{
+			"path": "src/app/(site)/(home)/_components/data.ts",
+			"export_name": "getLibraryBooks",
+			"is_type_only": false,
+			"line": 37,
+			"col": 13,
+			"span_start": 1160,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(site)/(home)/library/_shared/components/TaleDetailContent.tsx",
+			"export_name": "taleDetailViews",
+			"is_type_only": false,
+			"line": 24,
+			"col": 13,
+			"span_start": 621,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/ReaderBlock/ReaderBlock.tsx",
+			"export_name": "ReaderBlockContent",
+			"is_type_only": false,
+			"line": 47,
+			"col": 9,
+			"span_start": 1367,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/index.ts",
+			"export_name": "ReaderMeasurementLayer",
+			"is_type_only": false,
+			"line": 2,
+			"col": 9,
+			"span_start": 75,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/ReaderShell/index.ts",
+			"export_name": "ReaderStage",
+			"is_type_only": false,
+			"line": 3,
+			"col": 9,
+			"span_start": 165,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/LoadingTale/LoadingTale.tsx",
+			"export_name": "default",
+			"is_type_only": false,
+			"line": 6,
+			"col": 0,
+			"span_start": 142,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/LoadingTale/index.ts",
+			"export_name": "default",
+			"is_type_only": false,
+			"line": 1,
+			"col": 9,
+			"span_start": 9,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/TaleForbidden/TaleForbidden.tsx",
+			"export_name": "default",
+			"is_type_only": false,
+			"line": 14,
+			"col": 0,
+			"span_start": 193,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/TaleForbidden/index.ts",
+			"export_name": "default",
+			"is_type_only": false,
+			"line": 1,
+			"col": 9,
+			"span_start": 9,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/index.ts",
+			"export_name": "LoadingTale",
+			"is_type_only": false,
+			"line": 1,
+			"col": 9,
+			"span_start": 9,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/TaleFeedback/index.ts",
+			"export_name": "TaleForbidden",
+			"is_type_only": false,
+			"line": 2,
+			"col": 9,
+			"span_start": 65,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/index.ts",
+			"export_name": "LoadingTale",
+			"is_type_only": false,
+			"line": 3,
+			"col": 1,
+			"span_start": 53,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/components/index.ts",
+			"export_name": "TaleForbidden",
+			"is_type_only": false,
+			"line": 4,
+			"col": 1,
+			"span_start": 67,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/services/readerCompiler.ts",
+			"export_name": "binarySearchSegmentIndex",
+			"is_type_only": false,
+			"line": 202,
+			"col": 16,
+			"span_start": 5333,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/services/readerGeometry.ts",
+			"export_name": "directionVector",
+			"is_type_only": false,
+			"line": 177,
+			"col": 16,
+			"span_start": 4772,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/services/readerMath.ts",
+			"export_name": "ease",
+			"is_type_only": false,
+			"line": 14,
+			"col": 16,
+			"span_start": 329,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/(tale-reader)/_shared/services/readerProgressStorage.ts",
+			"export_name": "createDefaultProgress",
+			"is_type_only": false,
+			"line": 7,
+			"col": 16,
+			"span_start": 176,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/PageHeader.tsx",
+			"export_name": "PageHeader",
+			"is_type_only": false,
+			"line": 6,
+			"col": 16,
+			"span_start": 140,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/ReaderBlock/ReaderBlock.tsx",
+			"export_name": "ReaderBlockContent",
+			"is_type_only": false,
+			"line": 47,
+			"col": 9,
+			"span_start": 1367,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/index.ts",
+			"export_name": "ReaderMeasurementLayer",
+			"is_type_only": false,
+			"line": 2,
+			"col": 9,
+			"span_start": 75,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderShell/index.ts",
+			"export_name": "ReaderStage",
+			"is_type_only": false,
+			"line": 3,
+			"col": 9,
+			"span_start": 165,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderUi/index.ts",
+			"export_name": "ContentsNavigator",
+			"is_type_only": false,
+			"line": 1,
+			"col": 9,
+			"span_start": 9,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderUi/index.ts",
+			"export_name": "PageNavigator",
+			"is_type_only": false,
+			"line": 2,
+			"col": 9,
+			"span_start": 84,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderUi/index.ts",
+			"export_name": "ReaderProgress",
+			"is_type_only": false,
+			"line": 4,
+			"col": 9,
+			"span_start": 210,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderUi/index.ts",
+			"export_name": "ReaderScrollCue",
+			"is_type_only": false,
+			"line": 5,
+			"col": 9,
+			"span_start": 276,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/components/ReaderUi/index.ts",
+			"export_name": "TaleDebug",
+			"is_type_only": false,
+			"line": 6,
+			"col": 9,
+			"span_start": 345,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/services/readerCompiler.ts",
+			"export_name": "binarySearchSegmentIndex",
+			"is_type_only": false,
+			"line": 167,
+			"col": 16,
+			"span_start": 4333,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/services/readerGeometry.ts",
+			"export_name": "directionVector",
+			"is_type_only": false,
+			"line": 148,
+			"col": 16,
+			"span_start": 4041,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/services/readerMath.ts",
+			"export_name": "ease",
+			"is_type_only": false,
+			"line": 14,
+			"col": 16,
+			"span_start": 329,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/services/readerProgressStorage.ts",
+			"export_name": "createDefaultProgress",
+			"is_type_only": false,
+			"line": 7,
+			"col": 16,
+			"span_start": 166,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/layout/Header/Header.tsx",
+			"export_name": "AutoHideHeader",
+			"is_type_only": false,
+			"line": 54,
+			"col": 9,
+			"span_start": 1441,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/layout/index.ts",
+			"export_name": "Footer",
+			"is_type_only": false,
+			"line": 1,
+			"col": 9,
+			"span_start": 9,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/layout/index.ts",
+			"export_name": "MainNav",
+			"is_type_only": false,
+			"line": 3,
+			"col": 9,
+			"span_start": 106,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/badge.tsx",
+			"export_name": "badgeVariants",
+			"is_type_only": false,
+			"line": 45,
+			"col": 16,
+			"span_start": 1513,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/button.tsx",
+			"export_name": "buttonVariants",
+			"is_type_only": false,
+			"line": 58,
+			"col": 17,
+			"span_start": 1963,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/dialog.tsx",
+			"export_name": "DialogClose",
+			"is_type_only": false,
+			"line": 137,
+			"col": 1,
+			"span_start": 3824,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/dialog.tsx",
+			"export_name": "DialogOverlay",
+			"is_type_only": false,
+			"line": 142,
+			"col": 1,
+			"span_start": 3904,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/dialog.tsx",
+			"export_name": "DialogPortal",
+			"is_type_only": false,
+			"line": 143,
+			"col": 1,
+			"span_start": 3920,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/scroll-area.tsx",
+			"export_name": "ScrollBar",
+			"is_type_only": false,
+			"line": 57,
+			"col": 21,
+			"span_start": 1494,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/select.tsx",
+			"export_name": "SelectGroup",
+			"is_type_only": false,
+			"line": 176,
+			"col": 1,
+			"span_start": 5772,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/select.tsx",
+			"export_name": "SelectLabel",
+			"is_type_only": false,
+			"line": 178,
+			"col": 1,
+			"span_start": 5799,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/select.tsx",
+			"export_name": "SelectScrollDownButton",
+			"is_type_only": false,
+			"line": 179,
+			"col": 1,
+			"span_start": 5813,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/select.tsx",
+			"export_name": "SelectScrollUpButton",
+			"is_type_only": false,
+			"line": 180,
+			"col": 1,
+			"span_start": 5838,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/components/ui/select.tsx",
+			"export_name": "SelectSeparator",
+			"is_type_only": false,
+			"line": 181,
+			"col": 1,
+			"span_start": 5861,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/features/auth/components/AuthStatus/index.ts",
+			"export_name": "SkeletonAuthStatus",
+			"is_type_only": false,
+			"line": 2,
+			"col": 9,
+			"span_start": 63,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/features/auth/components/index.ts",
+			"export_name": "SkeletonAuthStatus",
+			"is_type_only": false,
+			"line": 3,
+			"col": 1,
+			"span_start": 23,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/features/auth/components/index.ts",
+			"export_name": "UserMenu",
+			"is_type_only": false,
+			"line": 5,
+			"col": 9,
+			"span_start": 75,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/features/auth/components/index.ts",
+			"export_name": "SignInForm",
+			"is_type_only": false,
+			"line": 6,
+			"col": 9,
+			"span_start": 125,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/features/auth/components/index.ts",
+			"export_name": "SignUpForm",
+			"is_type_only": false,
+			"line": 7,
+			"col": 9,
+			"span_start": 179,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "BookMarkedIcon",
+			"is_type_only": false,
+			"line": 24,
+			"col": 1,
+			"span_start": 698,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "CastleIcon",
+			"is_type_only": false,
+			"line": 26,
+			"col": 1,
+			"span_start": 776,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "ChevronDownIcon",
+			"is_type_only": false,
+			"line": 27,
+			"col": 1,
+			"span_start": 809,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "LibraryBigIcon",
+			"is_type_only": false,
+			"line": 31,
+			"col": 1,
+			"span_start": 959,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "PenLineIcon",
+			"is_type_only": false,
+			"line": 33,
+			"col": 1,
+			"span_start": 1029,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "ScrollTextIcon",
+			"is_type_only": false,
+			"line": 34,
+			"col": 1,
+			"span_start": 1064,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "SparklesIcon",
+			"is_type_only": false,
+			"line": 35,
+			"col": 1,
+			"span_start": 1105,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "SettingsIcon",
+			"is_type_only": false,
+			"line": 36,
+			"col": 1,
+			"span_start": 1142,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "UserCogIcon",
+			"is_type_only": false,
+			"line": 38,
+			"col": 1,
+			"span_start": 1206,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "XIcon",
+			"is_type_only": false,
+			"line": 40,
+			"col": 1,
+			"span_start": 1270,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "EyeIcon",
+			"is_type_only": false,
+			"line": 41,
+			"col": 1,
+			"span_start": 1293,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/icons.tsx",
+			"export_name": "EyeOffIcon",
+			"is_type_only": false,
+			"line": 42,
+			"col": 1,
+			"span_start": 1320,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/uploadThing.ts",
+			"export_name": "UploadButton",
+			"is_type_only": false,
+			"line": 8,
+			"col": 13,
+			"span_start": 166,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/lib/utils/uploadThing.ts",
+			"export_name": "UploadDropzone",
+			"is_type_only": false,
+			"line": 9,
+			"col": 13,
+			"span_start": 233,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/middleware.ts",
+			"export_name": "clerkMiddlewareConfig",
+			"is_type_only": false,
+			"line": 3,
+			"col": 13,
+			"span_start": 90,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/api/routers/book.ts",
+			"export_name": "createBookInputSchema",
+			"is_type_only": false,
+			"line": 12,
+			"col": 13,
+			"span_start": 337,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/images/queries/getImages.ts",
+			"export_name": "getMyImages",
+			"is_type_only": false,
+			"line": 6,
+			"col": 22,
+			"span_start": 163,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/images/queries/getImages.ts",
+			"export_name": "getImageById",
+			"is_type_only": false,
+			"line": 17,
+			"col": 22,
+			"span_start": 463,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/queries/tales/getOfficialTale.ts",
+			"export_name": "getOfficialTaleQuery",
+			"is_type_only": false,
+			"line": 9,
+			"col": 22,
+			"span_start": 490,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/queries/tales/getTaleDeprecated.ts",
+			"export_name": "getTaleDeprecated",
+			"is_type_only": false,
+			"line": 5,
+			"col": 22,
+			"span_start": 198,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/ids.ts",
+			"export_name": "userId2",
+			"is_type_only": false,
+			"line": 32,
+			"col": 13,
+			"span_start": 782,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/seedReaderHelpers.ts",
+			"export_name": "toDbAnimationSelection",
+			"is_type_only": false,
+			"line": 83,
+			"col": 16,
+			"span_start": 2424,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the unused export from the public API"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-export"
+				}
+			]
+		}
+	],
+	"unused_types": [
+		{
+			"path": "src/app/(tale-reader)/_shared/store/createReaderStore.ts",
+			"export_name": "TaleReaderStore",
+			"is_type_only": true,
+			"line": 30,
+			"col": 12,
+			"span_start": 1023,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/app/new-reader/_shared/store/createReaderStore.ts",
+			"export_name": "NewReaderStore",
+			"is_type_only": true,
+			"line": 24,
+			"col": 12,
+			"span_start": 765,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/queries/counts.ts",
+			"export_name": "LibraryCounts",
+			"is_type_only": true,
+			"line": 29,
+			"col": 12,
+			"span_start": 498,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/queries/counts.ts",
+			"export_name": "CountsByTale",
+			"is_type_only": true,
+			"line": 31,
+			"col": 12,
+			"span_start": 573,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/library/queries/userLibrary.ts",
+			"export_name": "UserLibraryData",
+			"is_type_only": true,
+			"line": 44,
+			"col": 12,
+			"span_start": 869,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/queries/tales/getTale.ts",
+			"export_name": "TaleRecord",
+			"is_type_only": true,
+			"line": 188,
+			"col": 12,
+			"span_start": 4564,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "RawTaleRecord",
+			"is_type_only": true,
+			"line": 19,
+			"col": 1,
+			"span_start": 268,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "EntityBounds",
+			"is_type_only": true,
+			"line": 21,
+			"col": 1,
+			"span_start": 306,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "StructurePosition",
+			"is_type_only": true,
+			"line": 22,
+			"col": 1,
+			"span_start": 321,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "TaleIndexMap",
+			"is_type_only": true,
+			"line": 29,
+			"col": 1,
+			"span_start": 414,
+			"is_re_export": true,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration",
+					"note": "This finding originates from a re-export; verify it is not part of your public API before removing"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "TaleStructure",
+			"is_type_only": true,
+			"line": 36,
+			"col": 12,
+			"span_start": 554,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Block",
+			"is_type_only": true,
+			"line": 38,
+			"col": 12,
+			"span_start": 596,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Branch",
+			"is_type_only": true,
+			"line": 39,
+			"col": 12,
+			"span_start": 627,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Entry",
+			"is_type_only": true,
+			"line": 40,
+			"col": 12,
+			"span_start": 660,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Fragment",
+			"is_type_only": true,
+			"line": 41,
+			"col": 12,
+			"span_start": 691,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Page",
+			"is_type_only": true,
+			"line": 42,
+			"col": 12,
+			"span_start": 728,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Part",
+			"is_type_only": true,
+			"line": 43,
+			"col": 12,
+			"span_start": 757,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/data/tale-reader/types/tales.ts",
+			"export_name": "Path",
+			"is_type_only": true,
+			"line": 44,
+			"col": 12,
+			"span_start": 786,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedPart",
+			"is_type_only": true,
+			"line": 72,
+			"col": 12,
+			"span_start": 1787,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedEntry",
+			"is_type_only": true,
+			"line": 78,
+			"col": 12,
+			"span_start": 1861,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedPage",
+			"is_type_only": true,
+			"line": 88,
+			"col": 12,
+			"span_start": 2017,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedBranch",
+			"is_type_only": true,
+			"line": 98,
+			"col": 12,
+			"span_start": 2174,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedBlock",
+			"is_type_only": true,
+			"line": 105,
+			"col": 12,
+			"span_start": 2282,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedPath",
+			"is_type_only": true,
+			"line": 137,
+			"col": 12,
+			"span_start": 2940,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/server/db/seeds/tale-reader/readerTaleSeedData.ts",
+			"export_name": "SeedFragment",
+			"is_type_only": true,
+			"line": 149,
+			"col": 12,
+			"span_start": 3139,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/stores/theme-store.ts",
+			"export_name": "Theme",
+			"is_type_only": true,
+			"line": 5,
+			"col": 12,
+			"span_start": 62,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/trpc/react.tsx",
+			"export_name": "RouterInputs",
+			"is_type_only": true,
+			"line": 33,
+			"col": 12,
+			"span_start": 1040,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/trpc/react.tsx",
+			"export_name": "RouterOutputs",
+			"is_type_only": true,
+			"line": 40,
+			"col": 12,
+			"span_start": 1207,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		},
+		{
+			"path": "src/types/utils.ts",
+			"export_name": "IdListMap",
+			"is_type_only": true,
+			"line": 3,
+			"col": 12,
+			"span_start": 91,
+			"is_re_export": false,
+			"actions": [
+				{
+					"type": "remove-export",
+					"auto_fixable": true,
+					"description": "Remove the `export` (or `export type`) keyword from the type declaration"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line unused-type"
+				}
+			]
+		}
+	],
+	"private_type_leaks": [],
+	"unused_dependencies": [
+		{
+			"package_name": "@auth/drizzle-adapter",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 51,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@auth/drizzle-adapter\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@auth/drizzle-adapter",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "@clerk/themes",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 53,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@clerk/themes\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@clerk/themes",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "@gsap/react",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 54,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@gsap/react\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@gsap/react",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "@hookform/resolvers",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 55,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@hookform/resolvers\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@hookform/resolvers",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "@radix-ui/react-navigation-menu",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 60,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@radix-ui/react-navigation-menu\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@radix-ui/react-navigation-menu",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "@radix-ui/react-slider",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 64,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@radix-ui/react-slider\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@radix-ui/react-slider",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "embla-carousel-react",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 79,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"embla-carousel-react\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "embla-carousel-react",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "locomotive-scroll",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 81,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"locomotive-scroll\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "locomotive-scroll",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "lorem-ipsum",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 82,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"lorem-ipsum\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "lorem-ipsum",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "react-icons",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 91,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"react-icons\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "react-icons",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		},
+		{
+			"package_name": "talescape",
+			"location": "dependencies",
+			"path": "package.json",
+			"line": 96,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from dependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"talescape\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "talescape",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		}
+	],
+	"unused_dev_dependencies": [
+		{
+			"package_name": "react-grab",
+			"location": "devDependencies",
+			"path": "package.json",
+			"line": 114,
+			"actions": [
+				{
+					"type": "remove-dependency",
+					"auto_fixable": true,
+					"description": "Remove from devDependencies in package.json"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"react-grab\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "react-grab",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		}
+	],
+	"unused_optional_dependencies": [],
+	"unused_enum_members": [],
+	"unused_class_members": [],
+	"unresolved_imports": [],
+	"unlisted_dependencies": [
+		{
+			"package_name": "@clerk/types",
+			"imported_from": [
+				{
+					"path": "src/features/auth/utils/clerkAppearance.ts",
+					"line": 1,
+					"col": 14
+				}
+			],
+			"actions": [
+				{
+					"type": "install-dependency",
+					"auto_fixable": false,
+					"description": "Add this package to dependencies in package.json",
+					"note": "Verify this package should be a direct dependency before adding"
+				},
+				{
+					"type": "add-to-config",
+					"auto_fixable": false,
+					"description": "Add \"@clerk/types\" to ignoreDependencies in fallow config",
+					"config_key": "ignoreDependencies",
+					"value": "@clerk/types",
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+				}
+			]
+		}
+	],
+	"duplicate_exports": [
+		{
+			"export_name": "AnimationSelection",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 58,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 58,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "AnimationTrack",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 28,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 23,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "BlockCameraPath",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 22,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 17,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "BlockFlow",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 16,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 11,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "CameraPathPoint",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 20,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 15,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "Direction",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 6,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 1,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "NodeChild",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 98,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 142,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "ScrollAnimationPlayback",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 63,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 218,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		},
+		{
+			"export_name": "TimelineRange",
+			"locations": [
+				{
+					"path": "src/app/(tale-reader)/_shared/types.ts",
+					"line": 65,
+					"col": 12
+				},
+				{
+					"path": "src/server/db/types/tale-reader/readerConfig.ts",
+					"line": 63,
+					"col": 12
+				}
+			],
+			"actions": [
+				{
+					"type": "add-to-config",
+					"auto_fixable": true,
+					"description": "Add an ignoreExports rule so these files are excluded from duplicate-export grouping (use when this duplication is an intentional namespace-barrel API).",
+					"config_key": "ignoreExports",
+					"value": [
+						{
+							"file": "src/app/(tale-reader)/_shared/types.ts",
+							"exports": ["*"]
+						},
+						{
+							"file": "src/server/db/types/tale-reader/readerConfig.ts",
+							"exports": ["*"]
+						}
+					],
+					"value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreExports"
+				},
+				{
+					"type": "remove-duplicate",
+					"auto_fixable": false,
+					"description": "Keep one canonical export location and remove the others",
+					"note": "If every location is the sole `index.*` of its directory, this is likely an intentional namespace-barrel API. Prefer adding these files to `ignoreExports` over removing exports."
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line duplicate-export",
+					"scope": "per-location"
+				}
+			]
+		}
+	],
+	"type_only_dependencies": [],
+	"test_only_dependencies": [],
+	"circular_dependencies": [
+		{
+			"files": [
+				"src/components/layout/Header/AutoHideHeader.tsx",
+				"src/components/layout/Header/Header.tsx"
+			],
+			"length": 2,
+			"line": 6,
+			"col": 7,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": ["src/server/db/schema/images.ts", "src/server/db/schema.ts"],
+			"length": 2,
+			"line": 3,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/library/authors.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/library/books.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 3,
+			"col": 1,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/library/permissions/authorPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/library/permissions/bookPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/layout-structure/blocks.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 3,
+			"col": 1,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/layout-structure/branches.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 3,
+			"col": 1,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/layout-structure/fragments.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/layout-structure/nodes.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 3,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/layout-structure/paths.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 3,
+			"col": 1,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/narrative-structure/entries.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/narrative-structure/pages.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/narrative-structure/parts.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/permissions/blockPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/permissions/branchPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/permissions/fragmentPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/permissions/pathPermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/permissions/talePermissions.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/readerPresets.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		},
+		{
+			"files": [
+				"src/server/db/schema/tale-reader/taleProgresses.ts",
+				"src/server/db/schema.ts"
+			],
+			"length": 2,
+			"line": 2,
+			"col": 9,
+			"actions": [
+				{
+					"type": "refactor-cycle",
+					"auto_fixable": false,
+					"description": "Extract shared logic into a separate module to break the cycle",
+					"note": "Circular imports can cause initialization issues and make code harder to reason about"
+				},
+				{
+					"type": "suppress-line",
+					"auto_fixable": false,
+					"description": "Suppress with an inline comment above the line",
+					"comment": "// fallow-ignore-next-line circular-dependency"
+				}
+			]
+		}
+	],
+	"re_export_cycles": [],
+	"boundary_violations": [],
+	"stale_suppressions": [],
+	"unused_catalog_entries": [],
+	"empty_catalog_groups": [],
+	"unresolved_catalog_references": [],
+	"unused_dependency_overrides": [],
+	"misconfigured_dependency_overrides": []
+}

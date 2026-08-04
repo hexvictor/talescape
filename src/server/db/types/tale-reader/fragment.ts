@@ -11,6 +11,7 @@ export type TextFragmentData = {
 export type ImageFragmentData = {
 	url: string;
 	alt?: string;
+	fallbackUrl?: string;
 };
 
 export type AudioFragmentData = {
@@ -24,9 +25,36 @@ export type VideoFragmentData = {
 	duration?: number;
 };
 
+export type QuoteFragmentData = {
+	attribution?: string;
+	text: string;
+};
+
+export type SoundCueFragmentData = {
+	label: string;
+	mood?: string;
+	url?: string | null;
+};
+
+export type ChoiceButtonFragmentData = {
+	label: string;
+	pathId: string;
+	description?: string;
+};
+
+export type CodexEntryFragmentData = {
+	entryId?: string;
+	label: string;
+	description?: string;
+};
+
 export type FragmentDataMap = {
-	text: TextFragmentData;
-	image: ImageFragmentData;
 	audio: AudioFragmentData;
+	choiceButton: ChoiceButtonFragmentData;
+	codexEntry: CodexEntryFragmentData;
 	video: VideoFragmentData;
+	image: ImageFragmentData;
+	quote: QuoteFragmentData;
+	soundCue: SoundCueFragmentData;
+	text: TextFragmentData;
 };

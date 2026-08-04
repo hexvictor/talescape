@@ -5,7 +5,6 @@ import Separator from "~/components/ui/separator";
 import { AuthStatus } from "~/features/auth/components";
 import cn from "~/lib/utils/cn";
 import MainNav from "../MainNav";
-import AutoHideHeader from "./AutoHideHeader";
 
 type HeaderProps = HTMLAttributes<HTMLElement> & {
 	leftProps?: HTMLAttributes<HTMLDivElement>;
@@ -13,13 +12,22 @@ type HeaderProps = HTMLAttributes<HTMLElement> & {
 	children?: ReactNode;
 };
 
+/**
+ * Renders the shared site navigation header.
+ *
+ * @param props - Header attributes and optional left, right, and child content.
+ * @returns The site header navigation.
+ *
+ * @example
+ * <Header />
+ */
 export default function Header({
 	leftProps,
 	rightProps,
 	children,
 	className = "",
 	...mainProps
-}: HeaderProps) {
+}: HeaderProps): React.JSX.Element {
 	return (
 		<nav
 			className={cn(
@@ -50,5 +58,3 @@ export default function Header({
 		</nav>
 	);
 }
-
-export { AutoHideHeader };

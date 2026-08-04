@@ -1,7 +1,10 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import { blocks, entries, parts, tales } from "~/server/db/schema";
 import { createTable } from "~/server/db/schema-helpers";
 import type { PageType } from "~/server/db/types/tale-reader/page";
+import { blocks } from "../layout-structure/blocks";
+import { tales } from "../tales";
+import { entries } from "./entries";
+import { parts } from "./parts";
 
 export const pages = createTable("page", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -17,9 +20,11 @@ export const pages = createTable("page", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => entries.id),
+	title: d.text(),
+	description: d.text(),
 	type: d.text().notNull().$type<PageType>(),
 	isPaginated: d.boolean().notNull(),
-	index: d.integer().notNull(),
+	order: d.integer().notNull(),
 	createdAt: d
 		.timestamp({ withTimezone: true })
 		.default(sql`CURRENT_TIMESTAMP`)

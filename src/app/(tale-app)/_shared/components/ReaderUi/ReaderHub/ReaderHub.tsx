@@ -1,0 +1,395 @@
+"use client";
+
+import clsx from "clsx";
+import {
+	BookMarked,
+	ChevronDown,
+	Image,
+	MessageCircle,
+	PanelRightClose,
+	Settings,
+	Sparkles,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useRef, useState } from "react";
+import {
+	useTaleReaderStore,
+	useTaleReaderStoreShallow,
+} from "../../../contexts/TaleReaderStoreContext";
+import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
+import { getReaderHubContent } from "../../../services/readerHubContent";
+import type { ReaderHubPanel } from "../../../store/slices/hubSlice";
+import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
+import { ReaderHubSettings } from "./ReaderHubSettings";
+
+type HubPanelOption = {
+	icon: typeof MessageCircle;
+	id: ReaderHubPanel;
+	label: string;
+};
+
+const contextPanels: HubPanelOption[] = [
+	{ icon: MessageCircle, id: "community", label: "Community" },
+	{ icon: Image, id: "art", label: "Art" },
+	{ icon: BookMarked, id: "codex", label: "Codex" },
+	{ icon: Sparkles, id: "trivia", label: "Trivia" },
+	{ icon: Settings, id: "settings", label: "Settings" },
+];
+
+/**
+ * Renders the camera-shifting Reader Hub panel.
+ *
+ * @returns Reader Hub launcher and sidebar.
+ *
+ * @example
+ * <ReaderHub />
+ */
+export function ReaderHub(): React.JSX.Element {
+	const { page } = useReaderLocationContext();
+	const asideRef = useRef<HTMLElement | null>(null);
+	const [dragPanelWidthPx, setDragPanelWidthPx] = useState<number | null>(null);
+	const [mobileHeightVh, setMobileHeightVh] = useState(70);
+	const {
+		activePanel,
+		contentsOpen,
+		open,
+		panelWidthPx,
+		setActivePanel,
+		setPanelWidthPx,
+		toggleContents,
+		toggleOpen,
+	} = useTaleReaderStoreShallow((state) => ({
+		activePanel: state.hub.activePanel,
+		contentsOpen: state.contents.open,
+		open: state.hub.open,
+		panelWidthPx: state.hub.panelWidthPx,
+		setActivePanel: state.hub.setActivePanel,
+		setPanelWidthPx: state.hub.setPanelWidthPx,
+		toggleContents: state.contents.toggleOpen,
+		toggleOpen: state.hub.toggleOpen,
+	}));
+	const dockedHubWidthPx = useTaleReaderStore(
+		(state) => state.derived.dockedHubWidthPx,
+	);
+	const layout = useTaleReaderStore((state) => state.derived.viewportLayout);
+	const pageTitle = page?.title ?? page?.type ?? "Current page";
+	const content = getReaderHubContent(page?.id ?? "unknown", pageTitle);
+	const mobilePortrait = layout === "mobile-portrait";
+	const mobileLandscape = layout === "mobile-landscape";
+	const sidePanelWidthPx = mobilePortrait
+		? null
+		: mobileLandscape
+			? panelWidthPx
+			: dockedHubWidthPx;
+	const visiblePanelWidthPx = dragPanelWidthPx ?? sidePanelWidthPx;
+	/**
+	 * Opens Reader Hub while closing Contents first to avoid competing docked
+	 * viewport insets.
+	 *
+	 * @returns Nothing.
+	 *
+	 * @example
+	 * openHubOnly();
+	 */
+	const openHubOnly = (): void => {
+		if (!open && contentsOpen) toggleContents();
+		toggleOpen();
+	};
+
+	/**
+	 * Starts mobile bottom-sheet height dragging.
+	 *
+	 * @param event - Pointer event from the sheet header.
+	 * @returns Nothing.
+	 */
+	const startMobileHeightDrag = (
+		event: React.PointerEvent<HTMLElement>,
+	): void => {
+		if (!mobilePortrait) return;
+		event.preventDefault();
+		const updateHeight = (moveEvent: PointerEvent): void => {
+			const nextHeight =
+				((window.innerHeight - moveEvent.clientY) / window.innerHeight) * 100;
+			setMobileHeightVh(Math.max(42, Math.min(92, nextHeight)));
+		};
+		const stopDrag = (): void => {
+			window.removeEventListener("pointermove", updateHeight);
+			window.removeEventListener("pointerup", stopDrag);
+		};
+		window.addEventListener("pointermove", updateHeight);
+		window.addEventListener("pointerup", stopDrag);
+	};
+
+	/**
+	 * Calculates the reader hub width for one pointer x-coordinate.
+	 *
+	 * @param clientX - Current pointer x-coordinate.
+	 * @returns Clamped panel width in pixels.
+	 *
+	 * @example
+	 * const width = getPanelWidthFromPointer(600);
+	 */
+	const getPanelWidthFromPointer = (clientX: number): number | null => {
+		const bounds = asideRef.current?.parentElement?.getBoundingClientRect();
+		if (!bounds) return null;
+		const maximumWidth = Math.max(240, Math.floor(bounds.width * 0.5));
+		const minimumWidth = Math.min(320, maximumWidth);
+		const rawWidth = bounds.right - clientX;
+		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
+	};
+
+	return (
+		<>
+			{!open ? (
+				<button
+					data-reader-ui="true"
+					data-reader-component="ReaderHub"
+					data-reader-role="collapsed-handle"
+					type="button"
+					aria-label="Open Reader Hub"
+					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100 md:grid"
+					onClick={openHubOnly}
+				>
+					<BookMarked size={18} />
+				</button>
+			) : null}
+			<AnimatePresence>
+				{open ? (
+					<motion.aside
+						ref={asideRef}
+						data-reader-ui="true"
+						data-reader-component="ReaderHub"
+						data-reader-role="reader-hub-sidebar"
+						className={clsx(
+							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 text-foreground shadow-2xl backdrop-blur-xl",
+							mobilePortrait
+								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
+								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l",
+						)}
+						style={
+							mobilePortrait
+								? { height: `${mobileHeightVh}dvh` }
+								: visiblePanelWidthPx === null
+									? undefined
+									: { width: `${visiblePanelWidthPx}px` }
+						}
+						initial={mobilePortrait ? { y: "100%" } : { x: "100%" }}
+						animate={mobilePortrait ? { y: 0 } : { x: 0 }}
+						exit={mobilePortrait ? { y: "100%" } : { x: "100%" }}
+						transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+					>
+						{!mobilePortrait ? (
+							<div className="absolute inset-y-0 left-0 flex">
+								<VerticalPaneResizeHandle
+									label="Resize Reader Hub"
+									onDrag={(clientX) => {
+										const width = getPanelWidthFromPointer(clientX);
+										if (width !== null) setDragPanelWidthPx(width);
+									}}
+									onDragEnd={(clientX) => {
+										const width = getPanelWidthFromPointer(clientX);
+										setDragPanelWidthPx(null);
+										if (width !== null) setPanelWidthPx(width);
+									}}
+								/>
+							</div>
+						) : null}
+						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
+							<BookMarked size={17} className="text-primary" />
+							<div
+								className={clsx(
+									"min-w-0 flex-1",
+									mobilePortrait && "cursor-row-resize touch-none",
+								)}
+								onPointerDown={startMobileHeightDrag}
+							>
+								<p className="font-semibold text-foreground/90 text-sm">
+									Reader Hub
+								</p>
+								<p className="truncate text-[11px] text-foreground/40">
+									{pageTitle}
+								</p>
+							</div>
+							<button
+								type="button"
+								aria-label="Close Reader Hub"
+								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
+								onClick={toggleOpen}
+							>
+								{mobilePortrait ? (
+									<ChevronDown size={16} />
+								) : (
+									<PanelRightClose size={16} />
+								)}
+							</button>
+						</header>
+						<HubPanelSelector
+							activePanel={activePanel}
+							contextPanels={contextPanels}
+							onSelect={setActivePanel}
+						/>
+						<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
+							{activePanel === "community" ? (
+								<div className="space-y-2">
+									{content.comments.map((comment) => (
+										<HubCard key={`${comment.author}-${comment.body}`}>
+											<p className="font-semibold text-primary text-xs">
+												{comment.author}
+											</p>
+											<p className="mt-1 text-foreground/62 text-xs leading-relaxed">
+												{comment.body}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "art" ? (
+								<div className="grid grid-cols-2 gap-2">
+									{content.art.map((art) => (
+										<HubCard key={art.credit}>
+											<div className="mb-2 aspect-video rounded bg-[linear-gradient(135deg,#24211d,#55472f,#171717)]" />
+											<p className="text-foreground/68 text-xs">
+												{art.caption}
+											</p>
+											<p className="mt-1 text-[10px] text-foreground/35">
+												{art.credit}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "codex" ? (
+								<div className="space-y-2">
+									{content.codex.map((item) => (
+										<HubCard key={item.name}>
+											<p className="text-[10px] text-foreground/35 uppercase">
+												{item.type}
+											</p>
+											<p className="mt-1 font-semibold text-foreground/85 text-sm">
+												{item.name}
+											</p>
+											<p className="mt-1 text-foreground/55 text-xs leading-relaxed">
+												{item.description}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "trivia" ? (
+								<div className="space-y-2">
+									{content.trivia.map((item) => (
+										<HubCard key={item}>
+											<p className="text-foreground/62 text-xs leading-relaxed">
+												{item}
+											</p>
+										</HubCard>
+									))}
+								</div>
+							) : null}
+							{activePanel === "settings" ? <ReaderHubSettings /> : null}
+						</div>
+					</motion.aside>
+				) : null}
+			</AnimatePresence>
+		</>
+	);
+}
+
+/**
+ * Renders compact grouped Reader Hub destinations without nested tab bars.
+ *
+ * @param props - Panel groups, active panel, and selection callback.
+ * @returns Grouped panel selector.
+ */
+function HubPanelSelector({
+	activePanel,
+	contextPanels,
+	onSelect,
+}: {
+	activePanel: ReaderHubPanel;
+	contextPanels: HubPanelOption[];
+	onSelect: (panel: ReaderHubPanel) => void;
+}): React.JSX.Element {
+	return (
+		<nav
+			data-reader-component="ReaderHub"
+			data-reader-role="hub-panel-selector"
+			className="flex shrink-0 items-center gap-3 overflow-x-auto border-foreground/10 border-b px-3 py-2 [scrollbar-width:none]"
+		>
+			<HubPanelGroup
+				activePanel={activePanel}
+				label="Explore"
+				onSelect={onSelect}
+				panels={contextPanels}
+			/>
+		</nav>
+	);
+}
+
+/**
+ * Renders one labeled group of Reader Hub destinations.
+ *
+ * @param props - Panel group configuration.
+ * @returns Compact panel controls.
+ */
+function HubPanelGroup({
+	activePanel,
+	label,
+	onSelect,
+	panels,
+}: {
+	activePanel: ReaderHubPanel;
+	label: string;
+	onSelect: (panel: ReaderHubPanel) => void;
+	panels: HubPanelOption[];
+}): React.JSX.Element {
+	return (
+		<div className="flex shrink-0 items-center gap-1">
+			<span className="mr-1 hidden text-[9px] text-foreground/28 uppercase sm:inline">
+				{label}
+			</span>
+			{panels.map((panel) => {
+				const Icon = panel.icon;
+				return (
+					<button
+						key={panel.id}
+						type="button"
+						title={panel.label}
+						aria-label={panel.label}
+						className={clsx(
+							"grid h-8 w-8 place-items-center rounded",
+							activePanel === panel.id
+								? "bg-primary text-background"
+								: "text-foreground/48 hover:bg-foreground/7 hover:text-foreground",
+						)}
+						onClick={() => onSelect(panel.id)}
+					>
+						<Icon size={13} />
+					</button>
+				);
+			})}
+		</div>
+	);
+}
+
+/**
+ * Renders a shared Reader Hub content surface.
+ *
+ * @param props - Hub card child content.
+ * @returns A contextual hub card.
+ */
+function HubCard({
+	children,
+}: {
+	children: React.ReactNode;
+}): React.JSX.Element {
+	return (
+		<div
+			data-reader-component="HubCard"
+			data-reader-role="hub-content-card"
+			className="rounded-md border border-foreground/8 bg-foreground/[0.035] p-3"
+		>
+			{children}
+		</div>
+	);
+}

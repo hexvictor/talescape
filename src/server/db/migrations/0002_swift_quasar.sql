@@ -1,0 +1,2 @@
+ALTER TABLE "talescape_block" ALTER COLUMN "readingConfig" SET DEFAULT '{"animationConfig":{"ambient":{"cycleDurationMs":2400,"tracks":[]},"scrolling":{"tracks":[]}},"readingLength":null,"readingLengthMode":"content"}'::json;--> statement-breakpoint
+ALTER TABLE "talescape_fragment" ALTER COLUMN "animationConfig" SET DEFAULT '{"ambient":{"cycleDurationMs":2400,"tracks":[]},"entering":{"tracks":[]},"leaving":{"tracks":[]},"scrolling":{"tracks":[]}}'::json;

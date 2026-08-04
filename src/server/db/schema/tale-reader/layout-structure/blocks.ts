@@ -1,19 +1,26 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
-import {
-	blockPermissions,
-	entries,
-	fragments,
-	pages,
-	parts,
-	sections,
-	tales,
-	users,
-} from "~/server/db/schema";
+import type { TaleBlockResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AssetAccessLevel,
 	AssetVisibility,
 } from "~/server/db/types/tale-builder/asset";
+import type {
+	ReaderSizeConfig,
+	ReaderSizeMode,
+	ReaderStyleConfig,
+	ReadingConfig,
+	TransitionConfig,
+} from "~/server/db/types/tale-reader/readerConfig";
+import { users } from "../../users";
+import { entries } from "../narrative-structure/entries";
+import { pages } from "../narrative-structure/pages";
+import { parts } from "../narrative-structure/parts";
+import { blockPermissions } from "../permissions/blockPermissions";
+import { tales } from "../tales";
+import { branches } from "./branches";
+import { fragments } from "./fragments";
+import { nodes } from "./nodes";
 
 export const blocks = createTable("block", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -21,10 +28,21 @@ export const blocks = createTable("block", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-	sectionId: d
+	branchId: d
 		.integer()
 		.notNull()
-		.references(() => sections.id),
+		.references(() => branches.id),
+	creatorId: d
+		.text()
+		.notNull()
+		.references(() => users.id),
+	isOfficial: d.boolean().notNull().default(false),
+	isVerified: d.boolean().notNull().default(false),
+	editable: d.boolean().notNull().default(true),
+	pageId: d
+		.integer()
+		.notNull()
+		.references(() => pages.id),
 	entryId: d
 		.integer()
 		.notNull()
@@ -33,12 +51,48 @@ export const blocks = createTable("block", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => parts.id),
-	creatorId: d.text().references(() => users.id),
-	isOfficial: d.boolean().notNull().default(false),
-	editable: d.boolean().notNull().default(true),
-	pageId: d.integer().references(() => pages.id),
-	isSnap: d.boolean().notNull().default(false),
-	index: d.integer().notNull(),
+	title: d.text(),
+	description: d.text(),
+	isChoiceBlock: d.boolean().notNull().default(false),
+	order: d.integer().notNull(),
+	pageOrder: d.integer().notNull().default(0),
+	sizeMode: d
+		.text()
+		.notNull()
+		.$type<ReaderSizeMode>()
+		.default("contentResponsive"),
+	sizeConfig: d.json().notNull().$type<ReaderSizeConfig>().default({}),
+	readingConfig: d
+		.json()
+		.notNull()
+		.$type<ReadingConfig>()
+		.default({
+			animationConfig: {
+				ambient: { tracks: [] },
+				scrolling: { tracks: [] },
+			},
+			readingLength: null,
+			readingLengthMode: "content",
+		}),
+	transitionConfig: d
+		.json()
+		.notNull()
+		.$type<TransitionConfig>()
+		.default({
+			animationConfig: {
+				entering: { tracks: [] },
+				leaving: { tracks: [] },
+			},
+			enteringLength: null,
+			flow: { direction: "down", type: "linear" },
+			leavingLength: null,
+		}),
+	styleConfig: d.json().$type<ReaderStyleConfig>(),
+	responsiveConfig: d
+		.json()
+		.notNull()
+		.$type<Record<string, TaleBlockResponsiveOverride>>()
+		.default({}),
 	visibility: d.text().notNull().$type<AssetVisibility>().default("private"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	createdAt: d
@@ -53,17 +107,9 @@ export const blocksRelations = relations(blocks, ({ one, many }) => ({
 		fields: [blocks.taleId],
 		references: [tales.id],
 	}),
-	section: one(sections, {
-		fields: [blocks.sectionId],
-		references: [sections.id],
-	}),
-	entry: one(entries, {
-		fields: [blocks.entryId],
-		references: [entries.id],
-	}),
-	part: one(parts, {
-		fields: [blocks.partId],
-		references: [parts.id],
+	branch: one(branches, {
+		fields: [blocks.branchId],
+		references: [branches.id],
 	}),
 	user: one(users, {
 		fields: [blocks.creatorId],
@@ -73,7 +119,16 @@ export const blocksRelations = relations(blocks, ({ one, many }) => ({
 		fields: [blocks.pageId],
 		references: [pages.id],
 	}),
+	entry: one(entries, {
+		fields: [blocks.entryId],
+		references: [entries.id],
+	}),
+	part: one(parts, {
+		fields: [blocks.partId],
+		references: [parts.id],
+	}),
 	fragments: many(fragments),
+	nodes: many(nodes),
 	permissions: many(blockPermissions),
 }));
 

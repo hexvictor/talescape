@@ -1,0 +1,11 @@
+import { LibraryDetailPlaceholder } from "../../../_shared/components/LibraryDetailPlaceholder";
+
+export default function BookOverview() {
+	return (
+		<LibraryDetailPlaceholder
+			label="Book"
+			title="Book overview"
+			description="A shape-matched placeholder for book metadata, cover art, linked tales, and codex entries."
+		/>
+	);
+}

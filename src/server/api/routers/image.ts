@@ -7,22 +7,20 @@ import {
 } from "~/server/api/trpc";
 import { images } from "~/server/db/schema";
 
+/**
+ * Exposes image persistence and public image discovery procedures.
+ *
+ * Image creation is authenticated so ownership always comes from the active
+ * session rather than client input.
+ */
 export const imageRouter = createTRPCRouter({
-	hello: publicProcedure
-		.input(z.object({ text: z.string() }))
-		.query(({ input }) => {
-			return {
-				greeting: `Hello ${input.text}`,
-			};
-		}),
-
-	create: publicProcedure
+	create: protectedProcedure
 		.input(z.object({ name: z.string().min(1), url: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.insert(images).values({
 				name: input.name,
 				url: input.url,
-				userId: "1",
+				userId: ctx.session.userId,
 			});
 		}),
 
@@ -32,9 +30,5 @@ export const imageRouter = createTRPCRouter({
 		});
 
 		return image ?? null;
-	}),
-
-	getSecretMessage: protectedProcedure.query(() => {
-		return "you can now see this secret message!";
 	}),
 });

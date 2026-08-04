@@ -1,11 +1,11 @@
 import { cache } from "react";
-import { TaleAccessError } from "~/features/tale-reader/utils/errors/taleAccess";
 import { db } from "~/server/db";
+import { TaleAccessError } from "~/server/db/data/tale-reader/errors/taleAccess";
 import { getTale } from "~/server/db/data/tale-reader/queries/tales/getTale";
 import type { Tale, TaleData } from "~/server/db/data/tale-reader/types/tales";
 import { getUserInfo } from "~/server/db/data/users/queries";
 import { getSignedInUserId } from "../auth/getSignedInUserId";
-import { createNewProgress } from "../progress/createNewProgress";
+import { getTaleDataWithProgress } from "./getTaleDataWithProgress";
 
 async function getUserTaleQuery(
 	slug: string,
@@ -29,13 +29,13 @@ async function getUserTaleQuery(
 
 	const partialTale = {
 		id: tale.id,
-		title: tale.title,
-		slug: tale.slug,
-		visibility: tale.visibility,
-		type: tale.type,
+		title: tale.title ?? "Untitled Tale",
+		slug: tale.slug ?? slug,
+		visibility: tale.visibility ?? "private",
+		type: tale.type ?? "story",
 	};
 
-	switch (tale.visibility) {
+	switch (partialTale.visibility) {
 		case "public":
 			return getPublicTaleData(tale);
 		case "private":
@@ -104,26 +104,4 @@ async function requireSignedInUserId(
 	}
 
 	return userId;
-}
-
-async function getTaleDataWithProgress(
-	tale: Tale,
-	userId: string,
-): Promise<TaleData> {
-	const progress = await db.query.taleProgresses.findFirst({
-		where: (model, { eq, and }) =>
-			and(eq(model.taleId, tale.id), eq(model.userId, userId)),
-	});
-
-	if (progress !== undefined) {
-		return { tale, progress };
-	}
-
-	const newProgress = await createNewProgress(
-		tale.id,
-		tale.content.order.blockIds,
-		userId,
-	);
-
-	return { tale, progress: newProgress };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "talescape_block" ADD COLUMN "previousTransitionOverrideConfig" json;

@@ -13,7 +13,7 @@
 		/* Strictness */
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
-		"checkJs": true,
+		"checkJs": false,
 
 		/* Bundled projects */
 		"lib": ["dom", "dom.iterable", "ES2022"],
@@ -36,8 +36,12 @@
 		"next-env.d.ts",
 		"**/*.ts",
 		"**/*.tsx",
-		"**/*.cjs",
-		"**/*.js",
+		"*.cjs",
+		"*.js",
+		"*.mjs",
+		"src/**/*.cjs",
+		"src/**/*.js",
+		"src/**/*.mjs",
 		".next/types/**/*.ts"
 	],
 	"exclude": ["node_modules"]

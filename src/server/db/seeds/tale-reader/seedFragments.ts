@@ -1,528 +1,574 @@
+import { eq } from "drizzle-orm";
+import { LoremIpsum } from "lorem-ipsum";
 import { db } from "~/server/db";
 import {
-	type FragmentSchema,
 	blocks,
 	branches,
 	entries,
 	fragments,
-	sections,
+	nodes,
+	pages,
+	paths,
 	tales,
 } from "~/server/db/schema";
+import type { FragmentAnimationConfig } from "~/server/db/types/tale-reader/readerConfig";
+import { userId1 } from "../ids";
+import { readerPageBlueprints } from "./readerStoryBlueprint";
+import { createReaderStoryText } from "./readerStoryText";
+import { logSeedComplete, logSeedStart } from "./seedLogs";
 
-type FragmentSeed = Pick<
-	FragmentSchema,
-	| "taleId"
-	| "blockId"
-	| "creatorId"
-	| "type"
-	| "index"
-	| "isOfficial"
-	| "editable"
-	| "visibility"
-	| "cloneable"
-	| "data"
->;
+const localImages = [
+	"/reader-demo/thornwick-town.svg",
+	"/reader-demo/thornwick-market.svg",
+	"/reader-demo/thornwick-church.svg",
+	"/reader-demo/thornwick-crypt.svg",
+	"/reader-demo/thornwick-woods.svg",
+] as const;
 
-export async function seedFragments() {
-	const allBlocks = await db
-		.select({
-			id: blocks.id,
-			taleId: blocks.taleId,
-			creatorId: blocks.creatorId,
-			entryId: blocks.entryId,
-			sectionId: blocks.sectionId,
-			pageId: blocks.pageId,
-			index: blocks.index,
-		})
-		.from(blocks);
+const externalImages = [
+	"https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+	"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
+] as const;
 
-	const allEntries = await db
-		.select({
-			id: entries.id,
-			title: entries.title,
-			index: entries.index,
-		})
-		.from(entries);
+type FragmentSeed = typeof fragments.$inferInsert;
 
-	const allSections = await db
-		.select({
-			id: sections.id,
-			branchId: sections.branchId,
-			orientation: sections.orientation,
-			direction: sections.direction,
-			index: sections.index,
-		})
-		.from(sections);
+const lorem = new LoremIpsum({
+	sentencesPerParagraph: { max: 5, min: 3 },
+	wordsPerSentence: { max: 12, min: 8 },
+});
 
-	const allBranches = await db
-		.select({
-			id: branches.id,
-			name: branches.name,
-			index: branches.index,
-		})
-		.from(branches);
+/**
+ * Inserts text, quote, image, choice, and return fragments for every block.
+ *
+ * @returns Nothing.
+ */
+export async function seedFragments(): Promise<void> {
+	logSeedStart("Fragments");
+	const [tale] = await db
+		.select({ id: tales.id })
+		.from(tales)
+		.where(eq(tales.slug, "branched"));
+	if (!tale) throw new Error("Seeded reader tale was not found.");
 
-	const allTales = await db
-		.select({
-			id: tales.id,
-			title: tales.title,
-			isOfficial: tales.isOfficial,
-			editable: tales.editable,
-			visibility: tales.visibility,
-			cloneable: tales.cloneable,
-		})
-		.from(tales);
-
-	const taleMap = new Map(allTales.map((tale) => [tale.id, tale] as const));
-	const entryMap = new Map(
-		allEntries.map((entry) => [entry.id, entry] as const),
+	const [allBlocks, allBranches, allEntries, allPages, allNodes, allPaths] =
+		await Promise.all([
+			db
+				.select({
+					branchId: blocks.branchId,
+					id: blocks.id,
+					isChoiceBlock: blocks.isChoiceBlock,
+					order: blocks.order,
+					pageId: blocks.pageId,
+				})
+				.from(blocks)
+				.where(eq(blocks.taleId, tale.id)),
+			db
+				.select({ id: branches.id, name: branches.name })
+				.from(branches)
+				.where(eq(branches.taleId, tale.id)),
+			db
+				.select({ id: entries.id, title: entries.title, type: entries.type })
+				.from(entries)
+				.where(eq(entries.taleId, tale.id)),
+			db
+				.select({
+					entryId: pages.entryId,
+					id: pages.id,
+					order: pages.order,
+					title: pages.title,
+				})
+				.from(pages)
+				.where(eq(pages.taleId, tale.id)),
+			db
+				.select({
+					blockId: nodes.blockId,
+					config: nodes.config,
+					id: nodes.id,
+					name: nodes.name,
+				})
+				.from(nodes)
+				.where(eq(nodes.taleId, tale.id)),
+			db
+				.select({
+					fromBlockId: paths.fromBlockId,
+					id: paths.id,
+					label: paths.label,
+					type: paths.type,
+				})
+				.from(paths)
+				.where(eq(paths.taleId, tale.id)),
+		]);
+	const branchNameById = new Map(
+		allBranches.map((branch) => [branch.id, branch.name]),
 	);
-	const sectionMap = new Map(
-		allSections.map((section) => [section.id, section] as const),
+	const entryById = new Map(allEntries.map((entry) => [entry.id, entry]));
+	const pageById = new Map(allPages.map((page) => [page.id, page]));
+	const pageBlueprintByOrder = new Map(
+		readerPageBlueprints.map((page) => [page.order, page]),
 	);
-	const branchMap = new Map(
-		allBranches.map((branch) => [branch.id, branch] as const),
+	const nodesByBlockId = groupBy(allNodes, (node) => node.blockId);
+	const pathsByBlockId = groupBy(
+		allPaths.filter((path) => path.fromBlockId !== null),
+		(path) => path.fromBlockId as number,
 	);
-	const blockOrdinalById = getBlockOrdinalById(allBlocks);
 
-	const seeds: FragmentSeed[] = allBlocks.flatMap((block) => {
-		const tale = taleMap.get(block.taleId);
-		if (!tale) return [];
-
-		const entry = entryMap.get(block.entryId) ?? null;
-		const section = sectionMap.get(block.sectionId) ?? null;
-		const branch = section ? (branchMap.get(section.branchId) ?? null) : null;
-		const blockOrdinal = blockOrdinalById.get(block.id) ?? 0;
-		const fragmentContext = {
-			taleTitle: tale.title,
-			taleId: block.taleId,
-			branchName: branch?.name ?? "Main",
-			entryTitle: entry?.title ?? "Untitled entry",
-			sectionLabel: section
-				? `${section.orientation} ${section.direction} section ${section.index + 1}`
-				: "unplaced section",
-			blockOrdinal,
-			pageId: block.pageId,
-		};
-		const image = getFragmentImage(fragmentContext);
-
-		return [
-			{
-				taleId: block.taleId,
-				blockId: block.id,
-				creatorId: block.creatorId,
-				type: "text",
-				index: 0,
-				isOfficial: tale.isOfficial,
-				editable: tale.editable,
-				visibility: tale.visibility,
-				cloneable: tale.cloneable,
-				data: {
-					content: getFragmentText(fragmentContext),
-				},
-			},
-			{
-				taleId: block.taleId,
-				blockId: block.id,
-				creatorId: block.creatorId,
-				type: "image",
-				index: 1,
-				isOfficial: tale.isOfficial,
-				editable: tale.editable,
-				visibility: tale.visibility,
-				cloneable: tale.cloneable,
-				data: {
-					url: image.url,
-					alt: image.alt,
-				},
-			},
-		];
+	const values = allBlocks.flatMap((block) => {
+		const page = pageById.get(block.pageId);
+		const blueprint = page && pageBlueprintByOrder.get(page.order);
+		const entry = page && entryById.get(page.entryId);
+		const contentNode =
+			nodesByBlockId.get(block.id)?.find((node) => node.name === "root") ??
+			nodesByBlockId.get(block.id)?.[0];
+		if (!page || !blueprint || !entry || !contentNode) {
+			throw new Error(`Incomplete fragment parents for block ${block.id}.`);
+		}
+		return createBlockFragments({
+			block,
+			branchName: branchNameById.get(block.branchId) ?? "main",
+			contentNodeId: contentNode.id,
+			entry,
+			page,
+			pageBlueprint: blueprint,
+			paths: pathsByBlockId.get(block.id) ?? [],
+			taleId: tale.id,
+		});
+	});
+	const created = await db.insert(fragments).values(values).returning({
+		id: fragments.id,
+		nodeId: fragments.nodeId,
+		placementConfig: fragments.placementConfig,
 	});
 
-	await db.insert(fragments).values(seeds);
-	console.log(`✅ Seeded ${seeds.length} fragments (2 per block).`);
+	for (const node of allNodes) {
+		const fragmentChildren = created
+			.filter(
+				(fragment) =>
+					fragment.nodeId === node.id &&
+					fragment.placementConfig.mode === "normal",
+			)
+			.map((fragment) => ({
+				fragmentId: String(fragment.id),
+				type: "fragment" as const,
+			}));
+		if (fragmentChildren.length === 0) continue;
+		await db
+			.update(nodes)
+			.set({
+				config: {
+					...node.config,
+					children: [...node.config.children, ...fragmentChildren],
+				},
+			})
+			.where(eq(nodes.id, node.id));
+	}
+	logSeedComplete("Fragments");
 }
 
-type FragmentTextArgs = {
-	taleTitle: string;
-	taleId: number;
-	branchName: string;
-	entryTitle: string;
-	sectionLabel: string;
-	blockOrdinal: number;
-	pageId: number | null;
-};
-
-type FragmentImage = {
-	url: string;
-	alt: string;
-};
-
-type ImageAsset = {
-	fileName: string;
-	altSubject: string;
-};
-
-type ImageAssetPool = readonly [ImageAsset, ...ImageAsset[]];
-
-function getBlockOrdinalById(
-	allBlocks: {
+type CreateBlockFragmentsInput = {
+	block: {
 		id: number;
-		entryId: number;
-		index: number;
-	}[],
-) {
-	const blocksByEntryId = new Map<number, typeof allBlocks>();
-
-	for (const block of allBlocks) {
-		const existing = blocksByEntryId.get(block.entryId) ?? [];
-		existing.push(block);
-		blocksByEntryId.set(block.entryId, existing);
-	}
-
-	const ordinalById = new Map<number, number>();
-
-	for (const entryBlocks of blocksByEntryId.values()) {
-		entryBlocks
-			.sort((a, b) => a.id - b.id)
-			.forEach((block, index) => {
-				ordinalById.set(block.id, index);
-			});
-	}
-
-	return ordinalById;
-}
-
-function getFragmentText(args: FragmentTextArgs) {
-	if (args.taleId === 10) return getForkedFatesText(args);
-	return getLinearTaleText(args);
-}
-
-function getFragmentImage(args: FragmentTextArgs): FragmentImage {
-	if (args.taleId === 10) return getForkedFatesImage(args);
-	return getLinearTaleImage(args);
-}
-
-function getLinearTaleImage({
-	taleTitle,
-	entryTitle,
-	blockOrdinal,
-}: FragmentTextArgs): FragmentImage {
-	const assets = getLinearTaleImageAssets(taleTitle);
-	const asset = pickImageAsset(assets, blockOrdinal);
-	const beatLabel = getBeatImageLabel(blockOrdinal);
-
-	return {
-		url: createCommonsImageUrl(asset.fileName),
-		alt: `${taleTitle}, ${entryTitle}: ${asset.altSubject} during the ${beatLabel.toLowerCase()}`,
+		isChoiceBlock: boolean;
+		order: number;
 	};
-}
-
-function getForkedFatesImage({
-	branchName,
-	entryTitle,
-	blockOrdinal,
-}: FragmentTextArgs): FragmentImage {
-	const theme =
-		forkedFatesImageAssetsByRoute[entryTitle] ??
-		forkedFatesImageAssetsByRoute[branchName] ??
-		defaultForkedFatesImageAssets;
-	const asset = pickImageAsset(theme, blockOrdinal);
-	const beatLabel = getBeatImageLabel(blockOrdinal);
-
-	return {
-		url: createCommonsImageUrl(asset.fileName),
-		alt: `Forked Fates, ${entryTitle}: ${asset.altSubject} during the ${beatLabel.toLowerCase()}`,
-	};
-}
-
-function getBeatImageLabel(blockOrdinal: number) {
-	const labels = ["Opening", "Discovery", "Turn", "Consequence"];
-	return labels[blockOrdinal] ?? `Beat ${blockOrdinal + 1}`;
-}
-
-function getLinearTaleImageAssets(taleTitle: string): ImageAssetPool {
-	if (
-		taleTitle.includes("Frost") ||
-		taleTitle.includes("Ice") ||
-		taleTitle.includes("Frozen")
-	) {
-		return frozenImageAssets;
-	}
-
-	if (
-		taleTitle.includes("Ash") ||
-		taleTitle.includes("Flames") ||
-		taleTitle.includes("Ember") ||
-		taleTitle.includes("Cinder")
-	) {
-		return emberImageAssets;
-	}
-
-	if (taleTitle.includes("Puppies")) {
-		return puppyImageAssets;
-	}
-
-	return shadowImageAssets;
-}
-
-const frozenImageAssets = [
-	{
-		fileName: "Frozen Forest (Unsplash).jpg",
-		altSubject: "a snowy evergreen forest from above",
-	},
-	{
-		fileName: "Frozen winter forest (Unsplash).jpg",
-		altSubject: "a hilled forest buried under winter cloud",
-	},
-	{
-		fileName: "Above the frozen forest (Unsplash).jpg",
-		altSubject: "a high view over a frozen mountain forest",
-	},
-	{
-		fileName: "Watching A Frozen Waterfall In The Forest (Unsplash).jpg",
-		altSubject: "a frozen waterfall hidden in the woods",
-	},
-] as const satisfies ImageAssetPool;
-
-const emberImageAssets = [
-	{
-		fileName: "Strike fire (Unsplash).jpg",
-		altSubject: "hot embers and flames in a firepit",
-	},
-	{
-		fileName: "Glowing Embers (Unsplash).jpg",
-		altSubject: "glowing embers on dark fireplace logs",
-	},
-	{
-		fileName: "Bonfire flames (Unsplash).jpg",
-		altSubject: "bright bonfire flames rising from firewood",
-	},
-	{
-		fileName: "Heat of the Flames (Unsplash).jpg",
-		altSubject: "burning logs in an outdoor firepit",
-	},
-] as const satisfies ImageAssetPool;
-
-const tideImageAssets = [
-	{
-		fileName: "Ocean night.jpg",
-		altSubject: "a dark ocean horizon at night",
-	},
-	{
-		fileName: "Ocean of Stars.jpg",
-		altSubject: "stars above a night beach",
-	},
-	{
-		fileName: "Above the frozen forest (Unsplash).jpg",
-		altSubject: "a cold wilderness seen from above",
-	},
-] as const satisfies ImageAssetPool;
-
-const lanternImageAssets = [
-	{
-		fileName: "Night, street, lantern (45732183275).jpg",
-		altSubject: "a lantern glowing over a night street",
-	},
-	{
-		fileName: "White door with colors (Unsplash).jpg",
-		altSubject: "a weathered bright door waiting at the end of a path",
-	},
-	{
-		fileName: "Old door handle.jpg",
-		altSubject: "an old metal handle on a mysterious door",
-	},
-] as const satisfies ImageAssetPool;
-
-const doorImageAssets = [
-	{
-		fileName: "Black Door.jpg",
-		altSubject: "a dark side door with a hard threshold",
-	},
-	{
-		fileName: "White Door.jpg",
-		altSubject: "a pale door suggesting a merciful exit",
-	},
-	{
-		fileName: "Old door handle.jpg",
-		altSubject: "an old handle waiting for a choice",
-	},
-] as const satisfies ImageAssetPool;
-
-const puppyImageAssets = [
-	{
-		fileName: "Cute puppy running (Unsplash).jpg",
-		altSubject: "a puppy running forward with bright energy",
-	},
-	{
-		fileName: "Four puppies.jpg",
-		altSubject: "four puppies waiting together",
-	},
-	{
-		fileName: "Puppies (16717654917).jpg",
-		altSubject: "puppies gathered in the open air",
-	},
-	{
-		fileName: "A puppy.jpg",
-		altSubject: "a young yellow puppy facing the camera",
-	},
-] as const satisfies ImageAssetPool;
-
-const shadowImageAssets = [
-	{
-		fileName: "Night, street, lantern (45732183275).jpg",
-		altSubject: "a quiet lantern-lit night street",
-	},
-	{
-		fileName: "Black Door.jpg",
-		altSubject: "a dark door with a secret beyond it",
-	},
-	{
-		fileName: "Ocean of Stars.jpg",
-		altSubject: "a starry night over open water",
-	},
-] as const satisfies ImageAssetPool;
-
-const defaultForkedFatesImageAssets = shadowImageAssets;
-
-const forkedFatesImageAssetsByRoute: Record<string, ImageAssetPool> = {
-	Beginning: shadowImageAssets,
-	"First Path": frozenImageAssets,
-	"Second Path": emberImageAssets,
-	"Second Path I": emberImageAssets,
-	"Second Path II": emberImageAssets,
-	"Third Path": tideImageAssets,
-	"Fourth Path": lanternImageAssets,
-	"Fourth Path I": lanternImageAssets,
-	"Fourth Path II": lanternImageAssets,
-	"The Choice": doorImageAssets,
-	"The Good Choice": [
-		{
-			fileName: "White Door.jpg",
-			altSubject: "a pale door opening toward mercy",
-		},
-		{
-			fileName: "Ocean of Stars.jpg",
-			altSubject: "a brighter night sky after a merciful choice",
-		},
-	],
-	"The Bad Choice": [
-		{
-			fileName: "Black Door.jpg",
-			altSubject: "a black door closing with certainty",
-		},
-		{
-			fileName: "Glowing Embers (Unsplash).jpg",
-			altSubject: "dark embers after a costly choice",
-		},
-	],
-	Ending: [
-		{
-			fileName: "Ocean of Stars.jpg",
-			altSubject: "stars over the final threshold",
-		},
-		{
-			fileName: "Above the frozen forest (Unsplash).jpg",
-			altSubject: "a wide final view over the chosen road",
-		},
-	],
+	branchName: string;
+	contentNodeId: number;
+	entry: { title: string; type: string };
+	page: { order: number; title: string | null };
+	pageBlueprint: (typeof readerPageBlueprints)[number];
+	paths: { id: number; label: string | null; type: string }[];
+	taleId: number;
 };
 
-function pickImageAsset(assets: ImageAssetPool, blockOrdinal: number) {
-	return assets[blockOrdinal % assets.length] ?? assets[0];
-}
+/**
+ * Creates fragments appropriate for one fullscreen, chapter, or choice block.
+ *
+ * @param input - Actual parent rows and authored page metadata.
+ * @returns Fragment insert values.
+ */
+function createBlockFragments(
+	input: CreateBlockFragmentsInput,
+): FragmentSeed[] {
+	const {
+		block,
+		branchName,
+		contentNodeId,
+		entry,
+		page,
+		pageBlueprint,
+		paths: blockPaths,
+		taleId,
+	} = input;
+	const base = fragmentBase(block.id, taleId);
+	const title = page.title ?? entry.title;
+	if (block.isChoiceBlock) {
+		if (blockPaths.length === 0) {
+			throw new Error(`Choice block ${block.id} has no outgoing paths.`);
+		}
+		return [
+			headlineTextFragment(base, contentNodeId, title, 0, true),
+			bodyTextFragment(base, contentNodeId, seedLoremIpsum(block.order, 1), 1, true),
+			...blockPaths.map((path, index) =>
+				choiceFragment(base, contentNodeId, path, index + 2),
+			),
+		];
+	}
+	if (entry.type !== "chapter") {
+		const storyText = seedLoremIpsum(block.order, 2);
+		const codexOrder = title === "The Bell That Rang Below" ? 2 : 3;
+		return [
+			imageFragment(base, contentNodeId, title, page.order, 0, false),
+			title === "The Bell That Rang Below"
+				? quoteFragment(base, contentNodeId, title, 1, false)
+				: headlineTextFragment(base, contentNodeId, title, 1, true),
+			...(title === "The Bell That Rang Below"
+				? []
+				: [bodyTextFragment(base, contentNodeId, storyText, 2, true)]),
+			codexEntryFragment(
+				base,
+				contentNodeId,
+				`Codex: ${title}`,
+				`Open codex notes related to ${title}.`,
+				codexOrder,
+			),
+			...blockPaths.map((path, index) =>
+				choiceFragment(base, contentNodeId, path, index + codexOrder + 1),
+			),
+		];
+	}
 
-function createCommonsImageUrl(fileName: string) {
-	return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=1200`;
-}
-
-function getLinearTaleText({
-	taleTitle,
-	entryTitle,
-	sectionLabel,
-	blockOrdinal,
-	pageId,
-}: FragmentTextArgs) {
-	const pageLabel = pageId == null ? "opening panel" : `page ${blockOrdinal}`;
-	const beats = [
-		`${taleTitle} - ${entryTitle}. The scene opens in the ${sectionLabel}; this ${pageLabel} names the place, the danger, and the promise that pulls the reader forward.`,
-		`${taleTitle} - ${entryTitle}. A second beat sharpens the conflict: someone makes a costly discovery, and the reader should feel the story moving deeper into trouble.`,
-		`${taleTitle} - ${entryTitle}. The path bends. A clue, warning, or quiet betrayal changes what the characters believe about the journey.`,
-		`${taleTitle} - ${entryTitle}. The entry closes with a clear turn: the next section should feel like a consequence, not a random continuation.`,
+	const horizontal = pageBlueprint.layout === "horizontal";
+	return [
+		headlineTextFragment(base, contentNodeId, title, 0, false),
+		quoteFragment(
+			base,
+			contentNodeId,
+			createReaderStoryText(title, branchName, true),
+			1,
+			horizontal,
+		),
+		imageFragment(base, contentNodeId, title, page.order, 2, horizontal),
+		...(block.order % 4 === 0
+			? [
+					codexEntryFragment(
+						base,
+						contentNodeId,
+						`Codex: ${branchName}`,
+						`Field notes about ${branchName} and the passage ahead.`,
+						3,
+					),
+				]
+			: []),
+		...blockPaths.map((path, index) =>
+			choiceFragment(base, contentNodeId, path, index + (block.order % 4 === 0 ? 4 : 3)),
+		),
 	];
-
-	return beats[blockOrdinal] ?? beats.at(-1) ?? taleTitle;
 }
 
-function getForkedFatesText({
-	branchName,
-	entryTitle,
-	sectionLabel,
-	blockOrdinal,
-	pageId,
-}: FragmentTextArgs) {
-	const pageLabel =
-		pageId == null ? "branch opening" : `page beat ${blockOrdinal}`;
-	const fallback = `[${branchName} / ${entryTitle}] In this ${sectionLabel}, ${pageLabel} keeps the branch readable and marks exactly where this route sits in Forked Fates.`;
-
-	const beatsByEntry: Record<string, string[]> = {
-		Beginning: [
-			"[Beginning] The traveler reaches the moonlit causeway where four roads split from the same broken milestone.",
-			"[Beginning] The marker shows four symbols: frost, ash, tide, and lantern. Each promises a different future.",
-			"[Beginning] This is the first branch point. The next visible route depends on which path the reader chooses.",
-		],
-		"First Path": [
-			"[First Path] The frost road bends left into a silent pine valley, and the traveler follows the cold blue lights.",
-			"[First Path] A frozen bell rings under the snow, revealing that this route remembers every promise ever broken.",
-			"[First Path] The frost road resolves quickly: it gives one answer and then flows directly toward the ending branch.",
-		],
-		"Second Path I": [
-			"[Second Path I] The ash road descends through black grass where old watchfires still glow under the soil.",
-			"[Second Path I] A cinder-crowned guide warns that this route is longer, split across more than one section.",
-			"[Second Path I] The traveler accepts the ember map and continues downward toward the second half of the ash road.",
-		],
-		"Second Path II": [
-			"[Second Path II] The ash road turns horizontal, crossing a bridge of warm iron above a river of sparks.",
-			"[Second Path II] The guide admits the crown is not a prize but a burden waiting for someone desperate enough.",
-			"[Second Path II] This route has no choice here; it continues by consequence toward the next revealed branch.",
-		],
-		"Third Path": [
-			"[Third Path] The tide road moves right across glassy water, carrying the traveler between reflected stars.",
-			"[Third Path] Beneath the surface, a second version of the traveler refuses to make the same mistake twice.",
-			"[Third Path] The tide path closes cleanly and rolls onward to the shared ending branch.",
-		],
-		"Fourth Path I": [
-			"[Fourth Path I] The lantern road begins bright and straight, but every lamp shows a different possible companion.",
-			"[Fourth Path I] The traveler follows the warmest flame and hears a door unlocking somewhere ahead.",
-			"[Fourth Path I] The lantern route does not end here; it leads into a second section before the true decision.",
-		],
-		"Fourth Path II": [
-			"[Fourth Path II] The lantern road drops into a quiet stairwell lined with names the traveler almost remembers.",
-			"[Fourth Path II] At the bottom waits a sealed hall with two handles: one silver, one black.",
-			"[Fourth Path II] This route auto-continues into The Choice, where the reader must decide what kind of ending is earned.",
-		],
-		"The Choice": [
-			"[The Choice] The silver handle promises mercy. The black handle promises certainty. Neither promise is free.",
-			"[The Choice] The hall listens. The traveler can save a stranger at personal cost, or seize the answer alone.",
-			"[The Choice] This is the second real branch point: Good Choice or Bad Choice should appear after this block.",
-		],
-		"The Good Choice": [
-			"[The Good Choice] The traveler opens the silver door and gives up the map so the stranger can find daylight.",
-			"[The Good Choice] The hall brightens. The route proves that mercy changes the ending, even when it costs direction.",
-			"[The Good Choice] The good branch stands as its own ending route, marked clearly so the reader knows they chose compassion.",
-		],
-		"The Bad Choice": [
-			"[The Bad Choice] The traveler opens the black door and keeps the answer, leaving the stranger in the dark hall.",
-			"[The Bad Choice] The route moves right with a hard, metallic certainty; every step sounds like a lock closing.",
-			"[The Bad Choice] This darker branch does not stop here. It auto-continues into the shared ending with a changed tone.",
-		],
-		Ending: [
-			"[Ending] The roads meet beneath the dawn arch. What the traveler carries depends on the branch that brought them here.",
-			"[Ending] Frost, ash, tide, lantern, mercy, or certainty all leave different traces on the final threshold.",
-			"[Ending] The tale closes here. If the route felt different, the branch system is doing its job.",
-		],
+/**
+ * Creates a title-sized text fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Fragment text.
+ * @param order - Fragment order.
+ * @param centered - Whether text should be centered.
+ * @returns Title text fragment seed.
+ */
+function headlineTextFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	centered: boolean,
+): FragmentSeed {
+	return {
+		...base,
+		content: { content: text },
+		data: { content: text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			fontSize: "clamp(2rem, 5vw, 4.5rem)",
+			fontWeight: 800,
+			lineHeight: 1.05,
+			maxWidth: "52rem",
+			textAlign: centered ? "center" : "left",
+		},
+		type: "text",
 	};
+}
 
-	const beats = beatsByEntry[entryTitle];
-	return beats?.[blockOrdinal] ?? fallback;
+/**
+ * Creates a body-copy text fragment for seeded prose and supporting text.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Fragment text.
+ * @param order - Fragment order.
+ * @param centered - Whether text should be centered.
+ * @returns Body text fragment seed.
+ */
+function bodyTextFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	centered: boolean,
+): FragmentSeed {
+	return {
+		...base,
+		content: { content: text },
+		data: { content: text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			fontSize: "clamp(1rem, 1.8vw, 1.25rem)",
+			fontWeight: 500,
+			lineHeight: 1.8,
+			maxWidth: "56rem",
+			textAlign: centered ? "center" : "left",
+		},
+		type: "text",
+	};
+}
+
+/**
+ * Creates a chapter quote fragment with connected enter and scroll scales.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param text - Story text.
+ * @param order - Fragment order.
+ * @param horizontal - Whether the page scrolls horizontally.
+ * @returns Quote fragment seed.
+ */
+function quoteFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	text: string,
+	order: number,
+	horizontal: boolean,
+): FragmentSeed {
+	return {
+		...base,
+		animationConfig: {
+			ambient: { cycleDurationMs: 2400, tracks: [] },
+			entering: {
+				tracks: [{ end: 1, from: 1, property: "scale", start: 0, to: 0.94 }],
+			},
+			leaving: { tracks: [] },
+			scrolling: {
+				tracks: [{ end: 0.7, from: 0.94, property: "scale", start: 0, to: 1 }],
+			},
+		},
+		content: { attribution: "The Thornwick Ledger", text },
+		data: { attribution: "The Thornwick Ledger", text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			fontSize: "clamp(1rem, 1.5vw, 1.3rem)",
+			lineHeight: 1.8,
+			width: "100%",
+			maxWidth: "70vw",
+		},
+		type: "quote",
+		visibleRange: { end: 1, start: 0 },
+	};
+}
+
+/**
+ * Creates a deterministic external image fragment with a local fallback.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param title - Image alternative text context.
+ * @param pageOrder - Tale-wide page order.
+ * @param order - Fragment order.
+ * @param horizontal - Whether the page scrolls horizontally.
+ * @returns Image fragment seed.
+ */
+function imageFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	title: string,
+	pageOrder: number,
+	order: number,
+	horizontal: boolean,
+): FragmentSeed {
+	const source =
+		externalImages[pageOrder % externalImages.length] ?? externalImages[0];
+	const fallback =
+		localImages[pageOrder % localImages.length] ?? localImages[0];
+	return {
+		...base,
+		content: {
+			alt: `Illustration for ${title}`,
+			fallbackUrl: fallback,
+			url: source,
+		},
+		data: { alt: `Illustration for ${title}`, url: source },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: {
+			flexShrink: 0,
+			height: horizontal ? "72vh" : "min(52vh, 34rem)",
+			maxWidth: horizontal ? "65vw" : "48rem",
+			objectFit: "cover",
+			width: horizontal ? "65vw" : "100%",
+		},
+		type: "image",
+	};
+}
+
+/**
+ * Creates an unanimated choice or return button fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param path - Persisted path row.
+ * @param order - Fragment order.
+ * @returns Choice button fragment seed.
+ */
+function choiceFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	path: { id: number; label: string | null; type: string },
+	order: number,
+): FragmentSeed {
+	return {
+		...base,
+		content: {
+			description:
+				path.type === "return"
+					? "Return to a previously visited choice."
+					: path.type === "teleport"
+						? "Revisit a prior block without changing the selected route."
+						: "Choose the next route through Thornwick.",
+			label: path.label ?? "Continue",
+			pathId: String(path.id),
+		},
+		data: { label: path.label ?? "Continue", pathId: String(path.id) },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: { maxWidth: "34rem", width: "100%" },
+		type: "choiceButton",
+	};
+}
+
+/**
+ * Creates a codex launcher fragment.
+ *
+ * @param base - Shared fragment fields.
+ * @param nodeId - Parent content node id.
+ * @param label - Visible codex button label.
+ * @param text - Supporting codex teaser.
+ * @param order - Fragment order.
+ * @returns Codex entry fragment seed.
+ */
+function codexEntryFragment(
+	base: ReturnType<typeof fragmentBase>,
+	nodeId: number,
+	label: string,
+	text: string,
+	order: number,
+): FragmentSeed {
+	return {
+		...base,
+		content: { description: text, label },
+		data: { label, text },
+		nodeId,
+		order,
+		placementConfig: { mode: "normal", nodeId: String(nodeId) },
+		styleConfig: { maxWidth: "34rem", width: "100%" },
+		type: "codexEntry",
+	};
+}
+
+/**
+ * Creates common fragment insert values.
+ *
+ * @param blockId - Actual owning block id.
+ * @param taleId - Actual owning tale id.
+ * @returns Shared fragment fields.
+ */
+function fragmentBase(
+	blockId: number,
+	taleId: number,
+): Pick<
+	FragmentSeed,
+	| "animationConfig"
+	| "blockId"
+	| "cloneable"
+	| "creatorId"
+	| "editable"
+	| "isOfficial"
+	| "isVerified"
+	| "taleId"
+	| "visibility"
+> {
+	return {
+		animationConfig: emptyAnimationConfig(),
+		blockId,
+		cloneable: "private",
+		creatorId: userId1,
+		editable: true,
+		isOfficial: true,
+		isVerified: true,
+		taleId,
+		visibility: "public",
+	};
+}
+
+/**
+ * Creates an empty direct animation configuration.
+ *
+ * @returns Empty entity-owned animation tracks.
+ */
+function emptyAnimationConfig(): FragmentAnimationConfig {
+	return {
+		ambient: { cycleDurationMs: 2400, tracks: [] },
+		entering: { tracks: [] },
+		leaving: { tracks: [] },
+		scrolling: { tracks: [] },
+	};
+}
+
+/**
+ * Creates deterministic lorem ipsum used by seeded text fragments.
+ *
+ * @param order - Stable page or block order.
+ * @param salt - Small offset to diversify nearby fragments.
+ * @returns Paragraph text for seeded fragment content.
+ */
+function seedLoremIpsum(order: number, salt: number): string {
+	const paragraphCount = ((order + salt) % 3) + 1;
+	return Array.from({ length: paragraphCount }, () => lorem.generateParagraphs(1))
+		.join("\n\n");
+}
+
+/**
+ * Groups rows by a derived key.
+ *
+ * @param rows - Rows to group.
+ * @param getKey - Returns the grouping key for one row.
+ * @returns Rows grouped by key.
+ */
+function groupBy<Row, Key>(
+	rows: Row[],
+	getKey: (row: Row) => Key,
+): Map<Key, Row[]> {
+	const groups = new Map<Key, Row[]>();
+	for (const row of rows) {
+		const key = getKey(row);
+		groups.set(key, [...(groups.get(key) ?? []), row]);
+	}
+	return groups;
 }
