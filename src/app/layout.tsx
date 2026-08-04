@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { extractRouterConfig } from "uploadthing/server";
@@ -60,6 +61,7 @@ export default function RootLayout({
 							{auth}
 						</TRPCReactProvider>
 					</AppStoreProvider>
+					<Analytics />
 				</body>
 			</html>
 		</ClerkProvider>

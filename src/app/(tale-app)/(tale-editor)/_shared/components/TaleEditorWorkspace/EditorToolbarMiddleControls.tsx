@@ -87,7 +87,7 @@ function AutoSelectActiveBlockButton({
 			title="Automatically inspect the active block"
 			onClick={onToggle}
 		>
-			<span className="font-medium md:hidden">Auto-Select</span>
+			<span className="hidden font-medium lg:inline">Auto-Select</span>
 			<Target size={14} />
 		</button>
 	);
