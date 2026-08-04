@@ -170,6 +170,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 			<AnimatePresence initial={false}>
 				{navigatorVisibility.expanded ? (
 					<motion.div
+						data-reader-component="EntryNavigator"
+						data-reader-role="expanded-entry-panel"
 						className="relative"
 						initial={{ opacity: 0, x: 24 }}
 						animate={{ opacity: 1, x: 0 }}
@@ -186,7 +188,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 										? "Unpin entry navigation"
 										: "Pin entry navigation"
 								}
-								className="-translate-x-1/2 -translate-y-1/2 -top-4 md:-top-3 absolute left-1/2 z-10 grid h-8 w-10 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/45 opacity-100 transition-opacity hover:text-foreground md:h-6 md:w-8 md:opacity-0 md:group-hover/entry-nav:opacity-100"
+								className="-translate-y-1/2 absolute top-1/2 right-[calc(100%+0.5rem)] z-10 grid h-8 w-8 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/45 opacity-100 transition-opacity hover:text-foreground md:h-7 md:w-7 md:opacity-0 md:group-hover/entry-nav:opacity-100"
 								onClick={navigatorVisibility.togglePinned}
 							>
 								{navigatorVisibility.pinned ? (
@@ -202,7 +204,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 							data-reader-role="entry-panel-shell"
 						>
 							<PartSelector
-								className="-translate-x-1/2 absolute bottom-[calc(100%+0.55rem)] left-1/2 z-20"
+								className="-translate-x-1/2 absolute bottom-[calc(100%+3rem)] left-1/2 z-20"
 								currentPart={currentPart}
 								open={partsOpen}
 								parts={contents}
@@ -215,6 +217,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 								}}
 							/>
 							<button
+								data-reader-component="EntryNavigator"
+								data-reader-role="previous-entry-control"
 								type="button"
 								aria-label="Previous entry"
 								disabled={currentIndex <= 0}
@@ -227,6 +231,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 								<ChevronUp size={14} />
 							</button>
 							<button
+								data-reader-component="EntryNavigator"
+								data-reader-role="next-entry-control"
 								type="button"
 								aria-label="Next entry"
 								disabled={currentIndex >= allEntries.length - 1}
@@ -244,6 +250,8 @@ export function EntryNavigator(): React.JSX.Element | null {
 								className="flex max-h-[min(82vh,30rem)] w-[4.75rem] flex-col items-center gap-2 rounded-l-lg border border-foreground/12 border-r-0 bg-background/82 px-1.5 py-3 shadow-2xl backdrop-blur-md"
 							>
 								<div
+									data-reader-component="EntryNavigator"
+									data-reader-role="entry-list"
 									className="flex max-h-[23rem] flex-col items-center justify-center gap-1.5 overflow-hidden px-2 py-1"
 									style={{ touchAction: "pan-y" }}
 									onTouchStart={(event) => {
@@ -365,7 +373,11 @@ export function EntryNavigator(): React.JSX.Element | null {
 												</button>
 												{entry.id === currentEntryId &&
 												entry.pages.length > 1 ? (
-													<span className="-bottom-1 -left-1 absolute rounded-full border border-primary/45 bg-background/90 px-1.5 py-0.5 font-semibold text-[8px] text-primary">
+													<span
+														data-reader-component="EntryNavigator"
+														data-reader-role="current-page-indicator"
+														className="-bottom-1 -left-1 absolute rounded-full border border-primary/45 bg-background/90 px-1.5 py-0.5 font-semibold text-[8px] text-primary"
+													>
 														{currentEntryPage?.number ??
 															currentEntryPage?.label ??
 															`${currentEntryPage?.type?.charAt(0)?.toUpperCase()}${currentEntryPage?.type?.slice(1)}`}

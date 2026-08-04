@@ -48,6 +48,8 @@ export function PartSelector({
 		>
 			{showStepButtons ? (
 				<button
+					data-reader-component="PartSelector"
+					data-reader-role="previous-part-control"
 					type="button"
 					aria-label="Previous part"
 					disabled={currentIndex === 0}
@@ -61,16 +63,20 @@ export function PartSelector({
 				</button>
 			) : null}
 			<button
+				data-reader-component="PartSelector"
+				data-reader-role="part-selector-control"
 				type="button"
 				aria-label="Select story part"
 				aria-expanded={open}
-				className="grid h-8 w-8 rotate-45 place-items-center rounded-[3px] border border-foreground/15 bg-foreground/8 font-black text-foreground transition hover:border-primary/65 hover:bg-primary/12"
+				className="grid h-8 w-8 rotate-45 place-items-center rounded-[3px] border border-foreground/20 bg-transparent font-black text-foreground transition hover:border-primary/65 hover:bg-primary/12"
 				onClick={() => onOpenChange(!open)}
 			>
 				<span className="-rotate-45 text-[11px]">{currentIndex + 1}</span>
 			</button>
 			{showStepButtons ? (
 				<button
+					data-reader-component="PartSelector"
+					data-reader-role="next-part-control"
 					type="button"
 					aria-label="Next part"
 					disabled={currentIndex >= parts.length - 1}
@@ -84,12 +90,19 @@ export function PartSelector({
 				</button>
 			) : null}
 			{open ? (
-				<div className="absolute top-0 right-[calc(100%+0.5rem)] w-64 rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md">
+				<div
+					data-reader-component="PartSelector"
+					data-reader-role="part-options"
+					className="absolute top-0 right-[calc(100%+0.5rem)] w-64 rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md"
+				>
 					<p className="px-2 py-1 font-semibold text-[10px] text-foreground/45 uppercase">
 						Select part
 					</p>
 					{parts.map((part, index) => (
 						<button
+							data-reader-component="PartSelector"
+							data-reader-role="part-option"
+							data-reader-part-id={part.id}
 							key={part.id}
 							type="button"
 							className={clsx(
@@ -182,6 +195,8 @@ export function EntryPageFlyout({
 				if (navigationIndex.type === "ellipsis") {
 					return (
 						<button
+							data-reader-component="EntryPageFlyout"
+							data-reader-role="ellipsis-control"
 							key={navigationIndex.id}
 							type="button"
 							aria-label="Browse more pages"

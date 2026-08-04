@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { EditorDebugHeaderActions } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorDebugHeaderActions";
+import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import {
 	useTaleReaderStore,
@@ -71,6 +72,7 @@ export function TaleDebug(): React.JSX.Element | null {
 
 */
 function TaleDebugContent(): React.JSX.Element {
+	const { viewport } = useReaderViewportContext();
 	const { block, branch, entry, location, page, part } =
 		useReaderLocationContext();
 	const {
@@ -92,7 +94,7 @@ function TaleDebugContent(): React.JSX.Element {
 	);
 	const layout = useTaleReaderStore((state) => state.derived.viewportLayout);
 	const [activeTab, setActiveTab] = useState<DebugTab>("summary");
-	const [mobileHeightVh, setMobileHeightVh] = useState(70);
+	const [mobileHeightPercent, setMobileHeightPercent] = useState(70);
 	const [desktopBounds, setDesktopBounds] = useState({
 		height: 620,
 		left: 16,
@@ -100,6 +102,22 @@ function TaleDebugContent(): React.JSX.Element {
 		width: 608,
 	});
 	const mobile = layout !== "desktop";
+	const desktopPanelWidth = Math.min(
+		desktopBounds.width,
+		Math.max(1, viewport.width - 16),
+	);
+	const desktopPanelHeight = Math.min(
+		desktopBounds.height,
+		Math.max(1, viewport.height - 16),
+	);
+	const desktopPanelLeft = Math.max(
+		8,
+		Math.min(viewport.width - desktopPanelWidth - 8, desktopBounds.left),
+	);
+	const desktopPanelTop = Math.max(
+		8,
+		Math.min(viewport.height - desktopPanelHeight - 8, desktopBounds.top),
+	);
 	const debugTabs = coreTabs.map((tab) => ({
 		...tab,
 		icon: getDebugTabIcon(tab.id),
@@ -161,10 +179,15 @@ function TaleDebugContent(): React.JSX.Element {
 	): void => {
 		if (!mobile) return;
 		event.preventDefault();
+		const containerBounds = event.currentTarget
+			.closest("[data-reader-role='debug-panel']")
+			?.parentElement?.getBoundingClientRect();
 		const updateHeight = (moveEvent: PointerEvent): void => {
+			if (!containerBounds) return;
+			const relativeY = moveEvent.clientY - containerBounds.top;
 			const nextHeight =
-				((window.innerHeight - moveEvent.clientY) / window.innerHeight) * 100;
-			setMobileHeightVh(Math.max(42, Math.min(92, nextHeight)));
+				((containerBounds.height - relativeY) / containerBounds.height) * 100;
+			setMobileHeightPercent(Math.max(42, Math.min(92, nextHeight)));
 		};
 		const stopDrag = (): void => {
 			window.removeEventListener("pointermove", updateHeight);
@@ -192,14 +215,14 @@ function TaleDebugContent(): React.JSX.Element {
 				left: Math.max(
 					8,
 					Math.min(
-						window.innerWidth - startBounds.width - 8,
+						viewport.width - desktopPanelWidth - 8,
 						startBounds.left + moveEvent.clientX - startX,
 					),
 				),
 				top: Math.max(
 					8,
 					Math.min(
-						window.innerHeight - startBounds.height - 8,
+						viewport.height - desktopPanelHeight - 8,
 						startBounds.top + moveEvent.clientY - startY,
 					),
 				),
@@ -225,20 +248,22 @@ function TaleDebugContent(): React.JSX.Element {
 		const startX = event.clientX;
 		const startY = event.clientY;
 		const startBounds = desktopBounds;
+		const maximumHeight = Math.max(1, viewport.height - desktopPanelTop - 8);
+		const maximumWidth = Math.max(1, viewport.width - desktopPanelLeft - 8);
 		const updateSize = (moveEvent: PointerEvent): void => {
 			setDesktopBounds({
 				...startBounds,
 				height: Math.max(
-					320,
+					Math.min(320, maximumHeight),
 					Math.min(
-						window.innerHeight - startBounds.top - 8,
+						maximumHeight,
 						startBounds.height + moveEvent.clientY - startY,
 					),
 				),
 				width: Math.max(
-					360,
+					Math.min(360, maximumWidth),
 					Math.min(
-						window.innerWidth - startBounds.left - 8,
+						maximumWidth,
 						startBounds.width + moveEvent.clientX - startX,
 					),
 				),
@@ -255,25 +280,33 @@ function TaleDebugContent(): React.JSX.Element {
 	return (
 		<aside
 			data-reader-ui="true"
+			data-reader-component="TaleDebug"
+			data-reader-role="debug-panel"
 			className={clsx(
 				"pointer-events-auto flex flex-col overflow-hidden border border-foreground/12 bg-background/92 shadow-2xl backdrop-blur-md",
 				mobile
-					? "fixed inset-x-0 bottom-0 z-[1200] w-full rounded-t-xl border-b-0"
-					: "fixed z-[90] rounded-lg",
+					? "absolute inset-x-0 bottom-0 z-[1200] w-full rounded-t-xl border-b-0"
+					: "absolute z-[90] rounded-lg",
 			)}
 			style={
 				mobile
-					? { height: `${mobileHeightVh}dvh` }
+					? { height: `${mobileHeightPercent}%` }
 					: {
-							height: desktopBounds.height,
-							left: desktopBounds.left,
-							top: desktopBounds.top,
-							width: desktopBounds.width,
+							height: desktopPanelHeight,
+							left: desktopPanelLeft,
+							top: desktopPanelTop,
+							width: desktopPanelWidth,
 						}
 			}
 		>
-			<header className="flex shrink-0 items-center justify-between gap-4 border-foreground/10 border-b px-4 py-3">
+			<header
+				data-reader-component="TaleDebug"
+				data-reader-role="debug-header"
+				className="flex shrink-0 items-center justify-between gap-4 border-foreground/10 border-b px-4 py-3"
+			>
 				<div
+					data-reader-component="TaleDebug"
+					data-reader-role="debug-drag-handle"
 					className={clsx(
 						"min-w-0 flex-1",
 						mobile ? "cursor-row-resize touch-none" : "cursor-move",
@@ -292,6 +325,8 @@ function TaleDebugContent(): React.JSX.Element {
 						<EditorDebugHeaderActions blockId={location?.blockId ?? null} />
 					) : null}
 					<button
+						data-reader-component="TaleDebug"
+						data-reader-role="close-debug-control"
 						type="button"
 						aria-label="Hide reader debug"
 						className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground"
@@ -308,7 +343,11 @@ function TaleDebugContent(): React.JSX.Element {
 				onChange={setActiveTab}
 				tabs={debugTabs}
 			/>
-			<div className="min-h-0 flex-1 overflow-y-auto p-3">
+			<div
+				data-reader-component="TaleDebug"
+				data-reader-role="debug-content"
+				className="min-h-0 flex-1 overflow-y-auto p-3"
+			>
 				{activeTab === "summary" ? (
 					<SummaryPanel
 						anchors={compiled?.anchors ?? []}
@@ -352,6 +391,8 @@ function TaleDebugContent(): React.JSX.Element {
 			</div>
 			{mobile ? null : (
 				<button
+					data-reader-component="TaleDebug"
+					data-reader-role="resize-debug-control"
 					type="button"
 					aria-label="Resize reader debug"
 					className="absolute right-1 bottom-1 h-5 w-5 cursor-nwse-resize rounded border border-foreground/10 bg-foreground/8"

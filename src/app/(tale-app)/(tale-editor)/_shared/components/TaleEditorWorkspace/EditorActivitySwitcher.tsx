@@ -41,8 +41,12 @@ export function EditorActivitySwitcher(): React.JSX.Element {
 
 				return (
 					<button
+						data-reader-component="EditorActivitySwitcher"
+						data-reader-role={`${option.value}-mode-control`}
 						key={option.value}
 						type="button"
+						aria-label={option.label}
+						title={option.label}
 						className={clsx(
 							"flex h-9 items-center gap-2 rounded px-3 text-xs transition",
 							active
@@ -52,7 +56,13 @@ export function EditorActivitySwitcher(): React.JSX.Element {
 						onClick={() => setActivity(option.value)}
 					>
 						<Icon size={15} />
-						<span className="hidden md:inline">{option.label}</span>
+						<span
+							data-reader-component="EditorActivitySwitcher"
+							data-reader-role="mode-label"
+							className="hidden lg:inline"
+						>
+							{option.label}
+						</span>
 					</button>
 				);
 			})}
