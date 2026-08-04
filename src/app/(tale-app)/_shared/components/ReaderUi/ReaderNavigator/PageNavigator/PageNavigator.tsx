@@ -179,7 +179,7 @@ export function PageNavigator(): React.JSX.Element | null {
 										? "Unpin page navigation"
 										: "Pin page navigation"
 								}
-								className="-translate-x-1/2 -translate-y-1/2 -top-4 md:-top-3 absolute left-1/2 z-10 grid h-8 w-10 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/40 opacity-100 transition-opacity hover:text-foreground md:h-6 md:w-8 md:opacity-0 md:group-hover/page-nav:opacity-100"
+								className="reader-connected-tab reader-connected-tab-top -translate-x-1/2 absolute bottom-[calc(100%-1px)] left-1/2 z-10 grid h-8 w-10 place-items-center rounded-t-md rounded-b-none border border-b-0 text-foreground/40 opacity-100 transition-opacity hover:text-foreground md:h-6 md:w-8 md:opacity-0 md:group-hover/page-nav:opacity-100"
 								onClick={() => {
 									navigatorVisibility.togglePinned();
 									if (navigatorVisibility.pinned) setOpen(false);
@@ -195,7 +195,7 @@ export function PageNavigator(): React.JSX.Element | null {
 						<div
 							data-reader-component="PageNavigator"
 							data-reader-role="page-controls"
-							className="relative flex items-end rounded-t-lg border border-foreground/12 border-b-0 bg-background/82 p-1.5 shadow-2xl backdrop-blur-md"
+							className="reader-connected-panel relative flex items-end rounded-t-lg border border-foreground/12 border-b-0 p-1.5 shadow-2xl backdrop-blur-md"
 						>
 							<button
 								data-reader-component="PageNavigator"

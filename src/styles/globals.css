@@ -163,6 +163,138 @@
 		@apply bg-background text-foreground;
 		min-height: 100dvh;
 	}
+
+	.dark .cl-userButtonPopoverActionButton,
+	.dark .cl-userButtonPopoverActionButtonText {
+		color: var(--popover-foreground) !important;
+	}
+
+	.dark .cl-userButtonPopoverActionButton:hover,
+	.dark
+		.cl-userButtonPopoverActionButton:hover
+		.cl-userButtonPopoverActionButtonText {
+		color: var(--accent-foreground) !important;
+	}
+}
+
+.reader-connected-panel,
+.reader-connected-tab {
+	--reader-connected-tab-background: rgb(var(--background-rgb) / 0.94);
+	--reader-connected-tab-border: rgb(var(--foreground-rgb) / 0.16);
+	--reader-connected-tab-curve: 0.625rem;
+	background-color: var(--reader-connected-tab-background);
+}
+
+.reader-connected-tab {
+	border-color: var(--reader-connected-tab-border);
+}
+
+.reader-connected-tab::before,
+.reader-connected-tab::after {
+	position: absolute;
+	width: var(--reader-connected-tab-curve);
+	height: var(--reader-connected-tab-curve);
+	pointer-events: none;
+	content: "";
+}
+
+.reader-connected-tab-top::before,
+.reader-connected-tab-top::after {
+	bottom: -1px;
+}
+
+.reader-connected-tab-top::before {
+	left: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-top::after {
+	right: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top right,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-bottom::before,
+.reader-connected-tab-bottom::after {
+	top: -1px;
+}
+
+.reader-connected-tab-bottom::before {
+	left: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at bottom left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-bottom::after {
+	right: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at bottom right,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-left::before,
+.reader-connected-tab-left::after {
+	right: -1px;
+}
+
+.reader-connected-tab-left::before {
+	top: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-left::after {
+	bottom: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at bottom left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
 }
 
 @supports (-moz-appearance: none) {

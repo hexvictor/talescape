@@ -188,7 +188,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 										? "Unpin entry navigation"
 										: "Pin entry navigation"
 								}
-								className="-translate-y-1/2 absolute top-1/2 right-[calc(100%+0.5rem)] z-10 grid h-8 w-8 place-items-center rounded border border-foreground/12 bg-background/90 text-foreground/45 opacity-100 transition-opacity hover:text-foreground md:h-7 md:w-7 md:opacity-0 md:group-hover/entry-nav:opacity-100"
+								className="reader-connected-tab reader-connected-tab-left -translate-y-1/2 absolute top-1/2 right-[calc(100%-1px)] z-10 grid h-8 w-8 place-items-center rounded-r-none rounded-l-md border border-r-0 text-foreground/45 opacity-100 transition-opacity hover:text-foreground md:h-7 md:w-7 md:opacity-0 md:group-hover/entry-nav:opacity-100"
 								onClick={navigatorVisibility.togglePinned}
 							>
 								{navigatorVisibility.pinned ? (
@@ -203,40 +203,47 @@ export function EntryNavigator(): React.JSX.Element | null {
 							data-reader-component="EntryNavigator"
 							data-reader-role="entry-panel-shell"
 						>
-							<PartSelector
-								className="-translate-x-1/2 absolute bottom-[calc(100%+3rem)] left-1/2 z-20"
-								currentPart={currentPart}
-								open={partsOpen}
-								parts={contents}
-								showStepButtons={!mobile}
-								onOpenChange={setPartsOpen}
-								onSelect={(part) => {
-									setSelectedPartId(part.id);
-									travelToBlock(part.firstBlockId);
-									setPartsOpen(false);
-								}}
-							/>
-							<button
+							<div
 								data-reader-component="EntryNavigator"
-								data-reader-role="previous-entry-control"
-								type="button"
-								aria-label="Previous entry"
-								disabled={currentIndex <= 0}
-								className="-translate-x-1/2 -top-10 absolute left-1/2 grid h-8 w-8 place-items-center rounded-full border border-foreground/12 bg-background/86 text-foreground/55 shadow-xl backdrop-blur-md hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
-								onClick={() => {
-									const previousEntry = allEntries[currentIndex - 1];
-									if (previousEntry) travelToBlock(previousEntry.firstBlockId);
-								}}
+								data-reader-role="entry-top-controls"
+								className="-translate-x-1/2 absolute bottom-[calc(100%-1px)] left-1/2 z-20 flex flex-col items-center gap-2"
 							>
-								<ChevronUp size={14} />
-							</button>
+								<PartSelector
+									currentPart={currentPart}
+									open={partsOpen}
+									parts={contents}
+									showStepButtons={!mobile}
+									onOpenChange={setPartsOpen}
+									onSelect={(part) => {
+										setSelectedPartId(part.id);
+										travelToBlock(part.firstBlockId);
+										setPartsOpen(false);
+									}}
+								/>
+								<button
+									data-reader-component="EntryNavigator"
+									data-reader-role="previous-entry-control"
+									type="button"
+									aria-label="Previous entry"
+									disabled={currentIndex <= 0}
+									className="reader-connected-tab reader-connected-tab-top grid h-8 w-8 place-items-center rounded-t-md rounded-b-none border border-b-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:opacity-20"
+									onClick={() => {
+										const previousEntry = allEntries[currentIndex - 1];
+										if (previousEntry) {
+											travelToBlock(previousEntry.firstBlockId);
+										}
+									}}
+								>
+									<ChevronUp size={14} />
+								</button>
+							</div>
 							<button
 								data-reader-component="EntryNavigator"
 								data-reader-role="next-entry-control"
 								type="button"
 								aria-label="Next entry"
 								disabled={currentIndex >= allEntries.length - 1}
-								className="-translate-x-1/2 -bottom-10 absolute left-1/2 grid h-8 w-8 place-items-center rounded-full border border-foreground/12 bg-background/86 text-foreground/55 shadow-xl backdrop-blur-md hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
+								className="reader-connected-tab reader-connected-tab-bottom -translate-x-1/2 absolute top-[calc(100%-1px)] left-1/2 grid h-8 w-8 place-items-center rounded-t-none rounded-b-md border border-t-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:opacity-20"
 								onClick={() => {
 									const nextEntry = allEntries[currentIndex + 1];
 									if (nextEntry) travelToBlock(nextEntry.firstBlockId);
@@ -247,7 +254,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 							<div
 								data-reader-component="EntryNavigator"
 								data-reader-role="entry-panel"
-								className="flex max-h-[min(82vh,30rem)] w-[4.75rem] flex-col items-center gap-2 rounded-l-lg border border-foreground/12 border-r-0 bg-background/82 px-1.5 py-3 shadow-2xl backdrop-blur-md"
+								className="reader-connected-panel flex max-h-[min(82vh,30rem)] w-[4.75rem] flex-col items-center gap-2 rounded-l-lg border border-foreground/12 border-r-0 px-1.5 py-3 shadow-2xl backdrop-blur-md"
 							>
 								<div
 									data-reader-component="EntryNavigator"
