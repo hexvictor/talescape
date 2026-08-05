@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
 import {
 	type CSSProperties,
@@ -141,14 +142,24 @@ export default function AutoHideTopBar({
 	return (
 		<>
 			<div
+				data-reader-component="AutoHideTopBar"
+				data-reader-role="auto-hide-header"
+				data-reader-pinned={pinned ? "true" : "false"}
 				className={`pointer-events-none ${wrapperClassName}`}
 				onMouseLeave={onMouseLeave}
 			>
 				<AnimatePresence mode="wait">
 					{isVisible ? (
 						<motion.div
+							data-reader-component="AutoHideTopBar"
+							data-reader-role="expanded-header"
+							data-reader-pinned={pinned ? "true" : "false"}
 							key="expanded-content"
-							className={`pointer-events-auto ${contentClassName}`}
+							className={clsx(
+								"pointer-events-auto transition-[box-shadow] duration-150",
+								contentClassName,
+								pinned && "ring-2 ring-primary/70 ring-inset",
+							)}
 							initial={{ opacity: 0, y: "-100%" }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: "-100%" }}
@@ -160,6 +171,8 @@ export default function AutoHideTopBar({
 						</motion.div>
 					) : collapsedContent ? (
 						<motion.div
+							data-reader-component="AutoHideTopBar"
+							data-reader-role="collapsed-header"
 							key="collapsed-content"
 							className={`pointer-events-auto ${collapsedContentClassName ?? ""}`}
 							initial={{ y: "-100%" }}
@@ -174,6 +187,8 @@ export default function AutoHideTopBar({
 			</div>
 			<div
 				aria-hidden="true"
+				data-reader-component="AutoHideTopBar"
+				data-reader-role="header-reveal-zone"
 				className={`fixed top-0 left-0 z-[1001] w-full ${revealZoneClassName}`}
 				style={{ height: revealZoneHeight }}
 				onMouseEnter={onMouseEnter}

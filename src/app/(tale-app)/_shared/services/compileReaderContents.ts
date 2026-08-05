@@ -1,6 +1,7 @@
 import type {
 	Anchor,
 	ReaderContentsEntry,
+	ReaderContentsEntryPartSpan,
 	ReaderContentsPage,
 	ReaderContentsPart,
 	Tale,
@@ -30,6 +31,15 @@ export function compileReaderContents(
 	anchors: Anchor[],
 ): CompiledReaderContents {
 	const anchorsByEntryId = new Map<string, Anchor[]>();
+	const visiblePartIds = new Set(anchors.map((anchor) => anchor.page.partId));
+	const partMetaById = new Map(
+		tale.structure.parts
+			.filter((part) => visiblePartIds.has(part.id))
+			.map((part, index) => [
+				part.id,
+				{ number: index + 1, title: part.title },
+			]),
+	);
 	const globalBlockIndexById = new Map(
 		anchors.map((anchor, index) => [anchor.block.id, index]),
 	);
@@ -74,6 +84,7 @@ export function compileReaderContents(
 					entry.id,
 					entryAnchors,
 					pageNumberById,
+					partMetaById,
 				);
 				pages.push(...entryPages);
 				const compiledEntry: ReaderContentsEntry = {
@@ -99,6 +110,7 @@ export function compileReaderContents(
 						(anchor) => anchor.block.isChoiceBlock,
 					),
 					id: entry.id,
+					partSpans: compileEntryPartSpans(entryPages),
 					pages: entryPages,
 					title: entry.title,
 					type: entry.type,
@@ -151,6 +163,7 @@ function compileEntryPages(
 	entryId: string,
 	anchors: Anchor[],
 	pageNumberById: Map<string, number>,
+	partMetaById: Map<string, { number: number; title: string }>,
 ): ReaderContentsPage[] {
 	const anchorsByPageId = new Map<string, Anchor[]>();
 	for (const anchor of anchors) {
@@ -165,6 +178,7 @@ function compileEntryPages(
 			throw new Error(`Entry ${entryId} contains an empty compiled page.`);
 		}
 		const number = pageNumberById.get(firstAnchor.page.id) ?? null;
+		const partMeta = partMetaById.get(firstAnchor.page.partId);
 		return {
 			blockIds: pageAnchors.map((anchor) => anchor.block.id),
 			entryId,
@@ -172,11 +186,45 @@ function compileEntryPages(
 			globalIndex: firstAnchor.page.position.globalPageNumber,
 			hasChoiceBlock: pageAnchors.some((anchor) => anchor.block.isChoiceBlock),
 			id: firstAnchor.page.id,
+			isFirstInPart: firstAnchor.page.position.isFirstInPart,
+			isLastInPart: firstAnchor.page.position.isLastInPart,
 			isPaginated: firstAnchor.page.isPaginated,
 			label: getReaderPageLabel(firstAnchor.page, number),
 			number,
+			partId: firstAnchor.page.partId,
+			partNumber: partMeta?.number ?? 0,
+			partTitle: partMeta?.title ?? "Untitled part",
 			title: firstAnchor.page.title ?? firstAnchor.block.title,
 			type: firstAnchor.page.type,
 		};
 	});
+}
+
+function compileEntryPartSpans(
+	pages: ReaderContentsPage[],
+): ReaderContentsEntryPartSpan[] {
+	const spans: ReaderContentsEntryPartSpan[] = [];
+
+	for (const page of pages) {
+		const currentSpan = spans.at(-1);
+		if (currentSpan && currentSpan.partId === page.partId) {
+			currentSpan.endPageId = page.id;
+			currentSpan.endsPart = page.isLastInPart;
+			currentSpan.pageCount += 1;
+			continue;
+		}
+
+		spans.push({
+			endPageId: page.id,
+			endsPart: page.isLastInPart,
+			partId: page.partId,
+			partNumber: page.partNumber,
+			partTitle: page.partTitle,
+			pageCount: 1,
+			startPageId: page.id,
+			startsPart: page.isFirstInPart,
+		});
+	}
+
+	return spans;
 }

@@ -20,6 +20,7 @@ import {
 	EntryTypeIcon,
 	getEntryTypeLabel,
 } from "../EntryNavigator/EntryTypeIcon";
+import { getReaderPartLabel, getReaderPartTheme } from "../readerPartTheme";
 import { EntryPagesGrid } from "./EntryPagesGrid";
 import { RouteGraphSection } from "./RouteGraphSection";
 
@@ -97,12 +98,14 @@ export function ContentsTree({
 		>
 			{contents.map((part, partIndex) => {
 				const collapsed = collapsedPartIds.has(part.id);
+				const partNumber = partIndex + 1;
 				return (
 					<section
 						key={part.id}
 						data-reader-component="ContentsTree"
 						data-reader-role="part-section"
-						className="rounded-md border border-foreground/10 bg-foreground/[0.025] p-2"
+						style={getReaderPartTheme(partNumber)}
+						className="rounded-md border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] p-2"
 					>
 						<div className="mb-2 flex items-center gap-1 rounded hover:bg-foreground/5">
 							<button
@@ -124,17 +127,19 @@ export function ContentsTree({
 								className="flex min-w-0 flex-1 items-center gap-3 py-2 pr-2 text-left"
 								onClick={() => onNavigate(part.firstBlockId)}
 							>
-								<Layers3 size={17} className="text-primary" />
+								<span className="grid h-8 w-8 shrink-0 place-items-center rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft-strong)] text-[color:var(--reader-part-solid)]">
+									<Layers3 size={15} />
+								</span>
 								<span className="min-w-0 flex-1">
 									<span className="block font-semibold text-foreground/88 text-sm">
-										Part {partIndex + 1}
+										{getReaderPartLabel(partNumber)}
 									</span>
 									<span className="block truncate text-foreground/42 text-xs">
 										{part.title}
 									</span>
 								</span>
 								<span className="text-foreground/38 text-xs">
-									{part.pageCount} pages
+									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
 								</span>
 							</button>
 						</div>
@@ -156,10 +161,10 @@ export function ContentsTree({
 												className={clsx(
 													"flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs",
 													active
-														? "bg-foreground/10 text-foreground"
+														? "bg-[color:var(--reader-part-soft-strong)] text-foreground"
 														: entry.hasChoiceBlock
 															? "text-emerald-900 hover:bg-emerald-500/12 hover:text-foreground dark:text-[#d8f5da] dark:hover:bg-[#8bcf90]/10"
-															: "text-foreground/58 hover:bg-foreground/6 hover:text-foreground/84",
+															: "text-foreground/64 hover:bg-[color:var(--reader-part-soft-strong)] hover:text-foreground",
 												)}
 											>
 												{entry.pages.length > 1 ? (
@@ -188,7 +193,7 @@ export function ContentsTree({
 													className="flex min-w-0 flex-1 items-center gap-2 text-left"
 													onClick={() => selectEntry(entry)}
 												>
-													<span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-foreground/10">
+													<span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-[color:var(--reader-part-solid)]">
 														{entry.type === "chapter" ? (
 															entry.chapterNumber
 														) : (
@@ -198,7 +203,7 @@ export function ContentsTree({
 													<span className="min-w-0 flex-1 truncate">
 														{entry.title}
 													</span>
-													<span className="rounded border border-foreground/10 bg-foreground/5 px-1.5 py-0.5 text-[9px] text-foreground/42 uppercase">
+													<span className="rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] px-1.5 py-0.5 text-[9px] text-[color:var(--reader-part-solid)] uppercase">
 														{getEntryTypeLabel(entry.type)}
 													</span>
 													{entry.hasChoiceBlock ? (

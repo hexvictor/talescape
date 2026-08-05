@@ -25,7 +25,7 @@ export const DEFAULT_READER_INPUT_SETTINGS = {
 	wheelBurstDecayMs: 650,
 	wheelBurstEnergyLimit: 180000,
 	wheelDeltaRatio: 0.7,
-	wheelDuration: 0.2,
+	wheelDuration: 0.75,
 	wheelMaxStepPx: 1900,
 	wheelResetDelayMs: 650,
 	touchAccelerationLimit: 10,

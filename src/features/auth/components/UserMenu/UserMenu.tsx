@@ -11,31 +11,33 @@ export default function UserMenu() {
 	if (!user) return null;
 
 	return (
-		<UserButton fallback={<SkeletonAvatar />}>
-			<UserButton.UserProfilePage label="account" />
-			<UserButton.UserProfilePage label="security" />
-			<UserButton.UserProfilePage
-				label="Help"
-				labelIcon={<CircleHelpIcon />}
-				url="help"
-			>
-				<div>
-					<h1>Help</h1>
-				</div>
-			</UserButton.UserProfilePage>
-			<UserButton.MenuItems>
-				<UserButton.Link
-					label="My library"
-					href={`/library/${user?.username}`}
-					labelIcon={<BookOpenIcon />}
-				/>
-				<UserButton.Action label="manageAccount" />
-				<UserButton.Action
+		<div data-reader-component="UserMenu" data-reader-role="user-menu">
+			<UserButton fallback={<SkeletonAvatar />}>
+				<UserButton.UserProfilePage label="account" />
+				<UserButton.UserProfilePage label="security" />
+				<UserButton.UserProfilePage
 					label="Help"
-					open="help"
-					labelIcon={<CircleHelpIcon />}
-				/>
-			</UserButton.MenuItems>
-		</UserButton>
+					labelIcon={<CircleHelpIcon className="text-popover-foreground" />}
+					url="help"
+				>
+					<div>
+						<h1>Help</h1>
+					</div>
+				</UserButton.UserProfilePage>
+				<UserButton.MenuItems>
+					<UserButton.Link
+						label="My library"
+						href={`/library/${user?.username}`}
+						labelIcon={<BookOpenIcon className="text-popover-foreground" />}
+					/>
+					<UserButton.Action label="manageAccount" />
+					<UserButton.Action
+						label="Help"
+						open="help"
+						labelIcon={<CircleHelpIcon className="text-popover-foreground" />}
+					/>
+				</UserButton.MenuItems>
+			</UserButton>
+		</div>
 	);
 }

@@ -1,8 +1,10 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { extractRouterConfig } from "uploadthing/server";
+import { TaleInteractionMotion } from "~/app/(tale-app)/_shared/components/TaleInteractionMotion";
 import { ourFileRouter } from "~/app/api/uploadthing/core";
 import { AppStoreProvider } from "~/contexts/AppStoreContext";
 import { clerkAppearance } from "~/features/auth/utils/clerkAppearance";
@@ -55,11 +57,14 @@ export default function RootLayout({
 							routerConfig={extractRouterConfig(ourFileRouter)}
 						/>
 						<TRPCReactProvider>
-							{children}
-							<div id="modal-root" />
-							{auth}
+							<TaleInteractionMotion>
+								{children}
+								<div id="modal-root" />
+								{auth}
+							</TaleInteractionMotion>
 						</TRPCReactProvider>
 					</AppStoreProvider>
+					<Analytics />
 				</body>
 			</html>
 		</ClerkProvider>

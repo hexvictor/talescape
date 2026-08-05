@@ -43,7 +43,14 @@ export const clerkAppearance = {
 			},
 		},
 		userButtonPopoverActionButtonText: {
-			color: "inherit",
+			color: "var(--popover-foreground)",
+		},
+		userButtonPopoverActionButtonIconBox: {
+			color: "var(--popover-foreground)",
+		},
+		userButtonPopoverActionButtonIcon: {
+			color: "var(--popover-foreground)",
+			stroke: "currentColor",
 		},
 		userButtonPopoverFooter: {
 			backgroundColor: "var(--popover)",
