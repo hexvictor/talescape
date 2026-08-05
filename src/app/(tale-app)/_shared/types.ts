@@ -928,9 +928,21 @@ export type ReaderContentsEntry = {
 	firstBlockId: string;
 	hasChoiceBlock: boolean;
 	id: string;
+	partSpans: ReaderContentsEntryPartSpan[];
 	pages: ReaderContentsPage[];
 	title: string;
 	type: TaleEntry["type"];
+};
+
+export type ReaderContentsEntryPartSpan = {
+	endPageId: string;
+	endsPart: boolean;
+	partId: string;
+	partNumber: number;
+	partTitle: string;
+	pageCount: number;
+	startPageId: string;
+	startsPart: boolean;
 };
 
 export type ReaderContentsPage = {
@@ -940,9 +952,14 @@ export type ReaderContentsPage = {
 	globalIndex: number;
 	hasChoiceBlock: boolean;
 	id: string;
+	isFirstInPart: boolean;
+	isLastInPart: boolean;
 	isPaginated: boolean;
 	label: string;
 	number: number | null;
+	partId: string;
+	partNumber: number;
+	partTitle: string;
 	title: string;
 	type: TalePage["type"];
 };

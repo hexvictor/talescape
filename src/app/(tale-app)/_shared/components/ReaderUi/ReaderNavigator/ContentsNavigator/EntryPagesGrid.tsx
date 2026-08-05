@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import type { ReaderContentsEntry } from "../../../../types";
 import { ReaderTypeIcon } from "../EntryNavigator/ReaderTypeIcon";
+import { getReaderPartTheme } from "../readerPartTheme";
 
 /**
  * Renders the route-visible pages belonging to a contents entry.
@@ -39,13 +40,14 @@ export function EntryPagesGrid({
 					type="button"
 					title={`${page.label}: ${page.title}`}
 					aria-label={`Go to ${page.label}: ${page.title}`}
+					style={getReaderPartTheme(page.partNumber)}
 					className={clsx(
 						"group/page grid h-9 w-9 place-items-center rounded-full border font-bold text-[10px] transition",
 						page.blockIds.includes(currentBlockId ?? "")
 							? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
 							: page.hasChoiceBlock
 								? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
-								: "border-foreground/12 bg-foreground/[0.035] text-foreground/62 hover:border-foreground/30 hover:bg-foreground/10 hover:text-foreground",
+								: "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-[color:var(--reader-part-solid)] hover:bg-[color:var(--reader-part-soft-strong)] hover:text-foreground",
 					)}
 					onClick={() => onNavigate(page.firstBlockId)}
 				>

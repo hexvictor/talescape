@@ -47,17 +47,29 @@ export function EditorEditingToolbar(): React.JSX.Element {
 			data-reader-role="editor-toolbar"
 			className="relative z-60 flex min-h-16 items-center justify-between gap-2 bg-background/95 px-3 py-2 text-foreground backdrop-blur-md sm:px-4 md:grid md:grid-cols-[auto_1fr_auto]"
 		>
-			<div className="flex min-w-0 items-center gap-2">
+			<div
+				data-reader-component="EditorEditingToolbar"
+				data-reader-role="editor-mode-controls"
+				className="flex min-w-0 items-center gap-2"
+			>
 				<Link href="/" className="hidden min-w-0 items-center gap-2 md:flex">
 					<Logo />
 				</Link>
 				<Separator className="hidden h-8 md:block" />
 				<EditorActivitySwitcher />
 			</div>
-			<div className="hidden min-w-0 items-center justify-center gap-2 md:flex">
+			<div
+				data-reader-component="EditorEditingToolbar"
+				data-reader-role="editor-middle-controls"
+				className="hidden min-w-0 items-center justify-center gap-2 md:flex"
+			>
 				<EditorToolbarMiddleControls />
 			</div>
-			<div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
+			<div
+				data-reader-component="EditorEditingToolbar"
+				data-reader-role="editor-desktop-actions"
+				className="hidden min-w-0 items-center justify-end gap-2 md:flex"
+			>
 				<EditorEditingDesktopActions />
 			</div>
 			<span className="font-bold text-xl tracking-normal md:hidden">
@@ -115,8 +127,14 @@ function EditorEditingMobileButtons({
 	onControlsOpenChange: (open: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<div className="flex min-w-0 items-center gap-2 md:hidden">
+		<div
+			data-reader-component="EditorEditingMobileButtons"
+			data-reader-role="mobile-editor-actions"
+			className="flex min-w-0 items-center gap-2 md:hidden"
+		>
 			<button
+				data-reader-component="EditorEditingMobileButtons"
+				data-reader-role="mobile-controls-toggle"
 				type="button"
 				aria-expanded={controlsOpen}
 				aria-label="Toggle editor header controls"
@@ -152,7 +170,11 @@ function EditorEditingMobilePanel({
 	if (!controlsOpen) return null;
 
 	return (
-		<div className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl backdrop-blur-xl md:hidden">
+		<div
+			data-reader-component="EditorEditingMobilePanel"
+			data-reader-role="mobile-editor-controls"
+			className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto rounded-lg border border-foreground/12 bg-background/96 p-3 shadow-2xl backdrop-blur-xl md:hidden"
+		>
 			<div className="flex flex-grow justify-between gap-2">
 				<EditorToolbarMiddleControls />
 			</div>

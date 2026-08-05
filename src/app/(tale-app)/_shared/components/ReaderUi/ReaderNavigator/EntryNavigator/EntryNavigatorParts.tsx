@@ -2,13 +2,13 @@
 
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { useHorizontalDragNavigation } from "../../../../hooks/useHorizontalDragNavigation";
-import { getBoundedNavigationIndices } from "../../../../services/getBoundedNavigationIndices";
+import { AnimatePresence, motion } from "motion/react";
+import { Fragment } from "react";
 import type {
 	ReaderContentsEntry,
 	ReaderContentsPart,
 } from "../../../../types";
+import { getReaderPartLabel, getReaderPartTheme } from "../readerPartTheme";
 import { ReaderTypeIcon } from "./ReaderTypeIcon";
 
 type PartSelectorProps = {
@@ -40,14 +40,17 @@ export function PartSelector({
 		parts.findIndex((part) => part.id === currentPart?.id),
 		0,
 	);
+	const currentPartTheme = getReaderPartTheme(currentIndex + 1);
 	return (
 		<div
 			data-reader-component="PartSelector"
 			data-reader-role="part-selection"
-			className={clsx("relative flex items-center gap-0.5", className)}
+			className={clsx("relative mb-3 flex items-center gap-0.5", className)}
 		>
 			{showStepButtons ? (
 				<button
+					data-reader-component="PartSelector"
+					data-reader-role="previous-part-control"
 					type="button"
 					aria-label="Previous part"
 					disabled={currentIndex === 0}
@@ -61,16 +64,25 @@ export function PartSelector({
 				</button>
 			) : null}
 			<button
+				data-reader-component="PartSelector"
+				data-reader-role="part-selector-control"
 				type="button"
 				aria-label="Select story part"
 				aria-expanded={open}
-				className="grid h-8 w-8 rotate-45 place-items-center rounded-[3px] border border-foreground/15 bg-foreground/8 font-black text-foreground transition hover:border-primary/65 hover:bg-primary/12"
+				className="grid h-8 w-8 rotate-45 place-items-center rounded-[4px] border font-black text-[color:var(--reader-part-solid)] transition hover:bg-[color:var(--reader-part-soft)]"
+				style={{
+					...currentPartTheme,
+					borderColor: "var(--reader-part-border)",
+					backgroundColor: "var(--reader-part-soft-strong)",
+				}}
 				onClick={() => onOpenChange(!open)}
 			>
 				<span className="-rotate-45 text-[11px]">{currentIndex + 1}</span>
 			</button>
 			{showStepButtons ? (
 				<button
+					data-reader-component="PartSelector"
+					data-reader-role="next-part-control"
 					type="button"
 					aria-label="Next part"
 					disabled={currentIndex >= parts.length - 1}
@@ -83,38 +95,66 @@ export function PartSelector({
 					<ChevronRight size={11} />
 				</button>
 			) : null}
-			{open ? (
-				<div className="absolute top-0 right-[calc(100%+0.5rem)] w-64 rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md">
-					<p className="px-2 py-1 font-semibold text-[10px] text-foreground/45 uppercase">
-						Select part
-					</p>
-					{parts.map((part, index) => (
-						<button
-							key={part.id}
-							type="button"
-							className={clsx(
-								"flex w-full items-center gap-3 rounded px-2 py-2 text-left",
-								part.id === currentPart?.id
-									? "bg-primary/18 text-primary"
-									: "text-foreground/68 hover:bg-foreground/8",
-							)}
-							onClick={() => onSelect(part)}
+			<AnimatePresence>
+				{open ? (
+					<motion.div
+						data-reader-component="PartSelector"
+						data-reader-role="part-options-bridge"
+						className="absolute top-0 right-full z-30 pr-2"
+						initial={{ opacity: 0, x: 6 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: 6 }}
+						transition={{ duration: 0.14 }}
+					>
+						<div
+							data-reader-component="PartSelector"
+							data-reader-role="part-options"
+							className="w-64 rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md"
 						>
-							<span className="grid h-8 w-8 place-items-center rounded bg-foreground/8 font-bold text-xs">
-								{index + 1}
-							</span>
-							<span className="min-w-0">
-								<span className="block truncate font-semibold text-xs">
-									{part.title}
-								</span>
-								<span className="block text-[10px] text-foreground/42">
-									{part.entries.length} entries · {part.pageCount} pages
-								</span>
-							</span>
-						</button>
-					))}
-				</div>
-			) : null}
+							<p className="px-2 py-1 font-semibold text-[10px] text-foreground/45 uppercase">
+								Select part
+							</p>
+							{parts.map((part, index) => (
+								<button
+									data-reader-component="PartSelector"
+									data-reader-role="part-option"
+									data-reader-part-id={part.id}
+									key={part.id}
+									type="button"
+									style={getReaderPartTheme(index + 1)}
+									className={clsx(
+										"flex w-full items-center gap-3 rounded px-2 py-2 text-left transition",
+										part.id === currentPart?.id
+											? "border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-foreground"
+											: "text-foreground/68 hover:bg-[color:var(--reader-part-soft)] hover:text-foreground",
+									)}
+									onClick={() => onSelect(part)}
+								>
+									<span
+										className="grid h-8 w-8 place-items-center rounded border font-bold text-[11px] text-[color:var(--reader-part-solid)]"
+										style={{
+											borderColor: "var(--reader-part-border)",
+											backgroundColor: "var(--reader-part-soft-strong)",
+										}}
+									>
+										{getReaderPartLabel(index + 1)}
+									</span>
+									<span className="min-w-0">
+										<span className="block truncate font-semibold text-xs">
+											{part.title}
+										</span>
+										<span className="block text-[10px] text-foreground/42">
+											{part.entries.length}{" "}
+											{part.entries.length === 1 ? "entry" : "entries"} ·{" "}
+											{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
+										</span>
+									</span>
+								</button>
+							))}
+						</div>
+					</motion.div>
+				) : null}
+			</AnimatePresence>
 		</div>
 	);
 }
@@ -139,83 +179,96 @@ export function EntryPageFlyout({
 	entry,
 	onNavigate,
 }: EntryPageFlyoutProps): React.JSX.Element {
-	const currentIndex = Math.max(
-		entry.pages.findIndex((page) => page.id === currentPageId),
-		0,
-	);
-	const [manualBrowseIndex, setManualBrowseIndex] = useState<number | null>(
-		null,
-	);
-	const navigationIndices = getBoundedNavigationIndices({
-		activeIndex: currentIndex,
-		browseIndex: manualBrowseIndex ?? currentIndex,
-		itemCount: entry.pages.length,
-		visibleItemCount: 5,
-	});
-	const moveBrowseIndex = (direction: -1 | 1): void => {
-		setManualBrowseIndex((index) =>
-			Math.max(
-				0,
-				Math.min(entry.pages.length - 1, (index ?? currentIndex) + direction),
-			),
-		);
-	};
-	const dragNavigation = useHorizontalDragNavigation({
-		onStep: moveBrowseIndex,
-	});
-
 	return (
 		<div
 			data-reader-component="EntryPageFlyout"
 			data-reader-role="entry-page-window"
-			className="pointer-events-auto flex items-center justify-center gap-1 overflow-hidden rounded-lg border border-foreground/12 bg-background/92 p-2 shadow-2xl backdrop-blur-md"
-			{...dragNavigation}
-			style={{ touchAction: "pan-y" }}
-			onWheel={(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				if (entry.pages.length <= 6) return;
-				moveBrowseIndex(event.deltaY > 0 ? 1 : -1);
-			}}
+			className="pointer-events-auto w-[min(20rem,calc(100vw-8rem))] max-w-[20rem] overflow-hidden rounded-xl border border-foreground/12 bg-background/94 shadow-2xl backdrop-blur-md"
 		>
-			{navigationIndices.map((navigationIndex) => {
-				if (navigationIndex.type === "ellipsis") {
+			<div className="border-foreground/10 border-b px-3 py-2">
+				<p className="truncate font-semibold text-foreground/84 text-xs">
+					{entry.title}
+				</p>
+				<p className="text-[10px] text-foreground/42">
+					{entry.pages.length} {entry.pages.length === 1 ? "page" : "pages"}
+				</p>
+			</div>
+			<div
+				data-reader-component="EntryPageFlyout"
+				data-reader-role="page-grid"
+				className="grid max-h-[16rem] grid-cols-3 gap-2 overflow-y-auto p-3"
+			>
+				{entry.pages.map((page, index) => {
+					const previousPage = index > 0 ? entry.pages[index - 1] : null;
+					const showPartStart =
+						page.isFirstInPart || previousPage?.partId !== page.partId;
 					return (
-						<button
-							key={navigationIndex.id}
-							type="button"
-							aria-label="Browse more pages"
-							className="grid h-7 w-5 shrink-0 place-items-center text-[9px] text-foreground/35 hover:text-foreground/70"
-							onClick={() => setManualBrowseIndex(navigationIndex.targetIndex)}
-						>
-							•••
-						</button>
+						<Fragment key={page.id}>
+							{showPartStart ? (
+								<div
+									data-reader-component="EntryPageFlyout"
+									data-reader-role="part-section-header"
+									data-reader-part-id={page.partId}
+									className="col-span-full flex items-center gap-2 pt-1"
+								>
+									<span
+										className="inline-flex items-center justify-center rounded-md border px-1.5 py-1 font-semibold text-[9px] text-[color:var(--reader-part-solid)] leading-none"
+										style={{
+											...getReaderPartTheme(page.partNumber),
+											borderColor: "var(--reader-part-border)",
+											backgroundColor: "var(--reader-part-soft-strong)",
+										}}
+									>
+										{getReaderPartLabel(page.partNumber)}
+									</span>
+									<span className="truncate text-[10px] text-foreground/54">
+										{page.partTitle}
+									</span>
+								</div>
+							) : null}
+							<button
+								data-reader-component="EntryPageFlyout"
+								data-reader-page-id={page.id}
+								data-reader-part-id={page.partId}
+								data-reader-role="page-control"
+								type="button"
+								title={`${page.label}: ${page.title} · Part ${page.partNumber}: ${page.partTitle}`}
+								style={getReaderPartTheme(page.partNumber)}
+								className={clsx(
+									"relative flex aspect-square min-w-0 flex-col items-start justify-between rounded-lg border p-2 text-left transition",
+									page.id === currentPageId
+										? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
+										: page.hasChoiceBlock
+											? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
+											: "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-foreground hover:bg-[color:var(--reader-part-soft-strong)]",
+								)}
+								onClick={() => onNavigate(page.firstBlockId)}
+							>
+								<div className="flex w-full items-start justify-between gap-2">
+									<span className="font-semibold text-[11px] leading-none">
+										{page.number ?? page.label}
+									</span>
+									<span
+										className={clsx(
+											"grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[8px]",
+											page.id === currentPageId
+												? "border-background/20 bg-background/12 text-background"
+												: "border-[color:var(--reader-part-border)] bg-background/80 text-[color:var(--reader-part-solid)]",
+										)}
+									>
+										<ReaderTypeIcon type={page.type} size={10} />
+									</span>
+								</div>
+								<div className="w-full">
+									<p className="line-clamp-2 text-[9px] leading-tight opacity-90">
+										{page.title}
+									</p>
+								</div>
+							</button>
+						</Fragment>
 					);
-				}
-				const page = entry.pages[navigationIndex.index];
-				if (!page) return null;
-				return (
-					<button
-						key={page.id}
-						data-reader-component="EntryPageFlyout"
-						data-reader-page-id={page.id}
-						data-reader-role="page-control"
-						type="button"
-						title={page.title}
-						className={clsx(
-							"flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full border px-2 font-semibold text-[9px]",
-							page.id === currentPageId
-								? "border-primary bg-primary text-background"
-								: page.hasChoiceBlock
-									? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/70 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
-									: "border-foreground/12 bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground",
-						)}
-						onClick={() => onNavigate(page.firstBlockId)}
-					>
-						{page.number ?? <ReaderTypeIcon type={page.type} size={13} />}
-					</button>
-				);
-			})}
+				})}
+			</div>
 		</div>
 	);
 }
