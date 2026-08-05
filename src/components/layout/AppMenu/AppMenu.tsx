@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import Logo from "~/components/ui/Logo";
 import ThemeToggle from "~/components/ui/ThemeToggle";
 import { AuthStatus } from "~/features/auth/components";
+import cn from "~/lib/utils/cn";
 
 export type AppMenuLinkItem = {
 	href: string;
@@ -96,7 +97,7 @@ export default function AppMenu({
 			ref={rootRef}
 			data-reader-component="AppMenu"
 			data-reader-role={dataReaderRole}
-			className={clsx(className, "relative")}
+			className={cn("relative", className)}
 		>
 			<button
 				type="button"

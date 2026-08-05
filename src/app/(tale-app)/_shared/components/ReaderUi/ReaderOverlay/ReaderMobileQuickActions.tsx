@@ -94,6 +94,8 @@ function MobileQuickActionButton({
 }): React.JSX.Element {
 	return (
 		<button
+			data-reader-component="ReaderMobileQuickActions"
+			data-reader-role="mobile-quick-action-control"
 			type="button"
 			aria-label={label}
 			aria-pressed={active}

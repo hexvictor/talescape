@@ -179,10 +179,93 @@
 
 .reader-connected-panel,
 .reader-connected-tab {
-	--reader-connected-tab-background: rgb(var(--background-rgb) / 0.94);
+	--reader-connected-tab-background: rgb(var(--background-rgb));
 	--reader-connected-tab-border: rgb(var(--foreground-rgb) / 0.16);
-	--reader-connected-tab-curve: 0.625rem;
+	--reader-connected-tab-curve: 1em;
 	background-color: var(--reader-connected-tab-background);
+}
+
+/* Distance separates the circle from the panel; overlap hides subpixel seams. */
+.reader-connected-shell {
+	--reader-connected-tab-distance: 0.15rem;
+	--reader-connected-tab-overlap: 4px;
+}
+
+.reader-scrollbar-hidden {
+	scrollbar-width: none;
+}
+
+.reader-scrollbar-hidden::-webkit-scrollbar {
+	display: none;
+}
+
+[data-tale-motion-target="true"] {
+	scale: var(--tale-interaction-scale, 1);
+	transform-origin: center;
+}
+
+.reader-entry-list-window {
+	position: relative;
+	overflow: hidden;
+	box-shadow: inset 0 1px rgb(var(--foreground-rgb) / 0.12), inset 0 -1px
+		rgb(var(--foreground-rgb) / 0.12);
+}
+
+.reader-entry-list-fade {
+	position: absolute;
+	right: 0;
+	left: 0;
+	z-index: 10;
+	height: 1.25rem;
+	pointer-events: none;
+	-webkit-backdrop-filter: blur(2.5px);
+	backdrop-filter: blur(2.5px);
+}
+
+.reader-entry-list-fade-top {
+	top: 0;
+	background: var(--reader-connected-tab-background);
+	-webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+	mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+}
+
+.reader-entry-list-fade-bottom {
+	bottom: 0;
+	background: var(--reader-connected-tab-background);
+	-webkit-mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+	mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+}
+
+.reader-entry-preview-bridge {
+	--reader-entry-preview-corridor: 1.25rem;
+	padding-right: var(--reader-connected-tab-distance);
+}
+
+.reader-entry-preview-bridge::after {
+	position: absolute;
+	top: 50%;
+	left: 100%;
+	width: var(--reader-entry-preview-corridor);
+	height: 3rem;
+	transform: translateY(-50%);
+	pointer-events: auto;
+	content: "";
+}
+
+.reader-connected-tab-top {
+	transform-origin: center bottom;
+}
+
+.reader-connected-tab-bottom {
+	transform-origin: center top;
+}
+
+.reader-connected-tab-left {
+	transform-origin: right center;
+}
+
+.reader-connected-tab-right {
+	transform-origin: left center;
 }
 
 .reader-connected-tab {
@@ -194,7 +277,7 @@
 	position: absolute;
 	width: var(--reader-connected-tab-curve);
 	height: var(--reader-connected-tab-curve);
-	pointer-events: none;
+	pointer-events: auto;
 	content: "";
 }
 
@@ -284,6 +367,331 @@
 }
 
 .reader-connected-tab-left::after {
+	bottom: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at bottom left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-right::before,
+.reader-connected-tab-right::after {
+	left: -1px;
+}
+
+.reader-connected-tab-right::before {
+	top: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top right,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-tab-right::after {
+	bottom: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at bottom right,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+/* Circle tabs use a center neck so both concave joins stay seamless. */
+.reader-connected-tab {
+	--reader-connected-tab-curve: 0.6rem;
+	--reader-connected-tab-neck: 1.25rem;
+}
+
+.reader-connected-tab-top::before {
+	inset: calc(100% - var(--reader-connected-tab-overlap, 1px)) auto auto 50%;
+	width: var(--reader-connected-tab-neck);
+	height: calc(
+		var(--reader-connected-tab-distance) +
+		var(--reader-connected-tab-overlap, 1px) +
+		var(--reader-connected-tab-overlap, 1px)
+	);
+	transform: translateX(-50%);
+	background: var(--reader-connected-tab-background);
+}
+
+.reader-connected-tab-top::after {
+	inset: calc(
+			100% +
+			var(--reader-connected-tab-distance) -
+			var(--reader-connected-tab-curve)
+		)
+		auto auto 50%;
+	width: calc(
+		var(--reader-connected-tab-neck) +
+		var(--reader-connected-tab-curve) *
+		2
+	);
+	height: var(--reader-connected-tab-curve);
+	transform: translateX(-50%);
+	background: radial-gradient(
+			circle at top left,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		left center / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat,
+		radial-gradient(
+			circle at top right,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		right center / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat;
+}
+
+.reader-connected-tab-bottom::before {
+	inset: auto auto calc(100% - var(--reader-connected-tab-overlap, 1px)) 50%;
+	width: var(--reader-connected-tab-neck);
+	height: calc(
+		var(--reader-connected-tab-distance) +
+		var(--reader-connected-tab-overlap, 1px) +
+		var(--reader-connected-tab-overlap, 1px)
+	);
+	transform: translateX(-50%);
+	background: var(--reader-connected-tab-background);
+}
+
+.reader-connected-tab-bottom::after {
+	inset: calc(0px - var(--reader-connected-tab-distance)) auto auto 50%;
+	width: calc(
+		var(--reader-connected-tab-neck) +
+		var(--reader-connected-tab-curve) *
+		2
+	);
+	height: var(--reader-connected-tab-curve);
+	transform: translateX(-50%);
+	background: radial-gradient(
+			circle at bottom left,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		left center / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat,
+		radial-gradient(
+			circle at bottom right,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		right center / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat;
+}
+
+.reader-connected-tab-left::before {
+	inset: 50% auto auto calc(100% - var(--reader-connected-tab-overlap, 1px));
+	width: calc(
+		var(--reader-connected-tab-distance) +
+		var(--reader-connected-tab-overlap, 1px) +
+		var(--reader-connected-tab-overlap, 1px)
+	);
+	height: var(--reader-connected-tab-neck);
+	transform: translateY(-50%);
+	background: var(--reader-connected-tab-background);
+}
+
+.reader-connected-tab-left::after {
+	inset: 50% auto auto
+		calc(
+			100% +
+			var(--reader-connected-tab-distance) -
+			var(--reader-connected-tab-curve)
+		);
+	width: var(--reader-connected-tab-curve);
+	height: calc(
+		var(--reader-connected-tab-neck) +
+		var(--reader-connected-tab-curve) *
+		2
+	);
+	transform: translateY(-50%);
+	background: radial-gradient(
+			circle at top left,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		center top / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat,
+		radial-gradient(
+			circle at bottom left,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		center bottom / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat;
+}
+
+.reader-connected-tab-right::before {
+	inset: 50% calc(100% - var(--reader-connected-tab-overlap, 1px)) auto auto;
+	width: calc(
+		var(--reader-connected-tab-distance) +
+		var(--reader-connected-tab-overlap, 1px) +
+		var(--reader-connected-tab-overlap, 1px)
+	);
+	height: var(--reader-connected-tab-neck);
+	transform: translateY(-50%);
+	background: var(--reader-connected-tab-background);
+}
+
+.reader-connected-tab-right::after {
+	inset: 50%
+		calc(
+			100% +
+			var(--reader-connected-tab-distance) -
+			var(--reader-connected-tab-curve)
+		)
+		auto auto;
+	width: var(--reader-connected-tab-curve);
+	height: calc(
+		var(--reader-connected-tab-neck) +
+		var(--reader-connected-tab-curve) *
+		2
+	);
+	transform: translateY(-50%);
+	background: radial-gradient(
+			circle at top right,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		center top / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat,
+		radial-gradient(
+			circle at bottom right,
+			transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) - 0.75px),
+			var(--reader-connected-tab-border)
+				calc(var(--reader-connected-tab-curve) + 0.25px),
+			var(--reader-connected-tab-background)
+				calc(var(--reader-connected-tab-curve) + 0.75px)
+		)
+		center bottom / var(--reader-connected-tab-curve)
+		var(--reader-connected-tab-curve) no-repeat;
+}
+
+.reader-connected-panel-bottom,
+.reader-connected-panel-right {
+	position: relative;
+}
+
+.reader-connected-panel-bottom::before,
+.reader-connected-panel-bottom::after,
+.reader-connected-panel-right::before,
+.reader-connected-panel-right::after {
+	position: absolute;
+	width: var(--reader-connected-tab-curve);
+	height: var(--reader-connected-tab-curve);
+	pointer-events: none;
+	content: "";
+}
+
+.reader-connected-panel-bottom::before,
+.reader-connected-panel-bottom::after {
+	bottom: -1px;
+}
+
+.reader-connected-panel-bottom::before {
+	left: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-panel-bottom::after {
+	right: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top right,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-panel-right::before,
+.reader-connected-panel-right::after {
+	right: -1px;
+}
+
+.reader-connected-panel-right::before {
+	top: calc(var(--reader-connected-tab-curve) * -1);
+	background: radial-gradient(
+		circle at top left,
+		transparent calc(var(--reader-connected-tab-curve) - 1.25px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) - 0.75px),
+		var(--reader-connected-tab-border)
+			calc(var(--reader-connected-tab-curve) + 0.25px),
+		var(--reader-connected-tab-background)
+			calc(var(--reader-connected-tab-curve) + 0.75px)
+	);
+}
+
+.reader-connected-panel-right::after {
 	bottom: calc(var(--reader-connected-tab-curve) * -1);
 	background: radial-gradient(
 		circle at bottom left,

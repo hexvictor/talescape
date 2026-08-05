@@ -27,14 +27,14 @@ const VISIBILITY_OPTIONS: Array<{
  * <ReaderUiVisibilityControl />
  */
 export function ReaderUiVisibilityControl(): React.JSX.Element {
-	const { layout, mode, setMode, toggle } = useTaleReaderStoreShallow(
-		(state) => ({
+	const { layout, mode, reduceInactiveUiOpacity, setMode, toggle } =
+		useTaleReaderStoreShallow((state) => ({
 			layout: state.derived.viewportLayout,
 			mode: state.ui.visibilityMode,
+			reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 			setMode: state.ui.setVisibilityMode,
 			toggle: state.ui.toggleReaderUi,
-		}),
-	);
+		}));
 	const [open, setOpen] = useState(false);
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const mobile = layout !== "desktop";
@@ -108,9 +108,12 @@ export function ReaderUiVisibilityControl(): React.JSX.Element {
 				aria-label="Change reader UI visibility"
 				aria-expanded={open}
 				className={clsx(
-					"grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground opacity-25 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:opacity-100",
-					open && "opacity-100",
-					mode === "hidden" && !open && "opacity-15",
+					"grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground shadow-2xl backdrop-blur-md transition-opacity duration-200",
+					open || !reduceInactiveUiOpacity
+						? "opacity-100"
+						: mode === "hidden"
+							? "opacity-15 hover:opacity-100"
+							: "opacity-25 hover:opacity-100",
 				)}
 				onClick={() => {
 					if (mobile) {
