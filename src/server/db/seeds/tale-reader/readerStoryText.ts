@@ -29,3 +29,13 @@ export function createReaderStoryText(
 		...(extended ? storyParagraphs.slice(1, 6) : []),
 	].join("\n\n");
 }
+
+/** Creates one short panel-sized line of seeded story copy. */
+export function createReaderStoryExcerpt(
+	title: string,
+	route: string,
+	order: number,
+): string {
+	const paragraph = storyParagraphs[order % storyParagraphs.length];
+	return `${title}. ${route}: ${paragraph}`;
+}

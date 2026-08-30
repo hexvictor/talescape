@@ -1,7 +1,7 @@
 "use client";
 
-import clsx from "clsx";
 import { useEffect, useRef } from "react";
+import cn from "~/lib/utils/cn";
 import type { ResolvedTaleFragment } from "../../../../types";
 
 /**
@@ -12,7 +12,7 @@ import type { ResolvedTaleFragment } from "../../../../types";
  * @param props.fragment - Resolved text fragment data and styles.
  * @param props.index - Fragment position used for alternating alignment.
  * @param props.onCommit - Receives edited text when the field loses focus.
- * @param props.onRequestEdit - Requests editor ownership after a double-click.
+ * @param props.onRequestEdit - Requests Studio editing after a double-click.
  * @returns Styled text fragment content.
  *
  * @example
@@ -48,7 +48,7 @@ export function DefaultFragment({
 			data-reader-component="DefaultFragment"
 			data-reader-role="text-content"
 			data-reader-fragment-id={fragment.id}
-			className={clsx(
+			className={cn(
 				"max-w-3xl p-5 text-base leading-8 backdrop-blur-md md:text-lg",
 				index % 2 === 0 ? "justify-self-start" : "justify-self-end",
 			)}

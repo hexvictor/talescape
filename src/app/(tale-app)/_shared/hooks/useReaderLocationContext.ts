@@ -1,5 +1,6 @@
 "use client";
 
+import { useTaleAppStore } from "../contexts/TaleAppStoreContext";
 import { useTaleReaderStore } from "../contexts/TaleReaderStoreContext";
 import type {
 	ReaderLocation,
@@ -30,13 +31,16 @@ type ReaderLocationContext = {
 export function useReaderLocationContext(): ReaderLocationContext {
 	const anchor = useTaleReaderStore((state) => state.navigation.currentAnchor);
 	const location = useTaleReaderStore((state) => state.navigation.current);
+	const tale = useTaleAppStore((state) => state.document.tale);
 
 	return {
-		block: anchor?.block ?? null,
-		branch: anchor?.branch ?? null,
-		entry: anchor?.entry ?? null,
+		block: anchor ? (tale.indexMap.blocksById[anchor.blockId] ?? null) : null,
+		branch: anchor
+			? (tale.indexMap.branchesById[anchor.branchId] ?? null)
+			: null,
+		entry: anchor ? (tale.indexMap.entriesById[anchor.entryId] ?? null) : null,
 		location,
-		page: anchor?.page ?? null,
-		part: anchor?.part ?? null,
+		page: anchor ? (tale.indexMap.pagesById[anchor.pageId] ?? null) : null,
+		part: anchor ? (tale.indexMap.partsById[anchor.partId] ?? null) : null,
 	};
 }

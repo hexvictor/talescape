@@ -1,7 +1,7 @@
 "use client";
 
-import clsx from "clsx";
 import { BookMarked, ListTree } from "lucide-react";
+import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 
 /**
@@ -45,8 +45,8 @@ export function ReaderMobileQuickActions(): React.JSX.Element | null {
 			data-reader-ui="true"
 			data-reader-component="ReaderMobileQuickActions"
 			data-reader-role="mobile-reader-actions"
-			className={clsx(
-				"pointer-events-auto absolute top-3 right-3 z-60 flex rounded-lg border border-foreground/14 bg-background/92 p-1 shadow-2xl backdrop-blur-md transition-opacity duration-300 md:hidden",
+			className={cn(
+				"pointer-events-auto absolute top-[calc(var(--reader-mobile-toolbar-offset,0px)+0.75rem)] right-3 z-60 flex rounded-lg border border-foreground/14 bg-background/92 p-1 shadow-2xl backdrop-blur-md transition-[top,opacity] duration-300 md:hidden",
 				contentsOpen || hubOpen || !reduceInactiveUiOpacity
 					? "opacity-100"
 					: "opacity-25 hover:opacity-100",
@@ -99,7 +99,7 @@ function MobileQuickActionButton({
 			type="button"
 			aria-label={label}
 			aria-pressed={active}
-			className={clsx(
+			className={cn(
 				"grid h-10 w-10 place-items-center rounded-md transition",
 				active
 					? "bg-primary/18 text-primary"

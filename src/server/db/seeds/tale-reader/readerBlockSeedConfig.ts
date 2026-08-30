@@ -1,5 +1,7 @@
+import type { TaleBlockResponsiveOverride } from "~/app/(tale-app)/_shared/types";
 import type {
 	AnimationSelection,
+	Direction,
 	ReaderSizeConfig,
 	ReaderSizeMode,
 	ReaderStyleConfig,
@@ -26,6 +28,7 @@ const colorBackgrounds = [
 
 export type ReaderBlockSeedConfig = {
 	readingConfig: ReadingConfig;
+	responsiveConfig: Record<string, TaleBlockResponsiveOverride>;
 	sizeConfig: ReaderSizeConfig;
 	sizeMode: ReaderSizeMode;
 	styleConfig: ReaderStyleConfig;
@@ -43,79 +46,196 @@ export function createReaderBlockSeedConfig(
 	page: ReaderPageBlueprint,
 	branchName: string,
 ): ReaderBlockSeedConfig {
-	const fullscreen = page.layout === "fullscreen";
-	const horizontal = page.layout === "horizontal";
-	const stack = fullscreen && !page.isChoice && page.order % 4 === 0;
+	const panel = getDesktopPanelTile(page.order);
 	return {
 		readingConfig: {
 			animationConfig: {
 				ambient: { cycleDurationMs: 2400, tracks: [] },
 				scrolling: { tracks: [] },
 			},
-			cameraPath: fullscreen
-				? { mode: "auto" }
-				: horizontal
-					? {
-							direction: page.readingDirection,
-							mode: "straight",
-						}
-					: { direction: page.readingDirection, mode: "straight" },
+			cameraPath: panel.scrollable
+				? { direction: page.readingDirection, mode: "straight" }
+				: { mode: "auto" },
 			pauses: { atEnd: 0, atStart: 0 },
-			readingLength: fullscreen ? 800 : null,
-			readingLengthMode: fullscreen ? "manual" : "content",
+			readingLength: panel.scrollable ? null : 560,
+			readingLengthMode: panel.scrollable ? "content" : "manual",
 		},
-		sizeConfig: getSizeConfig(page),
-		sizeMode: fullscreen ? "fixed" : "contentResponsive",
+		responsiveConfig: createResponsiveConfig(page),
+		sizeConfig: getSizeConfig(panel),
+		sizeMode: panel.scrollable ? "contentResponsive" : "fixed",
 		styleConfig: styleForPage(page, branchName),
-		transitionConfig: {
-			animationConfig: stack
-				? {
-						entering: fade(0, 1),
-						leaving: fade(1, 0),
-					}
-				: {
-						entering: { tracks: [] },
-						leaving: { tracks: [] },
-					},
-			enteringLength: null,
-			flow: stack
-				? { type: "stack" }
-				: {
-						alignment: "start",
-						direction: page.readingDirection,
-						placement: "blockEdgeWithViewportAlignment",
-						spacing: { unit: "px", value: 0 },
-						type: "linear",
-					},
-			leavingLength: null,
-		},
+		transitionConfig: createTransitionConfig(panel),
 	};
 }
 
 /**
- * Creates dimensions for fullscreen and content-responsive pages.
+ * Creates dimensions for a seeded comic-panel tile.
  *
  * @param page - Authored page definition.
  * @returns Reader block size configuration.
  */
-function getSizeConfig(page: ReaderPageBlueprint): ReaderSizeConfig {
-	if (page.layout === "fullscreen") {
+function getSizeConfig(panel: PanelTile): ReaderSizeConfig {
+	if (panel.scrollable) {
 		return {
-			height: { unit: "viewport", value: 1 },
-			width: { unit: "viewport", value: 1 },
-		};
-	}
-	if (page.layout === "horizontal") {
-		return {
-			maxHeight: { unit: "viewport", value: 1 },
+			maxHeight: { unit: "viewport", value: panel.height },
 			minHeight: { unit: "viewport", value: 1 },
 			minWidth: { unit: "viewport", value: 1 },
 		};
 	}
 	return {
-		maxWidth: { unit: "viewport", value: 1 },
-		minHeight: { unit: "viewport", value: 1 },
-		minWidth: { unit: "viewport", value: 1 },
+		height: { unit: "viewport", value: panel.height },
+		width: { unit: "viewport", value: panel.width },
+	};
+}
+
+type PanelTile = {
+	alignment: "center" | "end" | "start";
+	direction: Direction;
+	height: number;
+	placement: "blockEdge" | "groupEdge";
+	scrollable?: boolean;
+	width: number;
+};
+
+const desktopPanels: readonly PanelTile[] = [
+	panel(0.5, 0.5, "down", "groupEdge"),
+	panel(0.5, 0.5, "right", "blockEdge"),
+	panel(0.5, 0.5, "down", "groupEdge"),
+	panel(0.5, 0.5, "right", "blockEdge"),
+	panel(0.5, 0.5, "down", "groupEdge"),
+	panel(0.5, 0.5, "right", "blockEdge"),
+	{ ...panel(1, 1, "down", "groupEdge"), scrollable: true },
+	panel(0.5, 1, "down", "groupEdge"),
+	panel(0.5, 0.5, "right", "blockEdge"),
+	panel(0.5, 0.5, "down", "blockEdge"),
+	panel(0.5, 1, "down", "groupEdge"),
+	panel(0.5, 1, "right", "blockEdge"),
+	panel(1, 0.5, "down", "groupEdge"),
+	panel(0.5, 0.5, "down", "groupEdge"),
+	panel(0.5, 0.5, "right", "blockEdge"),
+];
+
+const tabletPortraitPanels: readonly PanelTile[] = [
+	panel(1, 0.5, "down", "groupEdge"),
+	panel(1, 0.5, "down", "blockEdge"),
+	panel(0.5, 1, "down", "groupEdge"),
+	panel(0.5, 1, "right", "blockEdge"),
+	panel(1, 1, "down", "groupEdge"),
+];
+
+const tabletLandscapePanels: readonly PanelTile[] = [
+	panel(0.5, 1, "down", "groupEdge"),
+	panel(0.5, 1, "right", "blockEdge"),
+	panel(1, 0.5, "down", "groupEdge"),
+	panel(1, 0.5, "down", "blockEdge"),
+	panel(1, 1, "down", "groupEdge"),
+];
+
+const mobilePortraitPanels: readonly PanelTile[] = [
+	panel(1, 0.5, "down", "groupEdge"),
+	panel(1, 0.5, "down", "blockEdge"),
+	panel(1, 1, "down", "groupEdge"),
+];
+
+const mobileLandscapePanels: readonly PanelTile[] = [
+	panel(0.5, 1, "down", "groupEdge"),
+	panel(0.5, 1, "right", "blockEdge"),
+	panel(1, 1, "down", "groupEdge"),
+];
+
+/** Returns the base desktop panel tile for a seeded page. */
+export function getDesktopPanelTile(order: number): PanelTile {
+	return desktopPanels[order % desktopPanels.length] as PanelTile;
+}
+
+/** Returns whether the seeded desktop panel needs compact content. */
+export function isCompactSeedPanel(order: number): boolean {
+	const tile = getDesktopPanelTile(order);
+	return tile.width < 1 || tile.height < 1;
+}
+
+function panel(
+	width: number,
+	height: number,
+	direction: Direction,
+	placement: PanelTile["placement"],
+): PanelTile {
+	return { alignment: "start", direction, height, placement, width };
+}
+
+function getPanelTile(tiles: readonly PanelTile[], order: number): PanelTile {
+	return tiles[order % tiles.length] as PanelTile;
+}
+
+function createTransitionConfig(panelTile: PanelTile): TransitionConfig {
+	return {
+		animationConfig: {
+			entering: fade(0, 1),
+			leaving: { tracks: [] },
+			previousVisible: { tracks: [] },
+		},
+		enteringLength: null,
+		flow: {
+			alignment: panelTile.alignment,
+			direction: panelTile.direction,
+			groupHorizontalAlignment: "start",
+			placement: panelTile.placement,
+			spacing: { unit: "px", value: 0 },
+			type: "linear",
+		},
+		leavingLength: null,
+		previousBlocksDuringEnter: "keep",
+	};
+}
+
+function createResponsiveConfig(
+	page: ReaderPageBlueprint,
+): Record<string, TaleBlockResponsiveOverride> {
+	return {
+		"mobile-landscape": createResponsiveOverride(
+			getPanelTile(mobileLandscapePanels, page.order),
+		),
+		"mobile-portrait": createResponsiveOverride(
+			getPanelTile(mobilePortraitPanels, page.order),
+		),
+		"tablet-landscape": createResponsiveOverride(
+			getPanelTile(tabletLandscapePanels, page.order),
+		),
+		"tablet-portrait": createResponsiveOverride(
+			getPanelTile(tabletPortraitPanels, page.order),
+		),
+	};
+}
+
+function createResponsiveOverride(
+	panelTile: PanelTile,
+): TaleBlockResponsiveOverride {
+	return {
+		size: {
+			height: panelTile.height,
+			heightUnit: "viewport",
+			horizontalAlignment: "auto",
+			mode: "manual",
+			verticalAlignment: "auto",
+			width: panelTile.width,
+			widthUnit: "viewport",
+		},
+		transition: {
+			animations: {
+				entering: {
+					animations: [
+						{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
+					],
+				},
+				leaving: { animations: [] },
+				previousVisible: { animations: [] },
+			},
+			enteringLength: null,
+			flow: createTransitionConfig(panelTile).flow,
+			leavingLength: null,
+			previousBlocksDuringEnter: "keep",
+			scrollLength: null,
+		},
 	};
 }
 

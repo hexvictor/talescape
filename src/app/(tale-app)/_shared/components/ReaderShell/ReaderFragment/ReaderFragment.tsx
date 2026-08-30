@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { EditorTextFragmentContent } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorTextFragmentContent";
-import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleRenderSlots } from "../../../contexts/TaleRenderContext";
 import type { ResolvedTaleFragment } from "../../../types";
 import { ChoiceButtonFragment } from "./fragments/ChoiceButtonFragment";
 import { CodexEntryFragment } from "./fragments/CodexEntryFragment";
@@ -37,10 +36,10 @@ export function ReaderFragment({
 	fragment,
 	index,
 }: ReaderFragmentProps): React.JSX.Element {
-	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
+	const { TextFragmentContent } = useTaleRenderSlots();
 	const TextContent =
-		isEditor && fragment.type === "text"
-			? EditorTextFragmentContent
+		TextFragmentContent && fragment.type === "text"
+			? TextFragmentContent
 			: DefaultFragment;
 
 	return (

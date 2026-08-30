@@ -5,13 +5,13 @@ the architecture map in `docs/application-architecture.md`.
 
 ## Domains Reviewed
 
-- Main application: landing, authentication, codex, shared layout, and UI
+- Site application: landing, authentication, codex, shared layout, and UI
   primitives.
 - Library: browse routes, detail routes, metadata management, access-aware
   queries, counts, and mutations.
 - Tale reader: formatted tale data, compilation, measurement, viewport,
   scrolling, overlays, navigation, contextual hub, debug, and progress.
-- Tale editor: independent workspace store, preview, graph, inspectors, draft
+- Tale Studio: independent workspace store, live preview, graph, inspectors, draft
   editing, and explicit persistence.
 - Server: tRPC context and routers, Clerk middleware, database access,
   formatters, queries, mutations, schema support, and seeds.
@@ -26,7 +26,7 @@ the architecture map in `docs/application-architecture.md`.
 - `ReaderOverlayRuntime.tsx`: owns progress, navigation, cue, debug, and UI
   visibility subscriptions at feature boundaries.
 - `ReaderProgress.tsx`: remains a prop-driven display component.
-- `ReaderViewport.tsx`: consumes derived hub/layout state without routing child
+- `TaleReaderViewport.tsx`: consumes derived hub/layout state without routing child
   UI state.
 - `ReaderStage.tsx`: uses a visible local shallow selector for its render data.
 - `ReaderLoading.tsx` and `ReaderMotionReadiness.tsx`: use direct local runtime
@@ -34,7 +34,7 @@ the architecture map in `docs/application-architecture.md`.
 - `ReaderNavigationModal.tsx`, `EntryNavigator.tsx`, `PageNavigator.tsx`,
   `ReaderHub.tsx`, and `ReaderHubSettings.tsx`: expose their actual flat store
   dependencies locally.
-- `useReaderViewportController.ts`, `usePrepareReaderLayout.ts`, and
+- `useTaleReaderViewportController.ts`, `usePrepareReaderLayout.ts`, and
   `useViewportSize.ts`: no longer hide one-consumer selector contracts or store
   a derived layout label.
 - `uiSlice.ts`: stores viewport dimensions and visibility preferences, while
@@ -44,15 +44,15 @@ the architecture map in `docs/application-architecture.md`.
 - `scrollSlice.ts` and `taleSlice.ts`: public slice responsibilities now have
   explicit TSDoc contracts.
 
-### Editor runtime
+### Tale Studio runtime
 
-- `TaleEditorPreview.tsx`: owns preview rendering, width, preview viewport,
-  resize refs, and resize interaction; visibility comes from `TaleAppStore`.
-- `TaleEditorWorkspace.tsx`: delegates preview and graph behavior to their
+- `TaleEditorLivePreview.tsx`: owns embedded preview rendering, width, viewport,
+  resize refs, and resize interaction; visibility comes from `TaleStudioStore`.
+- `TaleStudioWorkspace.tsx`: delegates preview and graph behavior to their
   feature components instead of routing callbacks and preview DOM policy.
-- `TaleBranchGraph.tsx`: is runtime-connected and reads graph state/actions from
-  the editor store directly.
-- `editorSlice.ts`: provides atomic branch, block, path, and clear-selection
+- `TaleEditorBranchGraph.tsx`: is runtime-connected and reads graph state/actions from
+  the Tale Studio store directly.
+- `studioSelectionSlice.ts`: provides atomic branch, block, path, and clear-selection
   actions so mutually exclusive selections cannot drift.
 - `AnimationSelectionEditor.tsx`: owns collection-level preset and append
   behavior only.
@@ -113,7 +113,7 @@ Removed:
 Retained:
 
 - `useReaderDebugSelectors.ts`: combines reader diagnostics with the canonical
-  document title without depending on editor state.
+  document title without depending on Tale Studio state.
 - `useReaderLocationContext.ts`: reused resolution of the current location into
   block, branch, entry, page, and part entities.
 
@@ -121,7 +121,7 @@ Replaced locally:
 
 - Viewport, stage, loading, navigation, and hub consumers now use either one
   narrow selector or one flat shallow selector visible at the usage site.
-- Editor inspection controls now select the independent editor store directly;
+- Studio inspection controls now select the independent Tale Studio store directly;
   `useTaleInspectorControls` and the editor bridge were removed.
 
 ## Shared Pure Selectors
@@ -130,7 +130,7 @@ Replaced locally:
 - `selectShowsReaderProgress`: visibility mode permits progress UI.
 - `selectShowsReaderTools`: visibility mode permits runtime tools.
 - `selectIsReaderHubOpen`: the hub is open and allowed by visibility policy.
-- `selectReaderViewportLayout`: viewport dimensions resolve to desktop, mobile
+- `selectTaleReaderViewportLayout`: viewport dimensions resolve to desktop, mobile
   portrait, or mobile landscape.
 
 Raw property reads such as `state.reader.compiled` remain local and were not
@@ -145,9 +145,9 @@ wrapped in shared selectors.
 - `ReaderScrollCueRuntime`: owns cue visibility and value selection.
 - `TaleDebugRuntime`: owns tool visibility for diagnostics.
 - `ReaderUiVisibilityControlRuntime`: owns visibility-control mounting.
-- `TaleEditorPreview`: owns the editor-specific preview reader boundary while
-  shared application/activity state remains in `TaleAppStore`.
-- `TaleBranchGraph`: owns its editor runtime connection rather than accepting a
+- `TaleEditorLivePreview`: owns the editor-only embedded reader boundary while
+  the shared application/workspace state remains in `TaleAppStore`.
+- `TaleEditorBranchGraph`: owns its Studio runtime connection rather than accepting a
   store-action prop surface.
 
 ## Intentionally Prop-Driven Components
@@ -178,7 +178,7 @@ labels, or combined visibility flags were added to mutable Zustand state.
 
 - Route components pass server-loaded tale/progress data into runtime providers;
   this is a server/client and runtime-instance boundary.
-- `ReaderViewport` passes refs to stage and measurement components; preview
+- `TaleReaderViewport` passes refs to stage and measurement components; preview
   behavior is derived from `TaleAppStore`, while refs and DOM ownership remain
   in React.
 - Library routes pass authorized query results to presentation components;
@@ -194,7 +194,7 @@ Public contracts improved in:
 
 - `readerUiSelectors.ts`
 - `ReaderOverlayRuntime.tsx`
-- `TaleEditorPreview.tsx`
+- `TaleEditorLivePreview.tsx`
 - `AnimationTrackFields.tsx`
 - `createTaleNodeRows.tsx`
 - `taleDetailViews.ts`
@@ -244,7 +244,7 @@ similarity out of the actionable duplicate report.
 
 ## Remaining Risks
 
-- `createReaderScrollEngine`, `TaleBranchGraph`, `EntryNavigator`,
+- `createReaderScrollEngine`, `TaleEditorBranchGraph`, `EntryNavigator`,
   `AnimationTrackFields`, and `readerAnimations` remain large, high-effort
   modules. They should be split by stable behavior boundaries alongside focused
   tests, not by line count alone.

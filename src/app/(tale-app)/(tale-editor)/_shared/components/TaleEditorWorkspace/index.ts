@@ -1,1 +1,0 @@
-export { TaleEditorWorkspace } from "./TaleEditorWorkspace";

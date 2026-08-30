@@ -1,0 +1,2 @@
+ALTER TABLE "talescape_tale" ALTER COLUMN "playbackConfig" SET DEFAULT '{"autoplay":{"enabled":false,"speed":52,"stopOn":{"dragging":true,"keyboard":true,"scrolling":true}},"interactions":{"dragging":true,"keyboard":true,"scrolling":true}}'::json;--> statement-breakpoint
+ALTER TABLE "talescape_tale" ADD COLUMN "backgroundConfig" json DEFAULT '{"dark":{"color":"#070a0c","imageUrl":null},"light":{"color":"#fff8e8","imageUrl":null}}'::json NOT NULL;

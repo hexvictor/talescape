@@ -11,6 +11,7 @@ import type {
 	TaleFragmentResponsiveOverride,
 	ViewportSize,
 } from "../types";
+import { getTaleBlocks, getTaleFragments } from "./taleLookups";
 
 /**
  * Resolves the first authored breakpoint that matches the active viewport.
@@ -26,40 +27,10 @@ export function selectViewportBreakpointId(
 	tale: Tale,
 	viewport: ViewportSize,
 ): string | null {
-	const matching = getOrderedBreakpoints(tale)
-		.find((breakpoint) => matchesBreakpoint(breakpoint, viewport));
+	const matching = getOrderedBreakpoints(tale).find((breakpoint) =>
+		matchesBreakpoint(breakpoint, viewport),
+	);
 	return matching?.id ?? null;
-}
-
-/**
- * Resolves the editor-authored breakpoint target used for preview and edits.
- *
- * The editor does not treat the global base tale as a separate authored layer
- * once breakpoints exist. When at least one breakpoint is defined, the first
- * ordered breakpoint becomes the default editing target unless the user has
- * explicitly selected another authored breakpoint.
- *
- * @param tale - Current tale document.
- * @param selectedBreakpointId - Runtime-selected breakpoint id.
- * @returns Breakpoint id to use for editor preview and editing, or null when
- * no breakpoints exist yet.
- *
- * @example
- * const breakpointId = resolveEditorBreakpointId(tale, state.runtime.breakpointId);
- */
-export function resolveEditorBreakpointId(
-	tale: Tale,
-	selectedBreakpointId: string | null,
-): string | null {
-	const breakpoints = getOrderedBreakpoints(tale);
-	if (breakpoints.length === 0) return null;
-	if (
-		selectedBreakpointId &&
-		breakpoints.some((breakpoint) => breakpoint.id === selectedBreakpointId)
-	) {
-		return selectedBreakpointId;
-	}
-	return breakpoints[0]?.id ?? null;
 }
 
 /**
@@ -78,10 +49,13 @@ export function resolveTaleBreakpoint(
 ): Tale {
 	if (!breakpointId) return tale;
 
-	const fragments = tale.structure.fragments.map((fragment) =>
+	const fragments = getTaleFragments(tale).map((fragment) =>
 		resolveEditedFragment(
 			tale,
-			applyFragmentOverride(fragment, fragment.responsiveOverrides?.[breakpointId]),
+			applyFragmentOverride(
+				fragment,
+				fragment.responsiveOverrides?.[breakpointId],
+			),
 		),
 	);
 	const fragmentsById = Object.fromEntries(
@@ -93,12 +67,8 @@ export function resolveTaleBreakpoint(
 			...tale.indexMap,
 			fragmentsById,
 		},
-		structure: {
-			...tale.structure,
-			fragments,
-		},
 	};
-	const blocks = tale.structure.blocks.map((block) =>
+	const blocks = getTaleBlocks(tale).map((block) =>
 		resolveEditedBlock(
 			fragmentSource,
 			applyBlockOverride(block, block.responsiveOverrides?.[breakpointId]),
@@ -113,10 +83,6 @@ export function resolveTaleBreakpoint(
 		indexMap: {
 			...fragmentSource.indexMap,
 			blocksById,
-		},
-		structure: {
-			...fragmentSource.structure,
-			blocks,
 		},
 	};
 }
@@ -186,10 +152,7 @@ function matchesBreakpoint(
 ): boolean {
 	const orientation =
 		viewport.height > viewport.width ? "portrait" : "landscape";
-	if (
-		breakpoint.orientation &&
-		breakpoint.orientation !== orientation
-	) {
+	if (breakpoint.orientation && breakpoint.orientation !== orientation) {
 		return false;
 	}
 	if (
@@ -266,7 +229,6 @@ function applyBlockOverride(
 function pickBlockOverride(block: TaleBlock): TaleBlockResponsiveOverride {
 	return {
 		description: block.description,
-		nodes: block.nodes,
 		reading: block.reading,
 		rootNodeId: block.rootNodeId,
 		size: block.size,

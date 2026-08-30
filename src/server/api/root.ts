@@ -1,9 +1,9 @@
 import { imageRouter } from "~/server/api/routers/image";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { taleEditorRouter } from "./routers/taleEditor";
-import { taleProgressRouter } from "./routers/taleProgress";
 import { authorRouter } from "./routers/author";
 import { bookRouter } from "./routers/book";
+import { taleProgressRouter } from "./routers/taleProgress";
+import { taleStudioRouter } from "./routers/taleStudio";
 
 /**
  * This is the primary router for your server.
@@ -16,7 +16,7 @@ export const appRouter = createTRPCRouter({
 		book: bookRouter,
 	},
 	image: imageRouter,
-	taleReader: { editor: taleEditorRouter, progress: taleProgressRouter },
+	taleApp: { progress: taleProgressRouter, studio: taleStudioRouter },
 });
 
 // export type definition of API

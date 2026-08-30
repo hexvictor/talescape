@@ -1,13 +1,13 @@
 "use client";
 
-import clsx from "clsx";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type {
-	ReaderContentsEntry,
-	ReaderContentsPage,
-} from "~/app/(tale-app)/_shared/types";
+	ReaderNavigationEntry,
+	ReaderNavigationPage,
+} from "~/app/(tale-app)/_shared/services/readerNavigationView";
+import cn from "~/lib/utils/cn";
 import {
 	EntryTypeIcon,
 	getEntryTypeLabel,
@@ -17,9 +17,9 @@ import { getReaderPartLabel, getReaderPartTheme } from "../readerPartTheme";
 
 type PageNavigatorGridProps = {
 	currentPageId: string;
-	entries: ReaderContentsEntry[];
-	onNavigate: (page: ReaderContentsPage) => void;
-	pages: ReaderContentsPage[];
+	entries: ReaderNavigationEntry[];
+	onNavigate: (page: ReaderNavigationPage) => void;
+	pages: ReaderNavigationPage[];
 };
 
 type PartTab = {
@@ -48,13 +48,13 @@ export function PageNavigatorGrid({
 		for (const page of pages) {
 			const tab = tabsById.get(page.partId);
 			if (tab) {
-				tab.pageCount += 1;
+				if (page.isPaginated) tab.pageCount += 1;
 				continue;
 			}
 			tabsById.set(page.partId, {
 				id: page.partId,
 				number: page.partNumber,
-				pageCount: 1,
+				pageCount: page.isPaginated ? 1 : 0,
 				title: page.partTitle,
 			});
 		}
@@ -74,7 +74,7 @@ export function PageNavigatorGrid({
 	}, [currentPage]);
 
 	const activePages = pages.filter((page) => page.partId === activePartId);
-	const activePageIdsByEntry = new Map<string, ReaderContentsPage[]>();
+	const activePageIdsByEntry = new Map<string, ReaderNavigationPage[]>();
 	for (const page of activePages) {
 		const entryPages = activePageIdsByEntry.get(page.entryId);
 		if (entryPages) entryPages.push(page);
@@ -118,7 +118,7 @@ export function PageNavigatorGrid({
 							role="tab"
 							aria-selected={active}
 							style={getReaderPartTheme(part.number)}
-							className={clsx(
+							className={cn(
 								"relative flex shrink-0 items-center gap-2 rounded-t-md border border-b-0 px-3 py-2 text-left",
 								active
 									? "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft-strong)] text-foreground"
@@ -158,7 +158,7 @@ export function PageNavigatorGrid({
 							data-reader-current={isCurrentEntry ? "true" : "false"}
 							key={entry.id}
 							layout="position"
-							className={clsx(
+							className={cn(
 								"overflow-hidden rounded-lg border",
 								isCurrentEntry
 									? "border-primary/30 bg-primary/[0.055]"
@@ -189,8 +189,9 @@ export function PageNavigatorGrid({
 										{entry.title}
 									</span>
 									<span className="block text-[9px] text-foreground/46 uppercase">
-										{getEntryTypeLabel(entry.type)} · {entryPages.length}{" "}
-										{entryPages.length === 1 ? "page" : "pages"}
+										{getEntryTypeLabel(entry.type)} · {entry.pageCount}{" "}
+										{entry.pageCount === 1 ? "page" : "pages"} ·{" "}
+										{entry.blockCount} blocks
 									</span>
 								</span>
 								<motion.span
@@ -229,7 +230,7 @@ export function PageNavigatorGrid({
 														type="button"
 														title={`${page.label}: ${page.title}`}
 														style={getReaderPartTheme(page.partNumber)}
-														className={clsx(
+														className={cn(
 															"relative flex aspect-square min-w-0 flex-col items-start justify-between rounded-lg border p-2 text-left",
 															active
 																? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
@@ -247,7 +248,7 @@ export function PageNavigatorGrid({
 																{page.label}
 															</span>
 															<span
-																className={clsx(
+																className={cn(
 																	"grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[8px]",
 																	active
 																		? "border-background/18 bg-background/12 text-background"

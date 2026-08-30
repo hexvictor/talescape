@@ -1,5 +1,8 @@
 import { formatTale } from "~/app/(tale-app)/_shared/services/formatTale";
+import { normalizeTalePlaybackConfig } from "~/app/(tale-app)/_shared/services/readerPlaybackSettings";
 import { normalizeTaleSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
+import { normalizeResponsiveBlockNodes } from "~/app/(tale-app)/_shared/services/responsiveNodes";
+import { normalizeTaleBackgroundConfig } from "~/app/(tale-app)/_shared/services/taleBackgroundSettings";
 import type { RawTaleRecord, Tale } from "~/app/(tale-app)/_shared/types";
 import { formatBlocks } from "../blocks/formatBlocks";
 import { formatBranches } from "../branches/formatBranches";
@@ -32,49 +35,58 @@ export function formatTaleStructure(
 	record: DbTaleRecord,
 	officialPresets: OfficialPresetRows = {},
 ): Tale {
-	const pages = formatPages(record.pages ?? []);
-	const nodes = formatNodes(record.nodes ?? []);
-	const nodesById = new Map(nodes.map((node) => [node.id, node]));
-	const blocks = formatBlocks(record.blocks ?? [], pages).map((block) => {
-		const blockNodes = block.nodeIds.flatMap((id) => {
-			const node = nodesById.get(id);
-			return node ? [node] : [];
-		});
-		return {
-			...block,
-			nodes: blockNodes,
-			rootNodeId:
-				block.rootNodeId ??
-				blockNodes.find((node) => !node.parentNodeId)?.id ??
-				undefined,
-		};
-	});
+	const {
+		blocks: rawBlocks,
+		backgroundConfig,
+		book,
+		branches: rawBranches,
+		breakpointConfig,
+		creatorById,
+		entries: rawEntries,
+		fragments: rawFragments,
+		nodes: rawNodes,
+		pages: rawPages,
+		parts: rawParts,
+		paths: rawPaths,
+		playbackConfig,
+		snapConfig,
+	} = record;
+	const pages = formatPages(rawPages ?? []);
+	const responsiveNodes = formatBlocks(rawBlocks ?? [], pages).map(
+		normalizeResponsiveBlockNodes,
+	);
+	const blocks = responsiveNodes.map((result) => result.block);
+	const nodes = [
+		...formatNodes(rawNodes ?? []),
+		...responsiveNodes.flatMap((result) => result.nodes),
+	];
 	const raw: RawTaleRecord = {
 		animationPresets: formatAnimationPresets(
 			officialPresets.animationPresets ?? [],
 			"official",
 		),
 		blocks,
+		backgroundConfig: normalizeTaleBackgroundConfig(backgroundConfig),
 		blockStylePresets: formatStylePresets(
 			officialPresets.blockStylePresets ?? [],
 			"official",
 		),
-		breakpoints: record.breakpointConfig ?? [],
-		branches: formatBranches(record.branches ?? []),
-		entries: formatEntries(record.entries ?? []),
-		fragments: formatFragments(record.fragments ?? []),
+		breakpoints: breakpointConfig ?? [],
+		branches: formatBranches(rawBranches ?? []),
+		entries: formatEntries(rawEntries ?? []),
+		fragments: formatFragments(rawFragments ?? []),
 		id: record.id,
 		nodes,
 		pages,
-		parts: formatParts(record.parts ?? []),
-		paths: formatPaths(record.paths ?? []),
+		parts: formatParts(rawParts ?? []),
+		paths: formatPaths(rawPaths ?? []),
+		playbackConfig: normalizeTalePlaybackConfig(playbackConfig),
 		slug: record.slug,
-		snapConfig: normalizeTaleSnapConfig(record.snapConfig),
+		snapConfig: normalizeTaleSnapConfig(snapConfig),
 		synopsis: record.description ?? "",
 		title: record.title,
 		firstBlockTransitionMode:
 			record.firstBlockTransitionMode ?? "fromPlacement",
-		transitionFirstBlock: record.transitionFirstBlock ?? false,
 		transitionPresets: formatTransitionPresets(
 			officialPresets.transitionPresets ?? [],
 			"official",
@@ -86,12 +98,25 @@ export function formatTaleStructure(
 	};
 	const tale = formatTale(withFallbackPresets(raw));
 	return {
-		...record,
 		...tale,
+		bookId: record.bookId,
+		backgroundConfig: raw.backgroundConfig,
 		breakpoints: raw.breakpoints,
-		book: record.book ?? null,
-		creator: record.creatorById ?? null,
+		book: book ?? null,
+		cloneable: record.cloneable,
+		createdAt: record.createdAt,
+		creator: creatorById ?? null,
+		creatorId: record.creatorId,
+		description: record.description,
+		editable: record.editable,
 		id: record.id,
+		isOfficial: record.isOfficial,
+		isVerified: record.isVerified,
+		playbackConfig: raw.playbackConfig,
 		snapConfig: raw.snapConfig,
+		status: record.status,
+		type: record.type,
+		updatedAt: record.updatedAt,
+		visibility: record.visibility,
 	};
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "talescape_tale" ADD COLUMN "playbackConfig" json DEFAULT '{"autoplay":{"enabled":false,"speed":52},"interactions":{"dragging":true,"keyboard":true,"scrolling":true}}'::json NOT NULL;

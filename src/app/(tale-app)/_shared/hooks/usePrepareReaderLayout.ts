@@ -13,6 +13,7 @@ import {
 	measureBlocks,
 	waitForReaderAssets,
 } from "../services/readerMeasurement";
+import { getTaleBlocks } from "../services/taleLookups";
 import type {
 	CompiledReader,
 	ResolvedBlockSize,
@@ -106,9 +107,7 @@ export function usePrepareReaderLayout(
 				resolvedTale,
 				selectedBranchIds,
 			);
-			const allBlockIds = resolvedTale.structure.blocks.map(
-				(block) => block.id,
-			);
+			const allBlockIds = getTaleBlocks(resolvedTale).map((block) => block.id);
 			countReaderDiagnostic("layout preparation started", {
 				blockCount: routeBlockIds.length,
 				revision,

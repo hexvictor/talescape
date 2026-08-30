@@ -25,7 +25,7 @@ export function createReaderFixedFragmentPainter(
 	const transformByElement = new WeakMap<HTMLElement, string>();
 
 	return (anchor, activeAnchor, segment, segmentProgress): void => {
-		const elements = registry.fixedElementsByBlockId.get(anchor.block.id);
+		const elements = registry.fixedElementsByBlockId.get(anchor.blockId);
 		if (!elements?.size) return;
 		const readingProgress = getFixedReadingProgress(
 			anchor,
@@ -70,16 +70,16 @@ function getFixedReadingProgress(
 ): number {
 	if (
 		segment.type === "reading" &&
-		segment.anchor.block.id === anchor.block.id
+		segment.blockId === anchor.blockId
 	) {
 		return segmentProgress;
 	}
-	if (segment.type === "pause" && segment.anchor.block.id === anchor.block.id) {
+	if (segment.type === "pause" && segment.blockId === anchor.blockId) {
 		return segment.pauseType === "start" ? 0 : 1;
 	}
 	if (segment.type === "transition") {
-		if (segment.from.block.id === anchor.block.id) return 1;
-		if (segment.to.block.id === anchor.block.id) return 0;
+		if (segment.fromBlockId === anchor.blockId) return 1;
+		if (segment.toBlockId === anchor.blockId) return 0;
 	}
 	return anchor.scroll < activeAnchor.scroll ? 1 : 0;
 }

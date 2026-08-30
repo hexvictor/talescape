@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import {
 	BookMarked,
 	ChevronDown,
@@ -12,13 +11,14 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
+import cn from "~/lib/utils/cn";
+import type { ReaderHubPanel } from "../../../../(reader)/_shared/stores/slices/hubSlice";
 import {
 	useTaleReaderStore,
 	useTaleReaderStoreShallow,
 } from "../../../contexts/TaleReaderStoreContext";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
 import { getReaderHubContent } from "../../../services/readerHubContent";
-import type { ReaderHubPanel } from "../../../store/slices/hubSlice";
 import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import { ReaderHubSettings } from "./ReaderHubSettings";
 
@@ -147,7 +147,7 @@ export function ReaderHub(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open Reader Hub"
-					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100 md:grid"
+					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center border-2 border-foreground bg-card text-foreground opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
 					onClick={openHubOnly}
 				>
 					<BookMarked size={18} />
@@ -160,11 +160,11 @@ export function ReaderHub(): React.JSX.Element {
 						data-reader-ui="true"
 						data-reader-component="ReaderHub"
 						data-reader-role="reader-hub-sidebar"
-						className={clsx(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 text-foreground shadow-2xl backdrop-blur-xl",
+						className={cn(
+							"pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[-7px_0_0_var(--comic-teal)]",
 							mobilePortrait
-								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
-								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l",
+								? "inset-x-0 bottom-0 h-[70dvh] w-full border-t-[3px]"
+								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l-[3px]",
 						)}
 						style={
 							mobilePortrait
@@ -194,18 +194,16 @@ export function ReaderHub(): React.JSX.Element {
 								/>
 							</div>
 						) : null}
-						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
+						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 bg-accent px-4 text-accent-foreground">
 							<BookMarked size={17} className="text-primary" />
 							<div
-								className={clsx(
+								className={cn(
 									"min-w-0 flex-1",
 									mobilePortrait && "cursor-row-resize touch-none",
 								)}
 								onPointerDown={startMobileHeightDrag}
 							>
-								<p className="font-semibold text-foreground/90 text-sm">
-									Reader Hub
-								</p>
+								<p className="font-display text-lg uppercase">Reader Hub</p>
 								<p className="truncate text-[11px] text-foreground/40">
 									{pageTitle}
 								</p>
@@ -213,7 +211,7 @@ export function ReaderHub(): React.JSX.Element {
 							<button
 								type="button"
 								aria-label="Close Reader Hub"
-								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
+								className="grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-secondary"
 								onClick={toggleOpen}
 							>
 								{mobilePortrait ? (
@@ -356,7 +354,7 @@ function HubPanelGroup({
 						type="button"
 						title={panel.label}
 						aria-label={panel.label}
-						className={clsx(
+						className={cn(
 							"grid h-8 w-8 place-items-center rounded",
 							activePanel === panel.id
 								? "bg-primary text-background"

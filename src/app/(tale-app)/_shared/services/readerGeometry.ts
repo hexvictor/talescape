@@ -378,38 +378,6 @@ function resolveSpacing(
 	};
 }
 
-function getReadingCameraOffset(
-	size: { height: number; width: number },
-	block: ResolvedTaleBlock,
-	progress: number,
-	viewport: ViewportSize,
-	readingPathPoints?: Point[],
-) {
-	if (readingPathPoints?.length) {
-		return pointAlongPath(readingPathPoints, progress);
-	}
-	const extraX = Math.max(0, size.width - viewport.width);
-	const extraY = Math.max(0, size.height - viewport.height);
-	const cameraPath = block.reading.cameraPath;
-	if (cameraPath?.mode === "custom" && cameraPath.points.length > 0) {
-		const points = cameraPath.points.map((point) => ({
-			x: -extraX / 2 + clamp(point.x * viewport.width, 0, extraX),
-			y: -extraY / 2 + clamp(point.y * viewport.height, 0, extraY),
-		}));
-		return pointAlongPath(points, progress);
-	}
-	const direction = getCameraDirection(block, cameraPath);
-	const vector = direction ? directionVector(direction) : { x: 0, y: 1 };
-	const xProgress =
-		vector.x === 0 ? 0.5 : vector.x > 0 ? progress : 1 - progress;
-	const yProgress =
-		vector.y === 0 ? 0.5 : vector.y > 0 ? progress : 1 - progress;
-	return {
-		x: -extraX / 2 + extraX * xProgress,
-		y: -extraY / 2 + extraY * yProgress,
-	};
-}
-
 /**
  * Resolves the content movement offset along a block reading path.
  *
@@ -424,15 +392,9 @@ function getReadingCameraOffset(
 function getReadingContentOffset(
 	anchor: Anchor,
 	progress: number,
-	viewport: ViewportSize,
+	_viewport: ViewportSize,
 ): Point {
-	return getReadingCameraOffset(
-		{ height: anchor.height, width: anchor.width },
-		anchor.block,
-		progress,
-		viewport,
-		anchor.readingPathPoints,
-	);
+	return pointAlongPath(anchor.readingPathPoints, progress);
 }
 
 /**
@@ -447,22 +409,10 @@ function getReadingContentOffset(
  */
 export function getReadingTravelDistance(
 	anchor: Anchor,
-	viewport: ViewportSize,
+	_viewport: ViewportSize,
 ) {
-	const start = getReadingCameraOffset(
-		{ height: anchor.height, width: anchor.width },
-		anchor.block,
-		0,
-		viewport,
-		anchor.readingPathPoints,
-	);
-	const end = getReadingCameraOffset(
-		{ height: anchor.height, width: anchor.width },
-		anchor.block,
-		1,
-		viewport,
-		anchor.readingPathPoints,
-	);
+	const start = pointAlongPath(anchor.readingPathPoints, 0);
+	const end = pointAlongPath(anchor.readingPathPoints, 1);
 	return Math.hypot(end.x - start.x, end.y - start.y);
 }
 

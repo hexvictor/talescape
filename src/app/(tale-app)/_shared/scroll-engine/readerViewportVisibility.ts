@@ -52,7 +52,7 @@ export function createReaderViewportVisibilityResolver(
 			right: centerX + anchor.width / 2,
 			top: centerY - anchor.height / 2,
 		};
-		boundsByBlockId.set(anchor.block.id, bounds);
+		boundsByBlockId.set(anchor.blockId, bounds);
 		for (
 			let cellX = Math.floor(bounds.left / cellWidth);
 			cellX <= Math.floor(bounds.right / cellWidth);
@@ -131,7 +131,7 @@ export function createReaderViewportVisibilityResolver(
 		for (const index of candidateIndices) {
 			const anchor = compiled.anchors[index];
 			if (!anchor) continue;
-			const bounds = boundsByBlockId.get(anchor.block.id);
+			const bounds = boundsByBlockId.get(anchor.blockId);
 			if (
 				!bounds ||
 				bounds.right <= left ||
@@ -145,7 +145,7 @@ export function createReaderViewportVisibilityResolver(
 			visibleAnchors.push(anchor);
 		}
 		for (const anchor of requiredAnchors) {
-			const index = compiled.anchorIndexByBlockId[anchor.block.id];
+			const index = compiled.anchorIndexByBlockId[anchor.blockId];
 			if (index === undefined || visibleMarks[index] === lookupRevision)
 				continue;
 			visibleMarks[index] = lookupRevision;

@@ -1,7 +1,9 @@
 "use client";
 
-import clsx from "clsx";
+import { ChevronDown, PanelsTopLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
+import cn from "~/lib/utils/cn";
 
 export function DebugTabs<T extends string>({
 	active,
@@ -18,22 +20,25 @@ export function DebugTabs<T extends string>({
 		<div
 			data-reader-component="DebugTabs"
 			data-reader-role="debug-tab-list"
-			className="flex gap-1 overflow-x-auto border-foreground/10 border-b px-3 py-2"
+			className="flex gap-1 overflow-x-auto border-foreground border-b-2 px-3 py-2"
 		>
 			{tabs.map((tab) => (
 				<button
 					key={tab.id}
 					type="button"
-					className={clsx(
-						"shrink-0 rounded px-2.5 py-1.5 font-bold text-[11px] transition",
+					className={cn(
+						"min-h-10 shrink-0 border-2 border-transparent px-2.5 py-1.5 font-black text-[11px] uppercase transition",
 						active === tab.id
-							? "bg-primary text-background"
-							: "text-foreground/54 hover:bg-foreground/8 hover:text-foreground",
+							? "border-foreground bg-accent text-accent-foreground"
+							: "text-foreground/60 hover:border-foreground hover:bg-secondary hover:text-foreground",
 					)}
 					title={tab.label}
 					onClick={() => onChange(tab.id)}
 				>
-					{iconOnly && tab.icon ? tab.icon : tab.label}
+					<span className="flex items-center justify-center gap-1.5">
+						{tab.icon}
+						{iconOnly && tab.icon ? null : tab.label}
+					</span>
 				</button>
 			))}
 		</div>
@@ -42,27 +47,63 @@ export function DebugTabs<T extends string>({
 
 export function DebugCard({
 	children,
+	collapsible = true,
 	componentName = "DebugCard",
 	contentClassName,
+	defaultOpen = true,
+	icon,
 	readerRole = "debug-section",
 	title,
 }: {
 	children: ReactNode;
+	collapsible?: boolean;
 	componentName?: string;
 	contentClassName?: string;
+	defaultOpen?: boolean;
+	icon?: ReactNode;
 	readerRole?: string;
 	title: string;
 }) {
+	const [open, setOpen] = useState(defaultOpen);
+	const contentOpen = collapsible ? open : true;
 	return (
 		<section
 			data-reader-component={componentName}
 			data-reader-role={readerRole}
-			className="rounded-md border border-foreground/10 bg-foreground/[0.045] p-3"
+			className="@container min-w-0 border-2 border-foreground bg-card shadow-[3px_3px_0_var(--comic-teal)]"
 		>
-			<h3 className="mb-2 font-black text-[10px] text-primary uppercase tracking-[0.17em]">
-				{title}
-			</h3>
-			<div className={clsx("grid grid-cols-2 gap-2", contentClassName)}>
+			<button
+				type="button"
+				aria-expanded={contentOpen}
+				className={cn(
+					"flex min-h-10 w-full items-center gap-2 px-3 text-left font-black text-[10px] text-primary uppercase tracking-[0.17em]",
+					collapsible && "hover:bg-foreground/[0.045]",
+				)}
+				onClick={() => {
+					if (collapsible) setOpen((current) => !current);
+				}}
+			>
+				<span className="shrink-0" aria-hidden="true">
+					{icon ?? <PanelsTopLeft size={14} />}
+				</span>
+				<span className="min-w-0 flex-1 truncate">{title}</span>
+				{collapsible ? (
+					<ChevronDown
+						size={15}
+						className={cn(
+							"shrink-0 transition-transform",
+							contentOpen && "rotate-180",
+						)}
+					/>
+				) : null}
+			</button>
+			<div
+				hidden={!contentOpen}
+				className={cn(
+					"grid @md:grid-cols-2 grid-cols-1 gap-2 border-foreground/12 border-t p-3",
+					contentClassName,
+				)}
+			>
 				{children}
 			</div>
 		</section>
@@ -80,7 +121,7 @@ export function DebugField({
 		<div
 			data-reader-component="DebugField"
 			data-reader-role="debug-field"
-			className="min-w-0 rounded border border-foreground/[0.06] bg-background/20 p-2"
+			className="min-w-0 border border-foreground/35 bg-background/20 p-2"
 		>
 			<p className="font-bold text-[10px] text-foreground/38 uppercase">
 				{label}
@@ -109,7 +150,7 @@ export function Setting({
 		<div
 			data-reader-component={componentName}
 			data-reader-role={readerRole}
-			className={clsx(
+			className={cn(
 				"@container/setting grid min-w-0 gap-1 text-[11px] text-foreground/52",
 				className,
 			)}
@@ -121,4 +162,4 @@ export function Setting({
 }
 
 export const settingClassName =
-	"min-w-0 rounded border border-foreground/12 bg-background/32 px-2 py-2 text-xs text-foreground outline-none focus:border-primary";
+	"min-h-11 min-w-0 border-2 border-foreground bg-card px-2 py-2 text-xs text-foreground shadow-[2px_2px_0_rgb(var(--foreground-rgb))] outline-none focus:border-ring focus:ring-2 focus:ring-ring/40";

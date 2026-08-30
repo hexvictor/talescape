@@ -1,4 +1,5 @@
 import type { ResolvedTaleBlock, Tale, TaleBlockSnapMode } from "../types";
+import { getTaleBlocks } from "./taleLookups";
 
 /**
  * Applies one snap setting to every block in a formatted tale.
@@ -14,9 +15,9 @@ export function updateAllBlockSnapSettings(
 	tale: Tale,
 	mode: TaleBlockSnapMode,
 ): Tale {
-	const blocks = tale.structure.blocks.map((block) => ({
+	const blocks = getTaleBlocks(tale).map((block) => ({
 		...block,
-		snap: { ...block.snap, mode },
+		snap: { mode, settings: block.snap.settings, strategy: "shared" as const },
 	}));
 	return {
 		...tale,
@@ -26,6 +27,5 @@ export function updateAllBlockSnapSettings(
 				blocks.map((block) => [block.id, block]),
 			) as Record<string, ResolvedTaleBlock>,
 		},
-		structure: { ...tale.structure, blocks },
 	};
 }

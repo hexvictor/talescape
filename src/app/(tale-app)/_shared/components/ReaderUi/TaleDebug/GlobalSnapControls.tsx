@@ -1,9 +1,9 @@
 "use client";
 
-import clsx from "clsx";
 import { Magnet, MagnetIcon } from "lucide-react";
+import cn from "~/lib/utils/cn";
+import type { ReaderSnapModeOverride } from "../../../../(reader)/_shared/stores/slices/inputSettingsSlice";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
-import type { ReaderSnapModeOverride } from "../../../store/slices/inputSettingsSlice";
 
 const overrideOptions: Array<{
 	icon: "magnet" | "muted";
@@ -43,7 +43,7 @@ export function GlobalSnapControls(): React.JSX.Element {
 				<button
 					key={option.value}
 					type="button"
-					className={clsx(
+					className={cn(
 						"flex h-8 items-center gap-1.5 rounded border px-2 text-[10px] hover:bg-foreground/8",
 						mode === option.value
 							? "border-primary/55 text-primary"

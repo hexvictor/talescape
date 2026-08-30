@@ -1,4 +1,5 @@
-import clsx from "clsx";
+import cn from "~/lib/utils/cn";
+import { getTaleBranches } from "../../../services/taleLookups";
 import type { CompiledReader, ReaderLocation, Tale } from "../../../types";
 
 type DebugLocationDetailsProps = {
@@ -24,7 +25,7 @@ export function DebugLocationDetails({
 	if (!location) return null;
 
 	const snapMode =
-		compiled?.anchorsByBlockId[location.blockId]?.block.snap.mode ?? "snap-off";
+		tale.indexMap.blocksById[location.blockId]?.snap.mode ?? "snap-off";
 	const blockNumber =
 		(compiled?.anchorIndexByBlockId[location.blockId] ?? -1) + 1;
 	const pageNumber = (compiled?.pageIndexById[location.pageId] ?? -1) + 1;
@@ -33,7 +34,7 @@ export function DebugLocationDetails({
 		(compiled?.contents.findIndex((part) => part.id === location.partId) ??
 			-1) + 1;
 	const branchNumber =
-		tale.structure.branches.findIndex(
+		getTaleBranches(tale).findIndex(
 			(branch) => branch.id === location.branchId,
 		) + 1;
 
@@ -57,7 +58,7 @@ export function DebugLocationDetails({
 				</span>
 			))}
 			<span
-				className={clsx(
+				className={cn(
 					"w-fit rounded px-1.5 py-0.5 font-semibold uppercase",
 					snapMode === "snap" &&
 						"border border-emerald-600/35 bg-emerald-500/12 text-emerald-900 dark:border-emerald-300/35 dark:bg-emerald-400/18 dark:text-emerald-100",

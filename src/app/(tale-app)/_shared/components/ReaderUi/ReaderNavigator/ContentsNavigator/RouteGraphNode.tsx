@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, type NodeProps, Position } from "@xyflow/react";
-import clsx from "clsx";
+import cn from "~/lib/utils/cn";
 import type { RouteGraphNode as RouteGraphNodeType } from "./compileRouteGraph";
 
 /**
@@ -20,7 +20,7 @@ export function RouteGraphNode({
 		<div
 			data-reader-component="RouteGraphNode"
 			data-reader-role="route-branch"
-			className={clsx(
+			className={cn(
 				"relative w-52 rounded-md border px-3 py-2.5 shadow-lg transition-opacity",
 				data.current
 					? "border-sky-300/75 bg-sky-300/12 text-sky-100"

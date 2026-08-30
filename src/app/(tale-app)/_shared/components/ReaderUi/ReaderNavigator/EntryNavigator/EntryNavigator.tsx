@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import {
 	ChevronDown,
 	ChevronUp,
@@ -9,25 +8,27 @@ import {
 	PinOff,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
 import { useRecentReaderActivity } from "../../../../hooks/useRecentReaderActivity";
 import type {
-	ReaderContentsEntry,
-	ReaderContentsPart,
-} from "../../../../types";
+	ReaderNavigationEntry,
+	ReaderNavigationPart,
+} from "../../../../services/readerNavigationView";
+import { createReaderNavigationView } from "../../../../services/readerNavigationView";
 import { getReaderPartTheme } from "../readerPartTheme";
 import { EntryPageFlyout, PartSelector } from "./EntryNavigatorParts";
 import { EntryTypeIcon, getEntryTypeLabel } from "./EntryTypeIcon";
 
-const emptyContents: ReaderContentsPart[] = [];
+const emptyContents: ReaderNavigationPart[] = [];
 
 function EntryPartTrack({
 	spans,
 }: {
-	spans: ReaderContentsPart["entries"][number]["partSpans"];
+	spans: ReaderNavigationPart["entries"][number]["partSpans"];
 }): React.JSX.Element {
 	return (
 		<div
@@ -47,7 +48,7 @@ function EntryPartTrack({
 						backgroundColor: "var(--reader-part-solid)",
 						flexGrow: 1,
 					}}
-					className={clsx(
+					className={cn(
 						"block min-h-1 w-1",
 						span.startsPart && "rounded-t-full",
 						span.endsPart && "rounded-b-full",
@@ -71,7 +72,6 @@ export function EntryNavigator(): React.JSX.Element | null {
 	const {
 		activityFadeDelaySeconds,
 		compiled,
-		contents,
 		currentEntryId,
 		currentPageId,
 		currentPartId,
@@ -83,7 +83,6 @@ export function EntryNavigator(): React.JSX.Element | null {
 	} = useTaleReaderStoreShallow((state) => ({
 		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
 		compiled: state.reader.compiled,
-		contents: state.reader.compiled?.contents ?? emptyContents,
 		currentEntryId: state.navigation.current?.entryId ?? null,
 		currentPageId: state.navigation.current?.pageId ?? null,
 		currentPartId: state.navigation.current?.partId ?? null,
@@ -93,8 +92,14 @@ export function EntryNavigator(): React.JSX.Element | null {
 		viewportLayout: state.derived.viewportLayout,
 		scrollApi: state.scroll.api,
 	}));
-	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
-	const navigatorVisibility = usePinnedHoverPanel(!isPreviewing);
+	const isLivePreview = useTaleAppStore((state) => state.derived.isLivePreview);
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const navigationView = useMemo(
+		() => (compiled ? createReaderNavigationView(compiled, tale) : null),
+		[compiled, tale],
+	);
+	const contents = navigationView?.contents ?? emptyContents;
+	const navigatorVisibility = usePinnedHoverPanel(!isLivePreview);
 	const [hoveredEntryPreview, setHoveredEntryPreview] = useState<{
 		entryId: string;
 		top: number;
@@ -110,7 +115,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 	const previewCloseTimerRef = useRef<number | null>(null);
 	const pinHideTimerRef = useRef<number | null>(null);
 	const mobile = viewportLayout !== "desktop";
-	const allEntries = compiled?.entries ?? [];
+	const allEntries = navigationView?.entries ?? [];
 	const selectedPart =
 		contents.find((part) => part.id === selectedPartId) ?? null;
 	const entries =
@@ -203,7 +208,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 	const firstEntry = entries[0] ?? null;
 	const lastEntry = entries.length > 1 ? (entries.at(-1) ?? null) : null;
 	const middleEntries = entries.slice(1, -1);
-	const renderEntry = (entry: ReaderContentsEntry): React.JSX.Element => {
+	const renderEntry = (entry: ReaderNavigationEntry): React.JSX.Element => {
 		const currentEntryPage = entry.pages.find(
 			(page) => page.id === currentPageId,
 		);
@@ -227,7 +232,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 						type="button"
 						title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
 						aria-label={`Go to ${entry.title}`}
-						className={clsx(
+						className={cn(
 							"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg transition",
 							entry.id === currentEntryId
 								? "border-primary bg-primary text-background"
@@ -293,7 +298,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 			data-reader-component="EntryNavigator"
 			data-reader-role="entry-navigation"
 			aria-label="Entry navigation"
-			className={clsx(
+			className={cn(
 				"group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 flex items-center transition-opacity duration-300 ",
 				!reduceInactiveUiOpacity ||
 					recentlyActive ||
@@ -349,7 +354,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 										? "Unpin entry navigation"
 										: "Pin entry navigation"
 								}
-								className={clsx(
+								className={cn(
 									"reader-connected-tab reader-connected-tab-left -translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-8 w-8 place-items-center rounded-full border border-r-0 text-foreground/45 opacity-100 transition-opacity duration-100 hover:text-foreground md:h-7 md:w-7",
 									entryPanelHovered && hoveredEntryPreview === null
 										? "md:pointer-events-auto md:opacity-100"

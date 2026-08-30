@@ -86,14 +86,14 @@ export function resolveNonOverlappingBlockPoint(
 }
 
 /**
- * Places a block at the requested previous edge while searching nearby previous
- * block edges for the closest non-overlapping cross-axis slot.
+ * Places a block against the bounds of the panel group visible in the previous
+ * camera viewport.
  *
  * @param point - Candidate point from ordinary block/camera placement.
  * @param size - Destination block dimensions.
  * @param direction - Authored placement direction.
  * @param existingAnchors - Previously compiled route anchors.
- * @returns Candidate point adjusted into a nearby visible group gap.
+ * @returns Candidate point adjusted to the visible panel-group edge.
  *
  * @example
  * const point = resolveGroupEdgeBlockPoint(candidate, size, "left", anchors);
@@ -104,66 +104,127 @@ export function resolveGroupEdgeBlockPoint(
 	direction: Direction,
 	existingAnchors: readonly Anchor[],
 	options: {
+		crossAxisAlignment?: "center" | "end" | "start";
 		horizontalAlignment?: "center" | "end" | "start";
 		referenceCamera?: Point;
 		viewport?: ViewportSize;
 	} = {},
 ): Point {
 	const vector = directionVector(direction);
-	const preferredPoint = {
-		...point,
-		x:
-			options.horizontalAlignment && options.referenceCamera && options.viewport
-				? alignWithinAxis(
-						options.referenceCamera.x,
-						options.viewport.width,
-						size.width,
-						options.horizontalAlignment,
-					)
-				: point.x,
-	};
-	const xCandidates =
-		vector.x !== 0 && vector.y === 0 && !options.horizontalAlignment
-			? [point.x]
-			: [
-					preferredPoint.x,
-					...getEdgeAlignedAxisCandidates(
-						point.x,
-						size.width,
-						existingAnchors,
-						"horizontal",
-					),
-				];
-	const yCandidates =
-		vector.y !== 0 && vector.x === 0
-			? [point.y]
-			: getEdgeAlignedAxisCandidates(
-					point.y,
-					size.height,
-					existingAnchors,
-					"vertical",
-				);
+	const previous = existingAnchors.at(-1);
+	if (!previous || !options.referenceCamera || !options.viewport) return point;
 
-	const candidates = xCandidates.flatMap((x) =>
-		yCandidates.map((y) => ({ x, y })),
+	const viewportBounds = getBlockBounds(
+		options.referenceCamera,
+		options.viewport,
 	);
-	return (
-		candidates
-			.filter(
-				(candidate) =>
-					!existingAnchors.some((anchor) =>
-						boundsOverlap(
-							getBlockBounds(candidate, size),
-							getAnchorBounds(anchor),
-						),
-					),
-			)
-			.sort(
-				(left, right) =>
-					getPointDistance(left, preferredPoint) -
-					getPointDistance(right, preferredPoint),
-			)[0] ?? point
+	const framedAnchors = getPlacementPanelGroup(
+		existingAnchors,
+		direction,
+		viewportBounds,
+		options.viewport,
 	);
+	const groupBounds = getCombinedBounds(
+		framedAnchors.length > 0 ? framedAnchors : [previous],
+	);
+	const previousBounds = getAnchorBounds(previous);
+	const resolved = { ...point };
+
+	if (vector.x > 0) resolved.x += groupBounds.right - previousBounds.right;
+	if (vector.x < 0) resolved.x += groupBounds.left - previousBounds.left;
+	if (vector.y > 0) resolved.y += groupBounds.bottom - previousBounds.bottom;
+	if (vector.y < 0) resolved.y += groupBounds.top - previousBounds.top;
+
+	if (vector.y !== 0 && vector.x === 0) {
+		resolved.x = alignWithinBounds(
+			groupBounds.left,
+			groupBounds.right,
+			size.width,
+			options.horizontalAlignment ?? options.crossAxisAlignment ?? "center",
+		);
+	}
+	if (vector.x !== 0 && vector.y === 0) {
+		resolved.y = alignWithinBounds(
+			groupBounds.top,
+			groupBounds.bottom,
+			size.height,
+			options.crossAxisAlignment ?? "center",
+		);
+	}
+
+	return resolved;
+}
+
+/**
+ * Finds the contiguous panel row or column ending at the previous block.
+ *
+ * Cardinal group placement must be based on authored block geometry rather
+ * than the exit camera. Otherwise a half-height row framed in a full viewport
+ * makes the following block start at the viewport edge and leaves a gap.
+ */
+function getPlacementPanelGroup(
+	anchors: readonly Anchor[],
+	direction: Direction,
+	viewportBounds: BlockBounds,
+	viewport: ViewportSize,
+): Anchor[] {
+	const vector = directionVector(direction);
+	const previous = anchors.at(-1);
+	if (!previous) return [];
+	if (vector.x !== 0 && vector.y !== 0) {
+		return anchors.filter((anchor) =>
+			boundsOverlap(getAnchorBounds(anchor), viewportBounds),
+		);
+	}
+
+	const group = [previous];
+	let groupBounds = getAnchorBounds(previous);
+	const gapTolerance =
+		(vector.y !== 0 ? viewport.width : viewport.height) * 0.05;
+	let changed = true;
+
+	while (changed) {
+		changed = false;
+		for (const anchor of anchors) {
+			if (group.includes(anchor)) continue;
+			const bounds = getAnchorBounds(anchor);
+			const sharesPanelBand =
+				vector.y !== 0
+					? rangesOverlap(
+							bounds.top,
+							bounds.bottom,
+							groupBounds.top,
+							groupBounds.bottom,
+						)
+					: rangesOverlap(
+							bounds.left,
+							bounds.right,
+							groupBounds.left,
+							groupBounds.right,
+						);
+			const crossAxisGap =
+				vector.y !== 0
+					? getRangeGap(
+							bounds.left,
+							bounds.right,
+							groupBounds.left,
+							groupBounds.right,
+						)
+					: getRangeGap(
+							bounds.top,
+							bounds.bottom,
+							groupBounds.top,
+							groupBounds.bottom,
+						);
+			if (!sharesPanelBand || crossAxisGap > gapTolerance) continue;
+
+			group.push(anchor);
+			groupBounds = combineBounds(groupBounds, bounds);
+			changed = true;
+		}
+	}
+
+	return group;
 }
 
 /**
@@ -191,6 +252,37 @@ function alignWithinAxis(
 		return center + referenceSize / 2 - size / 2;
 	}
 	return center;
+}
+
+/** Aligns a destination inside an authored panel-group span. */
+function alignWithinBounds(
+	start: number,
+	end: number,
+	size: number,
+	alignment: "center" | "end" | "start",
+): number {
+	return alignWithinAxis((start + end) / 2, end - start, size, alignment);
+}
+
+/** Returns the union of a non-empty block-anchor collection. */
+function getCombinedBounds(anchors: readonly Anchor[]): BlockBounds {
+	const first = getAnchorBounds(anchors[0] as Anchor);
+	return anchors
+		.slice(1)
+		.reduce<BlockBounds>(
+			(combined, anchor) => combineBounds(combined, getAnchorBounds(anchor)),
+			first,
+		);
+}
+
+/** Returns the union of two rectangles. */
+function combineBounds(first: BlockBounds, second: BlockBounds): BlockBounds {
+	return {
+		bottom: Math.max(first.bottom, second.bottom),
+		left: Math.min(first.left, second.left),
+		right: Math.max(first.right, second.right),
+		top: Math.min(first.top, second.top),
+	};
 }
 
 /**
@@ -369,54 +461,6 @@ function getAnchorBounds(anchor: Anchor): BlockBounds {
 }
 
 /**
- * Creates axis coordinates that align the destination edge to previous block
- * edges, plus the original authored coordinate.
- *
- * @param original - Original center coordinate on the axis.
- * @param size - Destination size on the axis.
- * @param anchors - Previous route anchors.
- * @param axis - Axis whose edge candidates are generated.
- * @returns Candidate center coordinates.
- *
- * @example
- * const yCandidates = getEdgeAlignedAxisCandidates(0, 300, anchors, "vertical");
- */
-function getEdgeAlignedAxisCandidates(
-	original: number,
-	size: number,
-	anchors: readonly Anchor[],
-	axis: "horizontal" | "vertical",
-): number[] {
-	const candidates = new Set<number>([original]);
-	for (const anchor of anchors) {
-		const bounds = getAnchorBounds(anchor);
-		const start = axis === "horizontal" ? bounds.left : bounds.top;
-		const end = axis === "horizontal" ? bounds.right : bounds.bottom;
-		candidates.add(start + size / 2);
-		candidates.add(end - size / 2);
-		candidates.add(start - size / 2);
-		candidates.add(end + size / 2);
-	}
-	return [...candidates];
-}
-
-/**
- * Computes squared distance between two points.
- *
- * @param first - First point.
- * @param second - Second point.
- * @returns Squared distance.
- *
- * @example
- * const distance = getPointDistance(candidate, origin);
- */
-function getPointDistance(first: Point, second: Point): number {
-	const x = first.x - second.x;
-	const y = first.y - second.y;
-	return x * x + y * y;
-}
-
-/**
  * Keeps the previous camera when a destination fits inside it, otherwise moves minimally.
  *
  * @param previousCamera - Previous camera coordinate.
@@ -455,6 +499,16 @@ function rangesOverlap(
 	secondEnd: number,
 ): boolean {
 	return firstStart < secondEnd - 0.01 && firstEnd > secondStart + 0.01;
+}
+
+/** Returns whether two spans overlap or meet at an edge. */
+function getRangeGap(
+	firstStart: number,
+	firstEnd: number,
+	secondStart: number,
+	secondEnd: number,
+): number {
+	return Math.max(0, firstStart - secondEnd, secondStart - firstEnd);
 }
 
 /**

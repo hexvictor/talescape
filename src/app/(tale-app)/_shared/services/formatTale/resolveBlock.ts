@@ -3,16 +3,19 @@ import type {
 	ResolvedTaleFragment,
 	Tale,
 	TaleBlock,
+	TaleNode,
 } from "../../types";
+import { getTaleBlocks } from "../taleLookups";
 import { resolveAnimations } from "./resolveFragment";
 import {
 	createFragmentPlacementBuckets,
 	resolveBlockNodes,
 } from "./resolveNodes";
-import { adjacentIds, groupIdsBy, indexPosition, recordById } from "./shared";
+import { adjacentIds, groupIdsBy, indexPosition } from "./shared";
 
 type BlockLookups = {
 	fragmentsById: Record<string, ResolvedTaleFragment>;
+	nodesById: Record<string, TaleNode>;
 };
 
 export type BlockStructureLookups = {
@@ -40,10 +43,13 @@ export function resolveBlock(
 		const fragment = lookups.fragmentsById[id];
 		return fragment ? [fragment] : [];
 	});
-	const fragmentsById = recordById(fragments);
 	const buckets = createFragmentPlacementBuckets(fragments);
-	const { nodes, rootNodeId } = resolveBlockNodes(block, buckets);
-	const nodesById = recordById(nodes);
+	const { nodes, rootNodeId } = resolveBlockNodes(
+		block,
+		buckets,
+		lookups.nodesById,
+	);
+	for (const node of nodes) lookups.nodesById[node.id] = node;
 	const globalLinks = adjacentIds(structure.blockIds, block.id);
 	const branchLinks = adjacentIds(
 		structure.blockIdsByBranch[block.branchId] ?? [],
@@ -64,10 +70,7 @@ export function resolveBlock(
 
 	return {
 		...block,
-		children: { fragmentIds: block.fragmentIds },
 		...buckets,
-		fragments,
-		fragmentsById,
 		links: {
 			nextBlockId: globalLinks.next,
 			nextBlockIdInBranch: branchLinks.next,
@@ -80,8 +83,7 @@ export function resolveBlock(
 			previousBlockIdInPage: pageLinks.previous,
 			previousBlockIdInPart: partLinks.previous,
 		},
-		nodes,
-		nodesById,
+		nodeIds: nodes.map((node) => node.id),
 		rootNodeId,
 		position: {
 			...indexPosition(globalLinks.index, structure.blockIds.length),
@@ -142,11 +144,20 @@ export function resolveEditedBlock(
 	tale: Tale,
 	block: TaleBlock,
 ): ResolvedTaleBlock {
-	const blocks = tale.structure.blocks;
-	return resolveBlock(
+	return resolveEditedBlockWithNodes(tale, block).block;
+}
+
+export function resolveEditedBlockWithNodes(
+	tale: Tale,
+	block: TaleBlock,
+): { block: ResolvedTaleBlock; nodesById: Record<string, TaleNode> } {
+	const blocks = getTaleBlocks(tale);
+	const nodesById = { ...tale.indexMap.nodesById };
+	const resolvedBlock = resolveBlock(
 		block,
 		{
 			fragmentsById: tale.indexMap.fragmentsById,
+			nodesById,
 		},
 		{
 			blockIds: tale.order.blockIds,
@@ -172,6 +183,7 @@ export function resolveEditedBlock(
 			),
 		},
 	);
+	return { block: resolvedBlock, nodesById };
 }
 
 /**

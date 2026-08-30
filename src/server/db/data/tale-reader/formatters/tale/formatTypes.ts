@@ -1,8 +1,5 @@
 import type { Tale } from "~/app/(tale-app)/_shared/types";
-import type {
-	TaleBreakpoint,
-	TaleSnapConfig,
-} from "~/app/(tale-app)/_shared/types";
+import type { TaleSchema } from "~/server/db/schema";
 
 /**
  * Database tale query shape accepted by the tale reader formatter.
@@ -10,25 +7,17 @@ import type {
  * @example
  * const record: DbTaleRecord = await getTaleRecord();
  */
-export type DbTaleRecord = {
+export type DbTaleRecord = TaleSchema & {
 	blocks?: unknown[];
 	book?: Tale["book"];
 	branches?: unknown[];
 	creatorById?: Tale["creator"];
-	description?: string;
 	entries?: unknown[];
 	fragments?: unknown[];
-	id: number;
 	nodes?: unknown[];
 	pages?: unknown[];
 	parts?: unknown[];
 	paths?: unknown[];
-	breakpointConfig?: TaleBreakpoint[];
-	snapConfig?: TaleSnapConfig;
-	slug: string;
-	title: string;
-	firstBlockTransitionMode?: Tale["firstBlockTransitionMode"];
-	transitionFirstBlock?: boolean;
 };
 
 /**

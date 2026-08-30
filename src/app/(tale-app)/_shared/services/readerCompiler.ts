@@ -3,9 +3,12 @@ import type {
 	CompiledReader,
 	Point,
 	ResolvedBlockSize,
+	ResolvedTaleBlock,
 	SnapPoint,
 	Tale,
 	TaleBlock,
+	TaleBlockSnapApproach,
+	TaleBlockSnapBehavior,
 	TaleBlockSnapMode,
 	TimelineSegment,
 	ViewportSize,
@@ -26,17 +29,14 @@ import {
 	getReadingTravelDistance,
 } from "./readerGeometry";
 import { clamp, lerpPoint } from "./readerMath";
-import { isBlockSnapEnabled } from "./readerSnapSettings";
+import { resolveBlockSnapBehavior } from "./readerSnapSettings";
 
 function getVisibleBlockIds(tale: Tale, selectedBranchIds: string[]) {
 	const branchIds = [tale.bounds.rootBranchId, ...selectedBranchIds]
 		.filter((id): id is string => Boolean(id))
 		.filter((id, index, ids) => ids.indexOf(id) === index);
 	return branchIds.flatMap(
-		(id) =>
-			tale.indexMap.branchesById[id]?.blockIds ??
-			tale.indexMap.branchesById[id]?.children.blockIds ??
-			[],
+		(id) => tale.indexMap.branchesById[id]?.blockIds ?? [],
 	);
 }
 
@@ -54,46 +54,13 @@ export function getCompiledBlockIds(tale: Tale, selectedBranchIds: string[]) {
  * @example
  * const mode = getEffectiveSnapMode(block, "snap");
  */
-function getEffectiveSnapMode(
+function getEffectiveSnapBehavior(
 	block: TaleBlock,
+	approach: TaleBlockSnapApproach,
 	override: TaleBlockSnapMode | null,
-): TaleBlockSnapMode {
-	return override ?? block.snap.mode;
-}
-
-/**
- * Resolves block snap settings only when the authored block mode is active.
- *
- * @param block - Block being compiled.
- * @param override - Runtime debug override, or null for authored settings.
- * @returns Block-specific snap settings, or null while debug-overridden.
- *
- * @example
- * const settings = getEffectiveSnapSettings(block, null);
- */
-function getEffectiveSnapSettings(
-	block: TaleBlock,
-	override: TaleBlockSnapMode | null,
-) {
-	return override ? null : (block.snap.settings ?? null);
-}
-
-/**
- * Returns whether a block participates in snapping after debug overrides.
- *
- * @param block - Block being compiled.
- * @param override - Runtime debug override, or null for authored settings.
- * @returns True when snap points should be emitted.
- *
- * @example
- * if (isEffectiveSnapEnabled(block, override)) emitSnapPoints();
- */
-function isEffectiveSnapEnabled(
-	block: TaleBlock,
-	override: TaleBlockSnapMode | null,
-): boolean {
-	if (override) return override !== "snap-off";
-	return isBlockSnapEnabled(block);
+): TaleBlockSnapBehavior {
+	if (override) return { mode: override, settings: null };
+	return resolveBlockSnapBehavior(block.snap, approach);
 }
 
 export function compileReader(
@@ -135,6 +102,7 @@ export function compileReader(
 					flow.direction,
 					anchors,
 					{
+						crossAxisAlignment: flow.alignment,
 						horizontalAlignment: flow.groupHorizontalAlignment,
 						referenceCamera: getReadingCamera(previous, 1, viewport),
 						viewport,
@@ -165,15 +133,15 @@ export function compileReader(
 		);
 
 		const anchor: Anchor = {
-			block,
-			branch,
+			blockId: block.id,
+			branchId: branch.id,
 			cameraFramingOffset,
 			cameraPoint,
-			entry,
+			entryId: entry.id,
 			height: size.height,
 			id: block.id,
-			page,
-			part,
+			pageId: page.id,
+			partId: part.id,
 			point,
 			readingPathPoints,
 			scroll: 0,
@@ -191,60 +159,66 @@ export function compileReader(
 	let scroll = 0;
 
 	const firstAnchor = anchors[0];
-	if (Boolean(tale.transitionFirstBlock) && firstAnchor) {
-		const initialLength = Math.max(
-			firstAnchor.block.transition.enteringLength ?? viewport.height,
+	const firstBlock = firstAnchor
+		? tale.indexMap.blocksById[firstAnchor.blockId]
+		: undefined;
+	let openingTransitionAnchor: Anchor | null = null;
+	if (firstAnchor && firstBlock) {
+		const openingLength = Math.max(
+			firstBlock.transition.enteringLength ?? viewport.height,
 			1,
+		);
+		openingTransitionAnchor = createOpeningTransitionAnchor(
+			firstAnchor,
+			firstBlock,
+			viewport,
+			tale.firstBlockTransitionMode,
 		);
 		const transitionIndex = segments.length;
 		segments.push({
-			end: initialLength,
-			from: createInitialTransitionAnchor(
-				firstAnchor,
-				viewport,
-				tale.firstBlockTransitionMode,
-			),
+			end: openingLength,
+			fromBlockId: null,
 			index: transitionIndex,
-			length: initialLength,
+			length: openingLength,
 			start: 0,
-			to: firstAnchor,
+			toBlockId: firstAnchor.blockId,
 			type: "transition",
 		});
-		transitionIntoByBlockId[firstAnchor.block.id] = transitionIndex;
-		const firstSnapMode = getEffectiveSnapMode(
-			firstAnchor.block,
+		transitionIntoByBlockId[firstAnchor.blockId] = transitionIndex;
+		const firstSnap = getEffectiveSnapBehavior(
+			firstBlock,
+			"forward",
 			snapModeOverride,
 		);
-		if (firstSnapMode === "snap" || firstSnapMode === "scroll-snap") {
+		if (firstSnap.mode === "snap" || firstSnap.mode === "scroll-snap") {
 			snapPoints.push({
-				blockId: firstAnchor.block.id,
+				blockId: firstAnchor.blockId,
 				direction: "fromPrevious",
-				id: `${firstAnchor.block.id}-initial-transition-start`,
-				mode: firstSnapMode,
-				scroll: initialLength,
-				settings: getEffectiveSnapSettings(firstAnchor.block, snapModeOverride),
-				transitionEnd: initialLength,
+				id: `${firstAnchor.blockId}-opening-transition-start`,
+				mode: firstSnap.mode,
+				scroll: openingLength,
+				settings: firstSnap.settings,
+				transitionEnd: openingLength,
 				transitionStart: 0,
 				type: "block-start",
 			});
 		}
-		scroll = initialLength;
+		scroll = openingLength;
 	}
 
 	for (let index = 0; index < anchors.length; index++) {
 		const anchor = anchors[index];
 		const next = anchors[index + 1];
 		if (!anchor) continue;
+		const block = tale.indexMap.blocksById[anchor.blockId];
+		if (!block) continue;
 		anchor.scroll = scroll;
-		const readingLength = getReadingLength(anchor, viewport);
-		const startPauseLength = Math.max(
-			anchor.block.reading.pauses?.atStart ?? 0,
-			0,
-		);
-		const endPauseLength = Math.max(anchor.block.reading.pauses?.atEnd ?? 0, 0);
+		const readingLength = getReadingLength(anchor, block, viewport);
+		const startPauseLength = Math.max(block.reading.pauses?.atStart ?? 0, 0);
+		const endPauseLength = Math.max(block.reading.pauses?.atEnd ?? 0, 0);
 		if (startPauseLength > 0) {
 			segments.push({
-				anchor,
+				blockId: anchor.blockId,
 				end: scroll + startPauseLength,
 				index: segments.length,
 				length: startPauseLength,
@@ -254,55 +228,69 @@ export function compileReader(
 			});
 			scroll += startPauseLength;
 		}
-		segmentIndexByBlockId[anchor.block.id] = segments.length;
+		segmentIndexByBlockId[anchor.blockId] = segments.length;
 		segments.push({
-			anchor,
+			blockId: anchor.blockId,
 			end: scroll + readingLength,
 			index: segments.length,
 			length: readingLength,
 			start: scroll,
 			type: "reading",
 		});
-		const snapMode = getEffectiveSnapMode(anchor.block, snapModeOverride);
+		const forwardSnap = getEffectiveSnapBehavior(
+			block,
+			"forward",
+			snapModeOverride,
+		);
+		const backwardSnap = getEffectiveSnapBehavior(
+			block,
+			"backward",
+			snapModeOverride,
+		);
 		const blockEndScroll = scroll + readingLength;
-		if (snapMode === "scroll-snap") {
+		if (forwardSnap.mode === "scroll-snap") {
 			snapPoints.push({
-				blockId: anchor.block.id,
+				blockId: anchor.blockId,
 				direction: "fromPrevious",
-				id: `${anchor.block.id}-start`,
-				mode: snapMode,
+				id: `${anchor.blockId}-start`,
+				mode: forwardSnap.mode,
 				scroll: anchor.scroll,
-				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				settings: forwardSnap.settings,
 				type: "block-start",
 			});
+		}
+		if (backwardSnap.mode === "scroll-snap") {
 			snapPoints.push({
-				blockId: anchor.block.id,
+				blockId: anchor.blockId,
 				direction: "fromNext",
-				id: `${anchor.block.id}-end`,
-				mode: snapMode,
+				id: `${anchor.blockId}-end`,
+				mode: backwardSnap.mode,
 				scroll: blockEndScroll,
-				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				settings: backwardSnap.settings,
 				type: "block-end",
 			});
 		}
-		if (
-			anchor.block.isChoiceBlock &&
-			isEffectiveSnapEnabled(anchor.block, snapModeOverride)
-		) {
-			snapPoints.push({
-				blockId: anchor.block.id,
-				direction: "both",
-				id: `${anchor.block.id}-choice-end`,
-				mode: snapMode,
-				scroll: blockEndScroll,
-				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
-				type: "choice-end",
-			});
+		if (block.isChoiceBlock) {
+			for (const [approach, behavior, direction] of [
+				["forward", forwardSnap, "fromPrevious"],
+				["backward", backwardSnap, "fromNext"],
+			] as const) {
+				if (behavior.mode === "snap-off") continue;
+				snapPoints.push({
+					blockId: anchor.blockId,
+					direction,
+					id: `${anchor.blockId}-choice-end-${approach}`,
+					mode: behavior.mode,
+					scroll: blockEndScroll,
+					settings: behavior.settings,
+					type: "choice-end",
+				});
+			}
 		}
 		scroll += readingLength;
 		if (endPauseLength > 0) {
 			segments.push({
-				anchor,
+				blockId: anchor.blockId,
 				end: scroll + endPauseLength,
 				index: segments.length,
 				length: endPauseLength,
@@ -314,7 +302,9 @@ export function compileReader(
 		}
 
 		if (!next) continue;
-		const effectiveTransition = next.block.transition;
+		const nextBlock = tale.indexMap.blocksById[next.blockId];
+		if (!nextBlock) continue;
+		const effectiveTransition = nextBlock.transition;
 		const automaticTransitionLength = getAutomaticTransitionLength(
 			anchor,
 			next,
@@ -329,91 +319,96 @@ export function compileReader(
 		const transitionIndex = segments.length;
 		segments.push({
 			end: scroll + transitionLength,
-			from: anchor,
+			fromBlockId: anchor.blockId,
 			index: segments.length,
 			length: transitionLength,
 			start: scroll,
-			to: next,
+			toBlockId: next.blockId,
 			type: "transition",
 		});
-		const outgoingSnapMode = getEffectiveSnapMode(
-			anchor.block,
+		const outgoingSnap = getEffectiveSnapBehavior(
+			block,
+			"backward",
 			snapModeOverride,
 		);
-		if (outgoingSnapMode === "snap") {
+		if (outgoingSnap.mode === "snap") {
 			snapPoints.push({
-				blockId: anchor.block.id,
+				blockId: anchor.blockId,
 				direction: "fromNext",
-				id: `${anchor.block.id}-transition-end`,
+				id: `${anchor.blockId}-transition-end`,
 				mode: "snap",
 				scroll,
-				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				settings: outgoingSnap.settings,
 				transitionEnd: scroll + transitionLength,
 				transitionStart: scroll,
 				type: "block-end",
 			});
 		}
-		if (outgoingSnapMode === "scroll-snap") {
+		if (outgoingSnap.mode === "scroll-snap") {
 			snapPoints.push({
-				blockId: anchor.block.id,
+				blockId: anchor.blockId,
 				direction: "fromNext",
-				id: `${anchor.block.id}-transition-scroll-end`,
+				id: `${anchor.blockId}-transition-scroll-end`,
 				mode: "scroll-snap",
 				scroll,
-				settings: getEffectiveSnapSettings(anchor.block, snapModeOverride),
+				settings: outgoingSnap.settings,
 				transitionEnd: scroll + transitionLength,
 				transitionStart: scroll,
 				type: "block-end",
 			});
 		}
-		const incomingSnapMode = getEffectiveSnapMode(next.block, snapModeOverride);
-		if (incomingSnapMode === "snap") {
+		const incomingSnap = getEffectiveSnapBehavior(
+			nextBlock,
+			"forward",
+			snapModeOverride,
+		);
+		if (incomingSnap.mode === "snap") {
 			snapPoints.push({
-				blockId: next.block.id,
+				blockId: next.blockId,
 				direction: "fromPrevious",
-				id: `${next.block.id}-transition-start`,
+				id: `${next.blockId}-transition-start`,
 				mode: "snap",
 				scroll: scroll + transitionLength,
-				settings: getEffectiveSnapSettings(next.block, snapModeOverride),
+				settings: incomingSnap.settings,
 				transitionEnd: scroll + transitionLength,
 				transitionStart: scroll,
 				type: "block-start",
 			});
 		}
-		if (incomingSnapMode === "scroll-snap") {
+		if (incomingSnap.mode === "scroll-snap") {
 			snapPoints.push({
-				blockId: next.block.id,
+				blockId: next.blockId,
 				direction: "fromPrevious",
-				id: `${next.block.id}-transition-scroll-start`,
+				id: `${next.blockId}-transition-scroll-start`,
 				mode: "scroll-snap",
 				scroll: scroll + transitionLength,
-				settings: getEffectiveSnapSettings(next.block, snapModeOverride),
+				settings: incomingSnap.settings,
 				transitionEnd: scroll + transitionLength,
 				transitionStart: scroll,
 				type: "block-start",
 			});
 		}
-		transitionOutOfByBlockId[anchor.block.id] = transitionIndex;
-		transitionIntoByBlockId[next.block.id] = transitionIndex;
+		transitionOutOfByBlockId[anchor.blockId] = transitionIndex;
+		transitionIntoByBlockId[next.blockId] = transitionIndex;
 		scroll += transitionLength;
 	}
 	const navigation = compileReaderContents(tale, anchors);
-	const previousVisibleTakeover =
-		compilePreviousVisibleTakeoverMetadata(anchors);
+	const previousVisibleTakeover = compilePreviousVisibleTakeoverMetadata(
+		tale,
+		anchors,
+	);
 
 	return {
 		anchorIndexByBlockId: Object.fromEntries(
-			anchors.map((anchor, index) => [anchor.block.id, index]),
+			anchors.map((anchor, index) => [anchor.blockId, index]),
 		),
 		anchors,
-		anchorsByBlockId: Object.fromEntries(
-			anchors.map((anchor) => [anchor.block.id, anchor]),
-		),
 		contents: navigation.contents,
 		entries: navigation.entries,
 		entryIndexById: navigation.entryIndexById,
 		heldPreviousTakeoverBlockIdByAnchorIndex:
 			previousVisibleTakeover.heldBlockIdByAnchorIndex,
+		openingTransitionAnchor,
 		pageIndexById: navigation.pageIndexById,
 		pages: navigation.pages,
 		previousVisibleBlockIdsByEnteringBlockId:
@@ -423,7 +418,6 @@ export function compileReader(
 		segmentStarts: segments.map((segment) => segment.start),
 		snapConfig: tale.snapConfig,
 		snapPoints,
-		startsWithTransition: Boolean(tale.transitionFirstBlock),
 		totalScroll: Math.max(scroll, 1),
 		transitionIntoByBlockId,
 		transitionOutOfByBlockId,
@@ -446,6 +440,7 @@ type PreviousVisibleTakeoverMetadata = {
  * const metadata = compilePreviousVisibleTakeoverMetadata(anchors);
  */
 function compilePreviousVisibleTakeoverMetadata(
+	tale: Tale,
 	anchors: readonly Anchor[],
 ): PreviousVisibleTakeoverMetadata {
 	const blockIdsByEnteringBlockId: Record<string, string[]> = {};
@@ -453,17 +448,18 @@ function compilePreviousVisibleTakeoverMetadata(
 	const previousBlockIds: string[] = [];
 	let heldBlockId: string | null = null;
 	for (const anchor of anchors) {
+		const block = tale.indexMap.blocksById[anchor.blockId];
+		if (!block) continue;
 		if (
-			anchor.block.transition.previousBlocksDuringEnter ===
+			block.transition.previousBlocksDuringEnter ===
 				"customAllVisiblePrevious" ||
-			anchor.block.transition.previousBlocksDuringEnter ===
-				"fadeAllVisiblePrevious"
+			block.transition.previousBlocksDuringEnter === "fadeAllVisiblePrevious"
 		) {
-			blockIdsByEnteringBlockId[anchor.block.id] = [...previousBlockIds];
-			heldBlockId = anchor.block.id;
+			blockIdsByEnteringBlockId[anchor.blockId] = [...previousBlockIds];
+			heldBlockId = anchor.blockId;
 		}
 		heldBlockIdByAnchorIndex.push(heldBlockId);
-		previousBlockIds.push(anchor.block.id);
+		previousBlockIds.push(anchor.blockId);
 	}
 	return { blockIdsByEnteringBlockId, heldBlockIdByAnchorIndex };
 }
@@ -495,24 +491,25 @@ function shouldResolveNonOverlappingBlockPoint(
 }
 
 /**
- * Creates an off-screen source anchor for the optional first-block transition.
+ * Creates the virtual pre-story source anchor for the opening transition.
  *
  * @param anchor - First visible block anchor.
  * @param viewport - Active reader viewport.
- * @returns Virtual source anchor used by the initial transition.
+ * @returns Virtual source anchor used by the opening transition.
  */
-function createInitialTransitionAnchor(
+function createOpeningTransitionAnchor(
 	anchor: Anchor,
+	block: ResolvedTaleBlock,
 	viewport: ViewportSize,
 	mode: Tale["firstBlockTransitionMode"],
 ): Anchor {
 	if (mode === "inPlace") {
 		return {
 			...anchor,
-			id: `${anchor.id}-initial-transition`,
+			id: `${anchor.id}-opening-transition`,
 		};
 	}
-	const direction = flowDirection(anchor.block.transition.flow) ?? "down";
+	const direction = flowDirection(block.transition.flow) ?? "down";
 	const vector = directionVector(direction);
 	return {
 		...anchor,
@@ -520,7 +517,7 @@ function createInitialTransitionAnchor(
 			x: anchor.cameraPoint.x - vector.x * viewport.width,
 			y: anchor.cameraPoint.y - vector.y * viewport.height,
 		},
-		id: `${anchor.id}-initial-transition`,
+		id: `${anchor.id}-opening-transition`,
 	};
 }
 
@@ -555,7 +552,7 @@ function getAutomaticTransitionLength(
  * @returns Pixel offset from the centered anchor position.
  */
 function getCameraFramingOffset(
-	sizeConfig: Tale["structure"]["blocks"][number]["size"],
+	sizeConfig: TaleBlock["size"],
 	size: ResolvedBlockSize,
 	viewport: ViewportSize,
 ): Point {
@@ -587,13 +584,17 @@ function getCameraFramingOffset(
  * @example
  * const length = getReadingLength(anchor, viewport);
  */
-export function getReadingLength(anchor: Anchor, viewport: ViewportSize) {
-	if (anchor.block.reading.readingLengthMode === "manual") {
-		return Math.max(anchor.block.reading.readingLength ?? 1, 1);
+export function getReadingLength(
+	anchor: Anchor,
+	block: ResolvedTaleBlock,
+	viewport: ViewportSize,
+) {
+	if (block.reading.readingLengthMode === "manual") {
+		return Math.max(block.reading.readingLength ?? 1, 1);
 	}
 
 	const travelDistance = getReadingTravelDistance(anchor, viewport);
-	const direction = flowDirection(anchor.block.resolved.flow);
+	const direction = flowDirection(block.resolved.flow);
 	const viewportAxis =
 		direction === "left" || direction === "right"
 			? viewport.width
@@ -645,32 +646,56 @@ export function getSegmentProgress(segment: TimelineSegment, scroll: number) {
 }
 
 export function getSegmentCamera(
+	compiled: CompiledReader,
 	segment: TimelineSegment,
 	progress: number,
 	viewport: ViewportSize,
 ) {
 	if (segment.type === "reading") {
-		return getReadingCamera(segment.anchor, progress, viewport);
+		const anchor = getCompiledAnchor(compiled, segment.blockId);
+		return anchor
+			? getReadingCamera(anchor, progress, viewport)
+			: { x: 0, y: 0 };
 	}
 	if (segment.type === "pause") {
+		const anchor = getCompiledAnchor(compiled, segment.blockId);
+		if (!anchor) return { x: 0, y: 0 };
 		return getReadingCamera(
-			segment.anchor,
+			anchor,
 			segment.pauseType === "start" ? 0 : 1,
 			viewport,
 		);
 	}
+	const from =
+		segment.fromBlockId === null
+			? compiled.openingTransitionAnchor
+			: getCompiledAnchor(compiled, segment.fromBlockId);
+	const to = getCompiledAnchor(compiled, segment.toBlockId);
+	if (!from || !to) return { x: 0, y: 0 };
 	return lerpPoint(
-		getReadingCamera(segment.from, 1, viewport),
-		getReadingCamera(segment.to, 0, viewport),
+		getReadingCamera(from, 1, viewport),
+		getReadingCamera(to, 0, viewport),
 		progress,
 	);
 }
 
 export function getSegmentAnchor(
+	compiled: CompiledReader,
 	segment: TimelineSegment,
 	progress: number,
-): Anchor {
+): Anchor | undefined {
 	if (segment.type === "reading" || segment.type === "pause")
-		return segment.anchor;
-	return progress < 0.5 ? segment.from : segment.to;
+		return getCompiledAnchor(compiled, segment.blockId);
+	if (progress >= 0.5) return getCompiledAnchor(compiled, segment.toBlockId);
+	return segment.fromBlockId === null
+		? (compiled.openingTransitionAnchor ?? undefined)
+		: getCompiledAnchor(compiled, segment.fromBlockId);
+}
+
+function getCompiledAnchor(
+	compiled: CompiledReader,
+	blockId: string,
+): Anchor | undefined {
+	const index = compiled.anchorIndexByBlockId[blockId];
+	return index === undefined ? undefined : compiled.anchors[index];
 }

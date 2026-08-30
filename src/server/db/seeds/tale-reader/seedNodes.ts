@@ -7,6 +7,7 @@ import type {
 	ReaderStyleConfig,
 } from "~/server/db/types/tale-reader/readerConfig";
 import { userId1 } from "../ids";
+import { isCompactSeedPanel } from "./readerBlockSeedConfig";
 import { readerPageBlueprints } from "./readerStoryBlueprint";
 import { logSeedComplete, logSeedStart } from "./seedLogs";
 
@@ -136,6 +137,19 @@ function stableNodeId(blockId: number, role: string): string {
 function rootNodeStyle(
 	page: (typeof readerPageBlueprints)[number],
 ): ReaderStyleConfig {
+	if (isCompactSeedPanel(page.order)) {
+		return {
+			alignItems: "center",
+			display: "flex",
+			flexDirection: "column",
+			gap: 12,
+			height: "100%",
+			justifyContent: "center",
+			padding: "clamp(1rem, 3vw, 2.5rem)",
+			textAlign: "center",
+			width: "100%",
+		};
+	}
 	if (page.layout === "horizontal") {
 		return {
 			alignItems: "center",

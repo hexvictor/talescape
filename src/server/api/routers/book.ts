@@ -1,12 +1,12 @@
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { getOrderBy } from "~/lib/utils/orderBy";
-import { createWhereConditions } from "~/lib/utils/whereConditions";
 import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
+import { getOrderBy } from "~/server/db/query/orderBy";
+import { createWhereConditions } from "~/server/db/query/where";
 import { books } from "~/server/db/schema";
 
 const createBookInputSchema = z.object({

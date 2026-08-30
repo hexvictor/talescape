@@ -1,11 +1,11 @@
 import { desc } from "drizzle-orm";
 import { z } from "zod";
-import { getOrderBy } from "~/lib/utils/orderBy";
 import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
+import { getOrderBy } from "~/server/db/query/orderBy";
 import { authors } from "~/server/db/schema";
 
 const createAuthorInputSchema = z.object({

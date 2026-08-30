@@ -10,10 +10,30 @@ import type { ReaderDomRegistry } from "./readerDomRegistry";
 export function getUniqueAnchors(anchors: Anchor[]): Anchor[] {
 	const seen = new Set<string>();
 	return anchors.filter((anchor) => {
-		if (seen.has(anchor.block.id)) return false;
-		seen.add(anchor.block.id);
+		if (seen.has(anchor.blockId)) return false;
+		seen.add(anchor.blockId);
 		return true;
 	});
+}
+
+/**
+ * Resolves every mounted anchor that needs a deterministic animation style.
+ *
+ * Nearby hidden blocks are included so their future entering state is painted
+ * before they can intersect the viewport.
+ *
+ * @param paintedAnchors - Anchors visible or controlled by an active takeover.
+ * @param nearbyAnchors - Anchors mounted in the render window.
+ * @returns Unique anchors whose current or resting animation state must be painted.
+ *
+ * @example
+ * const anchors = getReaderStyleAnchors(visibleAnchors, nearbyAnchors);
+ */
+export function getReaderStyleAnchors(
+	paintedAnchors: readonly Anchor[],
+	nearbyAnchors: readonly Anchor[],
+): Anchor[] {
+	return getUniqueAnchors([...paintedAnchors, ...nearbyAnchors]);
 }
 
 /**
@@ -35,8 +55,8 @@ export function createReaderVisibilityPainter(
 	let previousKey = "";
 
 	return (anchors, foregroundBlockIds, activeAnchorIndex): void => {
-		const visibleIds = new Set(anchors.map((anchor) => anchor.block.id));
-		const visibleKey = anchors.map((anchor) => anchor.block.id).join("|");
+		const visibleIds = new Set(anchors.map((anchor) => anchor.blockId));
+		const visibleKey = anchors.map((anchor) => anchor.blockId).join("|");
 		const foregroundKey = [...foregroundBlockIds].join("|");
 		const key = `${registry.getRevision()}:${visibleKey}:${foregroundKey}:${activeAnchorIndex ?? -1}`;
 		if (key === previousKey) return;

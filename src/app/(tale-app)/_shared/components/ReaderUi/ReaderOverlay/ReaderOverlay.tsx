@@ -1,8 +1,10 @@
+import { ReaderAutoplayControl } from "../ReaderAutoplayControl/ReaderAutoplayControl";
 import { ReaderNavigator } from "../ReaderNavigator/ReaderNavigator";
 import { ReaderProgress } from "../ReaderProgress/ReaderProgress";
 import { ReaderScrollCue } from "../ReaderScrollCue/ReaderScrollCue";
 import { ReaderUiVisibilityControl } from "../ReaderUiVisibilityControl/ReaderUiVisibilityControl";
 import { TaleDebug } from "../TaleDebug/TaleDebug";
+import { ReaderMobileEdgeGestures } from "./ReaderMobileEdgeGestures";
 import { ReaderMobileQuickActions } from "./ReaderMobileQuickActions";
 
 /**
@@ -20,11 +22,13 @@ export function ReaderOverlay(): React.JSX.Element | null {
 			data-reader-role="reader-overlay"
 			className="pointer-events-none absolute inset-0 z-50"
 		>
+			<ReaderMobileEdgeGestures />
 			<ReaderProgress />
 			<ReaderMobileQuickActions />
 			<ReaderNavigator />
 			<ReaderScrollCue />
 			<TaleDebug />
+			<ReaderAutoplayControl />
 			<ReaderUiVisibilityControl />
 		</div>
 	);

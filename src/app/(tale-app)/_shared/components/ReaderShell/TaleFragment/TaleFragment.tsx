@@ -1,19 +1,17 @@
 "use client";
 
-import { EditorFragment } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorFragment";
-import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleRenderSlots } from "../../../contexts/TaleRenderContext";
 import type { ResolvedTaleFragment } from "../../../types";
 import { ReaderFragment } from "../ReaderFragment/ReaderFragment";
 
 /**
- * Chooses the reader or editor fragment shape for the mounted tale application.
+ * Chooses the base or application-extended fragment renderer.
  *
  * @param props - Tale fragment properties.
  * @param props.contentSized - Whether the owning block uses content-derived sizing.
  * @param props.fragment - Fragment to render.
  * @param props.index - Fragment index inside its owning node or layer.
- * @param props.onChoosePath - Optional choice-path callback.
- * @returns Reader fragment, or editor fragment wrapper when the editor application is active.
+ * @returns Base reader fragment or the active application extension.
  *
  * @example
  * <TaleFragment fragment={fragment} index={0} />
@@ -27,15 +25,11 @@ export function TaleFragment({
 	fragment: ResolvedTaleFragment;
 	index: number;
 }): React.JSX.Element {
-	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
+	const { Fragment } = useTaleRenderSlots();
 
-	if (isEditor) {
+	if (Fragment) {
 		return (
-			<EditorFragment
-				contentSized={contentSized}
-				fragment={fragment}
-				index={index}
-			/>
+			<Fragment contentSized={contentSized} fragment={fragment} index={index} />
 		);
 	}
 

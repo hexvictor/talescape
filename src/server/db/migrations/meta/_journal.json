@@ -57,6 +57,27 @@
       "when": 1783126081812,
       "tag": "0007_robust_tempest",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787159932378,
+      "tag": "0008_thankful_peter_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788018117895,
+      "tag": "0009_careful_king_bedlam",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788035802499,
+      "tag": "0010_spotty_maximus",
+      "breakpoints": true
     }
   ]
 }

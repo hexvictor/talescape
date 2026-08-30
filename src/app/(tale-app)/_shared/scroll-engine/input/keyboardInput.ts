@@ -15,9 +15,11 @@ import type { ReaderKeyboardInputControllerOptions } from "./inputTypes";
  */
 export function attachKeyboardInput({
 	driver,
+	getInputPermissions,
 	getInputSettings,
 	getSnapDuration,
 	registerSnapInput,
+	onUserInput,
 	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
@@ -37,8 +39,9 @@ export function attachKeyboardInput({
 	const animateBy = (amount: number) => {
 		const settings = getInputSettings();
 		const direction: ScrollDirection = amount >= 0 ? 1 : -1;
-		const nextTarget = clamp(driver.getTargetScroll() + amount, 0, totalScroll);
-		const snapTarget = resolveImmediateSnapTarget(nextTarget, direction);
+		const from = driver.getTargetScroll();
+		const nextTarget = clamp(from + amount, 0, totalScroll);
+		const snapTarget = resolveImmediateSnapTarget(nextTarget, direction, from);
 		setDirection(direction);
 		const durationSeconds = snapTarget
 			? getSnapDuration(snapTarget.durationSeconds)
@@ -51,7 +54,7 @@ export function attachKeyboardInput({
 			},
 		);
 		if (!snapTarget || durationSeconds === null) {
-			scheduleSnap(settings.keyboardDuration * 1000);
+			scheduleSnap(settings.keyboardDuration * 1000, from);
 		}
 	};
 
@@ -113,8 +116,24 @@ export function attachKeyboardInput({
 	};
 
 	const onKeyDown = (event: KeyboardEvent) => {
+		if (!getInputPermissions().keyboard) return;
 		if (shouldLetElementHandleInput(event.target)) return;
 		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (
+			![
+				"ArrowDown",
+				"ArrowLeft",
+				"ArrowRight",
+				"ArrowUp",
+				"End",
+				"Home",
+				"PageDown",
+				"PageUp",
+				" ",
+			].includes(event.key)
+		)
+			return;
+		onUserInput("keyboard");
 		registerSnapInput(event.repeat ? 1.2 : 0.8);
 
 		const pageStep = Math.max(
@@ -159,7 +178,7 @@ export function attachKeyboardInput({
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + direction * step, 0, totalScroll);
 		const settings = getInputSettings();
-		const snapTarget = resolveImmediateSnapTarget(target, direction);
+		const snapTarget = resolveImmediateSnapTarget(target, direction, from);
 		if (snapTarget) {
 			const durationSeconds = getSnapDuration(snapTarget.durationSeconds);
 			if (durationSeconds !== null) {
@@ -175,6 +194,7 @@ export function attachKeyboardInput({
 					event.repeat
 						? settings.keyboardDuration * 1000
 						: settings.keyboardTapBurstWindowMs,
+					from,
 				);
 			}
 		} else {
@@ -185,6 +205,7 @@ export function attachKeyboardInput({
 				event.repeat
 					? settings.keyboardDuration * 1000
 					: settings.keyboardTapBurstWindowMs,
+				from,
 			);
 		}
 	};

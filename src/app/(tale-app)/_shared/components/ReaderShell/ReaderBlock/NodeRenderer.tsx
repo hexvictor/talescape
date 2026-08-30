@@ -1,7 +1,6 @@
 "use client";
 
-import { EditorNodeOverlay } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorNodeOverlay";
-import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { useTaleRenderSlots } from "../../../contexts/TaleRenderContext";
 import type { Anchor, ResolvedTaleFragment, TaleNode } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { getNodeFragmentStyle, getNodeStyle } from "./nodeStyles";
@@ -12,23 +11,28 @@ import { getNodeFragmentStyle, getNodeStyle } from "./nodeStyles";
  * @param props - Node render props.
  * @param props.anchor - Current block anchor.
  * @param props.nodeId - Node id to render.
- * @param props.onChoosePath - Callback used by choice button fragments.
  * @returns The node subtree or null when the node cannot be found.
  *
  * @example
- * <NodeRenderer anchor={anchor} nodeId={anchor.block.rootNodeId} onChoosePath={choose} />
+ * <NodeRenderer anchor={anchor} contentSized={false} nodeId={rootNodeId} />
  */
 export function NodeRenderer({
 	anchor,
+	contentSized,
+	fragmentsById,
 	measurement = false,
 	nodeId,
+	nodesById,
 }: {
 	anchor: Anchor;
+	contentSized: boolean;
+	fragmentsById: Record<string, ResolvedTaleFragment>;
 	measurement?: boolean;
 	nodeId: string;
+	nodesById: Record<string, TaleNode>;
 }): React.JSX.Element | null {
-	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
-	const node = anchor.block.nodesById[nodeId];
+	const { NodeOverlay } = useTaleRenderSlots();
+	const node = nodesById[nodeId];
 	if (!node) return null;
 
 	return (
@@ -39,8 +43,8 @@ export function NodeRenderer({
 			className="group/node relative"
 			style={getNodeStyle(node, measurement)}
 		>
-			{isEditor ? (
-				<EditorNodeOverlay blockId={anchor.block.id} nodeId={node.id} />
+			{NodeOverlay ? (
+				<NodeOverlay blockId={anchor.blockId} nodeId={node.id} />
 			) : null}
 			{node.children.map((child, index) => {
 				if (child.type === "node") {
@@ -48,12 +52,15 @@ export function NodeRenderer({
 						<NodeRenderer
 							key={child.nodeId}
 							anchor={anchor}
+							contentSized={contentSized}
+							fragmentsById={fragmentsById}
 							measurement={measurement}
 							nodeId={child.nodeId}
+							nodesById={nodesById}
 						/>
 					);
 				}
-				const fragment = anchor.block.fragmentsById[child.fragmentId];
+				const fragment = fragmentsById[child.fragmentId];
 				if (!fragment || fragment.placement.mode !== "normal") return null;
 				return (
 					<FragmentFrame
@@ -61,6 +68,7 @@ export function NodeRenderer({
 						fragment={fragment}
 						index={index}
 						anchor={anchor}
+						contentSized={contentSized}
 						parentNode={node}
 					/>
 				);
@@ -84,11 +92,13 @@ export function NodeRenderer({
  */
 function FragmentFrame({
 	anchor,
+	contentSized,
 	fragment,
 	index,
 	parentNode,
 }: {
 	anchor: Anchor;
+	contentSized: boolean;
 	fragment: ResolvedTaleFragment;
 	index: number;
 	parentNode: TaleNode;
@@ -102,7 +112,7 @@ function FragmentFrame({
 			style={getNodeFragmentStyle(fragment.style, parentNode)}
 		>
 			<TaleFragment
-				contentSized={anchor.block.size.mode === "content"}
+				contentSized={contentSized}
 				fragment={fragment}
 				index={index}
 			/>

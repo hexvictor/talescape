@@ -1,5 +1,7 @@
 "use client";
 
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { resolveIds } from "../../../services/taleLookups";
 import type { Anchor, ResolvedTaleFragment } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { positionedStyle } from "./positionedStyle";
@@ -18,11 +20,18 @@ export function FixedFragments({
 }: {
 	anchor: Anchor;
 }): React.JSX.Element | null {
-	if (anchor.block.fixedFragments.length === 0) return null;
-	const clipped = anchor.block.fixedFragments.filter(
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const block = tale.indexMap.blocksById[anchor.blockId];
+	if (!block) return null;
+	const fixedFragments = resolveIds(
+		block.fixedFragmentIds,
+		tale.indexMap.fragmentsById,
+	);
+	if (fixedFragments.length === 0) return null;
+	const clipped = fixedFragments.filter(
 		(fragment) => fragment.placement.overflow !== "visible",
 	);
-	const overflowing = anchor.block.fixedFragments.filter(
+	const overflowing = fixedFragments.filter(
 		(fragment) => fragment.placement.overflow === "visible",
 	);
 
@@ -67,7 +76,7 @@ function FixedFragmentLayer({
 	return (
 		<div
 			data-reader-component="FixedFragments"
-			data-reader-fixed-block-id={anchor.block.id}
+			data-reader-fixed-block-id={anchor.blockId}
 			data-reader-role={
 				overflow === "hidden"
 					? "clipped-fixed-fragment-layer"

@@ -1,14 +1,17 @@
 "use client";
 
-import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Grid3X3, Pin, PinOff } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
 import { useRecentReaderActivity } from "../../../../hooks/useRecentReaderActivity";
-import type { ReaderContentsPage } from "../../../../types";
+import {
+	type ReaderNavigationPage,
+	createReaderNavigationView,
+} from "../../../../services/readerNavigationView";
 import { getReaderPartTheme } from "../readerPartTheme";
 import { PageNavigatorGrid } from "./PageNavigatorGrid";
 
@@ -36,12 +39,17 @@ export function PageNavigator(): React.JSX.Element | null {
 		reduceInactiveUiOpacity: state.ui.reduceInactiveUiOpacity,
 		scrollApi: state.scroll.api,
 	}));
-	const isPreviewing = useTaleAppStore((state) => state.derived.isPreviewing);
+	const isLivePreview = useTaleAppStore((state) => state.derived.isLivePreview);
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const navigationView = useMemo(
+		() => (compiled ? createReaderNavigationView(compiled, tale) : null),
+		[compiled, tale],
+	);
 	const [open, setOpen] = useState(false);
 	const pendingPageIndexRef = useRef<number | null>(null);
 	const closeTimerRef = useRef<number | null>(null);
 	const navigationRef = useRef<HTMLElement | null>(null);
-	const navigatorVisibility = usePinnedHoverPanel(!isPreviewing);
+	const navigatorVisibility = usePinnedHoverPanel(!isLivePreview);
 	const clearCloseTimer = useCallback((): void => {
 		window.clearTimeout(closeTimerRef.current ?? undefined);
 		closeTimerRef.current = null;
@@ -51,7 +59,7 @@ export function PageNavigator(): React.JSX.Element | null {
 		activityFadeDelaySeconds * 1000,
 	);
 	const currentPageId = location?.pageId ?? null;
-	const compiledPages = compiled?.pages;
+	const compiledPages = navigationView?.pages;
 	const navigatorExpanded = navigatorVisibility.expanded || open;
 
 	useEffect(() => {
@@ -88,12 +96,12 @@ export function PageNavigator(): React.JSX.Element | null {
 
 	if (!compiled || !location) return null;
 	const pageIndex = compiled.pageIndexById[location.pageId] ?? -1;
-	const currentPage = compiled.pages[pageIndex];
-	const currentEntry = compiled.entries.find(
+	const currentPage = navigationView?.pages[pageIndex];
+	const currentEntry = navigationView?.entries.find(
 		(entry) => entry.id === location.entryId,
 	);
-	const previous = compiled.pages[pageIndex - 1];
-	const next = compiled.pages[pageIndex + 1];
+	const previous = navigationView?.pages[pageIndex - 1];
+	const next = navigationView?.pages[pageIndex + 1];
 	if (!currentPage || !currentEntry) return null;
 
 	/**
@@ -102,7 +110,7 @@ export function PageNavigator(): React.JSX.Element | null {
 	 * @param page - Destination page.
 	 * @returns Nothing.
 	 */
-	const travelToPage = (page: ReaderContentsPage): void => {
+	const travelToPage = (page: ReaderNavigationPage): void => {
 		pendingPageIndexRef.current = compiled.pageIndexById[page.id] ?? null;
 		scrollApi?.capturePosition();
 		scrollApi?.scrollToBlock(page.firstBlockId, { motion: "travel" });
@@ -119,19 +127,26 @@ export function PageNavigator(): React.JSX.Element | null {
 		const baseIndex = pendingPageIndexRef.current ?? pageIndex;
 		const targetIndex = Math.max(
 			0,
-			Math.min(compiled.pages.length - 1, baseIndex + direction),
+			Math.min((navigationView?.pages.length ?? 1) - 1, baseIndex + direction),
 		);
-		const targetPage = compiled.pages[targetIndex];
+		const targetPage = navigationView?.pages[targetIndex];
 		if (!targetPage || targetIndex === baseIndex) return;
 		travelToPage(targetPage);
 	};
-	const paginatedCount = compiled.pages.filter(
+	const paginatedCount = (navigationView?.pages ?? []).filter(
 		(page) => page.isPaginated,
 	).length;
+	const visibleBlockIds = (navigationView?.pages ?? []).flatMap(
+		(page) => page.blockIds,
+	);
+	const currentBlockNumber = Math.max(
+		1,
+		visibleBlockIds.indexOf(location.blockId) + 1,
+	);
 	const currentLabel =
 		currentPage.isPaginated && currentPage.number !== null
 			? `Page ${currentPage.number} of ${paginatedCount}`
-			: currentPage.label;
+			: `${currentPage.label} · Block ${currentBlockNumber} of ${visibleBlockIds.length}`;
 	const currentPartTheme = getReaderPartTheme(currentPage.partNumber);
 
 	return (
@@ -141,7 +156,7 @@ export function PageNavigator(): React.JSX.Element | null {
 			data-reader-component="PageNavigator"
 			data-reader-role="page-navigation"
 			aria-label="Reader page navigation"
-			className={clsx(
+			className={cn(
 				"group/page-nav -translate-x-1/2 pointer-events-auto absolute bottom-0 left-1/2 z-40 max-w-[calc(100vw-2rem)] transition-opacity duration-300",
 				!reduceInactiveUiOpacity ||
 					recentlyActive ||
@@ -175,8 +190,8 @@ export function PageNavigator(): React.JSX.Element | null {
 						>
 							<PageNavigatorGrid
 								currentPageId={currentPage.id}
-								entries={compiled.entries}
-								pages={compiled.pages}
+								entries={navigationView?.entries ?? []}
+								pages={navigationView?.pages ?? []}
 								onNavigate={travelToPage}
 							/>
 						</div>

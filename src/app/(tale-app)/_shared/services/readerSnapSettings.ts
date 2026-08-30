@@ -1,5 +1,7 @@
 import type {
 	TaleBlock,
+	TaleBlockSnapApproach,
+	TaleBlockSnapBehavior,
 	TaleBlockSnapConfig,
 	TaleBlockSnapDirection,
 	TaleBlockSnapMode,
@@ -8,8 +10,13 @@ import type {
 } from "../types";
 
 export const defaultBlockSnapConfig: TaleBlockSnapConfig = {
-	direction: "both",
 	mode: "scroll-snap",
+	settings: null,
+	strategy: "shared",
+};
+
+const disabledSnapBehavior: TaleBlockSnapBehavior = {
+	mode: "snap-off",
 	settings: null,
 };
 
@@ -40,20 +47,58 @@ export const defaultTaleSnapConfig: TaleSnapConfig = {
 export function normalizeBlockSnapConfig(
 	snap: boolean | Partial<TaleBlockSnapConfig> | null | undefined,
 ): TaleBlockSnapConfig {
-	if (snap === false) return { mode: "snap-off", settings: null };
+	if (snap === false)
+		return { mode: "snap-off", settings: null, strategy: "shared" };
 	if (snap === true || snap == null) return defaultBlockSnapConfig;
 	if (
 		snap.mode === "snap" ||
 		snap.mode === "scroll-snap" ||
 		snap.mode === "snap-off"
 	) {
-		return {
-			direction: normalizeBlockSnapDirection(snap.direction),
-			mode: snap.mode,
-			settings: snap.settings ?? null,
-		};
+		const shared = normalizeSnapBehavior(snap);
+		if (snap.strategy === "separate") {
+			return {
+				...shared,
+				backward: normalizeSnapBehavior(snap.backward ?? shared),
+				forward: normalizeSnapBehavior(snap.forward ?? shared),
+				strategy: "separate",
+			};
+		}
+
+		const legacyDirection = normalizeBlockSnapDirection(snap.direction);
+		if (legacyDirection === "fromPrevious") {
+			return {
+				...shared,
+				backward: disabledSnapBehavior,
+				forward: shared,
+				strategy: "separate",
+			};
+		}
+		if (legacyDirection === "fromNext") {
+			return {
+				...shared,
+				backward: shared,
+				forward: disabledSnapBehavior,
+				strategy: "separate",
+			};
+		}
+		return { ...shared, strategy: "shared" };
 	}
 	return defaultBlockSnapConfig;
+}
+
+function normalizeSnapBehavior(
+	behavior: Partial<TaleBlockSnapBehavior>,
+): TaleBlockSnapBehavior {
+	return {
+		mode:
+			behavior.mode === "snap" ||
+			behavior.mode === "scroll-snap" ||
+			behavior.mode === "snap-off"
+				? behavior.mode
+				: "snap-off",
+		settings: behavior.settings ?? null,
+	};
 }
 
 /**
@@ -108,7 +153,24 @@ export function normalizeTaleSnapConfig(
  * if (isBlockSnapEnabled(block)) addSnapPoint(block);
  */
 export function isBlockSnapEnabled(block: TaleBlock): boolean {
-	return block.snap.mode !== "snap-off";
+	return (
+		resolveBlockSnapBehavior(block.snap, "forward").mode !== "snap-off" ||
+		resolveBlockSnapBehavior(block.snap, "backward").mode !== "snap-off"
+	);
+}
+
+/** Resolves the behavior authored for one direction of entry into a block. */
+export function resolveBlockSnapBehavior(
+	config: TaleBlockSnapConfig,
+	approach: TaleBlockSnapApproach,
+): TaleBlockSnapBehavior {
+	if (config.strategy !== "separate") {
+		return { mode: config.mode, settings: config.settings ?? null };
+	}
+	const behavior = config[approach];
+	return behavior
+		? { mode: behavior.mode, settings: behavior.settings ?? null }
+		: disabledSnapBehavior;
 }
 
 /**

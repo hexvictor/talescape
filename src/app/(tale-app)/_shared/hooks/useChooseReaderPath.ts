@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { useTaleAppStore } from "../contexts/TaleAppStoreContext";
 import {
 	useTaleReaderStoreInstance,
 	useTaleReaderStoreShallow,
 } from "../contexts/TaleReaderStoreContext";
-import { useTaleAppStore } from "../contexts/TaleAppStoreContext";
 import { getNextSelectedBranchIds } from "../services/navigation";
 import { flowDirection } from "../services/readerGeometry";
 import type { TalePath } from "../types";

@@ -1,1 +1,0 @@
-export { TaleEditor } from "./TaleEditor";

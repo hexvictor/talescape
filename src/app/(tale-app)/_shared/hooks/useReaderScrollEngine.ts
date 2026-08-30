@@ -6,7 +6,7 @@ import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
 import { createReaderScrollEngine } from "../scroll-engine/createReaderScrollEngine";
 import { createReaderScrollDriver } from "../scroll-engine/scrollDriver";
 import { logReaderDiagnostic } from "../services/readerDiagnostics";
-import type { CompiledReader, ViewportSize } from "../types";
+import type { CompiledReader, Tale, ViewportSize } from "../types";
 
 export function useReaderScrollEngine({
 	compiled,
@@ -14,6 +14,7 @@ export function useReaderScrollEngine({
 	requireScrollRoot = false,
 	scrollRoot,
 	stageRef,
+	tale,
 	viewport,
 }: {
 	compiled: CompiledReader | null;
@@ -21,6 +22,7 @@ export function useReaderScrollEngine({
 	requireScrollRoot?: boolean;
 	scrollRoot?: HTMLElement | null;
 	stageRef: RefObject<HTMLDivElement | null>;
+	tale: Tale;
 	viewport: ViewportSize;
 }) {
 	const store = useTaleReaderStoreInstance();
@@ -47,6 +49,7 @@ export function useReaderScrollEngine({
 			scrollRoot,
 			stage,
 			store,
+			tale,
 			viewport,
 		});
 		return () => {
@@ -63,6 +66,7 @@ export function useReaderScrollEngine({
 		scrollRoot,
 		stageRef,
 		store,
+		tale,
 		viewport,
 	]);
 }

@@ -19,10 +19,13 @@ export function createProgressPainter(
 	let storyLabel: HTMLElement | null = null;
 	let innerLabel: HTMLElement | null = null;
 	let innerFill: HTMLElement | null = null;
+	let transitionFill: HTMLElement | null = null;
 	let previousStoryLabel = "";
 	let previousInnerLabel = "";
 	let previousStoryScale = "";
 	let previousInnerScale = "";
+	let previousInnerPhase = "";
+	let previousTransitionScale = "";
 
 	return (
 		scroll: number,
@@ -57,6 +60,13 @@ export function createProgressPainter(
 				) ?? null;
 			previousInnerScale = "";
 		}
+		if (!transitionFill?.isConnected) {
+			transitionFill =
+				progressRoot?.querySelector<HTMLElement>(
+					"[data-reader-transition-progress-fill='true']",
+				) ?? null;
+			previousTransitionScale = "";
+		}
 		const storyProgress = clamp(scroll / compiled.totalScroll, 0, 1);
 		const storyScale = `scaleX(${storyProgress})`;
 		if (storyFill && storyScale !== previousStoryScale) {
@@ -74,15 +84,20 @@ export function createProgressPainter(
 
 		let label: string;
 		let innerScale: string;
+		let innerPhase = "reading";
+		let transitionScale = "scaleX(0)";
 		if (segment.type === "reading") {
 			label = `Page ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
 			innerScale = `scaleX(${segmentProgress})`;
 		} else if (segment.type === "pause") {
 			label = `${segment.pauseType === "start" ? "Enter pause" : "Leave pause"} ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
 			innerScale = `scaleX(${segmentProgress})`;
+			innerPhase =
+				segment.pauseType === "start" ? "enter-pause" : "leave-pause";
 		} else {
 			label = `Transition ${Math.round(segment.length * segmentProgress)} / ${segment.length}`;
 			innerScale = "scaleX(0)";
+			transitionScale = `scaleX(${segmentProgress})`;
 		}
 		if (label !== previousInnerLabel) {
 			innerLabel.textContent = label;
@@ -91,6 +106,14 @@ export function createProgressPainter(
 		if (innerFill && innerScale !== previousInnerScale) {
 			innerFill.style.transform = innerScale;
 			previousInnerScale = innerScale;
+		}
+		if (innerFill && innerPhase !== previousInnerPhase) {
+			innerFill.dataset.readerProgressPhase = innerPhase;
+			previousInnerPhase = innerPhase;
+		}
+		if (transitionFill && transitionScale !== previousTransitionScale) {
+			transitionFill.style.transform = transitionScale;
+			previousTransitionScale = transitionScale;
 		}
 	};
 }

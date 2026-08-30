@@ -1,0 +1,1 @@
+ALTER TABLE "talescape_tale" DROP COLUMN "transitionFirstBlock";

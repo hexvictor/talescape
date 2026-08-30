@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import {
 	Braces,
 	ChevronDown,
@@ -10,12 +9,12 @@ import {
 	MousePointerClick,
 } from "lucide-react";
 import { useState } from "react";
+import cn from "~/lib/utils/cn";
 import type {
-	ReaderContentsEntry,
-	ReaderContentsPart,
-	ResolvedTaleBranch,
-	ResolvedTalePath,
-} from "../../../../types";
+	ReaderNavigationEntry,
+	ReaderNavigationPart,
+} from "../../../../services/readerNavigationView";
+import type { ResolvedTaleBranch, ResolvedTalePath } from "../../../../types";
 import {
 	EntryTypeIcon,
 	getEntryTypeLabel,
@@ -25,7 +24,7 @@ import { EntryPagesGrid } from "./EntryPagesGrid";
 import { RouteGraphSection } from "./RouteGraphSection";
 
 type ContentsTreeProps = {
-	contents: ReaderContentsPart[];
+	contents: ReaderNavigationPart[];
 	currentBlockId: string | null;
 	currentEntryId: string | null;
 	onNavigate: (blockId: string) => void;
@@ -56,7 +55,7 @@ export function ContentsTree({
 	 * @param entry - Selected compiled entry.
 	 * @returns Nothing.
 	 */
-	const selectEntry = (entry: ReaderContentsEntry): void => {
+	const selectEntry = (entry: ReaderNavigationEntry): void => {
 		onNavigate(entry.firstBlockId);
 	};
 
@@ -139,7 +138,8 @@ export function ContentsTree({
 									</span>
 								</span>
 								<span className="text-foreground/38 text-xs">
-									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
+									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"} ·{" "}
+									{part.blockCount} blocks
 								</span>
 							</button>
 						</div>
@@ -158,7 +158,7 @@ export function ContentsTree({
 											data-reader-entry-id={entry.id}
 										>
 											<div
-												className={clsx(
+												className={cn(
 													"flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs",
 													active
 														? "bg-[color:var(--reader-part-soft-strong)] text-foreground"
@@ -212,7 +212,9 @@ export function ContentsTree({
 														</span>
 													) : null}
 													<span className="text-foreground/35">
-														{entry.pages.length > 1 ? entry.pages.length : null}
+														{entry.blockCount > 1
+															? `${entry.pageCount}p / ${entry.blockCount}b`
+															: null}
 													</span>
 												</button>
 											</div>
@@ -290,7 +292,7 @@ export function RoutesPanel({
 						key={branch.id}
 						data-reader-component="RoutesPanel"
 						data-reader-role="branch-section"
-						className={clsx(
+						className={cn(
 							"rounded-md border p-3",
 							selected
 								? "border-primary/60 bg-primary/8"
@@ -322,7 +324,7 @@ export function RoutesPanel({
 									return (
 										<div
 											key={path.id}
-											className={clsx(
+											className={cn(
 												"flex items-center gap-1 rounded px-1 py-1 text-[11px]",
 												currentOption
 													? "bg-sky-300/8 text-sky-100/75"

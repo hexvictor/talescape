@@ -32,7 +32,7 @@ function isDatabaseBackedProgress(
  */
 export function usePersistReaderProgress(): void {
 	const store = useTaleReaderStoreInstance();
-	const mutation = api.taleReader.progress.update.useMutation();
+	const mutation = api.taleApp.progress.update.useMutation();
 	const inFlightRef = useRef(false);
 	const lastFingerprintRef = useRef("");
 	const latestProgressRef = useRef<SavedReaderProgress | null>(null);

@@ -214,6 +214,7 @@ export type ReadingConfig = {
 		ambient: AmbientAnimationSelection;
 		scrolling: AnimationSelection;
 	};
+	autoplay?: import("~/app/(tale-app)/_shared/types").TaleBlockAutoplayConfig;
 	cameraPath?: BlockCameraPath;
 	pauses?: {
 		atEnd?: number;
@@ -225,6 +226,7 @@ export type ReadingConfig = {
 
 export type BlockSnapMode = "scroll-snap" | "snap" | "snap-off";
 export type BlockSnapDirection = "both" | "fromNext" | "fromPrevious";
+export type BlockSnapStrategy = "separate" | "shared";
 
 export type BlockSnapSettings = {
 	captureDistancePx?: number | null;
@@ -233,10 +235,16 @@ export type BlockSnapSettings = {
 	minViewportFraction?: number | null;
 };
 
-export type BlockSnapConfig = {
-	direction?: BlockSnapDirection;
+export type BlockSnapBehavior = {
 	mode: BlockSnapMode;
 	settings?: BlockSnapSettings | null;
+};
+
+export type BlockSnapConfig = BlockSnapBehavior & {
+	backward?: BlockSnapBehavior;
+	direction?: BlockSnapDirection;
+	forward?: BlockSnapBehavior;
+	strategy?: BlockSnapStrategy;
 };
 
 export type TransitionConfig = {

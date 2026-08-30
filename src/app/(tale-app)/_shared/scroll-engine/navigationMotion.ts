@@ -1,8 +1,10 @@
+import { getAnchorByBlockId } from "../services/readerLookups";
 import { clamp } from "../services/readerMath";
 import type {
 	Anchor,
 	CompiledReader,
 	ReaderScrollTargetOptions,
+	Tale,
 	ViewportSize,
 } from "../types";
 import type { ReaderScrollDriver } from "./scrollDriver";
@@ -43,6 +45,7 @@ type ReaderNavigationMotionOptions = {
  */
 export function createReaderNavigationMotion(
 	compiled: CompiledReader,
+	tale: Tale,
 	driver: ReaderScrollDriver,
 	viewport: ViewportSize,
 	lifecycle: ReaderNavigationMotionOptions,
@@ -183,10 +186,11 @@ export function createReaderNavigationMotion(
 		blockId: string,
 		options?: ReaderScrollTargetOptions,
 	): void => {
-		const anchor = compiled.anchorsByBlockId[blockId];
+		const anchor = getAnchorByBlockId(compiled, blockId);
 		if (!anchor) return;
+		const block = tale.indexMap.blocksById[blockId];
 		const targetScroll =
-			options?.atChoiceEnd && anchor.block.isChoiceBlock
+			options?.atChoiceEnd && block?.isChoiceBlock
 				? getReadingSegmentEnd(compiled, blockId, anchor.scroll)
 				: anchor.scroll;
 		const currentScroll = driver.getScroll();

@@ -8,13 +8,13 @@ import {
 	useRef,
 } from "react";
 import type { StoreApi } from "zustand/vanilla";
-import { createDerivedStoreHooks } from "~/stores/createDerivedStoreHooks";
+import { createDerivedStoreHooks } from "~/lib/zustand/createDerivedStoreHooks";
 import {
 	type TaleReaderDerivedState,
 	type TaleReaderState,
 	createTaleReaderDerivedState,
 	createTaleReaderStore,
-} from "../store/createTaleReaderStore";
+} from "../../(reader)/_shared/stores/createTaleReaderStore";
 import type { SavedReaderProgress, Tale } from "../types";
 import { useTaleAppStoreInstance } from "./TaleAppStoreContext";
 
@@ -23,7 +23,7 @@ const TaleReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
 );
 
 /**
- * Provides an isolated reader engine for a full reader or editor preview.
+ * Provides an isolated reader engine for Tale Reader or Tale Studio.
  *
  * @param props - Tale reader provider properties.
  * @param props.children - Reader viewport and related UI.
@@ -31,7 +31,7 @@ const TaleReaderStoreContext = createContext<StoreApi<TaleReaderState> | null>(
  * @param props.tale - Initial document snapshot.
  * @returns Reader store provider and document synchronizer.
  */
-export function TaleReaderStoreProvider({
+export function TaleReaderProvider({
 	children,
 	progress,
 	tale,
@@ -42,9 +42,8 @@ export function TaleReaderStoreProvider({
 	const taleAppStore = useTaleAppStoreInstance();
 	const storeRef = useRef<StoreApi<TaleReaderState> | null>(null);
 	if (!storeRef.current) {
-		const { activity, application } = taleAppStore.getState().runtime;
+		const { application } = taleAppStore.getState().runtime;
 		storeRef.current = createTaleReaderStore(tale, progress, {
-			activity,
 			application,
 		});
 	}
@@ -66,7 +65,7 @@ export function useTaleReaderStoreInstance(): StoreApi<TaleReaderState> {
 	const store = useContext(TaleReaderStoreContext);
 	if (!store) {
 		throw new Error(
-			"useTaleReaderStoreInstance must be used inside TaleReaderStoreProvider.",
+			"useTaleReaderStoreInstance must be used inside TaleReaderProvider.",
 		);
 	}
 	return store;

@@ -4,9 +4,10 @@ import type {
 	ReaderContentsEntryPartSpan,
 	ReaderContentsPage,
 	ReaderContentsPart,
+	ResolvedTaleEntry,
 	Tale,
 } from "../types";
-import { getReaderPageLabel } from "./readerPageLabels";
+import { getTaleEntries, getTaleParts } from "./taleLookups";
 
 export type CompiledReaderContents = {
 	contents: ReaderContentsPart[];
@@ -31,37 +32,26 @@ export function compileReaderContents(
 	anchors: Anchor[],
 ): CompiledReaderContents {
 	const anchorsByEntryId = new Map<string, Anchor[]>();
-	const visiblePartIds = new Set(anchors.map((anchor) => anchor.page.partId));
-	const partMetaById = new Map(
-		tale.structure.parts
-			.filter((part) => visiblePartIds.has(part.id))
-			.map((part, index) => [
-				part.id,
-				{ number: index + 1, title: part.title },
-			]),
-	);
-	const globalBlockIndexById = new Map(
-		anchors.map((anchor, index) => [anchor.block.id, index]),
-	);
 	const pageNumberById = new Map<string, number>();
 	let pageNumber = 0;
 	for (const anchor of anchors) {
-		if (anchor.page.isPaginated && !pageNumberById.has(anchor.page.id)) {
+		const page = tale.indexMap.pagesById[anchor.pageId];
+		if (page?.isPaginated && !pageNumberById.has(page.id)) {
 			pageNumber += 1;
-			pageNumberById.set(anchor.page.id, pageNumber);
+			pageNumberById.set(page.id, pageNumber);
 		}
 	}
 	for (const anchor of anchors) {
-		const entryAnchors = anchorsByEntryId.get(anchor.entry.id);
+		const entryAnchors = anchorsByEntryId.get(anchor.entryId);
 		if (entryAnchors) {
 			entryAnchors.push(anchor);
 		} else {
-			anchorsByEntryId.set(anchor.entry.id, [anchor]);
+			anchorsByEntryId.set(anchor.entryId, [anchor]);
 		}
 	}
 
-	const entriesByPartId = new Map<string, typeof tale.structure.entries>();
-	for (const entry of tale.structure.entries) {
+	const entriesByPartId = new Map<string, ResolvedTaleEntry[]>();
+	for (const entry of getTaleEntries(tale)) {
 		const partEntries = entriesByPartId.get(entry.partId);
 		if (partEntries) {
 			partEntries.push(entry);
@@ -73,7 +63,7 @@ export function compileReaderContents(
 	let chapterNumber = 0;
 	const pages: ReaderContentsPage[] = [];
 	const allEntries: ReaderContentsEntry[] = [];
-	const contents = tale.structure.parts.flatMap((part) => {
+	const contents = getTaleParts(tale).flatMap((part) => {
 		const partEntries = (entriesByPartId.get(part.id) ?? []).flatMap(
 			(entry) => {
 				const entryAnchors = anchorsByEntryId.get(entry.id) ?? [];
@@ -81,39 +71,21 @@ export function compileReaderContents(
 				const derivedChapterNumber =
 					entry.type === "chapter" ? ++chapterNumber : null;
 				const entryPages = compileEntryPages(
+					tale,
 					entry.id,
 					entryAnchors,
 					pageNumberById,
-					partMetaById,
 				);
 				pages.push(...entryPages);
 				const compiledEntry: ReaderContentsEntry = {
-					blocks: entryAnchors.map((anchor, entryBlockIndex) => {
-						const derivedPageNumber =
-							pageNumberById.get(anchor.page.id) ?? null;
-						return {
-							blockId: anchor.block.id,
-							entryBlockIndex,
-							globalBlockIndex:
-								globalBlockIndexById.get(anchor.block.id) ?? entryBlockIndex,
-							isPaginated: anchor.page.isPaginated,
-							pageId: anchor.page.id,
-							pageLabel: getReaderPageLabel(anchor.page, derivedPageNumber),
-							pageNumber: derivedPageNumber,
-							pageType: anchor.page.type,
-							title: anchor.block.title,
-						};
-					}),
+					blockIds: entryAnchors.map((anchor) => anchor.blockId),
 					chapterNumber: derivedChapterNumber,
-					firstBlockId: entryAnchors[0]?.block.id ?? "",
 					hasChoiceBlock: entryAnchors.some(
-						(anchor) => anchor.block.isChoiceBlock,
+						(anchor) => tale.indexMap.blocksById[anchor.blockId]?.isChoiceBlock,
 					),
 					id: entry.id,
-					partSpans: compileEntryPartSpans(entryPages),
-					pages: entryPages,
-					title: entry.title,
-					type: entry.type,
+					partSpans: compileEntryPartSpans(tale, entryPages),
+					pageIds: entryPages.map((page) => page.id),
 				};
 				allEntries.push(compiledEntry);
 				return [compiledEntry];
@@ -122,18 +94,8 @@ export function compileReaderContents(
 		if (partEntries.length === 0) return [];
 		return [
 			{
-				blockCount: partEntries.reduce(
-					(total, entry) => total + entry.blocks.length,
-					0,
-				),
-				entries: partEntries,
-				firstBlockId: partEntries[0]?.firstBlockId ?? "",
+				entryIds: partEntries.map((entry) => entry.id),
 				id: part.id,
-				pageCount: partEntries.reduce(
-					(total, entry) => total + entry.pages.length,
-					0,
-				),
-				title: part.title,
 			},
 		];
 	});
@@ -160,16 +122,16 @@ export function compileReaderContents(
  * @returns Distinct pages in current reader order.
  */
 function compileEntryPages(
+	tale: Tale,
 	entryId: string,
 	anchors: Anchor[],
 	pageNumberById: Map<string, number>,
-	partMetaById: Map<string, { number: number; title: string }>,
 ): ReaderContentsPage[] {
 	const anchorsByPageId = new Map<string, Anchor[]>();
 	for (const anchor of anchors) {
-		const pageAnchors = anchorsByPageId.get(anchor.page.id);
+		const pageAnchors = anchorsByPageId.get(anchor.pageId);
 		if (pageAnchors) pageAnchors.push(anchor);
-		else anchorsByPageId.set(anchor.page.id, [anchor]);
+		else anchorsByPageId.set(anchor.pageId, [anchor]);
 	}
 
 	return [...anchorsByPageId.values()].map((pageAnchors) => {
@@ -177,52 +139,44 @@ function compileEntryPages(
 		if (!firstAnchor) {
 			throw new Error(`Entry ${entryId} contains an empty compiled page.`);
 		}
-		const number = pageNumberById.get(firstAnchor.page.id) ?? null;
-		const partMeta = partMetaById.get(firstAnchor.page.partId);
+		const page = tale.indexMap.pagesById[firstAnchor.pageId];
+		if (!page) {
+			throw new Error(
+				`Entry ${entryId} references missing page ${firstAnchor.pageId}.`,
+			);
+		}
 		return {
-			blockIds: pageAnchors.map((anchor) => anchor.block.id),
-			entryId,
-			firstBlockId: firstAnchor.block.id,
-			globalIndex: firstAnchor.page.position.globalPageNumber,
-			hasChoiceBlock: pageAnchors.some((anchor) => anchor.block.isChoiceBlock),
-			id: firstAnchor.page.id,
-			isFirstInPart: firstAnchor.page.position.isFirstInPart,
-			isLastInPart: firstAnchor.page.position.isLastInPart,
-			isPaginated: firstAnchor.page.isPaginated,
-			label: getReaderPageLabel(firstAnchor.page, number),
-			number,
-			partId: firstAnchor.page.partId,
-			partNumber: partMeta?.number ?? 0,
-			partTitle: partMeta?.title ?? "Untitled part",
-			title: firstAnchor.page.title ?? firstAnchor.block.title,
-			type: firstAnchor.page.type,
+			blockIds: pageAnchors.map((anchor) => anchor.blockId),
+			hasChoiceBlock: pageAnchors.some(
+				(anchor) => tale.indexMap.blocksById[anchor.blockId]?.isChoiceBlock,
+			),
+			id: page.id,
+			number: pageNumberById.get(page.id) ?? null,
 		};
 	});
 }
 
 function compileEntryPartSpans(
+	tale: Tale,
 	pages: ReaderContentsPage[],
 ): ReaderContentsEntryPartSpan[] {
 	const spans: ReaderContentsEntryPartSpan[] = [];
 
 	for (const page of pages) {
+		const talePage = tale.indexMap.pagesById[page.id];
+		if (!talePage) continue;
 		const currentSpan = spans.at(-1);
-		if (currentSpan && currentSpan.partId === page.partId) {
+		if (currentSpan && currentSpan.partId === talePage.partId) {
 			currentSpan.endPageId = page.id;
-			currentSpan.endsPart = page.isLastInPart;
 			currentSpan.pageCount += 1;
 			continue;
 		}
 
 		spans.push({
 			endPageId: page.id,
-			endsPart: page.isLastInPart,
-			partId: page.partId,
-			partNumber: page.partNumber,
-			partTitle: page.partTitle,
+			partId: talePage.partId,
 			pageCount: 1,
 			startPageId: page.id,
-			startsPart: page.isFirstInPart,
 		});
 	}
 

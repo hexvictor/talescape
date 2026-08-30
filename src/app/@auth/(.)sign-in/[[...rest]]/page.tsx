@@ -2,8 +2,8 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
-import RouteDialog from "~/components/layout/RouteDialog";
-import SignInForm from "~/features/auth/components/SignInForm";
+import SignInForm from "~/app/_shared/auth/forms/SignInForm";
+import RouteDialog from "~/app/_shared/components/layout/RouteDialog";
 
 /**
  * Sign-in modal route rendered in the auth slot.
@@ -23,7 +23,7 @@ export default function SignInModalPage(): React.JSX.Element {
 	return (
 		<RouteDialog
 			closeWhen={isSignedIn}
-			contentClassName="w-auto overflow-hidden border-border/70 bg-card p-0 shadow-2xl sm:max-w-none"
+			contentClassName="w-auto overflow-hidden rounded-none border-[3px] border-foreground bg-card p-0 shadow-[7px_7px_0_var(--comic-ink)] sm:max-w-none"
 			hideHeader
 			replaceHrefs={["/sign-in", "/sign-up"]}
 			fallbackHref={safeReturnTo}

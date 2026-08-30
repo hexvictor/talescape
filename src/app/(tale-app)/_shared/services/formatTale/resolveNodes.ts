@@ -1,5 +1,4 @@
 import type { ResolvedTaleFragment, TaleBlock, TaleNode } from "../../types";
-import { recordById } from "./shared";
 
 export type FragmentPlacementBuckets = ReturnType<
 	typeof createFragmentPlacementBuckets
@@ -18,21 +17,23 @@ export function createFragmentPlacementBuckets(
 		(fragment) => fragment.placement.mode === "absolute",
 	);
 	return {
-		clippedFragments: placedFragments.filter(
-			(fragment) => fragment.placement.overflow !== "visible",
-		),
-		fixedFragments: fragments.filter(
-			(fragment) => fragment.placement.mode === "fixed",
-		),
-		flowFragments: fragments.filter(
-			(fragment) =>
-				fragment.placement.mode !== "absolute" &&
-				fragment.placement.mode !== "fixed",
-		),
-		overflowingFragments: placedFragments.filter(
-			(fragment) => fragment.placement.overflow === "visible",
-		),
-		placedFragments,
+		clippedFragmentIds: placedFragments
+			.filter((fragment) => fragment.placement.overflow !== "visible")
+			.map((fragment) => fragment.id),
+		fixedFragmentIds: fragments
+			.filter((fragment) => fragment.placement.mode === "fixed")
+			.map((fragment) => fragment.id),
+		flowFragmentIds: fragments
+			.filter(
+				(fragment) =>
+					fragment.placement.mode !== "absolute" &&
+					fragment.placement.mode !== "fixed",
+			)
+			.map((fragment) => fragment.id),
+		overflowingFragmentIds: placedFragments
+			.filter((fragment) => fragment.placement.overflow === "visible")
+			.map((fragment) => fragment.id),
+		placedFragmentIds: placedFragments.map((fragment) => fragment.id),
 	};
 }
 
@@ -46,9 +47,14 @@ export function createFragmentPlacementBuckets(
 export function resolveBlockNodes(
 	block: TaleBlock,
 	buckets: FragmentPlacementBuckets,
+	nodesById: Record<string, TaleNode>,
 ): { nodes: TaleNode[]; rootNodeId: string } {
-	if (block.nodes?.length) {
-		const nodes = normalizeNodeFragmentIds(block.nodes, block.fragmentIds);
+	const authoredNodes = block.nodeIds.flatMap((nodeId) => {
+		const node = nodesById[nodeId];
+		return node ? [node] : [];
+	});
+	if (authoredNodes.length) {
+		const nodes = normalizeNodeFragmentIds(authoredNodes, block.fragmentIds);
 		return {
 			nodes,
 			rootNodeId:
@@ -58,15 +64,17 @@ export function resolveBlockNodes(
 		};
 	}
 
-	const hasPlaced = buckets.placedFragments.length > 0;
+	const hasPlaced = buckets.placedFragmentIds.length > 0;
+	const rootNodeId = `${block.id}:root`;
+	const flowNodeId = `${block.id}:flow`;
 	const root: TaleNode = {
 		align: "center",
 		animations: emptyNodeAnimations(),
 		children: hasPlaced
-			? [{ nodeId: "flow", type: "node" }]
-			: groupChildren(buckets.flowFragments.map((item) => item.id)),
+			? [{ nodeId: flowNodeId, type: "node" }]
+			: groupChildren(buckets.flowFragmentIds),
 		gap: 18,
-		id: "root",
+		id: rootNodeId,
 		justify: "center",
 		mode: "stack",
 		overflow: "visible",
@@ -77,17 +85,17 @@ export function resolveBlockNodes(
 		nodes.push({
 			align: "center",
 			animations: emptyNodeAnimations(),
-			children: groupChildren(buckets.flowFragments.map((item) => item.id)),
+			children: groupChildren(buckets.flowFragmentIds),
 			gap: 16,
-			id: "flow",
+			id: flowNodeId,
 			justify: "center",
 			mode: "stack",
 			overflow: "visible",
-			parentNodeId: "root",
+			parentNodeId: rootNodeId,
 			style: { padding: 24 },
 		});
 	}
-	return { nodes, rootNodeId: "root" };
+	return { nodes, rootNodeId };
 }
 
 /**
@@ -132,7 +140,7 @@ function normalizeNodeFragmentIds(
 }
 
 function collectNodeFragmentIds(nodes: TaleNode[]): string[] {
-	const nodesById = recordById(nodes);
+	const nodesById = Object.fromEntries(nodes.map((node) => [node.id, node]));
 	const collectChildren = (children: TaleNode["children"]): string[] =>
 		children.flatMap((child) => {
 			if (child.type === "fragment") return [child.fragmentId];

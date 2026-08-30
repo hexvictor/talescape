@@ -1,7 +1,7 @@
 "use client";
 
-import clsx from "clsx";
-import type { ReaderContentsEntry } from "../../../../types";
+import cn from "~/lib/utils/cn";
+import type { ReaderNavigationEntry } from "../../../../services/readerNavigationView";
 import { ReaderTypeIcon } from "../EntryNavigator/ReaderTypeIcon";
 import { getReaderPartTheme } from "../readerPartTheme";
 
@@ -20,7 +20,7 @@ export function EntryPagesGrid({
 	onNavigate,
 }: {
 	currentBlockId: string | null;
-	entry: ReaderContentsEntry;
+	entry: ReaderNavigationEntry;
 	onNavigate: (blockId: string) => void;
 }): React.JSX.Element | null {
 	if (entry.pages.length <= 1) return null;
@@ -41,7 +41,7 @@ export function EntryPagesGrid({
 					title={`${page.label}: ${page.title}`}
 					aria-label={`Go to ${page.label}: ${page.title}`}
 					style={getReaderPartTheme(page.partNumber)}
-					className={clsx(
+					className={cn(
 						"group/page grid h-9 w-9 place-items-center rounded-full border font-bold text-[10px] transition",
 						page.blockIds.includes(currentBlockId ?? "")
 							? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"

@@ -1,5 +1,6 @@
 import { logReaderDiagnostic } from "../services/readerDiagnostics";
-import type { TaleSnapConfig } from "../types";
+import type { TalePlaybackConfig, TaleSnapConfig } from "../types";
+import type { ReaderInputKind } from "./input/inputTypes";
 import { attachKeyboardInput } from "./input/keyboardInput";
 import { attachMiddleDragInput } from "./input/middleDragInput";
 import { createSnapController } from "./input/snapController";
@@ -35,6 +36,8 @@ export function attachReaderInputBindings(
 	scrollToTimelineEdge: (edge: "end" | "start") => void,
 	getInputSettings: () => ReaderInputSettings,
 	getSnapConfig: () => TaleSnapConfig,
+	getInputPermissions: () => TalePlaybackConfig["interactions"],
+	onUserInput: (kind: ReaderInputKind) => void,
 	target: HTMLElement | Window = window,
 ): ReaderInputBindings {
 	logReaderDiagnostic("input bindings attached", { totalScroll });
@@ -51,20 +54,24 @@ export function attachReaderInputBindings(
 	const resolveImmediateSnapTarget = (
 		targetScroll: number,
 		nextDirection: ScrollDirection,
+		fromScroll: number,
 	) => {
 		const target = snapModel.getSnapTarget(
 			targetScroll,
 			nextDirection,
 			getSnapConfig(),
+			fromScroll,
 		);
 		return target?.forced ? target : null;
 	};
 	const cleanups = [
 		attachWheelInput({
 			driver,
+			getInputPermissions,
 			getInputSettings,
 			getSnapDuration: snapController.getDuration,
 			registerSnapInput: snapController.registerInput,
+			onUserInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -73,9 +80,11 @@ export function attachReaderInputBindings(
 		}),
 		attachKeyboardInput({
 			driver,
+			getInputPermissions,
 			getInputSettings,
 			getSnapDuration: snapController.getDuration,
 			registerSnapInput: snapController.registerInput,
+			onUserInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -85,9 +94,11 @@ export function attachReaderInputBindings(
 		}),
 		attachMiddleDragInput({
 			driver,
+			getInputPermissions,
 			getInputSettings,
 			getSnapDuration: snapController.getDuration,
 			registerSnapInput: snapController.registerInput,
+			onUserInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,
@@ -96,9 +107,11 @@ export function attachReaderInputBindings(
 		}),
 		attachTouchInput({
 			driver,
+			getInputPermissions,
 			getInputSettings,
 			getSnapDuration: snapController.getDuration,
 			registerSnapInput: snapController.registerInput,
+			onUserInput,
 			resolveImmediateSnapTarget,
 			scheduleSnap: snapController.schedule,
 			setDirection,

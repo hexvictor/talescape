@@ -1,17 +1,21 @@
 "use client";
 
+import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
-import type { TaleStoreMode } from "../../../types";
+import { Button } from "~/components/ui/button";
+import type { TaleAccessAction } from "../../../types";
 
 type TaleUnauthorizedProps = {
-	slug: string;
 	status: number;
-	creatorUsername: string;
+	creatorUsername?: string;
 	visibility?: string;
 	title?: string;
 	type?: string;
 	creator?: string;
-	mode?: TaleStoreMode;
+	action?: TaleAccessAction;
+	returnTo?: string;
+	slug?: string;
+	taleId?: number;
 };
 
 const SIGN_IN_PATH = "/sign-in";
@@ -21,20 +25,16 @@ const SIGN_IN_PATH = "/sign-in";
  *
  * @param creatorUsername - Tale creator username or `official`.
  * @param slug - Tale slug.
- * @param mode - Reader mode, `read` or `edit`.
  * @returns The internal return path.
  *
  * @example
- * buildReturnToPath("alex", "my-tale", "edit") // "/alex/my-tale/edit"
+ * buildReaderReturnToPath("alex", "my-tale") // "/alex/my-tale"
  */
-function buildReturnToPath(
+function buildReaderReturnToPath(
 	creatorUsername: string,
 	slug: string,
-	mode: TaleStoreMode,
 ): string {
-	return mode === "edit"
-		? `/${creatorUsername}/${slug}/edit`
-		: `/${creatorUsername}/${slug}`;
+	return `/${creatorUsername}/${slug}`;
 }
 
 /**
@@ -60,13 +60,16 @@ function buildSignInHref(returnTo: string): string {
  * @param props.title - Tale title.
  * @param props.type - Tale type.
  * @param props.creator - Tale owner display name.
- * @param props.mode - Reader mode, defaults to `read`.
+ * @param props.action - Access action, defaults to `read`.
+ * @param props.returnTo - Explicit internal route restored after sign-in.
+ * @param props.taleId - Tale id shown for Studio routes.
  * @returns The unauthorized tale screen.
  *
  * @example
  * <TaleUnauthorized slug="my-tale" status={401} creatorUsername="alex" />
  */
 export default function TaleUnauthorized({
+	action = "read",
 	slug,
 	status,
 	creatorUsername,
@@ -74,32 +77,44 @@ export default function TaleUnauthorized({
 	title,
 	type,
 	creator,
-	mode = "read",
+	returnTo,
+	taleId,
 }: TaleUnauthorizedProps): React.JSX.Element {
-	const action = mode === "edit" ? "edit" : "view";
-	const returnTo = buildReturnToPath(creatorUsername, slug, mode);
-	const signInHref = buildSignInHref(returnTo);
+	const actionLabel = action === "edit" ? "edit" : "view";
+	const resolvedReturnTo =
+		returnTo ??
+		(creatorUsername && slug
+			? buildReaderReturnToPath(creatorUsername, slug)
+			: "/");
+	const signInHref = buildSignInHref(resolvedReturnTo);
 
 	return (
 		<div
 			data-reader-component="TaleUnauthorized"
 			data-reader-role="feedback-screen"
-			className="fixed inset-0 z-50 flex items-center justify-center bg-background p-6 text-foreground"
+			className="comic-halftone fixed inset-0 z-50 flex items-center justify-center bg-[var(--comic-teal)] p-5 text-foreground"
 		>
-			<div className="w-full max-w-md rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center shadow-2xl backdrop-blur-sm">
-				<p className="mb-3 text-foreground/45 text-xs uppercase tracking-[0.24em]">
+			<section className="w-full max-w-lg border-[4px] border-foreground bg-card p-6 text-center shadow-[9px_9px_0_var(--comic-ink)] sm:p-9">
+				<LockKeyhole
+					size={38}
+					strokeWidth={2.5}
+					className="mx-auto mb-4 text-primary"
+				/>
+				<p className="mb-3 font-black text-[11px] text-[var(--comic-teal-dark)] uppercase">
 					Protected tale
 				</p>
 
-				<h1 className="mb-3 font-semibold text-2xl tracking-tight">
-					Sign in to {action} this tale
+				<h1 className="mb-3 font-display text-4xl uppercase leading-none">
+					Sign in to {actionLabel} this tale
 				</h1>
 
 				{title ? (
 					<div className="space-y-2">
-						<p className="text-foreground/90 text-lg italic">"{title}"</p>
-						<p className="text-foreground/65 text-sm leading-6">
-							{mode === "edit"
+						<p className="font-serif text-foreground text-lg italic">
+							"{title}"
+						</p>
+						<p className="font-serif text-muted-foreground text-sm leading-6">
+							{action === "edit"
 								? "You need to sign in with an account that can edit this tale."
 								: status === 403
 									? "This tale is restricted. Sign in with an account that can access it."
@@ -114,30 +129,28 @@ export default function TaleUnauthorized({
 						</p>
 					</div>
 				) : (
-					<p className="mb-1 text-foreground/65 text-sm leading-6">
-						You must sign in to {action} this tale.
+					<p className="mb-1 font-serif text-muted-foreground text-sm leading-6">
+						You must sign in to {actionLabel} this tale.
 					</p>
 				)}
 
-				<Link
-					href={signInHref}
-					className="mt-6 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background transition-colors hover:bg-foreground/90"
-				>
-					Sign in
-				</Link>
+				<Button asChild className="mt-6" variant="comic">
+					<Link href={signInHref}>Sign in</Link>
+				</Button>
 
-				<p className="mt-3 text-foreground/40 text-xs">
+				<p className="mt-4 text-muted-foreground text-xs">
 					You will return to this tale after signing in.
 				</p>
 
-				<div className="mt-6 border-foreground/10 border-t pt-4 text-left text-foreground/35 text-xs">
-					<p>Slug: {slug}</p>
-					<p>Creator Username: {creatorUsername}</p>
+				<div className="mt-6 border-foreground border-t-2 pt-4 text-left font-mono text-[11px] text-muted-foreground uppercase">
+					{taleId ? <p>Tale ID: {taleId}</p> : null}
+					{slug ? <p>Slug: {slug}</p> : null}
+					{creatorUsername ? <p>Creator Username: {creatorUsername}</p> : null}
 					{creator && <p>Owner: {creator}</p>}
 					{type && <p>Type: {type}</p>}
 					<p>Status: {status}</p>
 				</div>
-			</div>
+			</section>
 		</div>
 	);
 }

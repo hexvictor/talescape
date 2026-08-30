@@ -1,3 +1,7 @@
+import {
+	getAnchorByBlockId,
+	getTransitionAnchors,
+} from "../services/readerLookups";
 import type { Anchor, CompiledReader } from "../types";
 import { getUniqueAnchors } from "./readerVisibility";
 
@@ -23,27 +27,32 @@ export function compileReaderFramePlans(
 	compiled: CompiledReader,
 ): ReaderFramePlan[] {
 	return compiled.segments.map((segment) => {
-		const paintedAnchors =
+		const segmentAnchors =
 			segment.type === "transition"
-				? [segment.from, segment.to]
-				: [segment.anchor];
-		const visibleAnchors =
-			segment.type === "transition"
-				? getUniqueAnchors([segment.from, segment.to])
-				: [segment.anchor];
+				? Object.values(getTransitionAnchors(compiled, segment))
+				: [getAnchorByBlockId(compiled, segment.blockId)];
+		const paintedAnchors = segmentAnchors.filter((anchor): anchor is Anchor =>
+			Boolean(anchor),
+		);
+		const visibleAnchors = getUniqueAnchors(paintedAnchors);
 		const foregroundBlockIds =
 			segment.type === "transition"
-				? new Set([segment.from.block.id, segment.to.block.id])
-				: new Set([segment.anchor.block.id]);
+				? new Set(
+						[segment.fromBlockId, segment.toBlockId].filter(
+							(blockId): blockId is string => blockId !== null,
+						),
+					)
+				: new Set([segment.blockId]);
 		const activeBlockId =
-			segment.type === "transition"
-				? segment.from.block.id
-				: segment.anchor.block.id;
+			segment.type === "transition" ? segment.fromBlockId : segment.blockId;
 
 		return {
-			activeAnchorIndex: compiled.anchorIndexByBlockId[activeBlockId],
+			activeAnchorIndex:
+				activeBlockId === null
+					? -1
+					: compiled.anchorIndexByBlockId[activeBlockId],
 			foregroundBlockIds,
-			paintedBlockIds: new Set(paintedAnchors.map((anchor) => anchor.block.id)),
+			paintedBlockIds: new Set(paintedAnchors.map((anchor) => anchor.blockId)),
 			visibleAnchors,
 		};
 	});

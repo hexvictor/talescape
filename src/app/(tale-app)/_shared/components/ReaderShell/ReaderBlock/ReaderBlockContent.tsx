@@ -1,5 +1,7 @@
 "use client";
 
+import { useTaleAppStoreShallow } from "../../../contexts/TaleAppStoreContext";
+import { resolveIds } from "../../../services/taleLookups";
 import type { Anchor, ResolvedTaleFragment } from "../../../types";
 import { TaleFragment } from "../TaleFragment/TaleFragment";
 import { NodeRenderer } from "./NodeRenderer";
@@ -21,7 +23,20 @@ export function ReaderBlockContent({
 }: {
 	anchor: Anchor;
 	mode?: "measure" | "render";
-}): React.JSX.Element {
+}): React.JSX.Element | null {
+	const { block, fragmentsById, nodesById } = useTaleAppStoreShallow(
+		(state) => ({
+			block: state.document.tale.indexMap.blocksById[anchor.blockId],
+			fragmentsById: state.document.tale.indexMap.fragmentsById,
+			nodesById: state.document.tale.indexMap.nodesById,
+		}),
+	);
+	if (!block) return null;
+	const clippedFragments = resolveIds(block.clippedFragmentIds, fragmentsById);
+	const overflowingFragments = resolveIds(
+		block.overflowingFragmentIds,
+		fragmentsById,
+	);
 	if (mode === "measure") {
 		return (
 			<div
@@ -32,7 +47,10 @@ export function ReaderBlockContent({
 				<NodeRenderer
 					measurement
 					anchor={anchor}
-					nodeId={anchor.block.rootNodeId}
+					contentSized
+					fragmentsById={fragmentsById}
+					nodeId={block.rootNodeId}
+					nodesById={nodesById}
 				/>
 			</div>
 		);
@@ -44,7 +62,7 @@ export function ReaderBlockContent({
 				data-reader-component="ReaderBlockContent"
 				data-reader-role="clipped-content-layer"
 				className="absolute inset-0 overflow-hidden"
-				style={{ clipPath: anchor.block.style?.clipPath }}
+				style={{ clipPath: block.style?.clipPath }}
 			>
 				<div
 					data-reader-component="ReaderBlockContent"
@@ -56,19 +74,27 @@ export function ReaderBlockContent({
 					data-reader-role="node-content-layer"
 					className="relative h-full w-full overflow-hidden"
 				>
-					<NodeRenderer anchor={anchor} nodeId={anchor.block.rootNodeId} />
+					<NodeRenderer
+						anchor={anchor}
+						contentSized={block.size.mode === "content"}
+						fragmentsById={fragmentsById}
+						nodeId={block.rootNodeId}
+						nodesById={nodesById}
+					/>
 				</div>
-				{anchor.block.clippedFragments.length > 0 ? (
+				{clippedFragments.length > 0 ? (
 					<PositionedFragments
 						anchor={anchor}
-						fragments={anchor.block.clippedFragments}
+						contentSized={block.size.mode === "content"}
+						fragments={clippedFragments}
 					/>
 				) : null}
 			</div>
-			{anchor.block.overflowingFragments.length > 0 ? (
+			{overflowingFragments.length > 0 ? (
 				<PositionedFragments
 					anchor={anchor}
-					fragments={anchor.block.overflowingFragments}
+					contentSized={block.size.mode === "content"}
+					fragments={overflowingFragments}
 				/>
 			) : null}
 		</>
@@ -86,9 +112,11 @@ export function ReaderBlockContent({
  */
 function PositionedFragments({
 	anchor,
+	contentSized,
 	fragments,
 }: {
 	anchor: Anchor;
+	contentSized: boolean;
 	fragments: ResolvedTaleFragment[];
 }): React.JSX.Element[] {
 	return fragments.map((fragment, index) => (
@@ -117,7 +145,7 @@ function PositionedFragments({
 				className="w-full"
 			>
 				<TaleFragment
-					contentSized={anchor.block.size.mode === "content"}
+					contentSized={contentSized}
 					fragment={fragment}
 					index={index}
 				/>

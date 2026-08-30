@@ -45,7 +45,6 @@ export function resolveBranches(
 		return {
 			...branch,
 			blockIds,
-			children: { blockIds },
 			bounds: { firstBlockId: first(blockIds), lastBlockId: last(blockIds) },
 			counts: { blocks: blockIds.length },
 			links: {
@@ -118,6 +117,7 @@ export function resolveEntries(
 		const pageIds = pageIdsByEntry[entry.id] ?? [];
 		return {
 			...entry,
+			blockIds,
 			bounds: {
 				firstBlockId: first(blockIds),
 				firstPageId: first(pageIds),
@@ -129,7 +129,7 @@ export function resolveEntries(
 				localNumber: localChapterNumberById.get(entry.id) ?? null,
 				number: chapterNumberById.get(entry.id) ?? null,
 			},
-			children: { blockIds, pageIds },
+			pageIds,
 			counts: { blocks: blockIds.length, pages: pageIds.length },
 			links: {
 				nextEntryId: globalLinks.next,
@@ -193,7 +193,6 @@ export function resolvePages(
 			...page,
 			blockIds,
 			bounds: { firstBlockId: first(blockIds), lastBlockId: last(blockIds) },
-			children: { blockIds },
 			counts: { blocks: blockIds.length },
 			links: {
 				nextPageId: globalLinks.next,
@@ -256,6 +255,7 @@ export function resolveParts(
 		const blockIds = blockIdsByPart[part.id] ?? [];
 		return {
 			...part,
+			blockIds,
 			bounds: {
 				firstBlockId: first(blockIds),
 				firstEntryId: first(entryIds),
@@ -264,7 +264,8 @@ export function resolveParts(
 				lastEntryId: last(entryIds),
 				lastPageId: last(pageIds),
 			},
-			children: { blockIds, entryIds, pageIds },
+			entryIds,
+			pageIds,
 			counts: {
 				blocks: blockIds.length,
 				entries: entryIds.length,

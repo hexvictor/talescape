@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand";
-import type { TaleReaderState } from "../store/createTaleReaderStore";
+import type { TaleReaderState } from "../../(reader)/_shared/stores/createTaleReaderStore";
 import type { Anchor, CompiledReader, ReaderLocation } from "../types";
 
 type PendingLocation = {
@@ -43,11 +43,11 @@ export function createReaderStatePublisher(
 		anchor: Anchor,
 		segmentIndex: number,
 	): ReaderLocation => ({
-		blockId: anchor.block.id,
-		branchId: anchor.branch.id,
-		entryId: anchor.entry.id,
-		pageId: anchor.page.id,
-		partId: anchor.part.id,
+		blockId: anchor.blockId,
+		branchId: anchor.branchId,
+		entryId: anchor.entryId,
+		pageId: anchor.pageId,
+		partId: anchor.partId,
 		segmentIndex,
 	});
 
@@ -55,7 +55,7 @@ export function createReaderStatePublisher(
 		anchor: Anchor,
 		segmentIndex: number,
 	): void => {
-		const anchorIndex = compiled.anchorIndexByBlockId[anchor.block.id];
+		const anchorIndex = compiled.anchorIndexByBlockId[anchor.blockId];
 		if (anchorIndex === undefined) return;
 
 		if (lastObservedAnchorIndex !== null) {
@@ -68,17 +68,17 @@ export function createReaderStatePublisher(
 				const crossedAnchor = compiled.anchors[index];
 				if (!crossedAnchor) continue;
 				reachedLocationsByBlockId.set(
-					crossedAnchor.block.id,
+					crossedAnchor.blockId,
 					locationForAnchor(
 						crossedAnchor,
-						compiled.segmentIndexByBlockId[crossedAnchor.block.id] ??
+						compiled.segmentIndexByBlockId[crossedAnchor.blockId] ??
 							segmentIndex,
 					),
 				);
 			}
 		} else {
 			reachedLocationsByBlockId.set(
-				anchor.block.id,
+				anchor.blockId,
 				locationForAnchor(anchor, segmentIndex),
 			);
 		}

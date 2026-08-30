@@ -1,10 +1,10 @@
 "use client";
 
-import clsx from "clsx";
 import { Bug, Eye, EyeOff, Gauge, Navigation } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import cn from "~/lib/utils/cn";
+import type { ReaderUiVisibilityMode } from "../../../../(reader)/_shared/stores/slices/uiSlice";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
-import type { ReaderUiVisibilityMode } from "../../../store/slices/uiSlice";
 
 const VISIBILITY_OPTIONS: Array<{
 	icon: typeof Eye;
@@ -84,7 +84,7 @@ export function ReaderUiVisibilityControl(): React.JSX.Element {
 									data-reader-component="ReaderUiVisibilityControl"
 									data-reader-role="visibility-option"
 									type="button"
-									className={clsx(
+									className={cn(
 										"flex items-center gap-2 rounded px-2 py-2 text-left text-xs transition",
 										option.mode === mode
 											? "bg-foreground/14 text-foreground"
@@ -107,7 +107,7 @@ export function ReaderUiVisibilityControl(): React.JSX.Element {
 				type="button"
 				aria-label="Change reader UI visibility"
 				aria-expanded={open}
-				className={clsx(
+				className={cn(
 					"grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground shadow-2xl backdrop-blur-md transition-opacity duration-200",
 					open || !reduceInactiveUiOpacity
 						? "opacity-100"

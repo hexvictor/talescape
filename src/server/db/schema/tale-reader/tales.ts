@@ -1,6 +1,8 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
 import type {
 	FirstBlockTransitionMode,
+	TaleBackgroundConfig,
+	TalePlaybackConfig,
 	TaleSnapConfig,
 } from "~/app/(tale-app)/_shared/types";
 import type { TaleBreakpoint } from "~/app/(tale-app)/_shared/types";
@@ -41,14 +43,32 @@ export const tales = createTable("tale", (d) => ({
 	status: d.text().notNull().$type<AssetStatus>().default("draft"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	type: d.text().notNull().$type<TaleType>(),
-	// THis shouldn't be here, but it's here for now to support the old reader. It will be removed in the future.
-	transitionFirstBlock: d.boolean().notNull().default(false),
 	firstBlockTransitionMode: d
 		.text()
 		.notNull()
 		.$type<FirstBlockTransitionMode>()
 		.default("fromPlacement"),
 	breakpointConfig: d.json().notNull().$type<TaleBreakpoint[]>().default([]),
+	backgroundConfig: d
+		.json()
+		.notNull()
+		.$type<TaleBackgroundConfig>()
+		.default({
+			dark: { color: "#070a0c", imageUrl: null },
+			light: { color: "#fff8e8", imageUrl: null },
+		}),
+	playbackConfig: d
+		.json()
+		.notNull()
+		.$type<TalePlaybackConfig>()
+		.default({
+			autoplay: {
+				enabled: false,
+				speed: 52,
+				stopOn: { dragging: true, keyboard: true, scrolling: true },
+			},
+			interactions: { dragging: true, keyboard: true, scrolling: true },
+		}),
 	snapConfig: d
 		.json()
 		.notNull()

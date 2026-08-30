@@ -1,4 +1,4 @@
-import type { Anchor, RawTaleRecord, Tale, TaleBlock } from "../types";
+import type { RawTaleRecord, Tale, TaleBlock } from "../types";
 import {
 	type BlockStructureLookups,
 	resolveBlock,
@@ -19,7 +19,10 @@ import {
 	sortedByOrder,
 } from "./formatTale/shared";
 
-export { resolveEditedBlock } from "./formatTale/resolveBlock";
+export {
+	resolveEditedBlock,
+	resolveEditedBlockWithNodes,
+} from "./formatTale/resolveBlock";
 export { resolveEditedFragment } from "./formatTale/resolveFragment";
 
 /**
@@ -42,6 +45,7 @@ export function formatTale(raw: RawTaleRecord): Tale {
 	const rawPages = raw.pages;
 	const rawFragments = raw.fragments;
 	const rawNodes = raw.nodes;
+	const nodesById = recordById(rawNodes);
 	const blockIds = rawBlocks.map((block) => block.id);
 	const branchIds = rawBranches.map((branch) => branch.id);
 	const entryIds = rawEntries.map((entry) => entry.id);
@@ -85,6 +89,7 @@ export function formatTale(raw: RawTaleRecord): Tale {
 			block,
 			{
 				fragmentsById: resolvedFragmentsById,
+				nodesById,
 			},
 			blockStructure,
 		),
@@ -94,10 +99,13 @@ export function formatTale(raw: RawTaleRecord): Tale {
 		first(branchIds);
 
 	return {
+		backgroundConfig: raw.backgroundConfig,
 		book: null,
 		breakpoints: raw.breakpoints,
 		creator: null,
+		firstBlockTransitionMode: raw.firstBlockTransitionMode,
 		id: raw.id,
+		playbackConfig: raw.playbackConfig,
 		slug: raw.slug,
 		snapConfig: raw.snapConfig,
 		synopsis: raw.synopsis,
@@ -128,14 +136,13 @@ export function formatTale(raw: RawTaleRecord): Tale {
 			paths: paths.length,
 		},
 		indexMap: {
-			anchorsByBlockId: null,
 			animationPresetsById,
 			blocksById: recordById(blocks),
 			blockStylePresetsById,
 			branchesById: recordById(branches),
 			entriesById: recordById(entries),
 			fragmentsById: resolvedFragmentsById,
-			nodesById: recordById(rawNodes),
+			nodesById,
 			pagesById: recordById(pages),
 			partsById: recordById(parts),
 			pathsById: recordById(paths),
@@ -143,7 +150,9 @@ export function formatTale(raw: RawTaleRecord): Tale {
 			visibilityPresetsById,
 		},
 		order: {
+			animationPresetIds: raw.animationPresets.map((preset) => preset.id),
 			blockIds,
+			blockStylePresetIds: raw.blockStylePresets.map((preset) => preset.id),
 			branchIds,
 			entryIds,
 			fragmentIds,
@@ -152,45 +161,8 @@ export function formatTale(raw: RawTaleRecord): Tale {
 			pageIds,
 			partIds,
 			pathIds,
-		},
-		structure: {
-			anchors: null,
-			animationPresets: raw.animationPresets,
-			blocks,
-			blockStylePresets: raw.blockStylePresets,
-			branches,
-			entries,
-			fragments,
-			nodes: rawNodes,
-			pages,
-			parts,
-			paths,
-			transitionPresets: raw.transitionPresets,
-			visibilityPresets: raw.visibilityPresets,
-		},
-	};
-}
-
-/**
- * Stores compiled anchors on the formatted tale.
- *
- * @param tale - Current formatted tale.
- * @param anchors - Latest compiled anchors.
- * @returns Tale copy containing anchor collections and lookup.
- *
- * @example
- * const nextTale = setResolvedAnchors(tale, compiled.anchors);
- */
-export function setResolvedAnchors(tale: Tale, anchors: Anchor[]): Tale {
-	return {
-		...tale,
-		indexMap: {
-			...tale.indexMap,
-			anchorsByBlockId: recordById(anchors),
-		},
-		structure: {
-			...tale.structure,
-			anchors,
+			transitionPresetIds: raw.transitionPresets.map((preset) => preset.id),
+			visibilityPresetIds: raw.visibilityPresets.map((preset) => preset.id),
 		},
 	};
 }

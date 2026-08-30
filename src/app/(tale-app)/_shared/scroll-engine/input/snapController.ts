@@ -7,7 +7,7 @@ export type ReaderSnapController = {
 	cleanup: () => void;
 	getDuration: (durationSeconds: number) => number | null;
 	registerInput: (intensity?: number) => void;
-	schedule: (delayMs?: number) => void;
+	schedule: (delayMs?: number, fromScroll?: number) => void;
 };
 
 const pressureDecayMs = 650;
@@ -83,7 +83,7 @@ export function createSnapController(
 		},
 		getDuration,
 		registerInput,
-		schedule: (delayMs) => {
+		schedule: (delayMs, fromScroll) => {
 			countReaderDiagnostic("scheduleSnap()");
 			window.clearTimeout(timer ?? undefined);
 			const settings = getSnapConfig();
@@ -91,6 +91,7 @@ export function createSnapController(
 				driver.getTargetScroll(),
 				getDirection(),
 				settings,
+				fromScroll ?? driver.getScroll(),
 			);
 			if (target === null) return;
 			timer = window.setTimeout(

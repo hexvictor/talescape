@@ -404,6 +404,7 @@ export type ResolvedTaleFragment = TaleFragment & {
 };
 
 export type TaleBlock = {
+	autoplay?: TaleBlockAutoplayConfig;
 	branchId: string;
 	description?: string;
 	entryId: string;
@@ -412,7 +413,6 @@ export type TaleBlock = {
 	isChoiceBlock: boolean;
 	isPaginated: boolean;
 	nodeIds: string[];
-	nodes?: TaleNode[];
 	rootNodeId?: string;
 	order: number;
 	pageId: string;
@@ -454,6 +454,10 @@ export type TaleBlockSnapMode = "scroll-snap" | "snap" | "snap-off";
 
 export type TaleBlockSnapDirection = "both" | "fromNext" | "fromPrevious";
 
+export type TaleBlockSnapStrategy = "separate" | "shared";
+
+export type TaleBlockSnapApproach = "backward" | "forward";
+
 export type TaleBlockSnapSettings = {
 	captureDistancePx?: number | null;
 	durationSeconds?: number | null;
@@ -461,10 +465,17 @@ export type TaleBlockSnapSettings = {
 	minViewportFraction?: number | null;
 };
 
-export type TaleBlockSnapConfig = {
-	direction?: TaleBlockSnapDirection;
+export type TaleBlockSnapBehavior = {
 	mode: TaleBlockSnapMode;
 	settings?: TaleBlockSnapSettings | null;
+};
+
+export type TaleBlockSnapConfig = TaleBlockSnapBehavior & {
+	backward?: TaleBlockSnapBehavior;
+	/** Legacy direction field normalized when older tales are loaded. */
+	direction?: TaleBlockSnapDirection;
+	forward?: TaleBlockSnapBehavior;
+	strategy?: TaleBlockSnapStrategy;
 };
 
 export type TaleSnapConfig = {
@@ -472,15 +483,46 @@ export type TaleSnapConfig = {
 	snap: TaleBlockSnapSettings;
 };
 
-export type ResolvedTaleBlock = TaleBlock & {
-	children: {
-		fragmentIds: string[];
+export type TalePlaybackConfig = {
+	autoplay: {
+		enabled: boolean;
+		speed: number;
+		stopOn: {
+			dragging: boolean;
+			keyboard: boolean;
+			scrolling: boolean;
+		};
 	};
-	clippedFragments: ResolvedTaleFragment[];
-	fixedFragments: ResolvedTaleFragment[];
-	flowFragments: ResolvedTaleFragment[];
-	fragments: ResolvedTaleFragment[];
-	fragmentsById: Record<string, ResolvedTaleFragment>;
+	interactions: {
+		dragging: boolean;
+		keyboard: boolean;
+		scrolling: boolean;
+	};
+};
+
+export type TaleBlockAutoplayConfig = {
+	enabled: boolean;
+	enteringSpeed: number | null;
+	leavingSpeed: number | null;
+	pauseAfterEnteringSeconds: number | null;
+	pauseBeforeLeavingSeconds: number | null;
+	readingSpeed: number | null;
+};
+
+export type TaleBackgroundTheme = {
+	color: string;
+	imageUrl: string | null;
+};
+
+export type TaleBackgroundConfig = {
+	dark: TaleBackgroundTheme;
+	light: TaleBackgroundTheme;
+};
+
+export type ResolvedTaleBlock = TaleBlock & {
+	clippedFragmentIds: string[];
+	fixedFragmentIds: string[];
+	flowFragmentIds: string[];
 	links: {
 		nextBlockId: string | null;
 		nextBlockIdInBranch: string | null;
@@ -493,11 +535,9 @@ export type ResolvedTaleBlock = TaleBlock & {
 		previousBlockIdInPage: string | null;
 		previousBlockIdInPart: string | null;
 	};
-	nodes: TaleNode[];
-	nodesById: Record<string, TaleNode>;
 	rootNodeId: string;
-	overflowingFragments: ResolvedTaleFragment[];
-	placedFragments: ResolvedTaleFragment[];
+	overflowingFragmentIds: string[];
+	placedFragmentIds: string[];
 	position: StructurePosition & {
 		branchIndex: number;
 		entryIndex: number;
@@ -543,9 +583,6 @@ export type TaleBranch = {
 };
 
 export type ResolvedTaleBranch = TaleBranch & {
-	children: {
-		blockIds: string[];
-	};
 	bounds: EntityBounds;
 	counts: {
 		blocks: number;
@@ -576,6 +613,7 @@ export type TaleEntry = {
 };
 
 export type ResolvedTaleEntry = TaleEntry & {
+	blockIds: string[];
 	bounds: EntityBounds & {
 		firstPageId: string | null;
 		lastPageId: string | null;
@@ -585,10 +623,7 @@ export type ResolvedTaleEntry = TaleEntry & {
 		localNumber: number | null;
 		number: number | null;
 	};
-	children: {
-		blockIds: string[];
-		pageIds: string[];
-	};
+	pageIds: string[];
 	counts: {
 		blocks: number;
 		pages: number;
@@ -622,9 +657,6 @@ export type ResolvedTalePage = TalePage & {
 		firstBlockId: string | null;
 		lastBlockId: string | null;
 	};
-	children: {
-		blockIds: string[];
-	};
 	counts: {
 		blocks: number;
 	};
@@ -654,17 +686,15 @@ export type TalePart = {
 };
 
 export type ResolvedTalePart = TalePart & {
+	blockIds: string[];
 	bounds: EntityBounds & {
 		firstEntryId: string | null;
 		firstPageId: string | null;
 		lastEntryId: string | null;
 		lastPageId: string | null;
 	};
-	children: {
-		blockIds: string[];
-		entryIds: string[];
-		pageIds: string[];
-	};
+	entryIds: string[];
+	pageIds: string[];
 	counts: {
 		blocks: number;
 		entries: number;
@@ -699,39 +729,22 @@ export type ResolvedTalePath = TalePath & {
 export type Point = { x: number; y: number };
 
 export type Anchor = {
-	block: ResolvedTaleBlock;
-	branch: ResolvedTaleBranch;
+	blockId: string;
+	branchId: string;
 	cameraFramingOffset: Point;
 	cameraPoint: Point;
-	entry: ResolvedTaleEntry;
+	entryId: string;
 	height: number;
 	id: string;
-	page: ResolvedTalePage;
-	part: ResolvedTalePart;
+	pageId: string;
+	partId: string;
 	point: Point;
 	readingPathPoints: Point[];
 	scroll: number;
 	width: number;
 };
 
-export type TaleCollections = {
-	anchors: Anchor[] | null;
-	animationPresets: AnimationPreset[];
-	blocks: ResolvedTaleBlock[];
-	blockStylePresets: BlockStylePreset[];
-	branches: ResolvedTaleBranch[];
-	entries: ResolvedTaleEntry[];
-	fragments: ResolvedTaleFragment[];
-	nodes: TaleNode[];
-	pages: ResolvedTalePage[];
-	parts: ResolvedTalePart[];
-	paths: ResolvedTalePath[];
-	transitionPresets: TransitionPreset[];
-	visibilityPresets: VisibilityPreset[];
-};
-
 export type TaleIndexMap = {
-	anchorsByBlockId: Record<string, Anchor> | null;
 	animationPresetsById: Record<string, AnimationPreset>;
 	blocksById: Record<string, ResolvedTaleBlock>;
 	blockStylePresetsById: Record<string, BlockStylePreset>;
@@ -751,11 +764,12 @@ export type TaleContent = {
 	counts: TaleCounts;
 	indexMap: TaleIndexMap;
 	order: TaleOrder;
-	structure: TaleCollections;
 };
 
 export type TaleOrder = {
+	animationPresetIds: string[];
 	blockIds: string[];
+	blockStylePresetIds: string[];
 	branchIds: string[];
 	entryIds: string[];
 	fragmentIds: string[];
@@ -764,6 +778,8 @@ export type TaleOrder = {
 	pageIds: string[];
 	partIds: string[];
 	pathIds: string[];
+	transitionPresetIds: string[];
+	visibilityPresetIds: string[];
 };
 
 export type TaleCounts = {
@@ -797,8 +813,10 @@ export type Tale = Partial<Omit<TaleSchema, "id">> &
 	TaleContent & {
 		breakpoints: TaleBreakpoint[];
 		book: Book | null;
+		backgroundConfig: TaleBackgroundConfig;
 		creator: PublicUserInfo | null;
 		id: number;
+		playbackConfig: TalePlaybackConfig;
 		snapConfig: TaleSnapConfig;
 		synopsis?: string;
 	};
@@ -816,12 +834,13 @@ export type RawTaleRecord = {
 	pages: TalePage[];
 	parts: TalePart[];
 	paths: TalePath[];
+	playbackConfig: TalePlaybackConfig;
+	backgroundConfig: TaleBackgroundConfig;
 	slug: string;
 	snapConfig: TaleSnapConfig;
 	synopsis: string;
 	title: string;
 	firstBlockTransitionMode: FirstBlockTransitionMode;
-	transitionFirstBlock: boolean;
 	transitionPresets: TransitionPreset[];
 	visibilityPresets: VisibilityPreset[];
 };
@@ -843,7 +862,7 @@ export type ResolvedBlockSize = {
 
 export type TimelineSegment =
 	| {
-			anchor: Anchor;
+			blockId: string;
 			end: number;
 			index: number;
 			length: number;
@@ -852,7 +871,7 @@ export type TimelineSegment =
 			type: "pause";
 	  }
 	| {
-			anchor: Anchor;
+			blockId: string;
 			end: number;
 			index: number;
 			length: number;
@@ -861,11 +880,11 @@ export type TimelineSegment =
 	  }
 	| {
 			end: number;
-			from: Anchor;
+			fromBlockId: string | null;
 			index: number;
 			length: number;
 			start: number;
-			to: Anchor;
+			toBlockId: string;
 			type: "transition";
 	  };
 
@@ -891,11 +910,11 @@ export type ReaderScrollTargetOptions = {
 export type CompiledReader = {
 	anchorIndexByBlockId: Record<string, number>;
 	anchors: Anchor[];
-	anchorsByBlockId: Record<string, Anchor>;
 	contents: ReaderContentsPart[];
 	entries: ReaderContentsEntry[];
 	entryIndexById: Record<string, number>;
 	heldPreviousTakeoverBlockIdByAnchorIndex: Array<string | null>;
+	openingTransitionAnchor: Anchor | null;
 	pageIndexById: Record<string, number>;
 	pages: ReaderContentsPage[];
 	previousVisibleBlockIdsByEnteringBlockId: Record<string, string[]>;
@@ -904,76 +923,40 @@ export type CompiledReader = {
 	segmentStarts: number[];
 	snapConfig: TaleSnapConfig;
 	snapPoints: SnapPoint[];
-	startsWithTransition: boolean;
 	totalScroll: number;
 	transitionIntoByBlockId: Record<string, number>;
 	transitionOutOfByBlockId: Record<string, number>;
 };
 
-export type ReaderContentsBlock = {
-	blockId: string;
-	entryBlockIndex: number;
-	globalBlockIndex: number;
-	isPaginated: boolean;
-	pageId: string;
-	pageLabel: string;
-	pageNumber: number | null;
-	pageType: TalePage["type"];
-	title: string;
-};
-
 export type ReaderContentsEntry = {
-	blocks: ReaderContentsBlock[];
+	blockIds: string[];
 	chapterNumber: number | null;
-	firstBlockId: string;
 	hasChoiceBlock: boolean;
 	id: string;
 	partSpans: ReaderContentsEntryPartSpan[];
-	pages: ReaderContentsPage[];
-	title: string;
-	type: TaleEntry["type"];
+	pageIds: string[];
 };
 
 export type ReaderContentsEntryPartSpan = {
 	endPageId: string;
-	endsPart: boolean;
 	partId: string;
-	partNumber: number;
-	partTitle: string;
 	pageCount: number;
 	startPageId: string;
-	startsPart: boolean;
 };
 
 export type ReaderContentsPage = {
 	blockIds: string[];
-	entryId: string;
-	firstBlockId: string;
-	globalIndex: number;
 	hasChoiceBlock: boolean;
 	id: string;
-	isFirstInPart: boolean;
-	isLastInPart: boolean;
-	isPaginated: boolean;
-	label: string;
 	number: number | null;
-	partId: string;
-	partNumber: number;
-	partTitle: string;
-	title: string;
-	type: TalePage["type"];
 };
 
 export type ReaderContentsPart = {
-	blockCount: number;
-	entries: ReaderContentsEntry[];
-	firstBlockId: string;
+	entryIds: string[];
 	id: string;
-	pageCount: number;
-	title: string;
 };
 
-export type TaleStoreMode = "edit" | "read";
+export type TaleAccessAction = "edit" | "read";
 
 export type ReaderLocation = {
 	blockId: string;
@@ -1032,7 +1015,7 @@ export type TaleBlockResponsiveOverride = Partial<
 	Pick<
 		TaleBlock,
 		| "description"
-		| "nodes"
+		| "nodeIds"
 		| "reading"
 		| "rootNodeId"
 		| "size"

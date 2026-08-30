@@ -49,21 +49,21 @@ export function createReaderAnimationMonitor(
 		update(activeAnchors, reduced, reason): void {
 			const revision = registry.getRevision();
 			const key = `${reduced}:${activeAnchors
-				.map((anchor) => anchor.block.id)
+				.map((anchor) => anchor.blockId)
 				.join(",")}`;
 			if (key === previousKey && revision === previousRevision) return;
 			previousKey = key;
 			previousRevision = revision;
 
 			const activeBlockIds = new Set(
-				activeAnchors.map((anchor) => anchor.block.id),
+				activeAnchors.map((anchor) => anchor.blockId),
 			);
 			const animatedBlockIds = activeAnchors.flatMap((anchor) =>
-				animatedOwnerBlockIds.has(anchor.block.id) ? [anchor.block.id] : [],
+				animatedOwnerBlockIds.has(anchor.blockId) ? [anchor.blockId] : [],
 			);
 			const animatedFragmentIds = activeAnchors.flatMap(
 				(anchor) =>
-					plan.animatedFragmentIdsByBlockId.get(anchor.block.id) ?? [],
+					plan.animatedFragmentIdsByBlockId.get(anchor.blockId) ?? [],
 			);
 			const activeFragmentIds = new Set(animatedFragmentIds);
 

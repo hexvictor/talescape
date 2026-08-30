@@ -1,10 +1,12 @@
 "use client";
 
-import clsx from "clsx";
+import cn from "~/lib/utils/cn";
+import { useTaleAppStore } from "../../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStore } from "../../../../contexts/TaleReaderStoreContext";
 import type {
 	Anchor,
 	ResolvedTaleBlock,
+	Tale,
 	TaleBranch,
 	TaleEntry,
 	TalePage,
@@ -122,6 +124,12 @@ export function NavigationPanel({
  */
 export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 	const progress = useTaleReaderStore((state) => state.progress.data);
+	const numberedPageIds = useTaleAppStore(
+		(state) => state.document.tale.order.numberedPageIds,
+	);
+	const seenNumberedPages = progress.seenPageIds.filter((pageId) =>
+		numberedPageIds.includes(pageId),
+	).length;
 	return (
 		<div
 			data-reader-component="ProgressDebugPanel"
@@ -139,7 +147,11 @@ export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 					value={`${progress.seenBlockIds.length}/${compiledCount}`}
 				/>
 				<DebugField
-					label="Seen pages"
+					label="Seen numbered pages"
+					value={`${seenNumberedPages}/${numberedPageIds.length}`}
+				/>
+				<DebugField
+					label="Seen narrative units"
 					value={String(progress.seenPageIds.length)}
 				/>
 				<DebugField
@@ -179,6 +191,7 @@ export function SegmentsPanel({
 	activeIndex: number;
 	segments: TimelineSegment[];
 }) {
+	const tale = useTaleAppStore((state) => state.document.tale);
 	return (
 		<div
 			data-reader-component="SegmentsDebugPanel"
@@ -188,7 +201,7 @@ export function SegmentsPanel({
 			{segments.map((segment) => (
 				<div
 					key={`${segment.index}-${segment.type}`}
-					className={clsx(
+					className={cn(
 						"grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded border px-3 py-2 text-xs",
 						segment.index === activeIndex
 							? "border-primary/50 bg-primary/10"
@@ -197,7 +210,7 @@ export function SegmentsPanel({
 				>
 					<span className="font-bold text-foreground/42">{segment.index}</span>
 					<span className="truncate text-foreground/76">
-						{getSegmentLabel(segment)}
+						{getSegmentLabel(segment, tale)}
 					</span>
 					<span className="text-foreground/42">
 						{segment.type} / {Math.round(segment.length)}
@@ -221,6 +234,7 @@ export function AnchorsPanel({
 	activeBlockId?: string;
 	anchors: Anchor[];
 }) {
+	const tale = useTaleAppStore((state) => state.document.tale);
 	return (
 		<div
 			data-reader-component="AnchorsDebugPanel"
@@ -230,15 +244,15 @@ export function AnchorsPanel({
 			{anchors.map((anchor) => (
 				<div
 					key={anchor.id}
-					className={clsx(
+					className={cn(
 						"rounded border px-3 py-2 text-xs",
-						anchor.block.id === activeBlockId
+						anchor.blockId === activeBlockId
 							? "border-primary/50 bg-primary/10"
 							: "border-foreground/8 bg-foreground/[0.035]",
 					)}
 				>
 					<p className="font-semibold text-foreground/78">
-						{anchor.block.title}
+						{tale.indexMap.blocksById[anchor.blockId]?.title ?? anchor.blockId}
 					</p>
 					<p className="mt-1 text-foreground/43">
 						{Math.round(anchor.point.x)}, {Math.round(anchor.point.y)} /{" "}
@@ -257,10 +271,12 @@ export function AnchorsPanel({
  * @param segment - Timeline segment.
  * @returns Human-readable segment label.
  */
-function getSegmentLabel(segment: TimelineSegment): string {
-	if (segment.type === "reading") return segment.anchor.block.title;
+function getSegmentLabel(segment: TimelineSegment, tale: Tale): string {
+	const blockTitle = (blockId: string | null): string =>
+		(blockId && tale.indexMap.blocksById[blockId]?.title) ?? "Entrance";
+	if (segment.type === "reading") return blockTitle(segment.blockId);
 	if (segment.type === "pause") {
-		return `${segment.anchor.block.title} (${segment.pauseType} pause)`;
+		return `${blockTitle(segment.blockId)} (${segment.pauseType} pause)`;
 	}
-	return `${segment.from.block.title} -> ${segment.to.block.title}`;
+	return `${blockTitle(segment.fromBlockId)} -> ${blockTitle(segment.toBlockId)}`;
 }

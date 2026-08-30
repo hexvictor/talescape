@@ -1,6 +1,8 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
+import { resolveReaderBlockPaintBounds } from "../../../services/readerBlockPaintBounds";
 import type { Anchor } from "../../../types";
 import { FixedFragments } from "./FixedFragments";
 import { ReaderBlockContent } from "./ReaderBlockContent";
@@ -20,26 +22,32 @@ export function ReaderBlock({
 }: {
 	anchor: Anchor;
 	children?: ReactNode;
-}): React.JSX.Element {
+}): React.JSX.Element | null {
+	const block = useTaleAppStore(
+		(state) => state.document.tale.indexMap.blocksById[anchor.blockId],
+	);
+	if (!block) return null;
+	const paintBounds = resolveReaderBlockPaintBounds(anchor);
+
 	return (
 		<article
-			data-reader-block-id={anchor.block.id}
+			data-reader-block-id={anchor.blockId}
 			data-reader-component="ReaderBlock"
 			data-reader-role="block-container"
 			className="absolute flex items-center justify-center overflow-visible"
 			style={
 				{
-					background: anchor.block.resolved.background,
-					border: anchor.block.style?.border,
-					borderRadius: anchor.block.style?.borderRadius,
-					boxShadow: anchor.block.style?.boxShadow,
-					clipPath: anchor.block.style?.clipPath,
-					color: anchor.block.style?.color,
-					height: anchor.height,
-					left: anchor.point.x - anchor.width / 2,
-					top: anchor.point.y - anchor.height / 2,
+					background: block.resolved.background,
+					border: block.style?.border,
+					borderRadius: block.style?.borderRadius,
+					boxShadow: block.style?.boxShadow,
+					clipPath: block.style?.clipPath,
+					color: block.style?.color,
+					height: paintBounds.height,
+					left: paintBounds.left,
+					top: paintBounds.top,
 					visibility: "hidden",
-					width: anchor.width,
+					width: paintBounds.width,
 					willChange: "transform, opacity, filter",
 				} satisfies CSSProperties
 			}

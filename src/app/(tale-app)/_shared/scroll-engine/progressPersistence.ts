@@ -16,13 +16,16 @@ export function getSavedInnerProgress(
 	segment: TimelineSegment,
 	segmentProgress: number,
 ): number {
-	if (segment.type === "reading" && segment.anchor.id === activeAnchor.id) {
+	if (segment.type === "reading" && segment.blockId === activeAnchor.blockId) {
 		return segmentProgress;
 	}
-	if (segment.type === "pause" && segment.anchor.id === activeAnchor.id) {
+	if (segment.type === "pause" && segment.blockId === activeAnchor.blockId) {
 		return segment.pauseType === "start" ? 0 : 1;
 	}
-	if (segment.type === "transition" && segment.from.id === activeAnchor.id) {
+	if (
+		segment.type === "transition" &&
+		segment.fromBlockId === activeAnchor.blockId
+	) {
 		return 1;
 	}
 	return 0;

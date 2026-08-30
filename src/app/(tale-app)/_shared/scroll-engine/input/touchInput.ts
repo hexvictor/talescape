@@ -13,9 +13,11 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
  */
 export function attachTouchInput({
 	driver,
+	getInputPermissions,
 	getInputSettings,
 	getSnapDuration,
 	registerSnapInput,
+	onUserInput,
 	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
@@ -32,9 +34,14 @@ export function attachTouchInput({
 	let active = false;
 
 	const onTouchStart = (event: TouchEvent) => {
+		if (!getInputPermissions().dragging) {
+			active = false;
+			return;
+		}
 		registerSnapInput(0.8);
 		active = !shouldLetElementHandleInput(event.target);
 		if (!active) return;
+		onUserInput("dragging");
 		lastTouchY = event.touches[0]?.clientY ?? null;
 		lastTouchAt = performance.now();
 		const settings = getInputSettings();
@@ -87,12 +94,9 @@ export function attachTouchInput({
 		const scrollDelta = delta * settings.touchDeltaRatio * acceleration;
 		const direction = delta >= 0 ? 1 : -1;
 		setDirection(direction);
-		target = clamp(
-			(target ?? driver.getScroll()) + scrollDelta,
-			0,
-			totalScroll,
-		);
-		const snapTarget = resolveImmediateSnapTarget(target, direction);
+		const from = target ?? driver.getScroll();
+		target = clamp(from + scrollDelta, 0, totalScroll);
+		const snapTarget = resolveImmediateSnapTarget(target, direction, from);
 		const durationSeconds = snapTarget
 			? getSnapDuration(snapTarget.durationSeconds)
 			: null;
@@ -119,13 +123,14 @@ export function attachTouchInput({
 				-settings.touchMomentumMaxPx,
 				settings.touchMomentumMaxPx,
 			);
-			const momentumTarget = clamp(
-				(target ?? driver.getScroll()) + momentumDistance,
-				0,
-				totalScroll,
-			);
+			const from = target ?? driver.getScroll();
+			const momentumTarget = clamp(from + momentumDistance, 0, totalScroll);
 			const direction = momentumDistance >= 0 ? 1 : -1;
-			const snapTarget = resolveImmediateSnapTarget(momentumTarget, direction);
+			const snapTarget = resolveImmediateSnapTarget(
+				momentumTarget,
+				direction,
+				from,
+			);
 			setDirection(direction);
 			target = snapTarget?.scroll ?? momentumTarget;
 			const durationSeconds = snapTarget
@@ -136,7 +141,7 @@ export function attachTouchInput({
 				duration: durationSeconds ?? settings.touchMomentumDuration,
 			});
 			if (!snapTarget || durationSeconds === null) {
-				scheduleSnap(settings.touchMomentumDuration * 1000);
+				scheduleSnap(settings.touchMomentumDuration * 1000, from);
 			}
 			return;
 		}

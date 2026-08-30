@@ -1,3 +1,4 @@
+import { normalizeBlockAutoplayConfig } from "~/app/(tale-app)/_shared/services/readerPlaybackSettings";
 import { normalizeBlockSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
 import type {
 	RawTaleRecord,
@@ -28,6 +29,7 @@ type RawBlockRow = {
 	pageId?: number | null;
 	partId?: number | null;
 	readingConfig?: {
+		autoplay?: TaleBlock["autoplay"];
 		animationConfig?: {
 			ambient?: DbAmbientAnimationSelection;
 			scrolling?: DbAnimationSelection;
@@ -87,6 +89,7 @@ function formatBlockRow(
 	const ownership = getBlockOwnership(block, page);
 
 	return {
+		autoplay: normalizeBlockAutoplayConfig(block.readingConfig?.autoplay),
 		branchId: String(block.branchId ?? ""),
 		description: block.description ?? undefined,
 		entryId: ownership.entryId,

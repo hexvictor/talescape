@@ -1,16 +1,20 @@
 "use client";
 
-import clsx from "clsx";
 import { ChevronDown, ListTree, PanelLeftClose, Route } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
-import { useTaleAppStoreShallow } from "../../../contexts/TaleAppStoreContext";
+import cn from "~/lib/utils/cn";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import {
 	useTaleReaderStore,
 	useTaleReaderStoreShallow,
 } from "../../../contexts/TaleReaderStoreContext";
 import { useChooseReaderPath } from "../../../hooks/useChooseReaderPath";
-import type { ReaderContentsPart } from "../../../types";
+import {
+	type ReaderNavigationPart,
+	createReaderNavigationView,
+} from "../../../services/readerNavigationView";
+import { getTaleBranches, getTalePaths } from "../../../services/taleLookups";
 import { VerticalPaneResizeHandle } from "../../Layout/VerticalPaneResizeHandle";
 import {
 	ContentsTree,
@@ -19,7 +23,7 @@ import {
 
 type NavigationTab = "contents" | "routes";
 
-const emptyContents: ReaderContentsPart[] = [];
+const emptyContents: ReaderNavigationPart[] = [];
 
 /**
  * Renders the reader contents and routes navigator as a left docked sidebar.
@@ -36,7 +40,6 @@ export function ReaderContents(): React.JSX.Element {
 	const [mobileHeightVh, setMobileHeightVh] = useState(70);
 	const {
 		compiled,
-		contents,
 		currentBlockId,
 		currentBranchId,
 		currentEntryId,
@@ -50,7 +53,6 @@ export function ReaderContents(): React.JSX.Element {
 		toggleOpen,
 	} = useTaleReaderStoreShallow((state) => ({
 		compiled: state.reader.compiled,
-		contents: state.reader.compiled?.contents ?? emptyContents,
 		currentBlockId: state.navigation.current?.blockId ?? null,
 		currentBranchId: state.navigation.current?.branchId ?? null,
 		currentEntryId: state.navigation.current?.entryId ?? null,
@@ -63,10 +65,16 @@ export function ReaderContents(): React.JSX.Element {
 		toggleHub: state.hub.toggleOpen,
 		toggleOpen: state.contents.toggleOpen,
 	}));
-	const { branches, paths } = useTaleAppStoreShallow((state) => ({
-		branches: state.document.tale.structure.branches,
-		paths: state.document.tale.structure.paths,
-	}));
+	const tale = useTaleAppStore((state) => state.document.tale);
+	const contents = useMemo(
+		() =>
+			compiled?.contents
+				? createReaderNavigationView(compiled, tale).contents
+				: emptyContents,
+		[compiled, tale],
+	);
+	const branches = useMemo(() => getTaleBranches(tale), [tale]);
+	const paths = useMemo(() => getTalePaths(tale), [tale]);
 	const dockedContentsWidthPx = useTaleReaderStore(
 		(state) => state.derived.dockedContentsWidthPx,
 	);
@@ -136,11 +144,11 @@ export function ReaderContents(): React.JSX.Element {
 		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
 	const reachableBlockIds = useMemo(
-		() => new Set(compiled?.anchors.map((anchor) => anchor.block.id) ?? []),
+		() => new Set(compiled?.anchors.map((anchor) => anchor.blockId) ?? []),
 		[compiled],
 	);
 	const reachableBranchIds = useMemo(
-		() => new Set(compiled?.anchors.map((anchor) => anchor.branch.id) ?? []),
+		() => new Set(compiled?.anchors.map((anchor) => anchor.branchId) ?? []),
 		[compiled],
 	);
 
@@ -181,7 +189,7 @@ export function ReaderContents(): React.JSX.Element {
 					data-reader-role="collapsed-handle"
 					type="button"
 					aria-label="Open story navigation"
-					className="pointer-events-auto absolute top-4 left-4 z-45 hidden h-12 w-12 place-items-center rounded-lg border border-foreground/14 bg-background/90 text-foreground/78 opacity-70 shadow-2xl backdrop-blur-md transition-opacity duration-200 hover:text-foreground hover:opacity-100 md:grid"
+					className="pointer-events-auto absolute top-4 left-4 z-45 hidden h-12 w-12 place-items-center border-2 border-foreground bg-card text-foreground opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
 					onClick={openContentsOnly}
 				>
 					<ListTree size={18} />
@@ -194,11 +202,11 @@ export function ReaderContents(): React.JSX.Element {
 						data-reader-ui="true"
 						data-reader-component="ReaderContents"
 						data-reader-role="contents-sidebar"
-						className={clsx(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground/12 bg-background/96 text-foreground shadow-2xl backdrop-blur-xl",
+						className={cn(
+							"pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[7px_0_0_var(--comic-teal)]",
 							mobilePortrait
-								? "inset-x-0 bottom-0 h-[70dvh] w-full rounded-t-xl border-t"
-								: "inset-y-0 left-0 max-w-[calc(100vw-1rem)] border-r",
+								? "inset-x-0 bottom-0 h-[70dvh] w-full border-t-[3px]"
+								: "inset-y-0 left-0 max-w-[calc(100vw-1rem)] border-r-[3px]",
 						)}
 						style={
 							mobilePortrait
@@ -228,16 +236,16 @@ export function ReaderContents(): React.JSX.Element {
 								/>
 							</div>
 						) : null}
-						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground/10 border-b px-4">
+						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 bg-accent px-4">
 							<ListTree size={17} className="text-primary" />
 							<div
-								className={clsx(
+								className={cn(
 									"min-w-0 flex-1",
 									mobilePortrait && "cursor-row-resize touch-none",
 								)}
 								onPointerDown={startMobileHeightDrag}
 							>
-								<p className="font-semibold text-foreground/90 text-sm">
+								<p className="font-bold font-display text-foreground text-sm uppercase">
 									Story Navigation
 								</p>
 								<p className="truncate text-[11px] text-foreground/40">
@@ -247,7 +255,7 @@ export function ReaderContents(): React.JSX.Element {
 							<button
 								type="button"
 								aria-label="Close story navigation"
-								className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
+								className="hover:-translate-y-0.5 grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--comic-ink)] transition-transform hover:bg-primary hover:text-primary-foreground"
 								onClick={toggleOpen}
 							>
 								{mobilePortrait ? (
@@ -257,7 +265,7 @@ export function ReaderContents(): React.JSX.Element {
 								)}
 							</button>
 						</header>
-						<div className="flex items-center gap-2 border-foreground/10 border-b px-3 py-2">
+						<div className="flex items-center gap-2 border-foreground border-b-2 px-3 py-2">
 							<NavigationTabButton
 								active={activeTab === "contents"}
 								icon={ListTree}
@@ -322,11 +330,11 @@ function NavigationTabButton({
 	return (
 		<button
 			type="button"
-			className={clsx(
-				"inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition",
+			className={cn(
+				"hover:-translate-y-0.5 inline-flex min-h-11 items-center gap-2 border-2 px-3 py-1.5 font-bold text-xs uppercase transition-transform",
 				active
-					? "border-primary/55 bg-primary/14 text-primary"
-					: "border-foreground/10 bg-foreground/5 text-foreground/52 hover:text-foreground/78",
+					? "border-foreground bg-primary text-primary-foreground shadow-[3px_3px_0_var(--comic-ink)]"
+					: "border-foreground bg-card text-foreground hover:bg-accent",
 			)}
 			onClick={onClick}
 		>

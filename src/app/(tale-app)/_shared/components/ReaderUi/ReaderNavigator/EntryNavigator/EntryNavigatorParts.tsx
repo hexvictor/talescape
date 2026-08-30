@@ -1,23 +1,23 @@
 "use client";
 
-import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Fragment } from "react";
+import cn from "~/lib/utils/cn";
 import type {
-	ReaderContentsEntry,
-	ReaderContentsPart,
-} from "../../../../types";
+	ReaderNavigationEntry,
+	ReaderNavigationPart,
+} from "../../../../services/readerNavigationView";
 import { getReaderPartLabel, getReaderPartTheme } from "../readerPartTheme";
 import { ReaderTypeIcon } from "./ReaderTypeIcon";
 
 type PartSelectorProps = {
 	className?: string;
-	currentPart: ReaderContentsPart | undefined;
+	currentPart: ReaderNavigationPart | undefined;
 	onOpenChange: (open: boolean) => void;
-	onSelect: (part: ReaderContentsPart) => void;
+	onSelect: (part: ReaderNavigationPart) => void;
 	open: boolean;
-	parts: ReaderContentsPart[];
+	parts: ReaderNavigationPart[];
 	showStepButtons?: boolean;
 };
 
@@ -45,7 +45,7 @@ export function PartSelector({
 		<div
 			data-reader-component="PartSelector"
 			data-reader-role="part-selection"
-			className={clsx("relative mb-3 flex items-center gap-0.5", className)}
+			className={cn("relative mb-3 flex items-center gap-0.5", className)}
 		>
 			{showStepButtons ? (
 				<button
@@ -122,7 +122,7 @@ export function PartSelector({
 									key={part.id}
 									type="button"
 									style={getReaderPartTheme(index + 1)}
-									className={clsx(
+									className={cn(
 										"flex w-full items-center gap-3 rounded px-2 py-2 text-left transition",
 										part.id === currentPart?.id
 											? "border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-foreground"
@@ -146,7 +146,8 @@ export function PartSelector({
 										<span className="block text-[10px] text-foreground/42">
 											{part.entries.length}{" "}
 											{part.entries.length === 1 ? "entry" : "entries"} ·{" "}
-											{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
+											{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}{" "}
+											· {part.blockCount} blocks
 										</span>
 									</span>
 								</button>
@@ -161,7 +162,7 @@ export function PartSelector({
 
 type EntryPageFlyoutProps = {
 	currentPageId: string | null;
-	entry: ReaderContentsEntry;
+	entry: ReaderNavigationEntry;
 	onNavigate: (blockId: string) => void;
 };
 
@@ -190,7 +191,8 @@ export function EntryPageFlyout({
 					{entry.title}
 				</p>
 				<p className="text-[10px] text-foreground/42">
-					{entry.pages.length} {entry.pages.length === 1 ? "page" : "pages"}
+					{entry.pageCount} {entry.pageCount === 1 ? "page" : "pages"} ·{" "}
+					{entry.blockCount} blocks
 				</p>
 			</div>
 			<div
@@ -234,7 +236,7 @@ export function EntryPageFlyout({
 								type="button"
 								title={`${page.label}: ${page.title} · Part ${page.partNumber}: ${page.partTitle}`}
 								style={getReaderPartTheme(page.partNumber)}
-								className={clsx(
+								className={cn(
 									"relative flex aspect-square min-w-0 flex-col items-start justify-between rounded-lg border p-2 text-left transition",
 									page.id === currentPageId
 										? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
@@ -249,7 +251,7 @@ export function EntryPageFlyout({
 										{page.number ?? page.label}
 									</span>
 									<span
-										className={clsx(
+										className={cn(
 											"grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[8px]",
 											page.id === currentPageId
 												? "border-background/20 bg-background/12 text-background"

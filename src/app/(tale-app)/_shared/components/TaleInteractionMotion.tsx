@@ -36,6 +36,8 @@ const buttonLikeSelector = [
 	"summary",
 ].join(",");
 
+const interactionGroupSelector = '[data-tale-interaction-group="true"]';
+
 type TaleInteractionMotionProps = {
 	children: ReactNode;
 };
@@ -75,11 +77,19 @@ function getTooltipLabel(element: HTMLElement): string | null {
 	return element.getAttribute("aria-label")?.trim() || null;
 }
 
+function initializeInteractiveElement(element: HTMLElement): void {
+	element.style.setProperty("--tale-interaction-scale", "1");
+}
+
+function getFeedbackElement(element: HTMLElement): HTMLElement {
+	return element.closest<HTMLElement>(interactionGroupSelector) ?? element;
+}
+
 /**
  * Adds consistent, transform-safe interaction feedback across tale tools.
  *
  * @param props - Tale application content.
- * @returns A transparent event boundary for reader and editor controls.
+ * @returns A transparent event boundary for Reader and Studio controls.
  */
 export function TaleInteractionMotion({
 	children,
@@ -96,18 +106,24 @@ export function TaleInteractionMotion({
 		scale: number,
 		duration = 0.08,
 	): void => {
+		const feedbackElement = getFeedbackElement(element);
 		if (reduceMotion) {
-			element.style.setProperty("--tale-interaction-scale", "1");
+			feedbackElement.style.setProperty("--tale-interaction-scale", "1");
 			return;
 		}
+
+		if (!feedbackElement.style.getPropertyValue("--tale-interaction-scale")) {
+			initializeInteractiveElement(feedbackElement);
+		}
+
 		animate(
-			element,
+			feedbackElement,
 			{ "--tale-interaction-scale": scale },
 			{ duration, ease: "easeOut" },
 		);
 	};
 	const settle = (element: HTMLElement, hovered: boolean): void => {
-		const hoverScale = element.matches(buttonLikeSelector) ? 1.025 : 1.01;
+		const hoverScale = element.matches(buttonLikeSelector) ? 1.045 : 1.01;
 		setFeedback(element, hovered ? hoverScale : 1, 0.09);
 	};
 	const clearTooltipTimer = (): void => {
@@ -146,36 +162,7 @@ export function TaleInteractionMotion({
 	};
 
 	useEffect(() => {
-		const root = rootRef.current;
-		if (!root) return;
-		const initializeInteractiveElement = (element: HTMLElement): void => {
-			if (element.dataset.taleMotionTarget === "true") return;
-			element.dataset.taleMotionTarget = "true";
-			element.style.setProperty("--tale-interaction-scale", "1");
-		};
-		for (const interactive of root.querySelectorAll<HTMLElement>(
-			interactiveSelector,
-		)) {
-			initializeInteractiveElement(interactive);
-		}
-		const observer = new MutationObserver((mutations) => {
-			for (const mutation of mutations) {
-				for (const node of mutation.addedNodes) {
-					if (!(node instanceof HTMLElement)) continue;
-					if (node.matches(interactiveSelector)) {
-						initializeInteractiveElement(node);
-					}
-					for (const interactive of node.querySelectorAll<HTMLElement>(
-						interactiveSelector,
-					)) {
-						initializeInteractiveElement(interactive);
-					}
-				}
-			}
-		});
-		observer.observe(root, { childList: true, subtree: true });
 		return () => {
-			observer.disconnect();
 			window.clearTimeout(tooltipTimerRef.current ?? undefined);
 		};
 	}, []);

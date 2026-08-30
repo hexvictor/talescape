@@ -27,7 +27,7 @@ export function ReaderStage(): React.JSX.Element {
 		? []
 		: renderedBlockIds.length === 0
 			? compiled.anchors.slice(0, 3)
-			: compiled.anchors.filter((anchor) => requestedIds.has(anchor.block.id));
+			: compiled.anchors.filter((anchor) => requestedIds.has(anchor.blockId));
 	countReaderDiagnostic("ReaderStage React render", {
 		mountedBlocks: renderedAnchors.length,
 	});
@@ -49,7 +49,7 @@ export function ReaderStage(): React.JSX.Element {
 			}}
 		>
 			{renderedAnchors.map((anchor) => (
-				<TaleBlock key={anchor.block.id} anchor={anchor} />
+				<TaleBlock key={anchor.blockId} anchor={anchor} />
 			))}
 		</div>
 	);

@@ -1,6 +1,5 @@
 import { resolveSnapSettings } from "../services/readerSnapSettings";
-import type { SnapPoint } from "../types";
-import type { TaleSnapConfig } from "../types";
+import type { SnapPoint, TaleSnapConfig, TimelineSegment } from "../types";
 
 export type ReaderSnapModel = ReturnType<typeof createReaderSnapModel>;
 export type ScrollDirection = -1 | 1;
@@ -16,39 +15,49 @@ export type ReaderSnapTarget = {
  * Creates a snap resolver for compiled reader snap points.
  *
  * @param points - Compiled snap points from the current reader route.
+ * @param segments - Ordered timeline segments used to identify scroll intent.
  * @returns Snap target resolver used by the input controller.
  *
  * @example
- * const snapModel = createReaderSnapModel(compiled.snapPoints);
+ * const snapModel = createReaderSnapModel(
+ *   compiled.snapPoints,
+ *   compiled.segments,
+ * );
  */
-export function createReaderSnapModel(points: SnapPoint[]) {
+export function createReaderSnapModel(
+	points: SnapPoint[],
+	segments: TimelineSegment[],
+) {
 	const sorted = [...points].sort((left, right) => left.scroll - right.scroll);
 
 	const getSnapTarget = (
 		scroll: number,
 		direction: ScrollDirection,
 		defaults: TaleSnapConfig,
+		fromScroll = scroll,
 	): ReaderSnapTarget | null => {
-		const transitionTarget = getTransitionTarget(scroll, direction, defaults);
+		const transition = getCrossedTransition(
+			segments,
+			fromScroll,
+			scroll,
+			direction,
+		);
+		const transitionTarget = getTransitionTarget(
+			transition,
+			direction,
+			defaults,
+		);
 		if (transitionTarget) return transitionTarget;
+		const intendedBlockId = transition
+			? direction === 1
+				? transition.toBlockId
+				: transition.fromBlockId
+			: getCrossedChoiceBlockId(sorted, fromScroll, scroll, direction);
+		if (!intendedBlockId) return null;
 
-		let low = 0;
-		let high = sorted.length;
-		while (low < high) {
-			const middle = (low + high) >> 1;
-			if ((sorted[middle]?.scroll ?? Number.POSITIVE_INFINITY) < scroll) {
-				low = middle + 1;
-			} else {
-				high = middle;
-			}
-		}
-		const candidates =
-			direction === 1
-				? [sorted[low] ?? null, sorted[low + 1] ?? null]
-				: [sorted[low - 1] ?? null, sorted[low - 2] ?? null];
 		const nearest =
-			candidates
-				.filter((point): point is SnapPoint => Boolean(point))
+			sorted
+				.filter((point) => point.blockId === intendedBlockId)
 				.filter((point) => point.mode === "scroll-snap")
 				.filter((point) => isSnapPointDirectionEnabled(point, direction))
 				.sort(
@@ -57,7 +66,7 @@ export function createReaderSnapModel(points: SnapPoint[]) {
 				)[0] ?? null;
 		if (!nearest) return null;
 		const settings = resolveSnapSettings(nearest.settings, defaults.scrollSnap);
-		if (!isSnapCaptured(nearest, scroll, direction, settings)) {
+		if (!transition && !isSnapCaptured(nearest, scroll, direction, settings)) {
 			return null;
 		}
 		return {
@@ -71,34 +80,34 @@ export function createReaderSnapModel(points: SnapPoint[]) {
 	/**
 	 * Resolves snap-mode targets when the camera has entered a transition.
 	 *
-	 * @param scroll - Current target scroll.
+	 * @param transition - Direct transition crossed by the proposed movement.
 	 * @param direction - Current input direction.
 	 * @param defaults - Reader-level snap defaults.
 	 * @returns Forced transition snap target, or null outside snap transition ranges.
 	 */
 	function getTransitionTarget(
-		scroll: number,
+		transition: Extract<TimelineSegment, { type: "transition" }> | null,
 		direction: ScrollDirection,
 		defaults: TaleSnapConfig,
 	): ReaderSnapTarget | null {
+		if (!transition) return null;
+		const blockId =
+			direction === 1 ? transition.toBlockId : transition.fromBlockId;
+		if (!blockId) return null;
 		const match =
 			sorted.find(
 				(point) =>
+					point.blockId === blockId &&
 					point.mode === "snap" &&
 					point.transitionStart !== undefined &&
 					point.transitionEnd !== undefined &&
 					isSnapPointDirectionEnabled(point, direction) &&
-					scroll >= point.transitionStart &&
-					scroll <= point.transitionEnd &&
 					(direction === 1
 						? point.type === "block-start"
 						: point.type === "block-end"),
 			) ?? null;
 		if (!match) return null;
 		const settings = resolveSnapSettings(match.settings, defaults.snap);
-		if (!isSnapCaptured(match, scroll, direction, settings, true)) {
-			return null;
-		}
 		return {
 			delayMs: settings.delayMs,
 			durationSeconds: settings.durationSeconds,
@@ -108,6 +117,56 @@ export function createReaderSnapModel(points: SnapPoint[]) {
 	}
 
 	return { getSnapTarget };
+}
+
+/**
+ * Finds the first transition crossed by one proposed input movement.
+ *
+ * A movement wholly contained by reading or pause segments returns no
+ * transition, regardless of nearby snap-point capture distances.
+ */
+function getCrossedTransition(
+	segments: TimelineSegment[],
+	fromScroll: number,
+	targetScroll: number,
+	direction: ScrollDirection,
+): Extract<TimelineSegment, { type: "transition" }> | null {
+	const transitions = segments.filter(
+		(
+			segment,
+		): segment is Extract<TimelineSegment, { type: "transition" }> =>
+			segment.type === "transition",
+	);
+	const ordered = direction === 1 ? transitions : transitions.reverse();
+	return (
+		ordered.find((segment) => {
+			return direction === 1
+				? fromScroll < segment.end && targetScroll >= segment.start
+				: fromScroll > segment.start && targetScroll <= segment.end;
+		}) ?? null
+	);
+}
+
+/**
+ * Finds a choice boundary crossed without a following transition.
+ */
+function getCrossedChoiceBlockId(
+	points: SnapPoint[],
+	fromScroll: number,
+	targetScroll: number,
+	direction: ScrollDirection,
+): string | null {
+	const ordered = direction === 1 ? points : [...points].reverse();
+	return (
+		ordered.find(
+			(point) =>
+				point.type === "choice-end" &&
+				isSnapPointDirectionEnabled(point, direction) &&
+				(direction === 1
+					? fromScroll < point.scroll && targetScroll >= point.scroll
+					: fromScroll > point.scroll && targetScroll <= point.scroll),
+		)?.blockId ?? null
+	);
 }
 
 /**
@@ -138,7 +197,6 @@ function isSnapPointDirectionEnabled(
  * @param scroll - Current target scroll.
  * @param direction - Current input direction.
  * @param settings - Effective snap settings.
- * @param forceWhenUnset - Whether snap should capture when no threshold is set.
  * @returns True when pixel distance or visible transition fraction captures.
  *
  * @example
@@ -152,7 +210,6 @@ function isSnapCaptured(
 		capturePx: number | null;
 		minViewportFraction: number | null;
 	},
-	forceWhenUnset = false,
 ): boolean {
 	const capturePx = settings.capturePx;
 	const minViewportFraction = settings.minViewportFraction;
@@ -166,7 +223,7 @@ function isSnapCaptured(
 			Math.max(minViewportFraction, 0);
 
 	if (pixelCaptured || fractionCaptured) return true;
-	return forceWhenUnset && !hasPixelCapture && !hasFractionCapture;
+	return !hasPixelCapture && !hasFractionCapture;
 }
 
 /**

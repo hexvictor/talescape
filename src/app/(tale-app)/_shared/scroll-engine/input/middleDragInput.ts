@@ -14,9 +14,11 @@ import type { ReaderInputControllerOptions } from "./inputTypes";
  */
 export function attachMiddleDragInput({
 	driver,
+	getInputPermissions,
 	getInputSettings,
 	getSnapDuration,
 	registerSnapInput,
+	onUserInput,
 	resolveImmediateSnapTarget,
 	scheduleSnap,
 	setDirection,
@@ -62,12 +64,17 @@ export function attachMiddleDragInput({
 		);
 		const direction = delta >= 0 ? 1 : -1;
 		setDirection(direction);
+		const from = targetScroll;
 		targetScroll = clamp(
-			targetScroll + delta * settings.middleDragDeltaRatio * multiplier,
+			from + delta * settings.middleDragDeltaRatio * multiplier,
 			0,
 			totalScroll,
 		);
-		const snapTarget = resolveImmediateSnapTarget(targetScroll, direction);
+		const snapTarget = resolveImmediateSnapTarget(
+			targetScroll,
+			direction,
+			from,
+		);
 		const durationSeconds = snapTarget
 			? getSnapDuration(snapTarget.durationSeconds)
 			: null;
@@ -87,7 +94,9 @@ export function attachMiddleDragInput({
 
 	const onPointerDown = (event: PointerEvent): void => {
 		if (event.button !== 1) return;
+		if (!getInputPermissions().dragging) return;
 		if (shouldLetElementHandleInput(event.target)) return;
+		onUserInput("dragging");
 		event.preventDefault();
 		registerSnapInput(0.8);
 		countReaderDiagnostic("middle drag input");

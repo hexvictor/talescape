@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-	title: "Taleviewer | Talescape",
-	description: "The community-driven hub of interactive tales",
-	icons: [{ rel: "icon", url: "/favicon.ico" }],
+	title: "Tale | Talescape",
+	description: "Read, edit, and preview interactive tales on Talescape.",
 };
 
 export default function TaleAppLayout({

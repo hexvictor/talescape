@@ -13,8 +13,12 @@ import {
 } from "~/server/db/schema";
 import type { FragmentAnimationConfig } from "~/server/db/types/tale-reader/readerConfig";
 import { userId1 } from "../ids";
+import { isCompactSeedPanel } from "./readerBlockSeedConfig";
 import { readerPageBlueprints } from "./readerStoryBlueprint";
-import { createReaderStoryText } from "./readerStoryText";
+import {
+	createReaderStoryExcerpt,
+	createReaderStoryText,
+} from "./readerStoryText";
 import { logSeedComplete, logSeedStart } from "./seedLogs";
 
 const localImages = [
@@ -203,15 +207,43 @@ function createBlockFragments(
 	} = input;
 	const base = fragmentBase(block.id, taleId);
 	const title = page.title ?? entry.title;
+	const compactPanel = isCompactSeedPanel(page.order);
 	if (block.isChoiceBlock) {
 		if (blockPaths.length === 0) {
 			throw new Error(`Choice block ${block.id} has no outgoing paths.`);
 		}
 		return [
 			headlineTextFragment(base, contentNodeId, title, 0, true),
-			bodyTextFragment(base, contentNodeId, seedLoremIpsum(block.order, 1), 1, true),
+			...(compactPanel
+				? []
+				: [
+						bodyTextFragment(
+							base,
+							contentNodeId,
+							seedLoremIpsum(block.order, 1),
+							1,
+							true,
+						),
+					]),
 			...blockPaths.map((path, index) =>
-				choiceFragment(base, contentNodeId, path, index + 2),
+				choiceFragment(
+					base,
+					contentNodeId,
+					path,
+					index + (compactPanel ? 1 : 2),
+				),
+			),
+		];
+	}
+	if (compactPanel) {
+		return [
+			headlineTextFragment(base, contentNodeId, title, 0, true),
+			bodyTextFragment(
+				base,
+				contentNodeId,
+				createReaderStoryExcerpt(title, branchName, page.order),
+				1,
+				true,
 			),
 		];
 	}
@@ -262,7 +294,12 @@ function createBlockFragments(
 				]
 			: []),
 		...blockPaths.map((path, index) =>
-			choiceFragment(base, contentNodeId, path, index + (block.order % 4 === 0 ? 4 : 3)),
+			choiceFragment(
+				base,
+				contentNodeId,
+				path,
+				index + (block.order % 4 === 0 ? 4 : 3),
+			),
 		),
 	];
 }
@@ -550,8 +587,9 @@ function emptyAnimationConfig(): FragmentAnimationConfig {
  */
 function seedLoremIpsum(order: number, salt: number): string {
 	const paragraphCount = ((order + salt) % 3) + 1;
-	return Array.from({ length: paragraphCount }, () => lorem.generateParagraphs(1))
-		.join("\n\n");
+	return Array.from({ length: paragraphCount }, () =>
+		lorem.generateParagraphs(1),
+	).join("\n\n");
 }
 
 /**

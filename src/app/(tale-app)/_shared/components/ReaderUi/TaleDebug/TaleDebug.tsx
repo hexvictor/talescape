@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import {
 	Activity,
 	Bug,
@@ -11,15 +10,17 @@ import {
 	X,
 } from "lucide-react";
 import { useState } from "react";
-import { EditorDebugHeaderActions } from "~/app/(tale-app)/(tale-editor)/_shared/components/TaleEditor/EditorDebugHeaderActions";
+import cn from "~/lib/utils/cn";
 import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import {
 	useTaleReaderStore,
 	useTaleReaderStoreShallow,
 } from "../../../contexts/TaleReaderStoreContext";
+import { useTaleRenderSlots } from "../../../contexts/TaleRenderContext";
 import { useTaleDebugState } from "../../../hooks/store/useReaderDebugSelectors";
 import { useReaderLocationContext } from "../../../hooks/useReaderLocationContext";
+import { getReaderPageLabel } from "../../../services/readerPageLabels";
 import { DebugLocationDetails } from "./DebugLocationDetails";
 import { DebugTabs } from "./DebugPrimitives";
 import { GlobalSnapControls } from "./GlobalSnapControls";
@@ -42,15 +43,13 @@ const coreTabs: { id: DebugTab; label: string }[] = [
 ];
 
 /**
-
-* Renders diagnostics only while reader debug visibility is enabled.
-*
-* @returns Null while hidden or the active diagnostics panel.
-*
-* @example
-* <TaleDebug />
-
-*/
+ * Renders diagnostics only while reader debug visibility is enabled.
+ *
+ * @returns Null while hidden or the active diagnostics panel.
+ *
+ * @example
+ * <TaleDebug />
+ */
 export function TaleDebug(): React.JSX.Element | null {
 	const visible = useTaleReaderStoreShallow(
 		(state) => state.ui.visibilityMode === "all" && state.ui.debugVisible,
@@ -62,15 +61,13 @@ export function TaleDebug(): React.JSX.Element | null {
 }
 
 /**
-
-* Renders the active reader diagnostics panel and compact debug launcher.
-*
-* @returns Compact debug launcher or the expanded diagnostics panel.
-*
-* @example
-* <TaleDebugContent />
-
-*/
+ * Renders the active reader diagnostics panel and compact debug launcher.
+ *
+ * @returns Compact debug launcher or the expanded diagnostics panel.
+ *
+ * @example
+ * <TaleDebugContent />
+ */
 function TaleDebugContent(): React.JSX.Element {
 	const { viewport } = useReaderViewportContext();
 	const { block, branch, entry, location, page, part } =
@@ -85,7 +82,8 @@ function TaleDebugContent(): React.JSX.Element {
 		toggleDebug,
 	} = useTaleDebugState();
 	const tale = useTaleAppStore((state) => state.document.tale);
-	const isEditor = useTaleAppStore((state) => state.derived.isEditor);
+	const isStudio = useTaleAppStore((state) => state.derived.isStudio);
+	const { DebugHeaderActions } = useTaleRenderSlots();
 	const readerStatusVisible = useTaleReaderStore(
 		(state) => state.ui.readerStatusVisible,
 	);
@@ -123,14 +121,12 @@ function TaleDebugContent(): React.JSX.Element {
 		icon: getDebugTabIcon(tab.id),
 	}));
 
-	const currentContentsBlock = compiled?.contents
-		.flatMap((contentsPart) =>
-			contentsPart.entries.flatMap((contentsEntry) => contentsEntry.blocks),
-		)
-		.find((item) => item.blockId === location?.blockId);
 	const currentPage = compiled?.pages.find(
 		(item) => item.id === location?.pageId,
 	);
+	const currentPageLabel = page
+		? getReaderPageLabel(page, currentPage?.number ?? null)
+		: undefined;
 
 	if (!open) {
 		return (
@@ -140,7 +136,7 @@ function TaleDebugContent(): React.JSX.Element {
 				data-reader-role="compact-debug-status"
 				type="button"
 				aria-label="Open reader debug"
-				className={clsx(
+				className={cn(
 					"pointer-events-auto absolute right-2 z-[70] flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary shadow-2xl backdrop-blur-md transition-opacity duration-200 md:z-40",
 					reduceInactiveUiOpacity
 						? "opacity-25 hover:opacity-100"
@@ -155,7 +151,7 @@ function TaleDebugContent(): React.JSX.Element {
 						{block?.title ?? taleTitle}
 					</span>
 					<span className="block truncate text-[10px] text-foreground/42">
-						{currentPage?.label ?? page?.type ?? "No page"} ·{" "}
+						{currentPageLabel ?? page?.type ?? "No page"} ·{" "}
 						{entry?.title ?? "No entry"}
 					</span>
 					<DebugLocationDetails
@@ -282,7 +278,7 @@ function TaleDebugContent(): React.JSX.Element {
 			data-reader-ui="true"
 			data-reader-component="TaleDebug"
 			data-reader-role="debug-panel"
-			className={clsx(
+			className={cn(
 				"pointer-events-auto flex flex-col overflow-hidden border border-foreground/12 bg-background/92 shadow-2xl backdrop-blur-md",
 				mobile
 					? "absolute inset-x-0 bottom-0 z-[1200] w-full rounded-t-xl border-b-0"
@@ -307,7 +303,7 @@ function TaleDebugContent(): React.JSX.Element {
 				<div
 					data-reader-component="TaleDebug"
 					data-reader-role="debug-drag-handle"
-					className={clsx(
+					className={cn(
 						"min-w-0 flex-1",
 						mobile ? "cursor-row-resize touch-none" : "cursor-move",
 					)}
@@ -321,8 +317,8 @@ function TaleDebugContent(): React.JSX.Element {
 					</p>
 				</div>
 				<div className="flex items-center gap-1">
-					{isEditor ? (
-						<EditorDebugHeaderActions blockId={location?.blockId ?? null} />
+					{DebugHeaderActions ? (
+						<DebugHeaderActions blockId={location?.blockId ?? null} />
 					) : null}
 					<button
 						data-reader-component="TaleDebug"
@@ -336,7 +332,7 @@ function TaleDebugContent(): React.JSX.Element {
 					</button>
 				</div>
 			</header>
-			{isEditor ? <GlobalSnapControls /> : null}
+			{isStudio ? <GlobalSnapControls /> : null}
 			<DebugTabs
 				active={activeTab}
 				iconOnly={mobile}
@@ -357,7 +353,7 @@ function TaleDebugContent(): React.JSX.Element {
 						blockTitle={block?.title}
 						branchTitle={branch?.title}
 						entryTitle={entry?.title}
-						pageLabel={currentPage?.label ?? currentContentsBlock?.pageLabel}
+						pageLabel={currentPageLabel}
 						partTitle={part?.title}
 						phase={phase}
 						seenBlocks={seenBlocks}
@@ -369,7 +365,7 @@ function TaleDebugContent(): React.JSX.Element {
 						branch={branch}
 						entry={entry}
 						page={page}
-						pageLabel={currentPage?.label ?? currentContentsBlock?.pageLabel}
+						pageLabel={currentPageLabel}
 						part={part}
 					/>
 				) : null}

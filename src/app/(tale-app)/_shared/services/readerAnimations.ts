@@ -4,11 +4,13 @@ import type {
 	CompiledReader,
 	ResolvedTaleBlock,
 	ResolvedTaleFragment,
+	Tale,
 	TaleNode,
 	TimelineSegment,
 	ViewportSize,
 } from "../types";
 import { clamp, lerp } from "./readerMath";
+import { resolveIds } from "./taleLookups";
 
 type AnimationValues = {
 	blur: number;
@@ -74,6 +76,7 @@ const writtenValuesByElement = new WeakMap<
  */
 export function compileReaderAnimationPlan(
 	compiled: CompiledReader,
+	tale: Tale,
 	viewport: ViewportSize,
 ): ReaderAnimationPlan {
 	const ambientBlockIds = new Set<string>();
@@ -91,7 +94,8 @@ export function compileReaderAnimationPlan(
 	) {
 		const anchor = compiled.anchors[anchorIndex];
 		if (!anchor) continue;
-		const block = anchor.block;
+		const block = tale.indexMap.blocksById[anchor.blockId];
+		if (!block) continue;
 		const blockCompilation = compileBlockAnimations(block, viewport);
 		blockAnimationsById.set(block.id, blockCompilation.plan);
 		if (blockCompilation.hasAnimation) animatedBlockIds.add(block.id);
@@ -99,11 +103,14 @@ export function compileReaderAnimationPlan(
 
 		const previousAnchor = compiled.anchors[anchorIndex - 1];
 		if (previousAnchor && blockCompilation.plan.transitionLeaving.length > 0) {
-			animatedBlockIds.add(previousAnchor.block.id);
+			animatedBlockIds.add(previousAnchor.blockId);
 		}
 
 		const animatedFragmentIds: string[] = [];
-		for (const fragment of block.fragments) {
+		for (const fragment of resolveIds(
+			block.fragmentIds,
+			tale.indexMap.fragmentsById,
+		)) {
 			const fragmentPlan = compileEntityAnimations(
 				fragment.animations,
 				fragment.resolvedVisibleRange,
@@ -116,7 +123,7 @@ export function compileReaderAnimationPlan(
 		}
 		animatedFragmentIdsByBlockId.set(block.id, animatedFragmentIds);
 		const animatedNodeIds: string[] = [];
-		for (const node of block.nodes) {
+		for (const node of resolveIds(block.nodeIds, tale.indexMap.nodesById)) {
 			const nodePlan = compileEntityAnimations(
 				node.animations,
 				{ end: 1, start: 0 },
@@ -277,6 +284,7 @@ export function hasAmbientAnimations(
  */
 export function evaluateBlockAnimation(
 	plan: ReaderAnimationPlan,
+	tale: Tale,
 	blockId: string,
 	segment: TimelineSegment,
 	progress: number,
@@ -310,12 +318,11 @@ export function evaluateBlockAnimation(
 		return true;
 	}
 
-	const isEntering = segment.to.block.id === blockId;
-	const destinationAnimations = plan.blockAnimationsById.get(
-		segment.to.block.id,
-	);
+	const isEntering = segment.toBlockId === blockId;
+	const destinationAnimations = plan.blockAnimationsById.get(segment.toBlockId);
 	const currentBlockAnimations = plan.blockAnimationsById.get(blockId);
-	const transition = segment.to.block.transition;
+	const transition = tale.indexMap.blocksById[segment.toBlockId]?.transition;
+	if (!transition) return false;
 	const configuredLength = isEntering
 		? transition.enteringLength
 		: transition.leavingLength;
@@ -344,7 +351,7 @@ export function evaluateBlockAnimation(
  * @returns Whether any custom previous-visible tracks were applied.
  *
  * @example
- * evaluatePreviousVisibleBlockAnimation(plan, segment.to.block.id, 0.5, committedIds, values);
+ * evaluatePreviousVisibleBlockAnimation(plan, segment.toBlockId, 0.5, committedIds, values);
  */
 export function evaluatePreviousVisibleBlockAnimation(
 	plan: ReaderAnimationPlan,
@@ -353,7 +360,8 @@ export function evaluatePreviousVisibleBlockAnimation(
 	committedAnimationIds: ReadonlySet<string>,
 	target: AnimationValues,
 ): boolean {
-	const destinationAnimations = plan.blockAnimationsById.get(destinationBlockId);
+	const destinationAnimations =
+		plan.blockAnimationsById.get(destinationBlockId);
 	const tracks = destinationAnimations?.previousVisibleDuringEnter ?? [];
 	if (tracks.length === 0) return false;
 	evaluateTracks(tracks, progress, target, committedAnimationIds);
@@ -387,7 +395,7 @@ export function evaluateFragmentAnimation(
 	if (!animations?.hasAnimation) return false;
 	resetValues(target);
 
-	if (segment.type === "reading" && segment.anchor.block.id === blockId) {
+	if (segment.type === "reading" && segment.blockId === blockId) {
 		evaluateReadingFragment(
 			animations,
 			progress,
@@ -397,7 +405,7 @@ export function evaluateFragmentAnimation(
 		evaluateFragmentAmbient(animations, timeMs, progress, target);
 		return true;
 	}
-	if (segment.type === "pause" && segment.anchor.block.id === blockId) {
+	if (segment.type === "pause" && segment.blockId === blockId) {
 		evaluateReadingFragment(
 			animations,
 			segment.pauseType === "start" ? 0 : 1,
@@ -412,7 +420,7 @@ export function evaluateFragmentAnimation(
 		);
 		return true;
 	}
-	if (segment.type === "transition" && segment.to.block.id === blockId) {
+	if (segment.type === "transition" && segment.toBlockId === blockId) {
 		evaluateReadingFragment(animations, 0, committedAnimationIds, target);
 		evaluateTracks(
 			animations.entering,
@@ -423,7 +431,7 @@ export function evaluateFragmentAnimation(
 		evaluateFragmentAmbient(animations, timeMs, 0, target);
 		return true;
 	}
-	if (segment.type === "transition" && segment.from.block.id === blockId) {
+	if (segment.type === "transition" && segment.fromBlockId === blockId) {
 		evaluateReadingFragment(animations, 1, committedAnimationIds, target);
 		evaluateTracks(animations.leaving, progress, target, committedAnimationIds);
 		evaluateFragmentAmbient(animations, timeMs, 1, target);
@@ -493,7 +501,7 @@ function evaluateEntityAnimation(
 ): boolean {
 	if (!animations.hasAnimation) return false;
 	resetValues(target);
-	if (segment.type === "reading" && segment.anchor.block.id === blockId) {
+	if (segment.type === "reading" && segment.blockId === blockId) {
 		evaluateReadingFragment(
 			animations,
 			progress,
@@ -503,7 +511,7 @@ function evaluateEntityAnimation(
 		evaluateFragmentAmbient(animations, timeMs, progress, target);
 		return true;
 	}
-	if (segment.type === "pause" && segment.anchor.block.id === blockId) {
+	if (segment.type === "pause" && segment.blockId === blockId) {
 		const readingProgress = segment.pauseType === "start" ? 0 : 1;
 		evaluateReadingFragment(
 			animations,
@@ -514,7 +522,7 @@ function evaluateEntityAnimation(
 		evaluateFragmentAmbient(animations, timeMs, readingProgress, target);
 		return true;
 	}
-	if (segment.type === "transition" && segment.to.block.id === blockId) {
+	if (segment.type === "transition" && segment.toBlockId === blockId) {
 		evaluateReadingFragment(animations, 0, committedAnimationIds, target);
 		evaluateTracks(
 			animations.entering,
@@ -525,7 +533,7 @@ function evaluateEntityAnimation(
 		evaluateFragmentAmbient(animations, timeMs, 0, target);
 		return true;
 	}
-	if (segment.type === "transition" && segment.from.block.id === blockId) {
+	if (segment.type === "transition" && segment.fromBlockId === blockId) {
 		evaluateReadingFragment(animations, 1, committedAnimationIds, target);
 		evaluateTracks(animations.leaving, progress, target, committedAnimationIds);
 		evaluateFragmentAmbient(animations, timeMs, 1, target);
@@ -921,7 +929,7 @@ export function getCompletedAnimationIds(
 	for (const animation of plans) {
 		const tracks =
 			segment.type === "transition"
-				? segment.to.block.id === blockId
+				? segment.toBlockId === blockId
 					? animation.entering
 					: animation.leaving
 				: animation.scrolling;
@@ -938,10 +946,10 @@ export function getCompletedAnimationIds(
 	const blockAnimations = plan.blockAnimationsById.get(blockId);
 	const blockTracks =
 		segment.type === "transition"
-			? segment.to.block.id === blockId
+			? segment.toBlockId === blockId
 				? (blockAnimations?.transitionEntering ?? [])
-				: (plan.blockAnimationsById.get(segment.to.block.id)
-						?.transitionLeaving ?? [])
+				: (plan.blockAnimationsById.get(segment.toBlockId)?.transitionLeaving ??
+					[])
 			: (blockAnimations?.scrolling ?? []);
 	for (const track of blockTracks) {
 		if (

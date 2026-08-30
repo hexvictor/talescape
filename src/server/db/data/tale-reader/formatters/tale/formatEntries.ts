@@ -1,4 +1,4 @@
-import type { Tale } from "~/app/(tale-app)/_shared/types";
+import type { TaleEntry } from "~/app/(tale-app)/_shared/types";
 
 /**
  * Formats database entry rows into the reader entry model.
@@ -27,7 +27,7 @@ export function formatEntries(rows: unknown[]) {
 			order: item.order ?? 0,
 			partId: String(item.partId),
 			title: item.title,
-			type: item.type as Tale["structure"]["entries"][number]["type"],
+			type: item.type as TaleEntry["type"],
 		};
 	});
 }

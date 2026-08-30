@@ -1,0 +1,46 @@
+import { Save } from "lucide-react";
+import cn from "~/lib/utils/cn";
+import { useTaleStudio } from "../../contexts/TaleStudioProvider";
+
+/**
+ * Renders the Tale Studio save action and its persistence status.
+ *
+ * @param props - Save button presentation options.
+ * @param props.className - Additional classes applied to the button.
+ * @param props.isMobile - Whether to use the compact mobile status treatment.
+ * @returns Tale Studio save button.
+ *
+ * @example
+ * <TaleStudioSaveButton className="w-full" />
+ */
+export function TaleStudioSaveButton({
+	className,
+	isMobile = false,
+}: { className?: string; isMobile?: boolean }): React.JSX.Element {
+	const { dirtyStatus, save, savePending } = useTaleStudio().toolbar;
+	return (
+		<button
+			type="button"
+			disabled={savePending}
+			className={cn(
+				"flex h-9 min-w-9 items-center justify-center gap-2 rounded border border-primary/45 bg-primary/14 px-2 text-primary text-xs disabled:opacity-45",
+				className,
+			)}
+			aria-label="Save tale"
+			onClick={save}
+		>
+			<Save size={14} />
+			{!isMobile && dirtyStatus === "Save" && "Save"}
+			{dirtyStatus !== "Save" ? (
+				<span
+					className={cn(
+						"max-w-16 truncate",
+						isMobile && "hidden min-[420px]:inline",
+					)}
+				>
+					{dirtyStatus}
+				</span>
+			) : null}
+		</button>
+	);
+}

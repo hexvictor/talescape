@@ -1,8 +1,8 @@
 "use client";
 
-import { useTaleReaderStoreShallow } from "../../contexts/TaleReaderStoreContext";
+import type { TaleReaderState } from "../../../(reader)/_shared/stores/createTaleReaderStore";
 import { useTaleAppStore } from "../../contexts/TaleAppStoreContext";
-import type { TaleReaderState } from "../../store/createTaleReaderStore";
+import { useTaleReaderStoreShallow } from "../../contexts/TaleReaderStoreContext";
 import type { CompiledReader, LayoutPhase } from "../../types";
 
 type TaleDebugState = {

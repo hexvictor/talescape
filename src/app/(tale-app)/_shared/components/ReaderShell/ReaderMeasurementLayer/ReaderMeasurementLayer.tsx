@@ -36,22 +36,23 @@ export function ReaderMeasurementLayer({
 		>
 			{blockIds.flatMap((blockId) => {
 				const anchor = getMeasurementAnchor(tale, blockId);
-				if (!anchor || anchor.block.size.mode !== "content") return [];
+				const block = tale.indexMap.blocksById[blockId];
+				if (!anchor || !block || block.size.mode !== "content") return [];
 				return [
 					<article
-						key={anchor.block.id}
-						data-reader-measure-block={anchor.block.id}
+						key={anchor.blockId}
+						data-reader-measure-block={anchor.blockId}
 						data-reader-component="ReaderMeasurementLayer"
 						data-reader-role="measurement-block"
 						className="relative flex items-center justify-center overflow-visible"
 						style={{
-							background: anchor.block.resolved.background,
-							border: anchor.block.style?.border,
-							borderRadius: anchor.block.style?.borderRadius,
-							boxShadow: anchor.block.style?.boxShadow,
-							clipPath: anchor.block.style?.clipPath,
-							color: anchor.block.style?.color,
-							...getMeasurementBlockStyle(anchor.block.size, viewport),
+							background: block.resolved.background,
+							border: block.style?.border,
+							borderRadius: block.style?.borderRadius,
+							boxShadow: block.style?.boxShadow,
+							clipPath: block.style?.clipPath,
+							color: block.style?.color,
+							...getMeasurementBlockStyle(block.size, viewport),
 						}}
 					>
 						<ReaderBlockContent anchor={anchor} mode="measure" />
@@ -77,15 +78,15 @@ function getMeasurementAnchor(tale: Tale, blockId: string): Anchor | null {
 	const part = block && tale.indexMap.partsById[block.partId];
 	if (!block || !branch || !entry || !page || !part) return null;
 	return {
-		block,
-		branch,
+		blockId: block.id,
+		branchId: branch.id,
 		cameraFramingOffset: { x: 0, y: 0 },
 		cameraPoint: { x: 0, y: 0 },
-		entry,
+		entryId: entry.id,
 		height: 0,
 		id: block.id,
-		page,
-		part,
+		pageId: page.id,
+		partId: part.id,
 		point: { x: 0, y: 0 },
 		readingPathPoints: [],
 		scroll: 0,
