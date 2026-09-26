@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { expect, userEvent, within } from "storybook/test";
 import { Button } from "./button";
+import { CollapsibleSection } from "./collapsible-section";
+import { Field } from "./field";
+import Input from "./input";
 import { Panel, PanelContent, PanelHeading } from "./panel";
 import { PropertyGroup, PropertyRow } from "./property";
 import { SectionHeader } from "./section-header";
@@ -104,4 +108,45 @@ export const Empty: Story = {
 			</PanelContent>
 		</Panel>
 	),
+};
+
+export const InspectorFields: Story = {
+	render: () => (
+		<div className="max-w-sm">
+			<CollapsibleSection defaultExpanded title="Size and placement">
+				<Field
+					label="Width"
+					description="The rendered width of the selected element."
+				>
+					<Input
+						aria-label="Width"
+						defaultValue="640"
+						density="compact"
+						type="number"
+					/>
+				</Field>
+				<Field label="Height">
+					<Input
+						aria-label="Height"
+						defaultValue="360"
+						density="compact"
+						type="number"
+					/>
+				</Field>
+			</CollapsibleSection>
+		</div>
+	),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const trigger = canvas.getByRole("button", {
+			name: "Size and placement",
+		});
+		await expect(trigger).toHaveAttribute("aria-expanded", "true");
+		await userEvent.click(trigger);
+		await expect(trigger).toHaveAttribute("aria-expanded", "false");
+		await userEvent.click(trigger);
+		await expect(canvas.getByRole("spinbutton", { name: "Width" })).toHaveValue(
+			640,
+		);
+	},
 };

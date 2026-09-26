@@ -1,7 +1,12 @@
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import Input from "~/components/ui/input";
 import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 
 /**
  * Renders a required number input.
@@ -29,8 +34,9 @@ export function NumberSetting({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				min={min}
 				step={step}
 				type="number"
@@ -61,8 +67,9 @@ export function OptionalNumberSetting({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				placeholder="none"
 				type="number"
 				value={value ?? ""}
@@ -104,25 +111,31 @@ export function UnitNumberSetting({
 			readerRole="dimension-input"
 		>
 			<div className="grid min-w-0 @min-[18rem]/setting:grid-cols-[minmax(0,1fr)_7.5rem] grid-cols-1 gap-2">
-				<input
-					className={`${settingClassName} w-full`}
+				<Input
+					aria-label={label}
+					className="w-full"
+					density="compact"
 					min={0}
 					step={unit === "px" ? 25 : 0.25}
 					type="number"
 					value={value}
 					onChange={(event) => onChange(Number(event.target.value), unit)}
 				/>
-				<select
+				<Select
 					aria-label={`${label} unit`}
-					className={`${settingClassName} w-full`}
 					value={unit}
-					onChange={(event) =>
-						onChange(value, event.target.value as "px" | "viewport")
+					onValueChange={(nextUnit) =>
+						onChange(value, nextUnit as "px" | "viewport")
 					}
 				>
-					<option value="viewport">Viewport</option>
-					<option value="px">Pixels</option>
-				</select>
+					<SelectTrigger className="w-full" density="compact">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="viewport">Viewport</SelectItem>
+						<SelectItem value="px">Pixels</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 		</Setting>
 	);
@@ -160,8 +173,10 @@ export function OptionalUnitNumberSetting({
 			readerRole="optional-dimension-input"
 		>
 			<div className="grid min-w-0 @min-[18rem]/setting:grid-cols-[minmax(0,1fr)_7.5rem] grid-cols-1 gap-2">
-				<input
-					className={`${settingClassName} w-full`}
+				<Input
+					aria-label={label}
+					className="w-full"
+					density="compact"
 					placeholder="No limit"
 					step={resolvedUnit === "px" ? 25 : 0.25}
 					type="number"
@@ -174,18 +189,22 @@ export function OptionalUnitNumberSetting({
 						onChange(next, next === undefined ? undefined : resolvedUnit);
 					}}
 				/>
-				<select
+				<Select
 					aria-label={`${label} unit`}
-					className={`${settingClassName} w-full`}
-					disabled={value === undefined}
+					isDisabled={value === undefined}
 					value={resolvedUnit}
-					onChange={(event) =>
-						onChange(value, event.target.value as "px" | "viewport")
+					onValueChange={(nextUnit) =>
+						onChange(value, nextUnit as "px" | "viewport")
 					}
 				>
-					<option value="viewport">Viewport</option>
-					<option value="px">Pixels</option>
-				</select>
+					<SelectTrigger className="w-full" density="compact">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="viewport">Viewport</SelectItem>
+						<SelectItem value="px">Pixels</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 		</Setting>
 	);
@@ -213,8 +232,9 @@ export function TextSetting({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				placeholder={placeholder}
 				type="text"
 				value={value}

@@ -61,6 +61,12 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   for fit, selection, disabled, missing-image, action and responsive states.
 - Migrated Studio Element thumbnails, Library empty states and site loading
   placeholders to the shared display components.
+- Added semantic Field and React Aria-backed CollapsibleSection primitives with
+  compact Inspector interaction coverage.
+- Migrated Reader/Studio DebugCard disclosures and all Setting field groups to
+  shared structure while preserving Reader instrumentation and comic geometry.
+- Migrated core Inspector text, number and dimension value editors to shared
+  compact Input and Select controls.
 
 ## Files changed / components / stories
 
@@ -105,6 +111,8 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 - Navigation stories pass in Chromium: 5 story files and 54 tests, including
   keyboard tab selection and breadcrumb actions.
 - Display stories pass in Chromium: 6 story files and 57 tests total.
+- Inspector structure stories pass in Chromium: 6 story files and 58 tests total,
+  including disclosure expand/collapse and accessible numeric field lookup.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -112,9 +120,9 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 
 ## Exact next steps
 
-1. Consolidate Inspector property fields and collapsible sections against shared
-   controls and structural primitives.
-2. Add Tag and StatusBadge when their first domain consumers are migrated.
+1. Add Tag and StatusBadge while migrating their first domain consumers.
+2. Continue replacing remaining Inspector-native selects, inputs and textareas
+   with the shared controls in focused slices.
 3. Continue through resizing, overlays, collections, domain UI and application
    audit.
 
