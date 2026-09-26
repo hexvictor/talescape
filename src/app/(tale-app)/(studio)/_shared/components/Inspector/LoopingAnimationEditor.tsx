@@ -1,11 +1,15 @@
 "use client";
 
 import { Repeat2 } from "lucide-react";
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { AmbientAnimationSelection } from "~/app/(tale-app)/_shared/types";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import { AnimationSelectionEditor } from "./AnimationSelectionEditor";
 
 export function LoopingAnimationsGroup({
@@ -72,42 +76,53 @@ export function LoopingAnimationEditor({
 				{frameOptions?.length ? (
 					<div className="grid grid-cols-2 gap-2 border border-foreground/10 bg-background/35 p-2">
 						<Setting label="Starts at Frame">
-							<select
-								className={settingClassName}
-								value={selection.startFrameId ?? ""}
-								onChange={(event) =>
+							<Select
+								aria-label="Starts at Frame"
+								value={selection.startFrameId ?? "__first__"}
+								onValueChange={(startFrameId) =>
 									onChange({
 										...selection,
-										startFrameId: event.target.value || null,
+										startFrameId:
+											startFrameId === "__first__" ? null : startFrameId,
 									})
 								}
 							>
-								<option value="">First Frame</option>
-								{frameOptions.map((frame) => (
-									<option key={frame.id} value={frame.id}>
-										{frame.label}
-									</option>
-								))}
-							</select>
+								<SelectTrigger className="w-full" density="compact">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="__first__">First Frame</SelectItem>
+									{frameOptions.map((frame) => (
+										<SelectItem key={frame.id} value={frame.id}>
+											{frame.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</Setting>
 						<Setting label="Ends at Frame">
-							<select
-								className={settingClassName}
-								value={selection.endFrameId ?? ""}
-								onChange={(event) =>
+							<Select
+								aria-label="Ends at Frame"
+								value={selection.endFrameId ?? "__last__"}
+								onValueChange={(endFrameId) =>
 									onChange({
 										...selection,
-										endFrameId: event.target.value || null,
+										endFrameId: endFrameId === "__last__" ? null : endFrameId,
 									})
 								}
 							>
-								<option value="">Last Frame</option>
-								{frameOptions.map((frame) => (
-									<option key={frame.id} value={frame.id}>
-										{frame.label}
-									</option>
-								))}
-							</select>
+								<SelectTrigger className="w-full" density="compact">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="__last__">Last Frame</SelectItem>
+									{frameOptions.map((frame) => (
+										<SelectItem key={frame.id} value={frame.id}>
+											{frame.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</Setting>
 					</div>
 				) : null}

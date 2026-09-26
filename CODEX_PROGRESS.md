@@ -73,6 +73,10 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   to distinguish lifecycle status from categorical tags.
 - Removed the final direct application dependency on Radix Slot; it remains only
   as a transitive dependency of the not-yet-migrated Radix overlays.
+- Migrated Element Content text, textarea, media playback, activation scope,
+  volume and looping controls to shared compact form primitives.
+- Migrated animation selection preset controls, carry-state toggles, hover
+  duration, loop Frame bounds and editor actions to shared controls and Buttons.
 
 ## Files changed / components / stories
 
@@ -97,8 +101,8 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Remaining migration / Radix
 
-Composites and broader application migration remain. Source imports of Radix now
-remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
+Composites and broader application migration remain. Direct source imports of
+Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
 
 ## Checks and known limitations
 
@@ -123,6 +127,8 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
   Storybook production build also passes after the Library display migration.
 - A frozen offline pnpm install confirms package.json and pnpm-lock.yaml agree
   after removing the direct Radix Slot dependency.
+- Element Content and animation-selection migrations pass targeted Biome checks,
+  the 68-test unit suite, Storybook production build and 58 browser stories.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.

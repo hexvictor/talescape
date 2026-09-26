@@ -3,12 +3,21 @@
 import {
 	DebugCard,
 	Setting,
-	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
 	ResolvedTaleElement,
 	TaleElement,
 } from "~/app/(tale-app)/_shared/types";
+import { Checkbox } from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import Textarea from "~/components/ui/textarea";
 import { ImageUploadSetting } from "../ImageUploadSetting";
 
 /**
@@ -150,16 +159,16 @@ export function ElementContentSettings({
 						onChange={(src) => onChange((item) => ({ ...item, src }))}
 					/>
 					<Setting label="Playback behavior">
-						<select
-							className={settingClassName}
+						<Select
+							aria-label="Playback behavior"
 							value={element.mediaPlayback?.mode ?? "controls"}
-							onChange={(event) =>
+							onValueChange={(mode) =>
 								onChange((item) => ({
 									...item,
 									mediaPlayback: {
 										loop: item.mediaPlayback?.loop ?? false,
 										maxVolume: item.mediaPlayback?.maxVolume ?? 1,
-										mode: event.target.value as NonNullable<
+										mode: mode as NonNullable<
 											TaleElement["mediaPlayback"]
 										>["mode"],
 										scope: item.mediaPlayback?.scope ?? "scene",
@@ -167,38 +176,51 @@ export function ElementContentSettings({
 								}))
 							}
 						>
-							<option value="controls">Visible controls</option>
-							<option value="click">Play on click</option>
-							<option value="onEnter">Play when visible</option>
-							<option value="scrollVolume">Volume follows visibility</option>
-						</select>
+							<SelectTrigger className="w-full" density="compact">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="controls">Visible controls</SelectItem>
+								<SelectItem value="click">Play on click</SelectItem>
+								<SelectItem value="onEnter">Play when visible</SelectItem>
+								<SelectItem value="scrollVolume">
+									Volume follows visibility
+								</SelectItem>
+							</SelectContent>
+						</Select>
 					</Setting>
 					<Setting label="Activation scope">
-						<select
-							className={settingClassName}
+						<Select
+							aria-label="Activation scope"
 							value={element.mediaPlayback?.scope ?? "scene"}
-							onChange={(event) =>
+							onValueChange={(scope) =>
 								onChange((item) => ({
 									...item,
 									mediaPlayback: {
 										loop: item.mediaPlayback?.loop ?? false,
 										maxVolume: item.mediaPlayback?.maxVolume ?? 1,
 										mode: item.mediaPlayback?.mode ?? "onEnter",
-										scope: event.target.value as NonNullable<
+										scope: scope as NonNullable<
 											TaleElement["mediaPlayback"]
 										>["scope"],
 									},
 								}))
 							}
 						>
-							<option value="scene">Whole Scene</option>
-							<option value="frame">Specific Frame</option>
-							<option value="element">Element position</option>
-						</select>
+							<SelectTrigger className="w-full" density="compact">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="scene">Whole Scene</SelectItem>
+								<SelectItem value="frame">Specific Frame</SelectItem>
+								<SelectItem value="element">Element position</SelectItem>
+							</SelectContent>
+						</Select>
 					</Setting>
 					<Setting label="Maximum volume">
-						<input
-							className={settingClassName}
+						<Input
+							aria-label="Maximum volume"
+							density="compact"
 							max={1}
 							min={0}
 							step={0.05}
@@ -217,24 +239,23 @@ export function ElementContentSettings({
 							}
 						/>
 					</Setting>
-					<label className="flex items-center gap-2 text-foreground/68 text-xs">
-						<input
-							checked={element.mediaPlayback?.loop ?? false}
-							type="checkbox"
-							onChange={(event) =>
-								onChange((item) => ({
-									...item,
-									mediaPlayback: {
-										loop: event.target.checked,
-										maxVolume: item.mediaPlayback?.maxVolume ?? 1,
-										mode: item.mediaPlayback?.mode ?? "controls",
-										scope: item.mediaPlayback?.scope ?? "scene",
-									},
-								}))
-							}
-						/>
+					<Checkbox
+						density="compact"
+						isSelected={element.mediaPlayback?.loop ?? false}
+						onChange={(loop) =>
+							onChange((item) => ({
+								...item,
+								mediaPlayback: {
+									loop,
+									maxVolume: item.mediaPlayback?.maxVolume ?? 1,
+									mode: item.mediaPlayback?.mode ?? "controls",
+									scope: item.mediaPlayback?.scope ?? "scene",
+								},
+							}))
+						}
+					>
 						Loop media
-					</label>
+					</Checkbox>
 				</>
 			) : null}
 		</DebugCard>
@@ -261,8 +282,9 @@ function InputSetting({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				type="text"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
@@ -291,8 +313,10 @@ function TextAreaSetting({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<textarea
-				className={`${settingClassName} min-h-28 resize-y py-2`}
+			<Textarea
+				aria-label={label}
+				className="min-h-28"
+				density="compact"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>

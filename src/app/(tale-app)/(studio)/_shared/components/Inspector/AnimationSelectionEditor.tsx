@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
 	DebugCard,
-	settingClassName,
+	Setting,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { getTaleAnimationPresets } from "~/app/(tale-app)/_shared/services/taleLookups";
@@ -13,6 +13,16 @@ import type {
 	AnimationSelection,
 	AnimationTrack,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import {
 	AnimationTrackFields,
 	createAnimationTrackId,
@@ -91,18 +101,17 @@ export function AnimationSelectionEditor({
 		>
 			{timingMode === "timeline" ? (
 				<div className="col-span-2 grid gap-2 border-foreground/8 border-b pb-3">
-					<label className="flex items-start gap-2 text-foreground/68 text-xs">
-						<input
-							checked={currentSelection.carryEndStateForward ?? false}
-							className="mt-0.5 accent-primary"
-							type="checkbox"
-							onChange={(event) =>
-								onChange({
-									...currentSelection,
-									carryEndStateForward: event.target.checked,
-								})
-							}
-						/>
+					<Checkbox
+						className="items-start text-foreground/68"
+						density="compact"
+						isSelected={currentSelection.carryEndStateForward ?? false}
+						onChange={(carryEndStateForward) =>
+							onChange({
+								...currentSelection,
+								carryEndStateForward,
+							})
+						}
+					>
 						<span>
 							<span className="block font-semibold text-foreground">
 								Carry end state into next phase
@@ -111,15 +120,15 @@ export function AnimationSelectionEditor({
 								The next animation starts from this phase's completed values.
 							</span>
 						</span>
-					</label>
+					</Checkbox>
 				</div>
 			) : null}
 			{timingMode === "hover" ? (
 				<div className="col-span-2">
-					<label className="grid gap-1 font-bold text-[10px] text-foreground/55 uppercase">
-						Duration (seconds)
-						<input
-							className={settingClassName}
+					<Setting label="Duration (seconds)">
+						<Input
+							aria-label="Duration (seconds)"
+							density="compact"
 							min={0.05}
 							step={0.05}
 							type="number"
@@ -131,34 +140,42 @@ export function AnimationSelectionEditor({
 								})
 							}
 						/>
-					</label>
+					</Setting>
 				</div>
 			) : null}
 			{children ? <div className="col-span-2">{children}</div> : null}
 			<div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
-				<select
+				<Select
 					aria-label={`${title} official animation`}
-					className={settingClassName}
 					value={presetId}
-					onChange={(event) => setPresetId(event.target.value)}
+					onValueChange={setPresetId}
 				>
-					{presets.map((preset) => (
-						<option key={preset.id} value={preset.id}>
-							{preset.name}
-						</option>
-					))}
-				</select>
-				<button
+					<SelectTrigger className="w-full" density="compact">
+						<SelectValue placeholder="Choose animation" />
+					</SelectTrigger>
+					<SelectContent>
+						{presets.map((preset) => (
+							<SelectItem key={preset.id} value={preset.id}>
+								{preset.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				<Button
 					type="button"
-					className="grid h-9 w-9 place-items-center rounded border border-foreground/12 text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
+					aria-label="Copy official animation tracks"
+					className="size-9"
+					motion="flat"
+					size="icon"
 					title="Copy official animation tracks"
+					variant="outline"
 					onClick={() => {
 						const preset = presets.find((item) => item.id === presetId);
 						if (preset) appendTracks(preset.tracks);
 					}}
 				>
 					<Plus size={14} />
-				</button>
+				</Button>
 			</div>
 			{currentSelection.animations.map((track, index) => (
 				<AnimationTrackFields
@@ -184,9 +201,11 @@ export function AnimationSelectionEditor({
 					}
 				/>
 			))}
-			<button
+			<Button
 				type="button"
-				className="col-span-2 flex h-9 items-center justify-center gap-2 rounded border border-foreground/14 border-dashed text-foreground/52 text-xs hover:border-foreground/25 hover:text-foreground"
+				className="col-span-2 h-9 border-dashed text-foreground/62"
+				motion="flat"
+				variant="outline"
 				onClick={() =>
 					appendTracks([
 						{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
@@ -195,7 +214,7 @@ export function AnimationSelectionEditor({
 			>
 				<Plus size={13} />
 				Add custom track
-			</button>
+			</Button>
 		</DebugCard>
 	);
 }
