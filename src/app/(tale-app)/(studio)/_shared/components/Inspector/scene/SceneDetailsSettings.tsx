@@ -7,6 +7,7 @@ import type {
 import { Button } from "~/components/ui/button";
 import Input from "~/components/ui/input";
 import Label from "~/components/ui/label";
+import { Panel } from "~/components/ui/panel";
 import Textarea from "~/components/ui/textarea";
 
 export function SceneDetailsSettings({
@@ -22,7 +23,12 @@ export function SceneDetailsSettings({
 }): React.JSX.Element {
 	return (
 		<div className="space-y-3">
-			<section className="tale-ui-panel grid gap-3 p-3">
+			<Panel
+				appearance="comic"
+				data-studio-component="SceneDetailsSection"
+				data-studio-role="inspector-section"
+				className="grid gap-3 p-3"
+			>
 				<StudioField
 					id={`scene-${scene.id}-name`}
 					label="Scene name"
@@ -48,7 +54,7 @@ export function SceneDetailsSettings({
 						}
 					/>
 				</div>
-			</section>
+			</Panel>
 
 			<div className="grid grid-cols-1 gap-2">
 				{onAdd ? (

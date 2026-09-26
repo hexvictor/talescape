@@ -12,6 +12,8 @@ import type {
 	SceneContainer,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
+import { SectionHeader } from "~/components/ui/section-header";
 import {
 	Select,
 	SelectContent,
@@ -48,13 +50,16 @@ export function SceneContainerSettings({
 	if (variant === "style") {
 		return (
 			<div className="space-y-4">
-				<section className="tale-ui-panel grid gap-3 p-3 text-xs">
-					<div>
-						<p className="font-black text-xs uppercase">Frame layout</p>
-						<p className="mt-1 text-[10px] text-foreground/48">
-							Controls how Frames are arranged inside the Scene container.
-						</p>
-					</div>
+				<Panel
+					appearance="comic"
+					data-studio-component="SceneFrameLayoutSection"
+					data-studio-role="inspector-section"
+					className="grid gap-3 p-3 text-xs"
+				>
+					<SectionHeader
+						title="Frame layout"
+						description="Controls how Frames are arranged inside the Scene container."
+					/>
 					<div className="@container/scene-container grid min-w-0 @min-[34rem]/scene-container:grid-cols-2 grid-cols-1 gap-3">
 						<div className="grid min-w-0 gap-1">
 							<span>Display</span>
@@ -102,7 +107,7 @@ export function SceneContainerSettings({
 							</Select>
 						</div>
 					</div>
-				</section>
+				</Panel>
 				<StyleSettings
 					layoutMode={
 						container.mode === "stack" || container.mode === "free"

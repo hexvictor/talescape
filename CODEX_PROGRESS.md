@@ -9,7 +9,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 5 complete: React Aria form controls and representative Studio migration.
+Phase 6 in progress: structural primitives and Inspector composition.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
@@ -44,6 +44,12 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   components as the representative Studio slice.
 - Migrated the Library tale explorer to the shared SearchField and named Select
   controls as the representative shared application slice.
+- Added semantic Panel, PanelHeader, PanelHeading, PanelContent, SectionHeader,
+  PropertyGroup and PropertyRow primitives with compact/responsive stories.
+- Migrated the Scene Details, Frame Layout and Scene Structure Inspector sections
+  to shared structural primitives while preserving their comic panel treatment.
+- Removed the unused Radix Label and Select packages and their lockfile-only
+  transitive dependencies.
 
 ## Files changed / components / stories
 
@@ -70,9 +76,6 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 Composites and broader application migration remain. Source imports of Radix now
 remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
-The label/select packages are no longer imported by source, but dependency cleanup
-is deferred because the package manager attempted registry access in the offline
-workspace.
 
 ## Checks and known limitations
 
@@ -87,6 +90,7 @@ workspace.
   Fonts because this workspace has no external DNS access.
 - `pnpm test:storybook` passed after the control migration: 3 story files and 46
   Chromium tests, including opening and changing the React Aria Select.
+- Structural stories pass in Chromium: 4 story files and 50 tests total.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -94,12 +98,12 @@ workspace.
 
 ## Exact next steps
 
-1. Add display and structural primitives with colocated stories.
-2. Compose those primitives into the Inspector shell and repeated field/section
-   patterns without introducing domain state into generic UI.
-3. Continue through overlays, collections, domain UI and application audit.
-4. Remove unused Radix label/select dependencies when lockfile maintenance can run
-   without registry access.
+1. Add shared Tabs and Breadcrumbs primitives with compact/responsive stories.
+2. Migrate InspectorHeader and DebugTabs presentation without moving Studio state
+   into generic UI or changing Reader debug behavior unexpectedly.
+3. Add the remaining stable display primitives as real consumers migrate.
+4. Continue through resizing, overlays, collections, domain UI and application
+   audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should
