@@ -1,6 +1,11 @@
-import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
-
+import {
+	Children,
+	type ReactElement,
+	type ReactNode,
+	cloneElement,
+	isValidElement,
+} from "react";
 import cn from "~/lib/utils/cn";
 
 const badgeVariants = cva(
@@ -14,32 +19,117 @@ const badgeVariants = cva(
 					"border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
 				destructive:
 					"border-transparent bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+				info: "border-ts-cyan bg-ts-cyan/12 text-foreground",
 				outline:
 					"text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+				success: "border-ts-green bg-ts-green/12 text-foreground",
+				warning: "border-ts-yellow bg-ts-yellow/20 text-foreground",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-		},
+		defaultVariants: { variant: "default" },
 	},
 );
 
+export type BadgeProps = React.ComponentProps<"span"> &
+	VariantProps<typeof badgeVariants> & {
+		asChild?: boolean;
+		"data-slot"?: string;
+	};
+
 function Badge({
-	className,
-	variant,
 	asChild = false,
+	children,
+	className,
+	"data-slot": dataSlot = "badge",
+	variant,
 	...props
-}: React.ComponentProps<"span"> &
-	VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-	const Comp = asChild ? Slot : "span";
+}: BadgeProps): React.JSX.Element {
+	const resolvedClassName = cn(badgeVariants({ variant }), className);
+
+	if (asChild) {
+		const child = Children.only(children);
+		if (!isValidElement(child)) {
+			throw new Error("Badge with asChild requires one valid React element.");
+		}
+
+		const element = child as ReactElement<{
+			className?: string;
+			"data-slot"?: string;
+		}>;
+		return cloneElement(element, {
+			...props,
+			"data-slot": dataSlot,
+			className: cn(resolvedClassName, element.props.className),
+		});
+	}
 
 	return (
-		<Comp
-			data-slot="badge"
-			className={cn(badgeVariants({ variant }), className)}
+		<span {...props} data-slot={dataSlot} className={resolvedClassName}>
+			{children}
+		</span>
+	);
+}
+
+export type TagProps = Omit<BadgeProps, "variant">;
+
+function Tag({ className, ...props }: TagProps): React.JSX.Element {
+	return (
+		<Badge
 			{...props}
+			data-slot="tag"
+			variant="outline"
+			className={cn(
+				"rounded-full border text-foreground normal-case tracking-normal",
+				className,
+			)}
 		/>
 	);
 }
 
-export { Badge };
+export type StatusTone = "danger" | "info" | "neutral" | "success" | "warning";
+
+export type StatusBadgeProps = Omit<BadgeProps, "children" | "variant"> & {
+	children?: ReactNode;
+	status: string;
+	tone?: StatusTone;
+};
+
+const statusToneByName: Record<string, StatusTone> = {
+	approved: "success",
+	archived: "neutral",
+	deleted: "danger",
+	draft: "neutral",
+	private: "neutral",
+	published: "success",
+	rejected: "danger",
+	review: "warning",
+};
+
+const statusVariantByTone = {
+	danger: "destructive",
+	info: "info",
+	neutral: "outline",
+	success: "success",
+	warning: "warning",
+} as const;
+
+function StatusBadge({
+	children,
+	status,
+	tone,
+	...props
+}: StatusBadgeProps): React.JSX.Element {
+	const resolvedTone = tone ?? statusToneByName[status.toLowerCase()] ?? "info";
+
+	return (
+		<Badge
+			{...props}
+			data-slot="status-badge"
+			variant={statusVariantByTone[resolvedTone]}
+		>
+			{children ?? status}
+		</Badge>
+	);
+}
+
+export { Badge, StatusBadge, Tag };

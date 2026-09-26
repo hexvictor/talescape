@@ -1,7 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Badge } from "~/components/data-display/badge";
+import { Tag } from "~/components/data-display/badge";
 import { EmptyState } from "~/components/data-display/empty-state";
 import { ComicPanel } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
@@ -70,9 +70,7 @@ export function LibraryNodeList({
 							</div>
 							<div className="flex flex-wrap gap-2 lg:justify-end">
 								{row.badges.map((badge) => (
-									<Badge key={badge} variant="outline">
-										{badge}
-									</Badge>
+									<Tag key={badge}>{badge}</Tag>
 								))}
 							</div>
 						</div>

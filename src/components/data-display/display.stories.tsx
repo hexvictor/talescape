@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { ImageIcon, Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { Badge, StatusBadge, Tag } from "./badge";
 import { EmptyState } from "./empty-state";
 import { Skeleton } from "./skeleton";
 import { Thumbnail } from "./thumbnail";
@@ -8,6 +9,14 @@ import { Thumbnail } from "./thumbnail";
 function DisplayShowcase(): React.JSX.Element {
 	return (
 		<div className="grid max-w-2xl gap-6">
+			<div className="flex flex-wrap items-center gap-2">
+				<Badge>Official</Badge>
+				<StatusBadge status="published" />
+				<StatusBadge status="review" />
+				<StatusBadge status="rejected" />
+				<Tag>Fantasy</Tag>
+				<Tag>Branching narrative</Tag>
+			</div>
 			<div className="flex flex-wrap gap-3">
 				<Thumbnail
 					className="aspect-video w-40"

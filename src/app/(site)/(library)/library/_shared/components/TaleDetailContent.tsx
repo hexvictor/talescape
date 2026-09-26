@@ -7,7 +7,7 @@ import {
 	Route,
 } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "~/components/data-display/badge";
+import { Badge, StatusBadge, Tag } from "~/components/data-display/badge";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
@@ -75,9 +75,9 @@ function TaleHeader({ detail }: { detail: LibraryTaleDetail }) {
 					{detail.tale.description}
 				</p>
 				<div className="mt-4 flex flex-wrap gap-2">
-					<Badge>{detail.tale.type}</Badge>
-					<Badge variant="secondary">{detail.tale.status}</Badge>
-					<Badge variant="outline">{detail.tale.visibility}</Badge>
+					<Tag>{detail.tale.type}</Tag>
+					<StatusBadge status={detail.tale.status} />
+					<Tag>{detail.tale.visibility}</Tag>
 					{detail.tale.book ? (
 						<Badge asChild variant="outline">
 							<Link href={`/library/book/${detail.tale.book.id}`}>

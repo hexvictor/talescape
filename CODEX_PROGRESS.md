@@ -67,6 +67,12 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   shared structure while preserving Reader instrumentation and comic geometry.
 - Migrated core Inspector text, number and dimension value editors to shared
   compact Input and Select controls.
+- Added shared Tag and status-aware StatusBadge display components, including
+  semantic success, warning, danger, neutral and fallback information tones.
+- Migrated Library tale cards, book cards, node metadata and tale detail headers
+  to distinguish lifecycle status from categorical tags.
+- Removed the final direct application dependency on Radix Slot; it remains only
+  as a transitive dependency of the not-yet-migrated Radix overlays.
 
 ## Files changed / components / stories
 
@@ -113,6 +119,10 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 - Display stories pass in Chromium: 6 story files and 57 tests total.
 - Inspector structure stories pass in Chromium: 6 story files and 58 tests total,
   including disclosure expand/collapse and accessible numeric field lookup.
+- Tag and status stories pass in the same 6-file, 58-test Chromium suite; the
+  Storybook production build also passes after the Library display migration.
+- A frozen offline pnpm install confirms package.json and pnpm-lock.yaml agree
+  after removing the direct Radix Slot dependency.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -120,10 +130,11 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 
 ## Exact next steps
 
-1. Add Tag and StatusBadge while migrating their first domain consumers.
-2. Continue replacing remaining Inspector-native selects, inputs and textareas
+1. Continue replacing remaining Inspector-native selects, inputs and textareas
    with the shared controls in focused slices.
-3. Continue through resizing, overlays, collections, domain UI and application
+2. Migrate resizing and overlay primitives, then remove the remaining direct
+   Radix source dependencies where behavior can be preserved.
+3. Continue through collections, domain UI and the broader application
    audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
