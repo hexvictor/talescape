@@ -34,9 +34,6 @@ export function TaleCard({
 			accent={accents[index % accents.length] ?? "var(--talescape-cyan)"}
 			className={cn(
 				"group hover:-translate-y-1 min-h-64 overflow-hidden transition-transform xl:grid xl:grid-cols-[1.05fr_0.95fr]",
-				index === 0 && "-rotate-1",
-				index === 1 && "rotate-1",
-				index === 2 && "-rotate-[0.5deg]",
 			)}
 			decoration={index === 1 ? "strikes" : "dots"}
 			shape={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}

@@ -4,12 +4,13 @@ import type {
 	ResolvedTalePage,
 	ResolvedTalePart,
 	ResolvedTalePath,
-	TaleBlock,
 	TaleBranch,
 	TaleEntry,
 	TalePage,
 	TalePart,
 	TalePath,
+	TaleScene,
+	TaleKeyframe,
 } from "../../types";
 import { adjacentIds, first, groupIdsBy, indexPosition, last } from "./shared";
 
@@ -18,13 +19,13 @@ import { adjacentIds, first, groupIdsBy, indexPosition, last } from "./shared";
  *
  * @param branches - Ordered raw branches.
  * @param paths - Raw tale paths.
- * @param blockIdsByBranch - Block ids grouped by branch.
+ * @param sceneIdsByBranch - Scene ids grouped by branch.
  * @returns Resolved branches.
  */
 export function resolveBranches(
 	branches: TaleBranch[],
 	paths: TalePath[],
-	blockIdsByBranch: Record<string, string[]>,
+	sceneIdsByBranch: Record<string, string[]>,
 ): ResolvedTaleBranch[] {
 	const branchIds = branches.map((branch) => branch.id);
 	const outgoingByBranch = groupIdsBy(
@@ -40,13 +41,13 @@ export function resolveBranches(
 	return branches.map((branch, index) => {
 		const outgoingPathIds = outgoingByBranch[branch.id] ?? [];
 		const incomingPathIds = incomingByBranch[branch.id] ?? [];
-		const blockIds = blockIdsByBranch[branch.id] ?? [];
+		const sceneIds = sceneIdsByBranch[branch.id] ?? [];
 		const links = adjacentIds(branchIds, branch.id);
 		return {
 			...branch,
-			blockIds,
-			bounds: { firstBlockId: first(blockIds), lastBlockId: last(blockIds) },
-			counts: { blocks: blockIds.length },
+			sceneIds,
+			bounds: { firstSceneId: first(sceneIds), lastSceneId: last(sceneIds) },
+			counts: { scenes: sceneIds.length },
 			links: {
 				incomingPathIds,
 				nextBranchId: links.next,
@@ -69,21 +70,28 @@ export function resolveBranches(
  * Formats entries and their page/block relationships.
  *
  * @param entries - Ordered raw entries.
- * @param blocks - Raw tale blocks.
+ * @param scenes - Raw tale scenes.
  * @param pages - Raw tale pages.
  * @returns Resolved entries.
  */
 export function resolveEntries(
 	entries: TaleEntry[],
-	blocks: TaleBlock[],
+	scenes: TaleScene[],
 	pages: TalePage[],
+	keyframes: TaleKeyframe[] = [],
 ): ResolvedTaleEntry[] {
 	const entryIds = entries.map((entry) => entry.id);
-	const blockIdsByEntry = groupIdsBy(
-		blocks,
-		(item) => item.entryId,
-		(item) => item.id,
+	const pageById = new Map(pages.map((page) => [page.id, page]));
+	const sceneIdsByEntry = groupUniqueSceneIds(keyframes, (step) =>
+		step.pageId ? pageById.get(step.pageId)?.entryId : undefined,
 	);
+	for (const scene of scenes) {
+		if (!scene.entryId) continue;
+		sceneIdsByEntry[scene.entryId] ??= [];
+		if (!sceneIdsByEntry[scene.entryId]?.includes(scene.id)) {
+			sceneIdsByEntry[scene.entryId]?.push(scene.id);
+		}
+	}
 	const pageIdsByEntry = groupIdsBy(
 		pages,
 		(item) => item.entryId,
@@ -113,15 +121,15 @@ export function resolveEntries(
 	return entries.map((entry, index) => {
 		const globalLinks = adjacentIds(entryIds, entry.id);
 		const partLinks = adjacentIds(entriesByPart[entry.partId] ?? [], entry.id);
-		const blockIds = blockIdsByEntry[entry.id] ?? [];
+		const sceneIds = sceneIdsByEntry[entry.id] ?? [];
 		const pageIds = pageIdsByEntry[entry.id] ?? [];
 		return {
 			...entry,
-			blockIds,
+			sceneIds,
 			bounds: {
-				firstBlockId: first(blockIds),
+				firstSceneId: first(sceneIds),
 				firstPageId: first(pageIds),
-				lastBlockId: last(blockIds),
+				lastSceneId: last(sceneIds),
 				lastPageId: last(pageIds),
 			},
 			chapter: {
@@ -130,7 +138,7 @@ export function resolveEntries(
 				number: chapterNumberById.get(entry.id) ?? null,
 			},
 			pageIds,
-			counts: { blocks: blockIds.length, pages: pageIds.length },
+			counts: { scenes: sceneIds.length, pages: pageIds.length },
 			links: {
 				nextEntryId: globalLinks.next,
 				nextEntryIdInPart: partLinks.next,
@@ -153,13 +161,14 @@ export function resolveEntries(
  *
  * @param pages - Raw tale pages.
  * @param entries - Raw tale entries.
- * @param blocks - Raw tale blocks.
+ * @param scenes - Raw tale scenes.
  * @returns Resolved pages.
  */
 export function resolvePages(
 	pages: TalePage[],
 	_entries: TaleEntry[],
-	blocks: TaleBlock[],
+	scenes: TaleScene[],
+	keyframes: TaleKeyframe[] = [],
 ): ResolvedTalePage[] {
 	const pageIds = pages.map((page) => page.id);
 	const pagesByEntry = groupIdsBy(
@@ -172,11 +181,18 @@ export function resolvePages(
 		(item) => item.partId,
 		(item) => item.id,
 	);
-	const blockIdsByPage = groupIdsBy(
-		blocks,
+	const sceneIdsByPage = groupIdsBy(
+		scenes,
 		(item) => item.pageId,
 		(item) => item.id,
 	);
+	for (const step of keyframes) {
+		if (!step.pageId) continue;
+		sceneIdsByPage[step.pageId] ??= [];
+		if (!sceneIdsByPage[step.pageId]?.includes(step.sceneId)) {
+			sceneIdsByPage[step.pageId]?.push(step.sceneId);
+		}
+	}
 	const pageNumberById = new Map<string, number>();
 	let pageNumber = 0;
 	for (const page of pages) {
@@ -188,12 +204,12 @@ export function resolvePages(
 		const globalLinks = adjacentIds(pageIds, page.id);
 		const entryLinks = adjacentIds(pagesByEntry[page.entryId] ?? [], page.id);
 		const partLinks = adjacentIds(pagesByPart[page.partId] ?? [], page.id);
-		const blockIds = blockIdsByPage[page.id] ?? page.blockIds;
+		const sceneIds = sceneIdsByPage[page.id] ?? page.sceneIds;
 		return {
 			...page,
-			blockIds,
-			bounds: { firstBlockId: first(blockIds), lastBlockId: last(blockIds) },
-			counts: { blocks: blockIds.length },
+			sceneIds,
+			bounds: { firstSceneId: first(sceneIds), lastSceneId: last(sceneIds) },
+			counts: { scenes: sceneIds.length },
 			links: {
 				nextPageId: globalLinks.next,
 				nextPageIdInEntry: entryLinks.next,
@@ -223,14 +239,15 @@ export function resolvePages(
  * @param parts - Ordered raw parts.
  * @param entries - Raw tale entries.
  * @param pages - Raw tale pages.
- * @param blocks - Raw tale blocks.
+ * @param scenes - Raw tale scenes.
  * @returns Resolved parts.
  */
 export function resolveParts(
 	parts: TalePart[],
 	entries: TaleEntry[],
 	pages: TalePage[],
-	blocks: TaleBlock[],
+	scenes: TaleScene[],
+	keyframes: TaleKeyframe[] = [],
 ): ResolvedTalePart[] {
 	const partIds = parts.map((part) => part.id);
 	const entryIdsByPart = groupIdsBy(
@@ -243,31 +260,40 @@ export function resolveParts(
 		(item) => item.partId,
 		(item) => item.id,
 	);
-	const blockIdsByPart = groupIdsBy(
-		blocks,
+	const sceneIdsByPart = groupIdsBy(
+		scenes,
 		(item) => item.partId,
 		(item) => item.id,
 	);
+	const pageById = new Map(pages.map((page) => [page.id, page]));
+	for (const step of keyframes) {
+		const partId = step.pageId ? pageById.get(step.pageId)?.partId : undefined;
+		if (!partId) continue;
+		sceneIdsByPart[partId] ??= [];
+		if (!sceneIdsByPart[partId]?.includes(step.sceneId)) {
+			sceneIdsByPart[partId]?.push(step.sceneId);
+		}
+	}
 	return parts.map((part, index) => {
 		const links = adjacentIds(partIds, part.id);
 		const entryIds = entryIdsByPart[part.id] ?? [];
 		const pageIds = pageIdsByPart[part.id] ?? [];
-		const blockIds = blockIdsByPart[part.id] ?? [];
+		const sceneIds = sceneIdsByPart[part.id] ?? [];
 		return {
 			...part,
-			blockIds,
+			sceneIds,
 			bounds: {
-				firstBlockId: first(blockIds),
+				firstSceneId: first(sceneIds),
 				firstEntryId: first(entryIds),
 				firstPageId: first(pageIds),
-				lastBlockId: last(blockIds),
+				lastSceneId: last(sceneIds),
 				lastEntryId: last(entryIds),
 				lastPageId: last(pageIds),
 			},
 			entryIds,
 			pageIds,
 			counts: {
-				blocks: blockIds.length,
+				scenes: sceneIds.length,
 				entries: entryIds.length,
 				pages: pageIds.length,
 			},
@@ -292,4 +318,19 @@ export function resolvePaths(paths: TalePath[]): ResolvedTalePath[] {
 			links: { nextPathId: links.next, previousPathId: links.previous },
 		};
 	});
+}
+
+function groupUniqueSceneIds(
+	keyframes: TaleKeyframe[],
+	getGroupId: (step: TaleKeyframe) => string | undefined,
+): Record<string, string[]> {
+	const groups: Record<string, string[]> = {};
+	for (const step of keyframes) {
+		const groupId = getGroupId(step);
+		if (!groupId) continue;
+		groups[groupId] ??= [];
+		if (!groups[groupId]?.includes(step.sceneId))
+			groups[groupId]?.push(step.sceneId);
+	}
+	return groups;
 }

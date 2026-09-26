@@ -14,11 +14,11 @@ import { db } from "~/server/db";
 import {
 	authorPermissions,
 	authors,
-	blockPermissions,
+	scenePermissions,
 	bookPermissions,
 	books,
 	branchPermissions,
-	fragmentPermissions,
+	elementPermissions,
 	pathPermissions,
 	talePermissions,
 	tales,
@@ -120,7 +120,7 @@ export function branchAccessCondition(
 }
 
 export function blockAccessCondition(
-	blockIdColumn: AnyColumn,
+	sceneIdColumn: AnyColumn,
 	asset: {
 		isOfficial: AnyColumn;
 		visibility: AnyColumn;
@@ -135,13 +135,13 @@ export function blockAccessCondition(
 		userId
 			? exists(
 					db
-						.select({ id: blockPermissions.id })
-						.from(blockPermissions)
+						.select({ id: scenePermissions.id })
+						.from(scenePermissions)
 						.where(
 							and(
-								sql`${blockPermissions.blockId} = ${blockIdColumn}`,
-								eq(blockPermissions.userId, userId),
-								readablePermissionOverlap(blockPermissions.permissionTypes),
+								sql`${scenePermissions.sceneId} = ${sceneIdColumn}`,
+								eq(scenePermissions.userId, userId),
+								readablePermissionOverlap(scenePermissions.permissionTypes),
 							),
 						),
 				)
@@ -150,7 +150,7 @@ export function blockAccessCondition(
 }
 
 export function fragmentAccessCondition(
-	fragmentIdColumn: AnyColumn,
+	elementIdColumn: AnyColumn,
 	asset: {
 		isOfficial: AnyColumn;
 		visibility: AnyColumn;
@@ -165,13 +165,13 @@ export function fragmentAccessCondition(
 		userId
 			? exists(
 					db
-						.select({ id: fragmentPermissions.id })
-						.from(fragmentPermissions)
+						.select({ id: elementPermissions.id })
+						.from(elementPermissions)
 						.where(
 							and(
-								sql`${fragmentPermissions.fragmentId} = ${fragmentIdColumn}`,
-								eq(fragmentPermissions.userId, userId),
-								readablePermissionOverlap(fragmentPermissions.permissionTypes),
+								sql`${elementPermissions.elementId} = ${elementIdColumn}`,
+								eq(elementPermissions.userId, userId),
+								readablePermissionOverlap(elementPermissions.permissionTypes),
 							),
 						),
 				)

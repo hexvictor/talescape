@@ -3,7 +3,7 @@ import {
 	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { ReaderStyle } from "~/app/(tale-app)/_shared/types";
-import { TextSetting } from "../InspectorValueFields";
+import { OptionalNumberSetting, TextSetting } from "../InspectorValueFields";
 
 export type StyleChangeHandler = (style: ReaderStyle) => void;
 
@@ -27,6 +27,11 @@ export function GapSettings({
 }): React.JSX.Element {
 	return (
 		<>
+			<OptionalNumberSetting
+				label="Gap"
+				value={style.gap}
+				onChange={(gap) => onChange({ ...style, gap })}
+			/>
 			<TextSetting
 				label="Column gap"
 				placeholder="16px"

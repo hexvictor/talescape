@@ -113,16 +113,9 @@ export function PageNavigator(): React.JSX.Element | null {
 	const travelToPage = (page: ReaderNavigationPage): void => {
 		pendingPageIndexRef.current = compiled.pageIndexById[page.id] ?? null;
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToBlock(page.firstBlockId, { motion: "travel" });
+		scrollApi?.scrollToKeyframe(page.firstKeyframeId, { motion: "travel" });
 		setOpen(false);
 	};
-
-	/**
-	 * Queues relative page navigation from the latest requested destination.
-	 *
-	 * @param direction - Relative page direction.
-	 * @returns Nothing.
-	 */
 	const travelToRelativePage = (direction: -1 | 1): void => {
 		const baseIndex = pendingPageIndexRef.current ?? pageIndex;
 		const targetIndex = Math.max(
@@ -133,20 +126,14 @@ export function PageNavigator(): React.JSX.Element | null {
 		if (!targetPage || targetIndex === baseIndex) return;
 		travelToPage(targetPage);
 	};
+
 	const paginatedCount = (navigationView?.pages ?? []).filter(
 		(page) => page.isPaginated,
 	).length;
-	const visibleBlockIds = (navigationView?.pages ?? []).flatMap(
-		(page) => page.blockIds,
-	);
-	const currentBlockNumber = Math.max(
-		1,
-		visibleBlockIds.indexOf(location.blockId) + 1,
-	);
 	const currentLabel =
 		currentPage.isPaginated && currentPage.number !== null
 			? `Page ${currentPage.number} of ${paginatedCount}`
-			: `${currentPage.label} · Block ${currentBlockNumber} of ${visibleBlockIds.length}`;
+			: currentPage.label;
 	const currentPartTheme = getReaderPartTheme(currentPage.partNumber);
 
 	return (
@@ -254,11 +241,11 @@ export function PageNavigator(): React.JSX.Element | null {
 								data-reader-role="previous-page-control"
 								type="button"
 								aria-label="Previous page"
-								className="reader-connected-tab reader-connected-tab-left -translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-8 w-8 place-items-center rounded-full border border-r-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:cursor-default disabled:text-foreground/20"
+								className="reader-connected-tab reader-connected-tab-left -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
 								disabled={!previous}
 								onClick={() => travelToRelativePage(-1)}
 							>
-								<ArrowLeft size={14} />
+								<ArrowLeft size={15} strokeWidth={2.5} />
 							</button>
 							<button
 								data-reader-component="PageNavigator"
@@ -282,11 +269,11 @@ export function PageNavigator(): React.JSX.Element | null {
 								data-reader-role="next-page-control"
 								type="button"
 								aria-label="Next page"
-								className="reader-connected-tab reader-connected-tab-right -translate-y-1/2 absolute top-1/2 left-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-8 w-8 place-items-center rounded-full border border-l-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:cursor-default disabled:text-foreground/20"
+								className="reader-connected-tab reader-connected-tab-right -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 left-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
 								disabled={!next}
 								onClick={() => travelToRelativePage(1)}
 							>
-								<ArrowRight size={14} />
+								<ArrowRight size={15} strokeWidth={2.5} />
 							</button>
 						</div>
 					</motion.div>

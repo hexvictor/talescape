@@ -124,6 +124,19 @@ function TaleDebugContent(): React.JSX.Element {
 	const currentPage = compiled?.pages.find(
 		(item) => item.id === location?.pageId,
 	);
+	const currentKeyframe = location
+		? tale.indexMap.keyframesById[location.keyframeId]
+		: undefined;
+	const currentScene = location
+		? tale.indexMap.scenesById[location.sceneId]
+		: undefined;
+	const frameKeyframeIds =
+		currentScene?.keyframeIds.filter(
+			(keyframeId) => tale.indexMap.keyframesById[keyframeId]?.frameId !== null,
+		) ?? [];
+	const currentFrameNumber = currentKeyframe?.frameId
+		? frameKeyframeIds.indexOf(currentKeyframe.id) + 1
+		: 0;
 	const currentPageLabel = page
 		? getReaderPageLabel(page, currentPage?.number ?? null)
 		: undefined;
@@ -137,7 +150,7 @@ function TaleDebugContent(): React.JSX.Element {
 				type="button"
 				aria-label="Open reader debug"
 				className={cn(
-					"pointer-events-auto absolute right-2 z-[70] flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 rounded-lg border border-foreground/12 bg-background/72 px-3 py-2 text-left text-primary shadow-2xl backdrop-blur-md transition-opacity duration-200 md:z-40",
+					"group/debug pointer-events-auto absolute right-2 z-[70] flex min-h-12 max-w-[min(34rem,calc(100vw-2rem))] items-center gap-2 border-2 border-foreground bg-card px-3 py-2 text-left text-primary shadow-[4px_4px_0_var(--secondary)] transition-all duration-200 md:z-40",
 					reduceInactiveUiOpacity
 						? "opacity-25 hover:opacity-100"
 						: "opacity-100",
@@ -148,17 +161,21 @@ function TaleDebugContent(): React.JSX.Element {
 				<Bug size={18} />
 				<span className="hidden min-w-0 sm:block">
 					<span className="block truncate font-semibold text-[11px] text-foreground/78">
-						{block?.title ?? taleTitle}
+						{currentFrameNumber > 0
+							? `Frame ${currentFrameNumber}: ${currentKeyframe?.title ?? currentKeyframe?.id}`
+							: `Scene ${block?.title ?? taleTitle}`}
 					</span>
-					<span className="block truncate text-[10px] text-foreground/42">
+					<span className="block max-h-0 truncate text-[10px] text-foreground/42 opacity-0 transition-all group-hover/debug:max-h-6 group-hover/debug:opacity-100">
 						{currentPageLabel ?? page?.type ?? "No page"} ·{" "}
 						{entry?.title ?? "No entry"}
 					</span>
-					<DebugLocationDetails
-						compiled={compiled}
-						location={location}
-						tale={tale}
-					/>
+					<span className="block max-h-0 overflow-hidden opacity-0 transition-all group-hover/debug:max-h-24 group-hover/debug:opacity-100">
+						<DebugLocationDetails
+							compiled={compiled}
+							location={location}
+							tale={tale}
+						/>
+					</span>
 				</span>
 			</button>
 		);
@@ -318,7 +335,7 @@ function TaleDebugContent(): React.JSX.Element {
 				</div>
 				<div className="flex items-center gap-1">
 					{DebugHeaderActions ? (
-						<DebugHeaderActions blockId={location?.blockId ?? null} />
+						<DebugHeaderActions sceneId={location?.sceneId ?? null} />
 					) : null}
 					<button
 						data-reader-component="TaleDebug"
@@ -348,7 +365,7 @@ function TaleDebugContent(): React.JSX.Element {
 					<SummaryPanel
 						anchors={compiled?.anchors ?? []}
 						blockType={
-							block ? (block.isChoiceBlock ? "choice" : "standard") : undefined
+							block ? (block.isChoiceScene ? "choice" : "standard") : undefined
 						}
 						blockTitle={block?.title}
 						branchTitle={branch?.title}
@@ -380,7 +397,7 @@ function TaleDebugContent(): React.JSX.Element {
 				) : null}
 				{activeTab === "anchors" ? (
 					<AnchorsPanel
-						activeBlockId={location?.blockId}
+						activeSceneId={location?.sceneId}
 						anchors={compiled?.anchors ?? []}
 					/>
 				) : null}

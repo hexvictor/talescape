@@ -13,6 +13,7 @@ export type ReaderUiVisibilityMode =
 export type UiSlice = {
 	ui: {
 		activityFadeDelaySeconds: number;
+		audioMuted: boolean;
 		debugVisible: boolean;
 		hiddenVisibilityMode: Exclude<ReaderUiVisibilityMode, "all">;
 		navigationPinsVisible: boolean;
@@ -20,6 +21,7 @@ export type UiSlice = {
 		reduceInactiveUiOpacity: boolean;
 		readerStatusVisible: boolean;
 		setActivityFadeDelaySeconds: (seconds: number) => void;
+		setAudioMuted: (muted: boolean) => void;
 		setDebugVisible: (visible: boolean) => void;
 		setViewportSize: (
 			viewport: ViewportSize,
@@ -53,6 +55,7 @@ export const createUiSlice =
 	(set) => ({
 		ui: {
 			activityFadeDelaySeconds: 4,
+			audioMuted: false,
 			debugVisible: runtime.application === "editor",
 			hiddenVisibilityMode: "hidden",
 			navigationPinsVisible: true,
@@ -63,6 +66,8 @@ export const createUiSlice =
 				set((state) => ({
 					ui: { ...state.ui, activityFadeDelaySeconds },
 				})),
+			setAudioMuted: (audioMuted) =>
+				set((state) => ({ ui: { ...state.ui, audioMuted } })),
 			setDebugVisible: (debugVisible) =>
 				set((state) => ({ ui: { ...state.ui, debugVisible } })),
 			setViewportSize: (viewport, viewportFrame = viewport) =>

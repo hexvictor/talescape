@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 import type { Anchor, CompiledReader, Tale } from "../types";
 import { filterTimelineVisibleAnchors } from "./readerTimelineVisibility";
 
-function createAnchor(blockId: string): Anchor {
-	return { blockId } as Anchor;
+function createAnchor(sceneId: string): Anchor {
+	return { sceneId } as Anchor;
 }
 
 function createTale(flowTypes: Record<string, "linear" | "stack">): Tale {
 	return {
 		indexMap: {
-			blocksById: Object.fromEntries(
-				Object.entries(flowTypes).map(([blockId, type]) => [
-					blockId,
+			scenesById: Object.fromEntries(
+				Object.entries(flowTypes).map(([sceneId, type]) => [
+					sceneId,
 					{
 						transition: {
 							flow: type === "stack" ? { type } : { direction: "down", type },
@@ -24,9 +24,9 @@ function createTale(flowTypes: Record<string, "linear" | "stack">): Tale {
 }
 
 describe("filterTimelineVisibleAnchors", () => {
-	it("treats later blocks as future during the opening transition", () => {
+	it("treats later scenes as future during the opening transition", () => {
 		const anchors = ["first", "stacked", "later"].map(createAnchor);
-		const anchorIndexByBlockId = {
+		const anchorIndexBySceneId = {
 			first: 0,
 			later: 2,
 			stacked: 1,
@@ -39,7 +39,7 @@ describe("filterTimelineVisibleAnchors", () => {
 		const timelineVisible = filterTimelineVisibleAnchors(
 			anchors,
 			-1,
-			anchorIndexByBlockId,
+			anchorIndexBySceneId,
 			new Set(["first"]),
 			tale,
 		);

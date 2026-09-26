@@ -1,3 +1,5 @@
+import type { FrameActiveLengthConfig } from "~/app/(tale-app)/_shared/types";
+
 export type Direction =
 	| "down"
 	| "down-left"
@@ -10,7 +12,7 @@ export type Direction =
 
 export type StackPlacementPosition = "center" | "end" | "start";
 
-export type BlockFlow =
+export type SceneFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
@@ -38,7 +40,7 @@ export type ReaderSpacing = {
 	value: number;
 };
 
-export type PreviousBlocksDuringEnter =
+export type PreviousScenesDuringEnter =
 	| "fadeActivePrevious"
 	| "fadeAllVisiblePrevious"
 	| "customAllVisiblePrevious"
@@ -46,7 +48,7 @@ export type PreviousBlocksDuringEnter =
 
 export type CameraPathPoint = { x: number; y: number };
 
-export type BlockCameraPath =
+export type SceneCameraPath =
 	| { mode: "auto" }
 	| { mode: "reverseFlow" }
 	| { direction: Direction; mode: "straight" }
@@ -115,11 +117,16 @@ export type AnimationTrack = AnimationTrackTiming &
 
 export type AnimationSelection = {
 	tracks: AnimationTrack[];
+	durationSeconds?: number;
+	applyInitialStateBeforeStart?: boolean;
+	carryEndStateForward?: boolean;
 };
 
 export type AmbientAnimationSelection = AnimationSelection & {
 	cycleDurationMs?: number;
+	endFrameId?: string | null;
 	playback?: "alternate" | "restart";
+	startFrameId?: string | null;
 };
 
 export type TimelineRange = { end: number; start: number };
@@ -212,16 +219,24 @@ export type ReaderSizeConfig = {
 export type ReadingConfig = {
 	animationConfig: {
 		ambient: AmbientAnimationSelection;
-		scrolling: AnimationSelection;
+		hover?: HoverAnimationSelection;
+		sceneActive?: AnimationSelection;
+		sceneActiveLoop?: AmbientAnimationSelection;
+		active: AnimationSelection;
+		activeLoop?: AmbientAnimationSelection;
 	};
-	autoplay?: import("~/app/(tale-app)/_shared/types").TaleBlockAutoplayConfig;
-	cameraPath?: BlockCameraPath;
+	autoplay?: import("~/app/(tale-app)/_shared/types").TaleSceneAutoplayConfig;
+	cameraPath?: SceneCameraPath;
 	pauses?: {
 		atEnd?: number;
 		atStart?: number;
 	};
-	readingLength: number | null;
-	readingLengthMode: "content" | "manual";
+	activeLength: number | null;
+	activeLengthMode: "content" | "manual";
+	transition?: {
+		introLength: number | null;
+		outroLength: number | null;
+	};
 };
 
 export type BlockSnapMode = "scroll-snap" | "snap" | "snap-off";
@@ -249,80 +264,128 @@ export type BlockSnapConfig = BlockSnapBehavior & {
 
 export type TransitionConfig = {
 	animationConfig: {
-		entering: AnimationSelection;
-		leaving: AnimationSelection;
+		intro: AnimationSelection;
+		introLoop?: AmbientAnimationSelection;
+		outro: AnimationSelection;
+		outroLoop?: AmbientAnimationSelection;
+		previousBridge?: AnimationSelection;
+		previousBridgeLoop?: AmbientAnimationSelection;
+		nextBridge?: AnimationSelection;
+		nextBridgeLoop?: AmbientAnimationSelection;
 		previousVisible?: AnimationSelection;
 	};
-	enteringLength: number | null;
-	flow: BlockFlow;
-	leavingLength: number | null;
-	previousBlocksDuringEnter?: PreviousBlocksDuringEnter;
+	introLength: number | null;
+	introEnabled?: boolean;
+	flow: SceneFlow;
+	outroLength: number | null;
+	outroEnabled?: boolean;
+	previousBridgeEnabled?: boolean;
+	previousBridgeLength?: number | null;
+	nextBridgeEnabled?: boolean;
+	nextBridgeLength?: number | null;
+	pauseAfterIntroEnabled?: boolean;
+	pauseBeforeOutroEnabled?: boolean;
+	previousScenesDuringEnter?: PreviousScenesDuringEnter;
 	snap?: BlockSnapConfig;
 };
 
-export type NodeChild =
-	| { fragmentId: string; type: "fragment" }
-	| { nodeId: string; type: "node" };
+export type FrameChild =
+	| { elementId: string; type: "element" }
+	| { frameId: string; type: "frame" };
 
-export type ReaderNodeConfig =
+export type ReaderFrameConfig = {
+	defaultElementStates?: Record<string, "active" | "inactive">;
+	kind?: "frame" | "group";
+	progression?: FrameActiveLengthConfig;
+	transition?: {
+		introEnabled?: boolean;
+		introLength?: number | null;
+		outroEnabled?: boolean;
+		outroLength?: number | null;
+		previousBridgeEnabled?: boolean;
+		previousBridgeLength?: number | null;
+		nextBridgeEnabled?: boolean;
+		nextBridgeLength?: number | null;
+	};
+	visibleDuringFrameIntro?: boolean;
+	visibleDuringFrameOutro?: boolean;
+	visibleDuringPreviousFrameBridge?: boolean;
+	visibleDuringNextFrameBridge?: boolean;
+	visibleBeforeIntro?: boolean;
+	visibleBeforeFrameIntro?: boolean;
+	visibleDuringSceneIntro?: boolean;
+	visibleDuringSceneOutro?: boolean;
+	visibleDuringPreviousBridge?: boolean;
+	visibleDuringNextBridge?: boolean;
+} & (
 	| {
 			align?: "center" | "end" | "start" | "stretch";
-			children: NodeChild[];
+			children: FrameChild[];
 			gap?: number;
 			id: string;
 			justify?: "center" | "end" | "space-between" | "start";
 			mode: "stack";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyleConfig;
 	  }
 	| {
 			align?: "center" | "end" | "start" | "stretch";
-			children: NodeChild[];
+			children: FrameChild[];
 			direction?: "column" | "column-reverse" | "row" | "row-reverse";
 			gap?: number;
 			id: string;
 			justify?: "center" | "end" | "space-between" | "start";
 			mode: "flex";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyleConfig;
 			wrap?: boolean;
 	  }
 	| {
-			children: NodeChild[];
+			children: FrameChild[];
 			columns?: number;
 			gap?: number;
 			id: string;
 			mode: "grid";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			rows?: number;
 			style?: ReaderStyleConfig;
 	  }
 	| {
-			children: NodeChild[];
+			children: FrameChild[];
 			id: string;
 			mode: "free";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyleConfig;
-	  };
+	  }
+);
 
-export type NodeAnimationConfig = FragmentAnimationConfig;
+export type FrameAnimationConfig = ElementAnimationConfig;
 
-export type NodeConfig = ReaderNodeConfig;
+export type KeyframeActionConfig = {
+	id: string;
+	animationTarget?: "children" | "self";
+	type: import("~/app/(tale-app)/_shared/types").KeyframeAction["type"];
+	targetId: string;
+	targetType: "element" | "frame";
+	animation?: AnimationSelection;
+};
 
-export type FragmentPlacementConfig =
+export type FrameConfig = ReaderFrameConfig;
+
+export type ElementPlacementConfig =
 	| {
 			mode: "normal";
-			nodeId?: string;
+			frameId?: string;
 			overflow?: "clip" | "visible";
 	  }
 	| {
 			horizontal: "center" | "left" | "right";
 			mode: "absolute" | "fixed";
-			nodeId?: string;
+			frameId?: string;
 			overflow?: "clip" | "visible";
 			unit: ReaderSizeUnit;
 			vertical: "bottom" | "center" | "top";
@@ -332,11 +395,32 @@ export type FragmentPlacementConfig =
 			zIndex?: number;
 	  };
 
-export type FragmentAnimationConfig = {
+export type ElementAnimationConfig = {
 	ambient: AmbientAnimationSelection;
-	entering: AnimationSelection;
-	leaving: AnimationSelection;
-	scrolling: AnimationSelection;
+	previousFrameBridge?: AnimationSelection;
+	previousFrameBridgeLoop?: AmbientAnimationSelection;
+	frameIntro?: AnimationSelection;
+	frameOutro?: AnimationSelection;
+	nextFrameBridge?: AnimationSelection;
+	nextFrameBridgeLoop?: AmbientAnimationSelection;
+	previousBridge?: AnimationSelection;
+	previousBridgeLoop?: AmbientAnimationSelection;
+	sceneIntro?: AnimationSelection;
+	sceneOutro?: AnimationSelection;
+	nextBridge?: AnimationSelection;
+	nextBridgeLoop?: AmbientAnimationSelection;
+	intro: AnimationSelection;
+	introLoop?: AmbientAnimationSelection;
+	hover?: HoverAnimationSelection;
+	outro: AnimationSelection;
+	outroLoop?: AmbientAnimationSelection;
+	active: AnimationSelection;
+	activeLoop?: AmbientAnimationSelection;
+};
+
+export type HoverAnimationSelection = {
+	tracks: AnimationTrack[];
+	durationSeconds?: number;
 };
 
 export type PresetTarget = "block" | "both" | "fragment";

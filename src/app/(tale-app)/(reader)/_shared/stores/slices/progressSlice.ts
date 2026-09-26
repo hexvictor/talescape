@@ -30,7 +30,11 @@ export type ProgressSlice = {
 		commitAnimations: (animationIds: string[]) => void;
 		data: SavedReaderProgress;
 		markLocationsReached: (locations: ReaderLocation[]) => void;
-		savePosition: (blockId: string, innerProgress: number) => void;
+		savePosition: (
+			sceneId: string,
+			keyframeId: string,
+			innerProgress: number,
+		) => void;
 		setSelectedBranchIds: (ids: string[]) => void;
 	};
 };
@@ -65,9 +69,13 @@ export const createProgressSlice =
 				const progress = get().progress.data;
 				const latest = locations.at(-1);
 				if (!latest) return;
-				const seenBlockIds = addUniqueValues(
-					progress.seenBlockIds,
-					locations.map((location) => location.blockId),
+				const seenSceneIds = addUniqueValues(
+					progress.seenSceneIds,
+					locations.map((location) => location.sceneId),
+				);
+				const seenKeyframeIds = addUniqueValues(
+					progress.seenKeyframeIds,
+					locations.map((location) => location.keyframeId),
 				);
 				const seenEntryIds = addUniqueValues(
 					progress.seenEntryIds,
@@ -82,8 +90,10 @@ export const createProgressSlice =
 					locations.map((location) => location.partId),
 				);
 				if (
-					progress.blockId === latest.blockId &&
-					stringArraysEqual(progress.seenBlockIds, seenBlockIds) &&
+					progress.sceneId === latest.sceneId &&
+					progress.keyframeId === latest.keyframeId &&
+					stringArraysEqual(progress.seenSceneIds, seenSceneIds) &&
+					stringArraysEqual(progress.seenKeyframeIds, seenKeyframeIds) &&
 					stringArraysEqual(progress.seenEntryIds, seenEntryIds) &&
 					stringArraysEqual(progress.seenPageIds, seenPageIds) &&
 					stringArraysEqual(progress.seenPartIds, seenPartIds)
@@ -92,9 +102,11 @@ export const createProgressSlice =
 				}
 				const next = {
 					...progress,
-					blockId: latest.blockId,
+					sceneId: latest.sceneId,
+					keyframeId: latest.keyframeId,
 					innerProgress: 0,
-					seenBlockIds,
+					seenSceneIds,
+					seenKeyframeIds,
 					seenEntryIds,
 					seenPageIds,
 					seenPartIds,
@@ -103,19 +115,21 @@ export const createProgressSlice =
 				writeProgress(tale.id, next);
 				set((state) => ({ progress: { ...state.progress, data: next } }));
 			},
-			savePosition: (blockId, innerProgress) => {
+			savePosition: (sceneId, keyframeId, innerProgress) => {
 				const progress = get().progress.data;
 				const normalizedInnerProgress =
 					Math.round(Math.max(0, Math.min(1, innerProgress)) * 1000) / 1000;
 				if (
-					progress.blockId === blockId &&
+					progress.sceneId === sceneId &&
+					progress.keyframeId === keyframeId &&
 					Math.abs(progress.innerProgress - normalizedInnerProgress) < 0.002
 				) {
 					return;
 				}
 				const next = {
 					...progress,
-					blockId,
+					sceneId,
+					keyframeId,
 					innerProgress: normalizedInnerProgress,
 					updatedAt: new Date().toISOString(),
 				};

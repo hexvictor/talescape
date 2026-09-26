@@ -32,7 +32,7 @@ export function RouteGraphNode({
 		>
 			<p className="truncate font-semibold text-xs">{data.label}</p>
 			<p className="mt-0.5 text-[9px] text-current/55">
-				{data.branch.counts.blocks} blocks
+				{data.branch.position.isTerminalBranch ? "Ending route" : "Story route"}
 			</p>
 			{data.incomingPathIds.map((pathId, index) => (
 				<Handle

@@ -1,14 +1,13 @@
 import { formatTale } from "~/app/(tale-app)/_shared/services/formatTale";
 import { normalizeTalePlaybackConfig } from "~/app/(tale-app)/_shared/services/readerPlaybackSettings";
 import { normalizeTaleSnapConfig } from "~/app/(tale-app)/_shared/services/readerSnapSettings";
-import { normalizeResponsiveBlockNodes } from "~/app/(tale-app)/_shared/services/responsiveNodes";
+import { normalizeResponsiveSceneFrames } from "~/app/(tale-app)/_shared/services/responsiveFrames";
 import { normalizeTaleBackgroundConfig } from "~/app/(tale-app)/_shared/services/taleBackgroundSettings";
 import type { RawTaleRecord, Tale } from "~/app/(tale-app)/_shared/types";
-import { formatBlocks } from "../blocks/formatBlocks";
 import { formatBranches } from "../branches/formatBranches";
+import { formatElements } from "../elements/formatElements";
 import { formatEntries } from "../entries/formatEntries";
-import { formatFragments } from "../fragments/formatFragments";
-import { formatNodes } from "../nodes/formatNodes";
+import { formatFrames } from "../frames/formatFrames";
 import { formatPages } from "../pages/formatPages";
 import { formatParts } from "../parts/formatParts";
 import { formatPaths } from "../paths/formatPaths";
@@ -18,7 +17,9 @@ import {
 	formatTransitionPresets,
 	formatVisibilityPresets,
 } from "../presets/formatPresets";
+import { formatScenes } from "../scenes/formatScenes";
 import { withFallbackPresets } from "./fallbackPresets";
+import { formatKeyframes } from "./formatKeyframes";
 import type { DbTaleRecord, OfficialPresetRows } from "./formatTypes";
 
 /**
@@ -36,57 +37,68 @@ export function formatTaleStructure(
 	officialPresets: OfficialPresetRows = {},
 ): Tale {
 	const {
-		blocks: rawBlocks,
+		scenes: rawScenes,
 		backgroundConfig,
 		book,
 		branches: rawBranches,
 		breakpointConfig,
 		creatorById,
 		entries: rawEntries,
-		fragments: rawFragments,
-		nodes: rawNodes,
+		elements: rawElements,
+		frames: rawFrames,
 		pages: rawPages,
 		parts: rawParts,
 		paths: rawPaths,
+		keyframes: rawKeyframes,
 		playbackConfig,
 		snapConfig,
 	} = record;
 	const pages = formatPages(rawPages ?? []);
-	const responsiveNodes = formatBlocks(rawBlocks ?? [], pages).map(
-		normalizeResponsiveBlockNodes,
+	const responsiveFrames = formatScenes(rawScenes ?? [], pages).map(
+		normalizeResponsiveSceneFrames,
 	);
-	const blocks = responsiveNodes.map((result) => result.block);
-	const nodes = [
-		...formatNodes(rawNodes ?? []),
-		...responsiveNodes.flatMap((result) => result.nodes),
+	const scenes = responsiveFrames.map((result) => result.scene);
+	const frames = [
+		...formatFrames(rawFrames ?? []),
+		...responsiveFrames.flatMap((result) => result.frames),
 	];
+	const keyframes = formatKeyframes(rawKeyframes ?? [], scenes);
+	const keyframeIdsByScene = new Map<string, string[]>();
+	for (const step of keyframes) {
+		const ids = keyframeIdsByScene.get(step.sceneId) ?? [];
+		ids.push(step.id);
+		keyframeIdsByScene.set(step.sceneId, ids);
+	}
+	for (const scene of scenes)
+		scene.keyframeIds = keyframeIdsByScene.get(scene.id) ?? [];
 	const raw: RawTaleRecord = {
 		animationPresets: formatAnimationPresets(
 			officialPresets.animationPresets ?? [],
 			"official",
 		),
-		blocks,
+		scenes,
 		backgroundConfig: normalizeTaleBackgroundConfig(backgroundConfig),
-		blockStylePresets: formatStylePresets(
-			officialPresets.blockStylePresets ?? [],
+		sceneStylePresets: formatStylePresets(
+			officialPresets.sceneStylePresets ?? [],
 			"official",
 		),
 		breakpoints: breakpointConfig ?? [],
 		branches: formatBranches(rawBranches ?? []),
 		entries: formatEntries(rawEntries ?? []),
-		fragments: formatFragments(rawFragments ?? []),
+		elements: formatElements(rawElements ?? []),
 		id: record.id,
-		nodes,
+		frames,
 		pages,
 		parts: formatParts(rawParts ?? []),
 		paths: formatPaths(rawPaths ?? []),
+		keyframes,
 		playbackConfig: normalizeTalePlaybackConfig(playbackConfig),
 		slug: record.slug,
 		snapConfig: normalizeTaleSnapConfig(snapConfig),
 		synopsis: record.description ?? "",
 		title: record.title,
-		firstBlockTransitionMode:
-			record.firstBlockTransitionMode ?? "fromPlacement",
+		firstSceneTransitionMode:
+			record.firstSceneTransitionMode ?? "fromPlacement",
 		transitionPresets: formatTransitionPresets(
 			officialPresets.transitionPresets ?? [],
 			"official",

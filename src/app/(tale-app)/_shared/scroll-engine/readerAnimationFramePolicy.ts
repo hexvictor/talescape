@@ -5,7 +5,7 @@ export type ReaderAnimationFramePolicy = {
 };
 
 /**
- * Creates a velocity-aware policy that reduces detailed animations during fast scrolling.
+ * Creates a velocity-aware policy that reduces detailed animations during fast active.
  *
  * @param viewport - Active reader viewport dimensions.
  * @returns Stateful frame policy with velocity smoothing and hysteresis.

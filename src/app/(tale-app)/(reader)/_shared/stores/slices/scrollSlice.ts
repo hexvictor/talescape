@@ -13,9 +13,9 @@ import type { TaleReaderState } from "../createTaleReaderStore";
  * @returns Whether both windows are identical.
  *
  * @example
- * const unchanged = blockIdsMatch(previousIds, nextIds);
+ * const unchanged = sceneIdsMatch(previousIds, nextIds);
  */
-function blockIdsMatch(left: string[], right: string[]): boolean {
+function sceneIdsMatch(left: string[], right: string[]): boolean {
 	if (left.length !== right.length) return false;
 	return left.every((id, index) => id === right[index]);
 }
@@ -23,21 +23,26 @@ function blockIdsMatch(left: string[], right: string[]): boolean {
 export type ReaderScrollApi = {
 	capturePosition: () => void;
 	repaint: () => void;
-	scrollToBlock: (blockId: string, opts?: ReaderScrollTargetOptions) => void;
+	scrollToScene: (sceneId: string, opts?: ReaderScrollTargetOptions) => void;
+	/** @deprecated Use scrollToScene. */
+	scrollToBlock: (sceneId: string, opts?: ReaderScrollTargetOptions) => void;
+	scrollToKeyframe: (keyframeId: string, opts?: ReaderScrollTargetOptions) => void;
 };
 
 export type ScrollSlice = {
 	scroll: {
 		api: ReaderScrollApi | null;
 		cue: Direction | null;
-		pendingRestoreBlockId: string | null;
+		pendingRestoreSceneId: string | null;
+		pendingRestoreKeyframeId: string | null;
 		renderRevision: number;
-		renderedBlockIds: string[];
+		renderedSceneIds: string[];
 		isApiCurrent: (api: ReaderScrollApi) => boolean;
 		setApi: (api: ReaderScrollApi | null) => void;
 		setCue: (direction: Direction | null) => void;
-		setPendingRestoreBlockId: (blockId: string | null) => void;
-		setRenderedBlockIds: (blockIds: string[]) => void;
+		setPendingRestoreSceneId: (sceneId: string | null) => void;
+		setPendingRestoreKeyframeId: (keyframeId: string | null) => void;
+		setRenderedSceneIds: (sceneIds: string[]) => void;
 	};
 };
 
@@ -59,34 +64,41 @@ export const createScrollSlice: StateCreator<
 	const stableApi: ReaderScrollApi = {
 		capturePosition: () => currentApi?.capturePosition(),
 		repaint: () => currentApi?.repaint(),
-		scrollToBlock: (blockId, opts) => currentApi?.scrollToBlock(blockId, opts),
+		scrollToScene: (sceneId, opts) => currentApi?.scrollToScene(sceneId, opts),
+		scrollToBlock: (sceneId, opts) => currentApi?.scrollToBlock(sceneId, opts),
+		scrollToKeyframe: (keyframeId, opts) => currentApi?.scrollToKeyframe(keyframeId, opts),
 	};
 	return {
 		scroll: {
 			api: stableApi,
 			cue: null,
 			isApiCurrent: (api) => currentApi === api,
-			pendingRestoreBlockId: null,
+			pendingRestoreSceneId: null,
+			pendingRestoreKeyframeId: null,
 			renderRevision: 0,
-			renderedBlockIds: [],
+			renderedSceneIds: [],
 			setApi: (api) => {
 				currentApi = api;
 			},
 			setCue: (cue) => set((state) => ({ scroll: { ...state.scroll, cue } })),
-			setPendingRestoreBlockId: (pendingRestoreBlockId) =>
+			setPendingRestoreSceneId: (pendingRestoreSceneId) =>
 				set((state) => ({
-					scroll: { ...state.scroll, pendingRestoreBlockId },
+					scroll: { ...state.scroll, pendingRestoreSceneId },
 				})),
-			setRenderedBlockIds: (renderedBlockIds) =>
+			setPendingRestoreKeyframeId: (pendingRestoreKeyframeId) =>
+				set((state) => ({
+					scroll: { ...state.scroll, pendingRestoreKeyframeId },
+				})),
+			setRenderedSceneIds: (renderedSceneIds) =>
 				set((state) => {
-					if (blockIdsMatch(state.scroll.renderedBlockIds, renderedBlockIds)) {
+					if (sceneIdsMatch(state.scroll.renderedSceneIds, renderedSceneIds)) {
 						return state;
 					}
 					return {
 						scroll: {
 							...state.scroll,
 							renderRevision: state.scroll.renderRevision + 1,
-							renderedBlockIds,
+							renderedSceneIds,
 						},
 					};
 				}),

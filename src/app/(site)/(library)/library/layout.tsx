@@ -8,7 +8,7 @@ import { LibraryChrome } from "./_shared/components/LibraryChrome";
 
 export const metadata: Metadata = {
 	title: "Library | Talescape",
-	description: "Browse Talescape tales, books, authors, and story nodes.",
+	description: "Browse Talescape tales, books, authors, and story frames.",
 };
 
 export type LibraryLayoutProps = Readonly<

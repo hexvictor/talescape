@@ -1,9 +1,9 @@
 import type {
 	Anchor,
-	BlockFlow,
 	Direction,
 	Point,
-	ResolvedTaleBlock,
+	ResolvedTaleScene,
+	SceneFlow,
 	StackPlacementPosition,
 	ViewportSize,
 } from "../types";
@@ -35,7 +35,7 @@ export function getReadingCamera(
  */
 export function getNextPoint(
 	previous: Anchor,
-	nextBlock: ResolvedTaleBlock,
+	nextBlock: ResolvedTaleScene,
 	nextSize: { height: number; width: number },
 	viewport: ViewportSize,
 ): Point {
@@ -73,10 +73,7 @@ export function getNextPoint(
 			flow.alignment,
 		);
 	}
-	if (
-		flow.placement === "blockEdgeWithViewportAlignment" ||
-		flow.placement === "groupEdge"
-	) {
+	if (flow.placement === "blockEdgeWithViewportAlignment") {
 		return getBlockEdgeWithViewportAlignmentPoint(
 			previous,
 			exitCamera,
@@ -365,7 +362,7 @@ export function getCameraViewportEdgePoint(
  * const spacing = resolveSpacing(flow.spacing, viewport);
  */
 function resolveSpacing(
-	spacing: Extract<BlockFlow, { type: "linear" }>["spacing"],
+	spacing: Extract<SceneFlow, { type: "linear" }>["spacing"],
 	viewport: ViewportSize,
 ): Point {
 	if (!spacing) return { x: 0, y: 0 };
@@ -420,7 +417,7 @@ export function getReadingTravelDistance(
  * Compiles viewport-relative camera path points into pixel offsets.
  *
  * @param size - Measured block dimensions.
- * @param block - Block containing camera path configuration.
+ * @param block - Scene containing camera path configuration.
  * @param viewport - Current viewport dimensions.
  * @returns Pixel offsets used directly during scroll rendering.
  *
@@ -429,7 +426,7 @@ export function getReadingTravelDistance(
  */
 export function compileReadingPathPoints(
 	size: { height: number; width: number },
-	block: ResolvedTaleBlock,
+	block: ResolvedTaleScene,
 	viewport: ViewportSize,
 ): Point[] {
 	const extraX = Math.max(0, size.width - viewport.width);
@@ -458,8 +455,8 @@ export function compileReadingPathPoints(
 }
 
 function getCameraDirection(
-	block: ResolvedTaleBlock,
-	cameraPath: ResolvedTaleBlock["reading"]["cameraPath"],
+	block: ResolvedTaleScene,
+	cameraPath: ResolvedTaleScene["reading"]["cameraPath"],
 ) {
 	if (cameraPath?.mode === "straight") return cameraPath.direction;
 	const direction = flowDirection(block.resolved.flow);
@@ -506,6 +503,6 @@ export function directionVector(direction: Direction) {
 	return vectors[direction];
 }
 
-export function flowDirection(flow: BlockFlow): Direction | null {
+export function flowDirection(flow: SceneFlow): Direction | null {
 	return flow.type === "linear" ? flow.direction : null;
 }

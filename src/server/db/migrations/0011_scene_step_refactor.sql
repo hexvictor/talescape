@@ -1,0 +1,1 @@
+-- Reserved checkpoint before the generated Scene/Step schema migration.

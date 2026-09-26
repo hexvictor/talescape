@@ -53,12 +53,12 @@ export function attachWheelInput({
 			elapsed === 0 || elapsed < settings.wheelBurstDecayMs
 				? burstScore * (1 - elapsed / settings.wheelBurstDecayMs)
 				: 0;
-		const weightedBurstStep =
-			(normalizedMagnitude / settings.wheelBurstCountStepPx) **
+		const weightedBurstKeyframe =
+			(normalizedMagnitude / settings.wheelBurstCountKeyframePx) **
 			settings.wheelBurstCountMagnitudeExponent;
 		burstScore = Math.min(
 			settings.wheelBurstCountLimit,
-			retainedBurstScore + weightedBurstStep,
+			retainedBurstScore + weightedBurstKeyframe,
 		);
 		const retainedEnergy =
 			elapsed >= settings.wheelBurstDecayMs
@@ -81,8 +81,8 @@ export function attachWheelInput({
 			settings.wheelBurstCountBoostPx *
 			(settings.wheelBurstCountMultiplier ** Math.max(0, burstScore - 1) - 1);
 		const amount = Math.min(
-			settings.wheelMaxStepPx,
-			settings.wheelBaseStepPx +
+			settings.wheelMaxKeyframePx,
+			settings.wheelBaseKeyframePx +
 				normalizedMagnitude * settings.wheelDeltaRatio +
 				burstRatio * accelerationRatio * settings.wheelAccelerationPx +
 				streakBoost,

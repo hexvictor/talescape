@@ -1,9 +1,10 @@
-import type { RawTaleRecord, Tale, TaleBlock } from "../types";
-import {
-	type BlockStructureLookups,
-	resolveBlock,
-} from "./formatTale/resolveBlock";
-import { resolveFragment } from "./formatTale/resolveFragment";
+import type {
+	RawTaleRecord,
+	ResolvedTaleKeyframe,
+	Tale,
+	TaleScene,
+} from "../types";
+import { resolveElement } from "./formatTale/resolveElement";
 import {
 	resolveBranches,
 	resolveEntries,
@@ -12,18 +13,23 @@ import {
 	resolvePaths,
 } from "./formatTale/resolveNarrative";
 import {
+	type SceneStructureLookups,
+	resolveScene,
+} from "./formatTale/resolveScene";
+import {
 	first,
 	groupIdsBy,
+	indexPosition,
 	last,
 	recordById,
 	sortedByOrder,
 } from "./formatTale/shared";
 
 export {
-	resolveEditedBlock,
-	resolveEditedBlockWithNodes,
-} from "./formatTale/resolveBlock";
-export { resolveEditedFragment } from "./formatTale/resolveFragment";
+	resolveEditedScene,
+	resolveEditedSceneWithFrames,
+} from "./formatTale/resolveScene";
+export { resolveEditedFragment } from "./formatTale/resolveElement";
 
 /**
  * Formats raw database reader data into the indexed engine model.
@@ -37,59 +43,68 @@ export { resolveEditedFragment } from "./formatTale/resolveFragment";
 export function formatTale(raw: RawTaleRecord): Tale {
 	const animationPresetsById = recordById(raw.animationPresets);
 	const visibilityPresetsById = recordById(raw.visibilityPresets);
-	const rawBlocks = raw.blocks;
+	const rawBlocks = raw.scenes;
 	const rawBranches = sortedByOrder(raw.branches);
 	const rawEntries = sortedByOrder(raw.entries);
 	const rawParts = sortedByOrder(raw.parts);
 	const rawPaths = raw.paths;
 	const rawPages = raw.pages;
-	const rawFragments = raw.fragments;
-	const rawNodes = raw.nodes;
-	const nodesById = recordById(rawNodes);
-	const blockIds = rawBlocks.map((block) => block.id);
+	const rawElements = raw.elements;
+	const rawFrames = raw.frames;
+	const rawKeyframes = sortedByOrder(raw.keyframes);
+	const framesById = recordById(rawFrames);
+	const sceneIds = rawBlocks.map((block) => block.id);
 	const branchIds = rawBranches.map((branch) => branch.id);
 	const entryIds = rawEntries.map((entry) => entry.id);
-	const fragmentIds = rawFragments.map((fragment) => fragment.id);
-	const nodeIds = rawNodes.map((node) => node.id);
+	const elementIds = rawElements.map((element) => element.id);
+	const frameIds = rawFrames.map((frame) => frame.id);
+	const keyframeIds = rawKeyframes.map((step) => step.id);
 	const pageIds = rawPages.map((page) => page.id);
 	const numberedPageIds = rawPages
 		.filter((page) => page.isPaginated)
 		.map((page) => page.id);
 	const partIds = rawParts.map((part) => part.id);
 	const pathIds = rawPaths.map((path) => path.id);
-	const blockStructure = createBlockStructureLookups(rawBlocks, blockIds);
-	const fragmentToBlock = createFragmentBlockLookup(rawBlocks);
-	const fragments = rawFragments.map((fragment, globalIndex) => {
-		const block = fragmentToBlock.get(fragment.id);
-		return resolveFragment(fragment, {
-			blockId: block?.id ?? "",
-			branchId: block?.branchId ?? "",
-			entryId: block?.entryId ?? "",
-			globalIds: fragmentIds,
+	const blockStructure = createSceneStructureLookups(rawBlocks, sceneIds);
+	const elementToScene = createElementSceneLookup(rawBlocks);
+	const elements = rawElements.map((element, globalIndex) => {
+		const scene = elementToScene.get(element.id);
+		return resolveElement(element, {
+			sceneId: scene?.id ?? "",
+			branchId: scene?.branchId ?? "",
+			entryId: scene?.entryId ?? "",
+			globalIds: elementIds,
 			globalIndex,
-			pageId: block?.pageId ?? "",
-			partId: block?.partId ?? "",
-			siblingIds: block?.fragmentIds ?? [],
+			pageId: scene?.pageId ?? "",
+			partId: scene?.partId ?? "",
+			siblingIds: scene?.elementIds ?? [],
 		});
 	});
-	const resolvedFragmentsById = recordById(fragments);
+	const resolvedElementsById = recordById(elements);
+	const keyframes = resolveKeyframes(rawKeyframes);
 	const branches = resolveBranches(
 		rawBranches,
 		rawPaths,
-		blockStructure.blockIdsByBranch,
+		blockStructure.sceneIdsByBranch,
 	);
-	const entries = resolveEntries(rawEntries, rawBlocks, rawPages);
-	const pages = resolvePages(rawPages, rawEntries, rawBlocks);
-	const parts = resolveParts(rawParts, rawEntries, rawPages, rawBlocks);
+	const entries = resolveEntries(rawEntries, rawBlocks, rawPages, rawKeyframes);
+	const pages = resolvePages(rawPages, rawEntries, rawBlocks, rawKeyframes);
+	const parts = resolveParts(
+		rawParts,
+		rawEntries,
+		rawPages,
+		rawBlocks,
+		rawKeyframes,
+	);
 	const paths = resolvePaths(rawPaths);
-	const blockStylePresetsById = recordById(raw.blockStylePresets);
+	const sceneStylePresetsById = recordById(raw.sceneStylePresets);
 	const transitionPresetsById = recordById(raw.transitionPresets);
-	const blocks = rawBlocks.map((block) =>
-		resolveBlock(
+	const scenes = rawBlocks.map((block) =>
+		resolveScene(
 			block,
 			{
-				fragmentsById: resolvedFragmentsById,
-				nodesById,
+				elementsById: resolvedElementsById,
+				framesById,
 			},
 			blockStructure,
 		),
@@ -103,7 +118,7 @@ export function formatTale(raw: RawTaleRecord): Tale {
 		book: null,
 		breakpoints: raw.breakpoints,
 		creator: null,
-		firstBlockTransitionMode: raw.firstBlockTransitionMode,
+		firstSceneTransitionMode: raw.firstSceneTransitionMode,
 		id: raw.id,
 		playbackConfig: raw.playbackConfig,
 		slug: raw.slug,
@@ -111,56 +126,61 @@ export function formatTale(raw: RawTaleRecord): Tale {
 		synopsis: raw.synopsis,
 		title: raw.title,
 		bounds: {
-			firstBlockId: first(blockIds),
+			firstSceneId: first(sceneIds),
 			firstBranchId: first(branchIds),
 			firstEntryId: first(entryIds),
-			firstFragmentId: first(fragmentIds),
+			firstElementId: first(elementIds),
 			firstPageId: first(pageIds),
 			firstPartId: first(partIds),
-			lastBlockId: last(blockIds),
+			lastSceneId: last(sceneIds),
 			lastBranchId: last(branchIds),
 			lastEntryId: last(entryIds),
-			lastFragmentId: last(fragmentIds),
+			lastElementId: last(elementIds),
 			lastPageId: last(pageIds),
 			lastPartId: last(partIds),
 			rootBranchId,
 		},
 		counts: {
-			blocks: blocks.length,
+			scenes: scenes.length,
 			branches: branches.length,
 			entries: entries.length,
-			fragments: fragments.length,
-			nodes: rawNodes.length,
+			elements: elements.length,
+			frames: rawFrames.filter(
+				(frame) => !scenes.some((scene) => scene.rootFrameId === frame.id),
+			).length,
 			pages: pages.length,
 			parts: parts.length,
 			paths: paths.length,
+			keyframes: keyframes.length,
 		},
 		indexMap: {
 			animationPresetsById,
-			blocksById: recordById(blocks),
-			blockStylePresetsById,
+			scenesById: recordById(scenes),
+			sceneStylePresetsById,
 			branchesById: recordById(branches),
 			entriesById: recordById(entries),
-			fragmentsById: resolvedFragmentsById,
-			nodesById,
+			elementsById: resolvedElementsById,
+			framesById,
 			pagesById: recordById(pages),
 			partsById: recordById(parts),
 			pathsById: recordById(paths),
+			keyframesById: recordById(keyframes),
 			transitionPresetsById,
 			visibilityPresetsById,
 		},
 		order: {
 			animationPresetIds: raw.animationPresets.map((preset) => preset.id),
-			blockIds,
-			blockStylePresetIds: raw.blockStylePresets.map((preset) => preset.id),
+			sceneIds,
+			sceneStylePresetIds: raw.sceneStylePresets.map((preset) => preset.id),
 			branchIds,
 			entryIds,
-			fragmentIds,
-			nodeIds,
+			elementIds,
+			frameIds,
 			numberedPageIds,
 			pageIds,
 			partIds,
 			pathIds,
+			keyframeIds,
 			transitionPresetIds: raw.transitionPresets.map((preset) => preset.id),
 			visibilityPresetIds: raw.visibilityPresets.map((preset) => preset.id),
 		},
@@ -170,33 +190,33 @@ export function formatTale(raw: RawTaleRecord): Tale {
 /**
  * Groups block ids by each narrative relationship.
  *
- * @param blocks - Raw tale blocks.
- * @param blockIds - Global block order.
- * @returns Block relationship lookups.
+ * @param scenes - Raw tale scenes.
+ * @param sceneIds - Global block order.
+ * @returns Scene relationship lookups.
  */
-function createBlockStructureLookups(
-	blocks: TaleBlock[],
-	blockIds: string[],
-): BlockStructureLookups {
+function createSceneStructureLookups(
+	scenes: TaleScene[],
+	sceneIds: string[],
+): SceneStructureLookups {
 	return {
-		blockIds,
-		blockIdsByBranch: groupIdsBy(
-			blocks,
+		sceneIds,
+		sceneIdsByBranch: groupIdsBy(
+			scenes,
 			(block) => block.branchId,
 			(block) => block.id,
 		),
-		blockIdsByEntry: groupIdsBy(
-			blocks,
+		sceneIdsByEntry: groupIdsBy(
+			scenes,
 			(block) => block.entryId,
 			(block) => block.id,
 		),
-		blockIdsByPage: groupIdsBy(
-			blocks,
+		sceneIdsByPage: groupIdsBy(
+			scenes,
 			(block) => block.pageId,
 			(block) => block.id,
 		),
-		blockIdsByPart: groupIdsBy(
-			blocks,
+		sceneIdsByPart: groupIdsBy(
+			scenes,
 			(block) => block.partId,
 			(block) => block.id,
 		),
@@ -206,17 +226,35 @@ function createBlockStructureLookups(
 /**
  * Maps fragment ids to their owning raw block.
  *
- * @param blocks - Raw tale blocks.
+ * @param scenes - Raw tale scenes.
  * @returns Fragment-to-block lookup.
  */
-function createFragmentBlockLookup(
-	blocks: TaleBlock[],
-): Map<string, TaleBlock> {
-	const fragmentToBlock = new Map<string, TaleBlock>();
-	for (const block of blocks) {
-		for (const fragmentId of block.fragmentIds) {
-			fragmentToBlock.set(fragmentId, block);
+function createElementSceneLookup(scenes: TaleScene[]): Map<string, TaleScene> {
+	const elementToScene = new Map<string, TaleScene>();
+	for (const scene of scenes) {
+		for (const elementId of scene.elementIds) {
+			elementToScene.set(elementId, scene);
 		}
 	}
-	return fragmentToBlock;
+	return elementToScene;
+}
+
+function resolveKeyframes(keyframes: RawTaleRecord["keyframes"]): ResolvedTaleKeyframe[] {
+	const idsByScene = groupIdsBy(
+		keyframes,
+		(step) => step.sceneId,
+		(step) => step.id,
+	);
+	return keyframes.map((step) => {
+		const siblingIds = idsByScene[step.sceneId] ?? [];
+		const index = siblingIds.indexOf(step.id);
+		return {
+			...step,
+			links: {
+				nextKeyframeId: siblingIds[index + 1] ?? null,
+				previousKeyframeId: siblingIds[index - 1] ?? null,
+			},
+			position: indexPosition(index, siblingIds.length),
+		};
+	});
 }

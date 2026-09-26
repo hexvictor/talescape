@@ -1,0 +1,2 @@
+ALTER TABLE "talescape_step" ADD COLUMN "frameId" integer;--> statement-breakpoint
+ALTER TABLE "talescape_step" ADD CONSTRAINT "talescape_step_frameId_talescape_frame_id_fk" FOREIGN KEY ("frameId") REFERENCES "public"."talescape_frame"("id") ON DELETE no action ON UPDATE no action;

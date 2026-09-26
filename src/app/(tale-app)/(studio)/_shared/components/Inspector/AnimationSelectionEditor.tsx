@@ -31,28 +31,34 @@ import {
  * <AnimationSelectionEditor title="Entering" selection={selection} onChange={setSelection} />
  */
 export function AnimationSelectionEditor({
+	children,
 	defaultOpen = false,
 	icon,
+	inheritsPreviousState = false,
 	onChange,
 	selection,
 	timingMode = "timeline",
 	title,
 }: {
+	children?: ReactNode;
 	defaultOpen?: boolean;
 	icon?: ReactNode;
+	inheritsPreviousState?: boolean;
 	onChange: (selection: AnimationSelection) => void;
 	selection: AnimationSelection;
-	timingMode?: "loop" | "timeline";
+	timingMode?: "hover" | "loop" | "timeline";
 	title: string;
 }): React.JSX.Element {
 	const tale = useTaleAppStore((state) => state.document.tale);
 	const presets = useMemo(() => getTaleAnimationPresets(tale), [tale]);
 	const [presetId, setPresetId] = useState(presets[0]?.id ?? "");
+	const currentSelection = normalizeAnimationSelection(selection);
 
 	const appendTracks = (tracks: AnimationTrack[]): void => {
 		onChange({
+			...currentSelection,
 			animations: [
-				...selection.animations,
+				...currentSelection.animations,
 				...structuredClone(tracks).map((track) =>
 					timingMode === "loop"
 						? {
@@ -83,6 +89,52 @@ export function AnimationSelectionEditor({
 			readerRole="animation-selection"
 			title={title}
 		>
+			{timingMode === "timeline" ? (
+				<div className="col-span-2 grid gap-2 border-foreground/8 border-b pb-3">
+					<label className="flex items-start gap-2 text-foreground/68 text-xs">
+						<input
+							checked={currentSelection.carryEndStateForward ?? false}
+							className="mt-0.5 accent-primary"
+							type="checkbox"
+							onChange={(event) =>
+								onChange({
+									...currentSelection,
+									carryEndStateForward: event.target.checked,
+								})
+							}
+						/>
+						<span>
+							<span className="block font-semibold text-foreground">
+								Carry end state into next phase
+							</span>
+							<span className="block text-[10px] text-foreground/45">
+								The next animation starts from this phase's completed values.
+							</span>
+						</span>
+					</label>
+				</div>
+			) : null}
+			{timingMode === "hover" ? (
+				<div className="col-span-2">
+					<label className="grid gap-1 font-bold text-[10px] text-foreground/55 uppercase">
+						Duration (seconds)
+						<input
+							className={settingClassName}
+							min={0.05}
+							step={0.05}
+							type="number"
+							value={currentSelection.durationSeconds ?? 0.2}
+							onChange={(event) =>
+								onChange({
+									...currentSelection,
+									durationSeconds: Math.max(0.05, Number(event.target.value)),
+								})
+							}
+						/>
+					</label>
+				</div>
+			) : null}
+			{children ? <div className="col-span-2">{children}</div> : null}
 			<div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
 				<select
 					aria-label={`${title} official animation`}
@@ -108,21 +160,24 @@ export function AnimationSelectionEditor({
 					<Plus size={14} />
 				</button>
 			</div>
-			{selection.animations.map((track, index) => (
+			{currentSelection.animations.map((track, index) => (
 				<AnimationTrackFields
 					key={`${track.property}-${index}`}
 					timingMode={timingMode}
+					lockFromValues={inheritsPreviousState}
 					track={track}
 					onChange={(nextTrack) =>
 						onChange({
-							animations: selection.animations.map((item, itemIndex) =>
+							...currentSelection,
+							animations: currentSelection.animations.map((item, itemIndex) =>
 								itemIndex === index ? nextTrack : item,
 							),
 						})
 					}
 					onRemove={() =>
 						onChange({
-							animations: selection.animations.filter(
+							...currentSelection,
+							animations: currentSelection.animations.filter(
 								(_, itemIndex) => itemIndex !== index,
 							),
 						})
@@ -143,6 +198,18 @@ export function AnimationSelectionEditor({
 			</button>
 		</DebugCard>
 	);
+}
+
+function normalizeAnimationSelection(
+	selection: AnimationSelection | undefined,
+): AnimationSelection {
+	const legacy = selection as
+		| (Partial<AnimationSelection> & { tracks?: AnimationTrack[] })
+		| undefined;
+	return {
+		...legacy,
+		animations: legacy?.animations ?? legacy?.tracks ?? [],
+	};
 }
 
 /**

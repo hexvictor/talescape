@@ -31,4 +31,13 @@ export const imageRouter = createTRPCRouter({
 
 		return image ?? null;
 	}),
+
+	getMyImages: protectedProcedure.query(async ({ ctx }) => {
+		const image = await ctx.db.query.images.findMany({
+			where: (model, { eq }) => eq(model.userId, ctx.session.userId),
+			orderBy: (model, { desc }) => [desc(model.createdAt)],
+		});
+
+		return image ?? [];
+	}),
 });

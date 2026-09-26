@@ -1,7 +1,7 @@
 import type { Anchor, Tale } from "../types";
 
 /**
- * Prevents future stacked blocks from leaking into view before their
+ * Prevents future stacked scenes from leaking into view before their
  * transition becomes active while still allowing adjacent linear layouts
  * to remain visible inside the same viewport.
  *
@@ -11,8 +11,8 @@ import type { Anchor, Tale } from "../types";
  *
  * @param anchors - Spatially visible candidate anchors.
  * @param activeAnchorIndex - Route index of the currently active block.
- * @param anchorIndexByBlockId - Route index lookup for each block.
- * @param foregroundBlockIds - Blocks explicitly active in the current segment.
+ * @param anchorIndexBySceneId - Route index lookup for each block.
+ * @param foregroundSceneIds - Scenes explicitly active in the current segment.
  * @param tale - Tale containing canonical block transition settings.
  * @returns Timeline-eligible anchors that may be painted this frame.
  *
@@ -22,20 +22,20 @@ import type { Anchor, Tale } from "../types";
 export function filterTimelineVisibleAnchors(
 	anchors: readonly Anchor[],
 	activeAnchorIndex: number | undefined,
-	anchorIndexByBlockId: Record<string, number | undefined>,
-	foregroundBlockIds: ReadonlySet<string>,
+	anchorIndexBySceneId: Record<string, number | undefined>,
+	foregroundSceneIds: ReadonlySet<string>,
 	tale: Tale,
 ): Anchor[] {
 	if (activeAnchorIndex === undefined) return [...anchors];
 
 	const nextHiddenStackIndex = anchors.reduce<number | null>(
 		(nearest, anchor) => {
-			const routeIndex = anchorIndexByBlockId[anchor.blockId];
+			const routeIndex = anchorIndexBySceneId[anchor.sceneId];
 			if (
 				routeIndex === undefined ||
 				routeIndex <= activeAnchorIndex ||
-				foregroundBlockIds.has(anchor.blockId) ||
-				tale.indexMap.blocksById[anchor.blockId]?.transition.flow.type !==
+				foregroundSceneIds.has(anchor.sceneId) ||
+				tale.indexMap.scenesById[anchor.sceneId]?.transition.flow.type !==
 					"stack"
 			) {
 				return nearest;
@@ -48,10 +48,10 @@ export function filterTimelineVisibleAnchors(
 	if (nextHiddenStackIndex === null) return [...anchors];
 
 	return anchors.filter((anchor) => {
-		const routeIndex = anchorIndexByBlockId[anchor.blockId];
+		const routeIndex = anchorIndexBySceneId[anchor.sceneId];
 		if (routeIndex === undefined) return true;
 		if (routeIndex <= activeAnchorIndex) return true;
-		if (foregroundBlockIds.has(anchor.blockId)) return true;
+		if (foregroundSceneIds.has(anchor.sceneId)) return true;
 		return routeIndex < nextHiddenStackIndex;
 	});
 }

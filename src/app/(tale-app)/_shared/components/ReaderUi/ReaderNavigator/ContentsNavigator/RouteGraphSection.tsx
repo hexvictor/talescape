@@ -25,9 +25,9 @@ type RouteGraphSectionProps = {
 	branches: ResolvedTaleBranch[];
 	currentBranchId: string | null;
 	onChoosePath: (path: ResolvedTalePath) => void;
-	onTravelToBlock: (blockId: string) => void;
+	onTravelToBlock: (sceneId: string) => void;
 	paths: ResolvedTalePath[];
-	reachableBlockIds: Set<string>;
+	reachableSceneIds: Set<string>;
 	reachableBranchIds: Set<string>;
 	selectedBranchIds: string[];
 };
@@ -39,7 +39,7 @@ type RouteGraphSectionProps = {
  * @returns Compact selected graph and optional full graph dialog.
  *
  * @example
- * <RouteGraphSection branches={branches} paths={paths} selectedBranchIds={ids} reachableBlockIds={blocks} reachableBranchIds={routeBranches} currentBranchId={branchId} onChoosePath={choose} onTravelToBlock={travel} />
+ * <RouteGraphSection branches={branches} paths={paths} selectedBranchIds={ids} reachableSceneIds={scenes} reachableBranchIds={routeBranches} currentBranchId={branchId} onChoosePath={choose} onTravelToBlock={travel} />
  */
 export function RouteGraphSection({
 	branches,
@@ -47,7 +47,7 @@ export function RouteGraphSection({
 	onChoosePath,
 	onTravelToBlock,
 	paths,
-	reachableBlockIds,
+	reachableSceneIds,
 	reachableBranchIds,
 	selectedBranchIds,
 }: RouteGraphSectionProps): React.JSX.Element {
@@ -78,13 +78,13 @@ export function RouteGraphSection({
 				branches: selectedBranches,
 				currentBranchId,
 				paths: selectedPaths,
-				reachableBlockIds,
+				reachableSceneIds,
 				reachableBranchIds,
 				selectedBranchIds: selectedIds,
 			}),
 		[
 			currentBranchId,
-			reachableBlockIds,
+			reachableSceneIds,
 			reachableBranchIds,
 			selectedBranches,
 			selectedIds,
@@ -97,7 +97,7 @@ export function RouteGraphSection({
 				branches,
 				currentBranchId,
 				paths,
-				reachableBlockIds,
+				reachableSceneIds,
 				reachableBranchIds,
 				selectedBranchIds: selectedIds,
 			}),
@@ -105,7 +105,7 @@ export function RouteGraphSection({
 			branches,
 			currentBranchId,
 			paths,
-			reachableBlockIds,
+			reachableSceneIds,
 			reachableBranchIds,
 			selectedIds,
 		],
@@ -124,8 +124,8 @@ export function RouteGraphSection({
 		node: Node<RouteGraphNodeData>,
 	): void => {
 		if (!node.data.reachable) return;
-		const blockId = node.data.branch.bounds.firstBlockId;
-		if (blockId && reachableBlockIds.has(blockId)) onTravelToBlock(blockId);
+		const sceneId = node.data.branch.bounds.firstSceneId;
+		if (sceneId && reachableSceneIds.has(sceneId)) onTravelToBlock(sceneId);
 	};
 	const handleEdgeClick = (
 		_event: React.MouseEvent,

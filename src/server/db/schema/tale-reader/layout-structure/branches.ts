@@ -7,8 +7,8 @@ import type {
 import { users } from "../../users";
 import { branchPermissions } from "../permissions/branchPermissions";
 import { tales } from "../tales";
-import { blocks } from "./blocks";
 import { paths } from "./paths";
+import { scenes } from "./scenes";
 
 export const branches = createTable("branch", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -46,7 +46,7 @@ export const branchesRelations = relations(branches, ({ one, many }) => ({
 		fields: [branches.creatorId],
 		references: [users.id],
 	}),
-	blocks: many(blocks),
+	scenes: many(scenes),
 	outgoingPaths: many(paths, {
 		relationName: "branch_outgoing_paths",
 	}),

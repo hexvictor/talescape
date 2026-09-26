@@ -55,7 +55,7 @@ const worlds = [
 
 function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 	return (
-		<section className="site-landing-hero relative min-h-[min(40rem,calc(100svh-9rem))] overflow-hidden border-foreground border-b-2 bg-background sm:min-h-[min(46rem,calc(100svh-5rem))]">
+		<section className="site-landing-hero relative mx-auto min-h-[min(40rem,calc(100svh-9rem))] w-full overflow-hidden border-foreground border-b-2 bg-background sm:mt-4 sm:min-h-[min(46rem,calc(100svh-5rem))] sm:w-[calc(100%-2rem)] sm:border-2 lg:w-[calc(100%-3rem)] lg:max-w-[96rem]">
 			<Image
 				src={siteImages.emberCity}
 				alt="A vast illustrated fantasy world featured on Talescape"

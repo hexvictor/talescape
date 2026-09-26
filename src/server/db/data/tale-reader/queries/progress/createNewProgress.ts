@@ -5,39 +5,44 @@ import { type ReaderProgressSchema, taleProgresses } from "~/server/db/schema";
  * Creates the first persisted progress row for a reader and tale.
  *
  * @param taleId - The numeric database tale id.
- * @param blockIds - Ordered reader block ids for the visible root route.
+ * @param sceneIds - Ordered reader block ids for the visible root route.
  * @param userId - The Clerk user id that owns the progress row.
  * @returns The inserted database progress row.
  *
  * @example
- * const progress = await createNewProgress(tale.id, tale.order.blockIds, userId);
+ * const progress = await createNewProgress(tale.id, tale.order.sceneIds, userId);
  */
 export async function createNewProgress(
 	taleId: number,
-	blockIds: string[],
+	sceneIds: string[],
+	keyframeIds: string[],
 	userId: string,
 ): Promise<ReaderProgressSchema> {
-	const numericBlockIds = blockIds
-		.map((blockId) => Number(blockId))
+	const numericSceneIds = sceneIds
+		.map((sceneId) => Number(sceneId))
 		.filter(Number.isFinite);
-	const firstBlockId = numericBlockIds[0];
+	const firstSceneId = numericSceneIds[0];
+	const numericKeyframeIds = keyframeIds.map(Number).filter(Number.isFinite);
+	const firstKeyframeId = numericKeyframeIds[0];
 	const initialProgress =
-		numericBlockIds.length > 0 ? (1 / numericBlockIds.length).toFixed(4) : "0";
+		numericSceneIds.length > 0 ? (1 / numericSceneIds.length).toFixed(4) : "0";
 	const newProgressData = {
 		userId,
 		taleId,
-		seenBlockIds: firstBlockId ? [firstBlockId] : [],
-		lastBlockId: firstBlockId ?? null,
-		maxBlockIdReached: firstBlockId ?? null,
+		seenSceneIds: firstSceneId ? [firstSceneId] : [],
+		seenKeyframeIds: firstKeyframeId ? [firstKeyframeId] : [],
+		lastSceneId: firstSceneId ?? null,
+		lastKeyframeId: firstKeyframeId ?? null,
+		maxSceneIdReached: firstSceneId ?? null,
 		activePathIds: [],
 		committedAnimationIds: [],
-		lastBlockInnerProgress: "0",
+		lastKeyframeInnerProgress: "0",
 		selectedBranchIds: [],
 		seenPathIds: [],
 		seenEntryIds: [],
 		seenPageIds: [],
 		seenPartIds: [],
-		seenBlockProgress: initialProgress,
+		seenKeyframeProgress: initialProgress,
 		maxReadProgress: initialProgress,
 	};
 

@@ -1,3 +1,4 @@
+import { ReaderAudioControl } from "../ReaderAudioControl/ReaderAudioControl";
 import { ReaderAutoplayControl } from "../ReaderAutoplayControl/ReaderAutoplayControl";
 import { ReaderNavigator } from "../ReaderNavigator/ReaderNavigator";
 import { ReaderProgress } from "../ReaderProgress/ReaderProgress";
@@ -29,6 +30,7 @@ export function ReaderOverlay(): React.JSX.Element | null {
 			<ReaderScrollCue />
 			<TaleDebug />
 			<ReaderAutoplayControl />
+			<ReaderAudioControl />
 			<ReaderUiVisibilityControl />
 		</div>
 	);

@@ -1,5 +1,9 @@
 "use client";
 
+import { Pencil } from "lucide-react";
+import Link from "next/link";
+import { Button } from "~/components/ui/button";
+import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import type { ReaderInputSettings } from "../../../scroll-engine/readerInputSettings";
 
@@ -24,7 +28,7 @@ const readerInputSettingGroups: Array<{
 		settings: [
 			{
 				description: "Starting distance for one keyboard move.",
-				key: "keyboardBaseStepPx",
+				key: "keyboardBaseKeyframePx",
 				label: "Base step",
 				min: 1,
 				step: 1,
@@ -66,7 +70,7 @@ const readerInputSettingGroups: Array<{
 			},
 			{
 				description: "Multiplier amount removed on each decay tick.",
-				key: "keyboardDecayStep",
+				key: "keyboardDecayKeyframe",
 				label: "Decay step",
 				min: 0,
 				step: 0.01,
@@ -80,7 +84,7 @@ const readerInputSettingGroups: Array<{
 			},
 			{
 				description: "Maximum distance for one accelerated tap.",
-				key: "keyboardTapMaxStepPx",
+				key: "keyboardTapMaxKeyframePx",
 				label: "Tap max step",
 				min: 1,
 				step: 1,
@@ -101,7 +105,7 @@ const readerInputSettingGroups: Array<{
 			},
 			{
 				description: "Viewport fraction used by Page and Space keys.",
-				key: "pageStepRatio",
+				key: "pageKeyframeRatio",
 				label: "Page step ratio",
 				min: 0.1,
 				step: 0.01,
@@ -114,7 +118,7 @@ const readerInputSettingGroups: Array<{
 		settings: [
 			{
 				description: "Minimum wheel movement per input batch.",
-				key: "wheelBaseStepPx",
+				key: "wheelBaseKeyframePx",
 				label: "Base step",
 				min: 1,
 				step: 1,
@@ -142,7 +146,7 @@ const readerInputSettingGroups: Array<{
 			},
 			{
 				description: "Wheel distance that counts as one full streak step.",
-				key: "wheelBurstCountStepPx",
+				key: "wheelBurstCountKeyframePx",
 				label: "Streak step size",
 				min: 1,
 				step: 1,
@@ -170,7 +174,7 @@ const readerInputSettingGroups: Array<{
 			},
 			{
 				description: "Maximum distance one wheel batch can request.",
-				key: "wheelMaxStepPx",
+				key: "wheelMaxKeyframePx",
 				label: "Max step",
 				min: 1,
 				step: 1,
@@ -335,6 +339,7 @@ const readerInputSettingGroups: Array<{
  * <ReaderHubSettings />
  */
 export function ReaderHubSettings(): React.JSX.Element {
+	const tale = useTaleAppStore((state) => state.document.tale);
 	const settings = useTaleReaderStoreShallow((state) => ({
 		activityFadeDelaySeconds: state.ui.activityFadeDelaySeconds,
 		debugVisible: state.ui.debugVisible,
@@ -359,6 +364,13 @@ export function ReaderHubSettings(): React.JSX.Element {
 			data-reader-role="reader-settings"
 			className="space-y-2"
 		>
+			{tale.canEdit ? (
+				<Button asChild className="w-full" variant="outline">
+					<Link href={`/studio/${tale.id}`}>
+						<Pencil size={14} /> Edit in Studio
+					</Link>
+				</Button>
+			) : null}
 			<SettingsToggle
 				checked={settings.navigationPinsVisible}
 				label="Show navigation pins"

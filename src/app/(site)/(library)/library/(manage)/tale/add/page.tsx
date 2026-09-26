@@ -35,7 +35,7 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 					Sign in to start a tale.
 				</h1>
 				<p className="mt-3 text-muted-foreground leading-7">
-					Tales need an owner before their branches, blocks, and fragments can
+					Tales need an owner before their branches, scenes, and fragments can
 					be saved.
 				</p>
 				<Button asChild className="mt-5">
@@ -191,15 +191,15 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 				<ComicPanel accent="accent" className="p-5" shape="corner-bottom-left">
 					<h2 className="font-semibold text-lg">After save</h2>
 					<div className="mt-4 grid gap-3 text-sm">
-						<PreviewStep
+						<PreviewKeyframe
 							icon={<Settings2 className="size-4" />}
 							text="A minimal editable reader structure is created automatically."
 						/>
-						<PreviewStep
+						<PreviewKeyframe
 							icon={<BookOpen className="size-4" />}
 							text="The starter block shows the tale title in the center."
 						/>
-						<PreviewStep
+						<PreviewKeyframe
 							icon={<ArrowRight className="size-4" />}
 							text="Branching mode creates the first path."
 						/>
@@ -257,19 +257,19 @@ function StructurePreview() {
 				<div className="border-secondary border-l-4 bg-muted p-4">
 					<p className="font-semibold text-sm">Reader path</p>
 					<div className="mt-3 grid gap-2 text-sm">
-						<PreviewStep text="Branch" />
-						<PreviewStep text="Section" />
-						<PreviewStep text="Blocks" />
-						<PreviewStep text="Fragments" />
+						<PreviewKeyframe text="Branch" />
+						<PreviewKeyframe text="Section" />
+						<PreviewKeyframe text="Scenes" />
+						<PreviewKeyframe text="Elements" />
 					</div>
 				</div>
 				<div className="border-primary border-l-4 bg-muted p-4">
 					<p className="font-semibold text-sm">Narrative spine</p>
 					<div className="mt-3 grid gap-2 text-sm">
-						<PreviewStep text="Part" />
-						<PreviewStep text="Entry" />
-						<PreviewStep text="Pages" />
-						<PreviewStep text="Block links" />
+						<PreviewKeyframe text="Part" />
+						<PreviewKeyframe text="Entry" />
+						<PreviewKeyframe text="Pages" />
+						<PreviewKeyframe text="Scene links" />
 					</div>
 				</div>
 			</div>
@@ -277,7 +277,7 @@ function StructurePreview() {
 	);
 }
 
-function PreviewStep({
+function PreviewKeyframe({
 	icon,
 	text,
 }: {

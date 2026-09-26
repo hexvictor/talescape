@@ -6,11 +6,13 @@ export const taleProgressRouter = createTRPCRouter({
 	update: protectedProcedure
 		.input(
 			z.object({
-				blockId: z.string().nullable(),
+				sceneId: z.string().nullable(),
+				keyframeId: z.string().nullable(),
 				committedAnimationIds: z.array(z.string()),
 				id: z.number(),
 				innerProgress: z.number(),
-				seenBlockIds: z.array(z.string()),
+				seenSceneIds: z.array(z.string()),
+				seenKeyframeIds: z.array(z.string()),
 				seenEntryIds: z.array(z.string()),
 				seenPageIds: z.array(z.string()),
 				seenPartIds: z.array(z.string()),

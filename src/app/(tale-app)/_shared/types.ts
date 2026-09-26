@@ -15,7 +15,7 @@ export type Direction =
 
 export type StackPlacementPosition = "center" | "end" | "start";
 
-export type BlockFlow =
+export type SceneFlow =
 	| {
 			alignment?: "center" | "end" | "start";
 			direction: Direction;
@@ -38,9 +38,9 @@ export type BlockFlow =
 			verticalPlacement?: StackPlacementPosition;
 	  };
 
-export type FirstBlockTransitionMode = "fromPlacement" | "inPlace";
+export type FirstSceneTransitionMode = "fromPlacement" | "inPlace";
 
-export type PreviousBlocksDuringEnter =
+export type PreviousScenesDuringEnter =
 	| "fadeActivePrevious"
 	| "fadeAllVisiblePrevious"
 	| "customAllVisiblePrevious"
@@ -57,7 +57,7 @@ export type ReaderSpacing = {
 
 export type CameraPathPoint = { x: number; y: number };
 
-export type BlockCameraPath =
+export type SceneCameraPath =
 	| { mode: "auto" }
 	| { mode: "reverse-flow" }
 	| { direction: Direction; mode: "straight" }
@@ -126,27 +126,55 @@ export type AnimationTrack = AnimationTrackTiming &
 
 export type AnimationSelection = {
 	animations: AnimationTrack[];
+	durationSeconds?: number;
+	/** Paints the authored starting values before this animation becomes active. */
+	applyInitialStateBeforeStart?: boolean;
+	/** Uses this animation's completed values as the base for the next phase. */
+	carryEndStateForward?: boolean;
+};
+
+export type HoverAnimationSelection = {
+	animations: AnimationTrack[];
+	durationSeconds?: number;
 };
 
 export type AmbientAnimationSelection = AnimationSelection & {
 	cycleDurationMs?: number;
+	endFrameId?: string | null;
 	playback?: "alternate" | "restart";
+	startFrameId?: string | null;
 };
 
 export type ScrollAnimationPlayback = "commitOnComplete" | "scrub";
 
 export type TimelineRange = { end: number; start: number };
 
-export type FragmentAnimationConfig = {
+export type ElementAnimationConfig = {
 	ambient: AmbientAnimationSelection;
-	entering: AnimationSelection;
-	leaving: AnimationSelection;
-	scrolling: AnimationSelection;
+	previousFrameBridge?: AnimationSelection;
+	previousFrameBridgeLoop?: AmbientAnimationSelection;
+	frameIntro?: AnimationSelection;
+	frameOutro?: AnimationSelection;
+	nextFrameBridge?: AnimationSelection;
+	nextFrameBridgeLoop?: AmbientAnimationSelection;
+	previousBridge?: AnimationSelection;
+	previousBridgeLoop?: AmbientAnimationSelection;
+	sceneIntro?: AnimationSelection;
+	sceneOutro?: AnimationSelection;
+	nextBridge?: AnimationSelection;
+	nextBridgeLoop?: AmbientAnimationSelection;
+	intro: AnimationSelection;
+	introLoop?: AmbientAnimationSelection;
+	hover?: HoverAnimationSelection;
+	outro: AnimationSelection;
+	outroLoop?: AmbientAnimationSelection;
+	active: AnimationSelection;
+	activeLoop?: AmbientAnimationSelection;
 };
 
 export type EntityBounds = {
-	firstBlockId: string | null;
-	lastBlockId: string | null;
+	firstSceneId: string | null;
+	lastSceneId: string | null;
 };
 
 export type StructurePosition = {
@@ -155,7 +183,7 @@ export type StructurePosition = {
 	isLast: boolean;
 };
 
-export type BlockSize =
+export type SceneSize =
 	| {
 			horizontalAlignment: HorizontalCameraFraming;
 			height: number;
@@ -179,9 +207,16 @@ export type BlockSize =
 			verticalAlignment: VerticalCameraFraming;
 	  };
 
-export type NodeChild =
-	| { fragmentId: string; type: "fragment" }
-	| { nodeId: string; type: "node" };
+export type FrameChild =
+	| { elementId: string; type: "element" }
+	| { frameId: string; type: "frame" };
+
+/** Controls how a Frame's measured reading span is divided among Keyframes. */
+export type FrameActiveLengthConfig = {
+	allocations?: Record<string, number>;
+	mode: "content" | "manual";
+	unit?: "length" | "percentage";
+};
 
 export type ReaderStyle = {
 	alignContent?:
@@ -197,6 +232,16 @@ export type ReaderStyle = {
 	background?: string;
 	backgroundCss?: string;
 	backgroundImage?: string;
+	backgroundPosition?: string;
+	backgroundRepeat?:
+		| "no-repeat"
+		| "repeat"
+		| "repeat-x"
+		| "repeat-y"
+		| "round"
+		| "space";
+	backgroundSize?: string;
+	bottom?: number | string;
 	border?: string;
 	borderRadius?: number;
 	boxShadow?: string;
@@ -246,67 +291,103 @@ export type ReaderStyle = {
 	padding?: number | string;
 	paddingBlock?: number | string;
 	paddingInline?: number | string;
+	position?: "absolute" | "relative" | "static" | "sticky";
+	left?: number | string;
 	rowGap?: number | string;
 	textAlign?: "center" | "end" | "justify" | "left" | "right" | "start";
+	right?: number | string;
+	top?: number | string;
 	width?: number | string;
 	zIndex?: number;
 };
 
-export type TaleNode =
+export type TaleFrame = {
+	defaultElementStates?: Record<string, "active" | "inactive">;
+	/** Groups are layout/animation wrappers and never own Keyframes. */
+	kind?: "frame" | "group";
+	/** Author-facing label persisted in the frame row's `name` column. */
+	name?: string | null;
+	progression?: FrameActiveLengthConfig;
+	transition?: {
+		introEnabled?: boolean;
+		introLength?: number | null;
+		outroEnabled?: boolean;
+		outroLength?: number | null;
+		previousBridgeEnabled?: boolean;
+		previousBridgeLength?: number | null;
+		nextBridgeEnabled?: boolean;
+		nextBridgeLength?: number | null;
+	};
+	visibleDuringFrameIntro?: boolean;
+	visibleDuringFrameOutro?: boolean;
+	visibleDuringPreviousFrameBridge?: boolean;
+	visibleDuringNextFrameBridge?: boolean;
+	/** Shows this Frame and its default-active Elements while its Scene arrives. */
+	visibleDuringSceneIntro?: boolean;
+	/** Shows this Frame while its owning Scene outro transition runs. */
+	visibleDuringSceneOutro?: boolean;
+	visibleDuringPreviousBridge?: boolean;
+	visibleDuringNextBridge?: boolean;
+	/** Keeps this Frame visible before its own first Keyframe begins. */
+	visibleBeforeFrameIntro?: boolean;
+	/** @deprecated Split into the two explicit early-visibility gates above. */
+	visibleBeforeIntro?: boolean;
+} & (
 	| {
-			animations: FragmentAnimationConfig;
+			animations: ElementAnimationConfig;
 			align?: "center" | "end" | "start" | "stretch";
-			children: NodeChild[];
+			children: FrameChild[];
 			gap?: number;
 			id: string;
 			justify?: "center" | "end" | "space-between" | "start";
 			mode: "stack";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyle;
 	  }
 	| {
-			animations: FragmentAnimationConfig;
+			animations: ElementAnimationConfig;
 			align?: "center" | "end" | "start" | "stretch";
-			children: NodeChild[];
+			children: FrameChild[];
 			direction?: "column" | "column-reverse" | "row" | "row-reverse";
 			gap?: number;
 			id: string;
 			justify?: "center" | "end" | "space-between" | "start";
 			mode: "flex";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyle;
 			wrap?: boolean;
 	  }
 	| {
-			animations: FragmentAnimationConfig;
-			children: NodeChild[];
+			animations: ElementAnimationConfig;
+			children: FrameChild[];
 			columns?: number;
 			gap?: number;
 			id: string;
 			mode: "grid";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			rows?: number;
 			style?: ReaderStyle;
 	  }
 	| {
-			animations: FragmentAnimationConfig;
-			children: NodeChild[];
+			animations: ElementAnimationConfig;
+			children: FrameChild[];
 			id: string;
 			mode: "free";
 			overflow?: "clip" | "visible";
-			parentNodeId: string | null;
+			parentFrameId: string | null;
 			style?: ReaderStyle;
-	  };
+	  }
+);
 
-export type FragmentPlacement =
-	| { mode: "normal"; nodeId?: string; overflow?: "clip" | "visible" }
+export type ElementPlacement =
+	| { mode: "normal"; frameId?: string; overflow?: "clip" | "visible" }
 	| {
 			horizontal: "center" | "left" | "right";
 			mode: "absolute" | "fixed";
-			nodeId?: string;
+			frameId?: string;
 			overflow?: "clip" | "visible";
 			unit: "px" | "viewport";
 			vertical: "bottom" | "center" | "top";
@@ -320,7 +401,7 @@ export type AnimationPreset = {
 	id: string;
 	name: string;
 	source: "creator" | "official";
-	target: "block" | "fragment" | "both";
+	target: "both" | "element" | "scene";
 	tracks: AnimationTrack[];
 };
 
@@ -333,87 +414,116 @@ export type VisibilityPreset = {
 
 export type TransitionPreset = {
 	enteringAnimationPresetIds: string[];
-	flow: BlockFlow;
+	flow: SceneFlow;
 	id: string;
 	leavingAnimationPresetIds: string[];
 	name: string;
 	source: "creator" | "official";
 };
 
-export type BlockStylePreset = {
+export type SceneStylePreset = {
 	id: string;
 	name: string;
 	source: "creator" | "official";
 	style: ReaderStyle;
-	target: "block" | "fragment" | "both";
+	target: "both" | "element" | "scene";
 };
 
-export type TaleFragment = {
+export type TaleElement = {
 	alt?: string;
-	animations: {
-		ambient: AmbientAnimationSelection;
-		entering: AnimationSelection;
-		leaving: AnimationSelection;
-		scrolling: AnimationSelection;
-	};
+	animations: ElementAnimationConfig;
 	attribution?: string;
 	caption?: string;
 	fallbackSrc?: string | null;
 	id: string;
+	imageStyle?: ReaderStyle;
 	label?: string;
 	mood?: string;
-	nodeId: string | null;
+	mediaPlayback?: {
+		loop: boolean;
+		maxVolume: number;
+		mode: "click" | "controls" | "onEnter" | "scrollVolume";
+		scope: "element" | "frame" | "scene";
+	};
+	frameId: string | null;
 	order: number;
 	pathIds?: string[];
 	pathId?: string;
-	placement: FragmentPlacement;
+	placement: ElementPlacement;
 	prompt?: string;
+	progression?: {
+		enabled: boolean;
+		introLength: number;
+		outroLength: number;
+		pauses: { atEnd: number; atStart: number };
+		activeLength: number;
+		snap: TaleSceneSnapConfig;
+	};
 	src?: string | null;
 	style?: ReaderStyle;
 	text?: string;
-	type: "choiceButton" | "codexEntry" | "image" | "quote" | "soundCue" | "text";
-	responsiveOverrides?: Record<string, TaleFragmentResponsiveOverride>;
+	visibleDuringFrameIntro?: boolean;
+	visibleDuringFrameOutro?: boolean;
+	visibleDuringPreviousFrameBridge?: boolean;
+	visibleDuringNextFrameBridge?: boolean;
+	visibleDuringSceneIntro?: boolean;
+	visibleDuringSceneOutro?: boolean;
+	visibleDuringPreviousBridge?: boolean;
+	visibleDuringNextBridge?: boolean;
+	type:
+		| "audio"
+		| "choiceButton"
+		| "codexEntry"
+		| "image"
+		| "quote"
+		| "soundCue"
+		| "text"
+		| "video";
+	responsiveOverrides?: Record<string, TaleElementResponsiveOverride>;
 	visibleRange?: TimelineRange;
 };
 
-export type ResolvedTaleFragment = TaleFragment & {
-	blockId: string;
+export type ResolvedTaleElement = TaleElement & {
+	sceneId: string;
 	branchId: string;
 	entryId: string;
 	links: {
-		nextFragmentId: string | null;
-		nextFragmentIdInBlock: string | null;
-		previousFragmentId: string | null;
-		previousFragmentIdInBlock: string | null;
+		nextElementId: string | null;
+		nextElementIdInScene: string | null;
+		previousElementId: string | null;
+		previousElementIdInScene: string | null;
 	};
 	pageId: string;
 	partId: string;
 	position: StructurePosition & {
-		isFirstInBlock: boolean;
-		isLastInBlock: boolean;
+		isFirstInScene: boolean;
+		isLastInScene: boolean;
 	};
 	resolvedAnimations: {
 		ambient: AnimationTrack[];
 		ambientCycleDurationMs: number;
 		ambientPlayback: "alternate" | "restart";
-		entering: AnimationTrack[];
-		leaving: AnimationTrack[];
-		scrolling: AnimationTrack[];
+		intro: AnimationTrack[];
+		outro: AnimationTrack[];
+		active: AnimationTrack[];
 	};
 	resolvedVisibleRange: TimelineRange;
 };
 
-export type TaleBlock = {
-	autoplay?: TaleBlockAutoplayConfig;
+export type TaleScene = {
+	articleStyle?: ReaderStyle;
+	container?: SceneContainer;
+	autoplay?: TaleSceneAutoplayConfig;
 	branchId: string;
 	description?: string;
 	entryId: string;
-	fragmentIds: string[];
+	elementIds: string[];
 	id: string;
-	isChoiceBlock: boolean;
+	isChoiceScene: boolean;
 	isPaginated: boolean;
-	nodeIds: string[];
-	rootNodeId?: string;
+	frameIds: string[];
+	keyframeIds: string[];
+	rootFrameId?: string;
 	order: number;
 	pageId: string;
 	pageNumber: number | null;
@@ -421,66 +531,99 @@ export type TaleBlock = {
 	reading: {
 		animations: {
 			ambient: AmbientAnimationSelection;
-			scrolling: AnimationSelection;
+			hover?: HoverAnimationSelection;
+			/** Runs once across the complete Scene active span. */
+			sceneActive?: AnimationSelection;
+			/** Loops across the complete Scene active span. */
+			sceneActiveLoop?: AmbientAnimationSelection;
+			/** Runs once for each Keyframe active segment. */
+			active: AnimationSelection;
+			/** Loops independently inside each Keyframe active segment. */
+			activeLoop?: AmbientAnimationSelection;
 		};
-		cameraPath?: BlockCameraPath;
-		readingLength: number | null;
-		readingLengthMode: "content" | "manual";
+		cameraPath?: SceneCameraPath;
+		activeLength: number | null;
+		activeLengthMode: "content" | "manual";
 		pauses?: {
 			atEnd?: number;
 			atStart?: number;
 		};
 	};
-	size: BlockSize;
-	snap: TaleBlockSnapConfig;
+	size: SceneSize;
+	snap: TaleSceneSnapConfig;
 	style?: ReaderStyle;
 	title: string;
-	responsiveOverrides?: Record<string, TaleBlockResponsiveOverride>;
+	responsiveOverrides?: Record<string, TaleSceneResponsiveOverride>;
 	transition: {
 		animations: {
-			entering: AnimationSelection;
-			leaving: AnimationSelection;
+			intro: AnimationSelection;
+			introLoop?: AmbientAnimationSelection;
+			outro: AnimationSelection;
+			outroLoop?: AmbientAnimationSelection;
+			previousBridge?: AnimationSelection;
+			previousBridgeLoop?: AmbientAnimationSelection;
+			nextBridge?: AnimationSelection;
+			nextBridgeLoop?: AmbientAnimationSelection;
 			previousVisible: AnimationSelection;
 		};
-		enteringLength: number | null;
-		flow: BlockFlow;
-		leavingLength: number | null;
-		previousBlocksDuringEnter: PreviousBlocksDuringEnter;
+		introLength: number | null;
+		introEnabled?: boolean;
+		flow: SceneFlow;
+		outroLength: number | null;
+		outroEnabled?: boolean;
+		previousBridgeEnabled?: boolean;
+		previousBridgeLength?: number | null;
+		nextBridgeEnabled?: boolean;
+		nextBridgeLength?: number | null;
+		pauseAfterIntroEnabled?: boolean;
+		pauseBeforeOutroEnabled?: boolean;
+		previousScenesDuringEnter: PreviousScenesDuringEnter;
 		scrollLength: number | null;
 	};
 };
 
-export type TaleBlockSnapMode = "scroll-snap" | "snap" | "snap-off";
+export type SceneContainer = {
+	mode: "stack" | "flex" | "grid" | "free";
+	articleStyle?: ReaderStyle;
+	direction?: "row" | "column" | "row-reverse" | "column-reverse";
+	gap?: number;
+	columns?: number;
+	rows?: number;
+	overflow?: "clip" | "visible";
+	style?: ReaderStyle;
+};
 
-export type TaleBlockSnapDirection = "both" | "fromNext" | "fromPrevious";
+export type TaleSceneSnapMode = "scroll-snap" | "snap" | "snap-off";
 
-export type TaleBlockSnapStrategy = "separate" | "shared";
+export type TaleSceneSnapDirection = "both" | "fromNext" | "fromPrevious";
 
-export type TaleBlockSnapApproach = "backward" | "forward";
+export type TaleSceneSnapStrategy = "separate" | "shared";
 
-export type TaleBlockSnapSettings = {
+export type TaleSceneSnapApproach = "backward" | "forward";
+
+export type TaleSceneSnapSettings = {
 	captureDistancePx?: number | null;
 	durationSeconds?: number | null;
 	delayMs?: number | null;
 	minViewportFraction?: number | null;
 };
 
-export type TaleBlockSnapBehavior = {
-	mode: TaleBlockSnapMode;
-	settings?: TaleBlockSnapSettings | null;
+export type TaleSceneSnapBehavior = {
+	mode: TaleSceneSnapMode;
+	settings?: TaleSceneSnapSettings | null;
 };
 
-export type TaleBlockSnapConfig = TaleBlockSnapBehavior & {
-	backward?: TaleBlockSnapBehavior;
+export type TaleSceneSnapConfig = TaleSceneSnapBehavior & {
+	backward?: TaleSceneSnapBehavior;
 	/** Legacy direction field normalized when older tales are loaded. */
-	direction?: TaleBlockSnapDirection;
-	forward?: TaleBlockSnapBehavior;
-	strategy?: TaleBlockSnapStrategy;
+	direction?: TaleSceneSnapDirection;
+	forward?: TaleSceneSnapBehavior;
+	strategy?: TaleSceneSnapStrategy;
 };
 
 export type TaleSnapConfig = {
-	scrollSnap: TaleBlockSnapSettings;
-	snap: TaleBlockSnapSettings;
+	scrollSnap: TaleSceneSnapSettings;
+	snap: TaleSceneSnapSettings;
 };
 
 export type TalePlaybackConfig = {
@@ -500,13 +643,76 @@ export type TalePlaybackConfig = {
 	};
 };
 
-export type TaleBlockAutoplayConfig = {
+export type TaleSceneAutoplayConfig = {
 	enabled: boolean;
-	enteringSpeed: number | null;
-	leavingSpeed: number | null;
-	pauseAfterEnteringSeconds: number | null;
-	pauseBeforeLeavingSeconds: number | null;
-	readingSpeed: number | null;
+	introSpeed: number | null;
+	outroSpeed: number | null;
+	pauseAfterIntroSeconds: number | null;
+	pauseBeforeOutroSeconds: number | null;
+	activeSpeed: number | null;
+};
+
+export type KeyframeAction = {
+	animation?: AnimationSelection;
+	animationTarget?: "children" | "self";
+	id: string;
+	targetId: string;
+	targetType: "element" | "frame";
+	type:
+		| "inactive"
+		| "active"
+		| "intro"
+		| "outro"
+		| "continue"
+		| "stop"
+		| "disable"
+		| "enable"
+		| "hide"
+		| "pause"
+		| "play"
+		| "show";
+};
+
+export type TaleKeyframe = {
+	responsiveOverrides?: Record<
+		string,
+		Partial<
+			Pick<
+				TaleKeyframe,
+				| "actions"
+				| "autoplay"
+				| "reading"
+				| "transition"
+				| "snap"
+				| "order"
+				| "pageId"
+			>
+		>
+	>;
+	actions: KeyframeAction[];
+	autoplay?: TaleSceneAutoplayConfig;
+	branchId: string;
+	description?: string;
+	frameId: string | null;
+	id: string;
+	order: number;
+	pageId: string | null;
+	reading: TaleScene["reading"];
+	sceneId: string;
+	snap: TaleSceneSnapConfig;
+	title: string;
+	transition: {
+		introLength: number | null;
+		outroLength: number | null;
+	};
+};
+
+export type ResolvedTaleKeyframe = TaleKeyframe & {
+	links: {
+		nextKeyframeId: string | null;
+		previousKeyframeId: string | null;
+	};
+	position: StructurePosition;
 };
 
 export type TaleBackgroundTheme = {
@@ -519,25 +725,25 @@ export type TaleBackgroundConfig = {
 	light: TaleBackgroundTheme;
 };
 
-export type ResolvedTaleBlock = TaleBlock & {
-	clippedFragmentIds: string[];
-	fixedFragmentIds: string[];
-	flowFragmentIds: string[];
+export type ResolvedTaleScene = TaleScene & {
+	clippedElementIds: string[];
+	fixedElementIds: string[];
+	flowElementIds: string[];
 	links: {
-		nextBlockId: string | null;
-		nextBlockIdInBranch: string | null;
-		nextBlockIdInEntry: string | null;
-		nextBlockIdInPage: string | null;
-		nextBlockIdInPart: string | null;
-		previousBlockId: string | null;
-		previousBlockIdInBranch: string | null;
-		previousBlockIdInEntry: string | null;
-		previousBlockIdInPage: string | null;
-		previousBlockIdInPart: string | null;
+		nextSceneId: string | null;
+		nextSceneIdInBranch: string | null;
+		nextSceneIdInEntry: string | null;
+		nextSceneIdInPage: string | null;
+		nextSceneIdInPart: string | null;
+		previousSceneId: string | null;
+		previousSceneIdInBranch: string | null;
+		previousSceneIdInEntry: string | null;
+		previousSceneIdInPage: string | null;
+		previousSceneIdInPart: string | null;
 	};
-	rootNodeId: string;
-	overflowingFragmentIds: string[];
-	placedFragmentIds: string[];
+	rootFrameId: string;
+	overflowingElementIds: string[];
+	placedElementIds: string[];
 	position: StructurePosition & {
 		branchIndex: number;
 		entryIndex: number;
@@ -549,31 +755,32 @@ export type ResolvedTaleBlock = TaleBlock & {
 		isLastInEntry: boolean;
 		isLastInPage: boolean;
 		isLastInPart: boolean;
-		isPageBlock: boolean;
+		isPageScene: boolean;
 		pageIndex: number;
 		partIndex: number;
 	};
 	resolved: {
 		background: string;
-		flow: BlockFlow;
+		flow: SceneFlow;
 		hasImage: boolean;
 		readingAnimations: {
 			ambient: AnimationTrack[];
 			ambientCycleDurationMs: number;
 			ambientPlayback: "alternate" | "restart";
-			scrolling: AnimationTrack[];
+			sceneActive: AnimationTrack[];
+			active: AnimationTrack[];
 		};
 		style: ReaderStyle;
 		transitionAnimations: {
-			entering: AnimationTrack[];
-			leaving: AnimationTrack[];
+			intro: AnimationTrack[];
+			outro: AnimationTrack[];
 			previousVisible: AnimationTrack[];
 		};
 	};
 };
 
 export type TaleBranch = {
-	blockIds: string[];
+	sceneIds: string[];
 	description?: string;
 	id: string;
 	order: number;
@@ -585,7 +792,7 @@ export type TaleBranch = {
 export type ResolvedTaleBranch = TaleBranch & {
 	bounds: EntityBounds;
 	counts: {
-		blocks: number;
+		scenes: number;
 	};
 	links: {
 		incomingPathIds: string[];
@@ -613,7 +820,7 @@ export type TaleEntry = {
 };
 
 export type ResolvedTaleEntry = TaleEntry & {
-	blockIds: string[];
+	sceneIds: string[];
 	bounds: EntityBounds & {
 		firstPageId: string | null;
 		lastPageId: string | null;
@@ -625,7 +832,7 @@ export type ResolvedTaleEntry = TaleEntry & {
 	};
 	pageIds: string[];
 	counts: {
-		blocks: number;
+		scenes: number;
 		pages: number;
 	};
 	links: {
@@ -642,11 +849,12 @@ export type ResolvedTaleEntry = TaleEntry & {
 };
 
 export type TalePage = {
-	blockIds: string[];
+	sceneIds: string[];
 	description?: string;
 	entryId: string;
 	id: string;
 	isPaginated: boolean;
+	order: number;
 	partId: string;
 	title?: string;
 	type: string;
@@ -654,11 +862,11 @@ export type TalePage = {
 
 export type ResolvedTalePage = TalePage & {
 	bounds: {
-		firstBlockId: string | null;
-		lastBlockId: string | null;
+		firstSceneId: string | null;
+		lastSceneId: string | null;
 	};
 	counts: {
-		blocks: number;
+		scenes: number;
 	};
 	links: {
 		nextPageId: string | null;
@@ -686,7 +894,7 @@ export type TalePart = {
 };
 
 export type ResolvedTalePart = TalePart & {
-	blockIds: string[];
+	sceneIds: string[];
 	bounds: EntityBounds & {
 		firstEntryId: string | null;
 		firstPageId: string | null;
@@ -696,7 +904,7 @@ export type ResolvedTalePart = TalePart & {
 	entryIds: string[];
 	pageIds: string[];
 	counts: {
-		blocks: number;
+		scenes: number;
 		entries: number;
 		pages: number;
 	};
@@ -709,12 +917,14 @@ export type ResolvedTalePart = TalePart & {
 
 export type TalePath = {
 	description: string;
-	fromBlockId: string;
+	fromSceneId: string;
+	fromKeyframeId: string | null;
 	fromBranchId: string;
 	id: string;
 	label: string;
 	order: number;
-	toBlockId: string;
+	toSceneId: string;
+	toKeyframeId: string | null;
 	toBranchId: string;
 	type: "choice" | "linear" | "return" | "teleport";
 };
@@ -729,7 +939,7 @@ export type ResolvedTalePath = TalePath & {
 export type Point = { x: number; y: number };
 
 export type Anchor = {
-	blockId: string;
+	sceneId: string;
 	branchId: string;
 	cameraFramingOffset: Point;
 	cameraPoint: Point;
@@ -746,15 +956,16 @@ export type Anchor = {
 
 export type TaleIndexMap = {
 	animationPresetsById: Record<string, AnimationPreset>;
-	blocksById: Record<string, ResolvedTaleBlock>;
-	blockStylePresetsById: Record<string, BlockStylePreset>;
+	scenesById: Record<string, ResolvedTaleScene>;
+	sceneStylePresetsById: Record<string, SceneStylePreset>;
 	branchesById: Record<string, ResolvedTaleBranch>;
 	entriesById: Record<string, ResolvedTaleEntry>;
-	fragmentsById: Record<string, ResolvedTaleFragment>;
-	nodesById: Record<string, TaleNode>;
+	elementsById: Record<string, ResolvedTaleElement>;
+	framesById: Record<string, TaleFrame>;
 	pagesById: Record<string, ResolvedTalePage>;
 	partsById: Record<string, ResolvedTalePart>;
 	pathsById: Record<string, ResolvedTalePath>;
+	keyframesById: Record<string, ResolvedTaleKeyframe>;
 	transitionPresetsById: Record<string, TransitionPreset>;
 	visibilityPresetsById: Record<string, VisibilityPreset>;
 };
@@ -768,42 +979,44 @@ export type TaleContent = {
 
 export type TaleOrder = {
 	animationPresetIds: string[];
-	blockIds: string[];
-	blockStylePresetIds: string[];
+	sceneIds: string[];
+	sceneStylePresetIds: string[];
 	branchIds: string[];
 	entryIds: string[];
-	fragmentIds: string[];
-	nodeIds: string[];
+	elementIds: string[];
+	frameIds: string[];
 	numberedPageIds: string[];
 	pageIds: string[];
 	partIds: string[];
 	pathIds: string[];
+	keyframeIds: string[];
 	transitionPresetIds: string[];
 	visibilityPresetIds: string[];
 };
 
 export type TaleCounts = {
-	blocks: number;
+	scenes: number;
 	branches: number;
 	entries: number;
-	fragments: number;
-	nodes: number;
+	elements: number;
+	frames: number;
 	pages: number;
 	parts: number;
 	paths: number;
+	keyframes: number;
 };
 
 export type TaleBounds = {
-	firstBlockId: string | null;
+	firstSceneId: string | null;
 	firstBranchId: string | null;
 	firstEntryId: string | null;
-	firstFragmentId: string | null;
+	firstElementId: string | null;
 	firstPageId: string | null;
 	firstPartId: string | null;
-	lastBlockId: string | null;
+	lastSceneId: string | null;
 	lastBranchId: string | null;
 	lastEntryId: string | null;
-	lastFragmentId: string | null;
+	lastElementId: string | null;
 	lastPageId: string | null;
 	lastPartId: string | null;
 	rootBranchId: string | null;
@@ -815,6 +1028,7 @@ export type Tale = Partial<Omit<TaleSchema, "id">> &
 		book: Book | null;
 		backgroundConfig: TaleBackgroundConfig;
 		creator: PublicUserInfo | null;
+		canEdit?: boolean;
 		id: number;
 		playbackConfig: TalePlaybackConfig;
 		snapConfig: TaleSnapConfig;
@@ -823,24 +1037,25 @@ export type Tale = Partial<Omit<TaleSchema, "id">> &
 
 export type RawTaleRecord = {
 	animationPresets: AnimationPreset[];
-	blocks: TaleBlock[];
-	blockStylePresets: BlockStylePreset[];
+	scenes: TaleScene[];
+	sceneStylePresets: SceneStylePreset[];
 	breakpoints: TaleBreakpoint[];
 	branches: TaleBranch[];
 	entries: TaleEntry[];
-	fragments: TaleFragment[];
+	elements: TaleElement[];
 	id: number;
-	nodes: TaleNode[];
+	frames: TaleFrame[];
 	pages: TalePage[];
 	parts: TalePart[];
 	paths: TalePath[];
+	keyframes: TaleKeyframe[];
 	playbackConfig: TalePlaybackConfig;
 	backgroundConfig: TaleBackgroundConfig;
 	slug: string;
 	snapConfig: TaleSnapConfig;
 	synopsis: string;
 	title: string;
-	firstBlockTransitionMode: FirstBlockTransitionMode;
+	firstSceneTransitionMode: FirstSceneTransitionMode;
 	transitionPresets: TransitionPreset[];
 	visibilityPresets: VisibilityPreset[];
 };
@@ -855,23 +1070,33 @@ export type LayoutPhase =
 	| "preparing-motion"
 	| "ready";
 
-export type ResolvedBlockSize = {
+export type ResolvedSceneSize = {
 	height: number;
 	width: number;
 };
 
 export type TimelineSegment =
 	| {
-			blockId: string;
+			sceneId: string;
+			keyframeId: string;
+			cameraProgress: number;
 			end: number;
 			index: number;
 			length: number;
-			pauseType: "end" | "start";
+			pauseType: "end" | "frame-enter" | "frame-leave" | "start";
+			phaseOwner?: "frame" | "scene";
+			frameId?: string;
+			fromFrameId?: string | null;
+			toFrameId?: string | null;
+			framePhase?: "intro" | "outro" | "bridge";
 			start: number;
 			type: "pause";
 	  }
 	| {
-			blockId: string;
+			sceneId: string;
+			keyframeId: string;
+			cameraProgressEnd: number;
+			cameraProgressStart: number;
 			end: number;
 			index: number;
 			length: number;
@@ -880,24 +1105,36 @@ export type TimelineSegment =
 	  }
 	| {
 			end: number;
-			fromBlockId: string | null;
+			fromSceneId: string | null;
 			index: number;
 			length: number;
 			start: number;
-			toBlockId: string;
+			toSceneId: string;
+			/** The outgoing and incoming sides may enable their bridge tracks independently. */
+			incomingBridgeEnabled?: boolean;
+			outgoingBridgeEnabled?: boolean;
+			phase?: "bridge" | "opening";
 			type: "transition";
 	  };
 
 export type SnapPoint = {
-	blockId: string;
-	direction?: TaleBlockSnapDirection;
+	sceneId: string;
+	keyframeId: string;
+	direction?: TaleSceneSnapDirection;
 	id: string;
-	mode: TaleBlockSnapMode;
+	mode: TaleSceneSnapMode;
 	scroll: number;
-	settings?: TaleBlockSnapSettings | null;
+	settings?: TaleSceneSnapSettings | null;
 	transitionEnd?: number;
 	transitionStart?: number;
-	type: "block-end" | "block-start" | "choice-end";
+	type:
+		| "scene-end"
+		| "scene-start"
+		| "step-end"
+		| "step-start"
+		| "element-end"
+		| "element-start"
+		| "choice-end";
 };
 
 export type ReaderScrollTargetOptions = {
@@ -908,30 +1145,32 @@ export type ReaderScrollTargetOptions = {
 };
 
 export type CompiledReader = {
-	anchorIndexByBlockId: Record<string, number>;
+	anchorIndexBySceneId: Record<string, number>;
 	anchors: Anchor[];
 	contents: ReaderContentsPart[];
 	entries: ReaderContentsEntry[];
 	entryIndexById: Record<string, number>;
-	heldPreviousTakeoverBlockIdByAnchorIndex: Array<string | null>;
+	heldPreviousTakeoverSceneIdByAnchorIndex: Array<string | null>;
 	openingTransitionAnchor: Anchor | null;
 	pageIndexById: Record<string, number>;
 	pages: ReaderContentsPage[];
-	previousVisibleBlockIdsByEnteringBlockId: Record<string, string[]>;
-	segmentIndexByBlockId: Record<string, number>;
+	previousVisibleSceneIdsByEnteringSceneId: Record<string, string[]>;
+	segmentIndexBySceneId: Record<string, number>;
+	segmentIndexByKeyframeId: Record<string, number>;
 	segments: TimelineSegment[];
 	segmentStarts: number[];
 	snapConfig: TaleSnapConfig;
 	snapPoints: SnapPoint[];
 	totalScroll: number;
-	transitionIntoByBlockId: Record<string, number>;
-	transitionOutOfByBlockId: Record<string, number>;
+	transitionIntoBySceneId: Record<string, number>;
+	transitionOutOfBySceneId: Record<string, number>;
 };
 
 export type ReaderContentsEntry = {
-	blockIds: string[];
+	sceneIds: string[];
+	keyframeIds: string[];
 	chapterNumber: number | null;
-	hasChoiceBlock: boolean;
+	hasChoiceScene: boolean;
 	id: string;
 	partSpans: ReaderContentsEntryPartSpan[];
 	pageIds: string[];
@@ -945,8 +1184,9 @@ export type ReaderContentsEntryPartSpan = {
 };
 
 export type ReaderContentsPage = {
-	blockIds: string[];
-	hasChoiceBlock: boolean;
+	sceneIds: string[];
+	keyframeIds: string[];
+	hasChoiceScene: boolean;
 	id: string;
 	number: number | null;
 };
@@ -959,7 +1199,8 @@ export type ReaderContentsPart = {
 export type TaleAccessAction = "edit" | "read";
 
 export type ReaderLocation = {
-	blockId: string;
+	sceneId: string;
+	keyframeId: string;
 	branchId: string;
 	entryId: string;
 	pageId: string;
@@ -968,22 +1209,55 @@ export type ReaderLocation = {
 };
 
 export type TaleInspectorTarget =
-	| { id: string; type: "block" }
 	| {
-			blockId: string;
+			id: string;
+			initialTab?:
+				| "layout"
+				| "motion"
+				| "size"
+				| "style"
+				| "summary"
+				| "narrative";
+			returnTarget?: TaleInspectorTarget;
+			type: "scene";
+	  }
+	| {
+			sceneId: string;
 			id: string;
 			initialTab?: "content" | "motion" | "placement" | "style" | "summary";
-			type: "fragment";
+			returnTarget?: TaleInspectorTarget;
+			type: "element";
 	  }
-	| { blockId: string; id: string; type: "node" };
+	| {
+			sceneId: string;
+			id: string;
+			initialTab?:
+				| "elements"
+				| "keyframes"
+				| "motion"
+				| "style"
+				| "summary"
+				| "narrative";
+			returnTarget?: TaleInspectorTarget;
+			type: "frame";
+	  }
+	| {
+			sceneId: string;
+			id: string;
+			initialTab?: "actions" | "details" | "page" | "progression";
+			returnTarget?: TaleInspectorTarget;
+			type: "keyframe";
+	  };
 
 export type SavedReaderProgress = {
-	blockId: string | null;
+	sceneId: string | null;
+	keyframeId: string | null;
 	committedAnimationIds: string[];
 	id?: number;
 	innerProgress: number;
 	selectedBranchIds: string[];
-	seenBlockIds: string[];
+	seenSceneIds: string[];
+	seenKeyframeIds: string[];
 	seenEntryIds: string[];
 	seenPageIds: string[];
 	seenPartIds: string[];
@@ -1011,13 +1285,15 @@ export type TaleBreakpoint = {
 	order: number;
 };
 
-export type TaleBlockResponsiveOverride = Partial<
+export type TaleSceneResponsiveOverride = Partial<
 	Pick<
-		TaleBlock,
+		TaleScene,
+		| "articleStyle"
 		| "description"
-		| "nodeIds"
+		| "container"
+		| "frameIds"
 		| "reading"
-		| "rootNodeId"
+		| "rootFrameId"
 		| "size"
 		| "style"
 		| "title"
@@ -1025,14 +1301,15 @@ export type TaleBlockResponsiveOverride = Partial<
 	>
 >;
 
-export type TaleFragmentResponsiveOverride = Partial<
+export type TaleElementResponsiveOverride = Partial<
 	Pick<
-		TaleFragment,
+		TaleElement,
 		| "alt"
 		| "animations"
 		| "attribution"
 		| "caption"
 		| "fallbackSrc"
+		| "imageStyle"
 		| "label"
 		| "mood"
 		| "pathId"

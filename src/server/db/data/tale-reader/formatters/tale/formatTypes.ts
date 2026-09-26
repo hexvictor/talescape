@@ -8,16 +8,17 @@ import type { TaleSchema } from "~/server/db/schema";
  * const record: DbTaleRecord = await getTaleRecord();
  */
 export type DbTaleRecord = TaleSchema & {
-	blocks?: unknown[];
+	scenes?: unknown[];
 	book?: Tale["book"];
 	branches?: unknown[];
 	creatorById?: Tale["creator"];
 	entries?: unknown[];
-	fragments?: unknown[];
-	nodes?: unknown[];
+	elements?: unknown[];
+	frames?: unknown[];
 	pages?: unknown[];
 	parts?: unknown[];
 	paths?: unknown[];
+	keyframes?: unknown[];
 };
 
 /**
@@ -28,7 +29,7 @@ export type DbTaleRecord = TaleSchema & {
  */
 export type OfficialPresetRows = {
 	animationPresets?: unknown[];
-	blockStylePresets?: unknown[];
+	sceneStylePresets?: unknown[];
 	transitionPresets?: unknown[];
 	visibilityPresets?: unknown[];
 };

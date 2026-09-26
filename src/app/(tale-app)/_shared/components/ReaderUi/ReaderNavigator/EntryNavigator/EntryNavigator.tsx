@@ -156,9 +156,9 @@ export function EntryNavigator(): React.JSX.Element | null {
 
 	if (!compiled || allEntries.length <= 1 || currentIndex < 0) return null;
 
-	const travelToBlock = (blockId: string): void => {
+	const travelToPage = (keyframeId: string): void => {
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToBlock(blockId, { motion: "travel" });
+		scrollApi?.scrollToKeyframe(keyframeId, { motion: "travel" });
 	};
 	const clearTouchPreview = (): void => {
 		window.clearTimeout(touchPreviewTimerRef.current ?? undefined);
@@ -236,7 +236,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 							"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg transition",
 							entry.id === currentEntryId
 								? "border-primary bg-primary text-background"
-								: entry.hasChoiceBlock
+								: entry.hasChoiceScene
 									? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/45 dark:bg-[#8bcf90]/10 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 									: hoveredEntryPreview?.entryId === entry.id
 										? "border-foreground/35 bg-foreground/12 text-foreground"
@@ -266,7 +266,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 								touchPreviewTriggeredRef.current = false;
 								return;
 							}
-							travelToBlock(entry.firstBlockId);
+							travelToPage(entry.firstKeyframeId);
 						}}
 					>
 						{entry.type === "chapter" ? (
@@ -386,11 +386,11 @@ export function EntryNavigator(): React.JSX.Element | null {
 									currentPart={currentPart}
 									open={partsOpen}
 									parts={contents}
-									showStepButtons={!mobile}
+									showKeyframeButtons={!mobile}
 									onOpenChange={setPartsOpen}
 									onSelect={(part) => {
 										setSelectedPartId(part.id);
-										travelToBlock(part.firstBlockId);
+										travelToPage(part.firstKeyframeId);
 										setPartsOpen(false);
 									}}
 								/>
@@ -400,15 +400,13 @@ export function EntryNavigator(): React.JSX.Element | null {
 									type="button"
 									aria-label="Previous entry"
 									disabled={currentIndex <= 0}
-									className="reader-connected-tab reader-connected-tab-top grid h-8 w-8 place-items-center rounded-full border border-b-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:cursor-default disabled:text-foreground/20"
+									className="reader-connected-tab reader-connected-tab-top hover:-translate-y-px grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
 									onClick={() => {
 										const previousEntry = allEntries[currentIndex - 1];
-										if (previousEntry) {
-											travelToBlock(previousEntry.firstBlockId);
-										}
+										if (previousEntry) travelToPage(previousEntry.firstKeyframeId);
 									}}
 								>
-									<ChevronUp size={14} />
+									<ChevronUp size={15} strokeWidth={2.5} />
 								</button>
 							</div>
 							<button
@@ -417,13 +415,13 @@ export function EntryNavigator(): React.JSX.Element | null {
 								type="button"
 								aria-label="Next entry"
 								disabled={currentIndex >= allEntries.length - 1}
-								className="reader-connected-tab reader-connected-tab-bottom -translate-x-1/2 absolute top-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-20 grid h-8 w-8 place-items-center rounded-full border border-t-0 text-foreground/55 shadow-xl backdrop-blur-md hover:text-foreground disabled:cursor-default disabled:text-foreground/20"
+								className="reader-connected-tab reader-connected-tab-bottom -translate-x-1/2 hover:-translate-x-1/2 absolute top-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-20 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:translate-y-px hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
 								onClick={() => {
 									const nextEntry = allEntries[currentIndex + 1];
-									if (nextEntry) travelToBlock(nextEntry.firstBlockId);
+									if (nextEntry) travelToPage(nextEntry.firstKeyframeId);
 								}}
 							>
-								<ChevronDown size={14} />
+								<ChevronDown size={15} strokeWidth={2.5} />
 							</button>
 							<div
 								data-reader-component="EntryNavigator"
@@ -492,7 +490,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 										<EntryPageFlyout
 											currentPageId={currentPageId}
 											entry={hoveredEntry}
-											onNavigate={travelToBlock}
+											onNavigate={travelToPage}
 										/>
 									</motion.div>
 								) : null}

@@ -10,8 +10,8 @@ import type { ReaderDomRegistry } from "./readerDomRegistry";
 export function getUniqueAnchors(anchors: Anchor[]): Anchor[] {
 	const seen = new Set<string>();
 	return anchors.filter((anchor) => {
-		if (seen.has(anchor.blockId)) return false;
-		seen.add(anchor.blockId);
+		if (seen.has(anchor.sceneId)) return false;
+		seen.add(anchor.sceneId);
 		return true;
 	});
 }
@@ -19,7 +19,7 @@ export function getUniqueAnchors(anchors: Anchor[]): Anchor[] {
 /**
  * Resolves every mounted anchor that needs a deterministic animation style.
  *
- * Nearby hidden blocks are included so their future entering state is painted
+ * Nearby hidden scenes are included so their future intro state is painted
  * before they can intersect the viewport.
  *
  * @param paintedAnchors - Anchors visible or controlled by an active takeover.
@@ -37,42 +37,42 @@ export function getReaderStyleAnchors(
 }
 
 /**
- * Creates a visibility painter that updates mounted blocks only when the
+ * Creates a visibility painter that updates mounted scenes only when the
  * visible set, foreground set, or DOM registry changes.
  *
  * @param registry - Direct references to mounted reader elements.
- * @param anchorIndexByBlockId - Route index lookup used for proximity layering.
+ * @param anchorIndexBySceneId - Route index lookup used for proximity layering.
  * @returns Cached visibility painter.
  */
 export function createReaderVisibilityPainter(
 	registry: ReaderDomRegistry,
-	anchorIndexByBlockId: CompiledReader["anchorIndexByBlockId"],
+	anchorIndexBySceneId: CompiledReader["anchorIndexBySceneId"],
 ): (
 	anchors: Anchor[],
-	foregroundBlockIds: Set<string>,
+	foregroundSceneIds: Set<string>,
 	activeAnchorIndex: number | undefined,
 ) => void {
 	let previousKey = "";
 
-	return (anchors, foregroundBlockIds, activeAnchorIndex): void => {
-		const visibleIds = new Set(anchors.map((anchor) => anchor.blockId));
-		const visibleKey = anchors.map((anchor) => anchor.blockId).join("|");
-		const foregroundKey = [...foregroundBlockIds].join("|");
+	return (anchors, foregroundSceneIds, activeAnchorIndex): void => {
+		const visibleIds = new Set(anchors.map((anchor) => anchor.sceneId));
+		const visibleKey = anchors.map((anchor) => anchor.sceneId).join("|");
+		const foregroundKey = [...foregroundSceneIds].join("|");
 		const key = `${registry.getRevision()}:${visibleKey}:${foregroundKey}:${activeAnchorIndex ?? -1}`;
 		if (key === previousKey) return;
 		previousKey = key;
 
-		for (const [blockId, element] of registry.blockElementById) {
-			const visible = visibleIds.has(blockId);
+		for (const [sceneId, element] of registry.sceneElementById) {
+			const visible = visibleIds.has(sceneId);
 			const visibility = visible ? "visible" : "hidden";
 			const pointerEvents = visible ? "auto" : "none";
-			const routeIndex = anchorIndexByBlockId[blockId];
+			const routeIndex = anchorIndexBySceneId[sceneId];
 			const distance =
 				activeAnchorIndex === undefined || routeIndex === undefined
 					? 0
 					: Math.abs(routeIndex - activeAnchorIndex);
 			const zIndex = visible
-				? foregroundBlockIds.has(blockId)
+				? foregroundSceneIds.has(sceneId)
 					? String(100 + Math.max(routeIndex ?? 0, 0))
 					: String(Math.max(1, 50 - distance))
 				: "0";
@@ -85,7 +85,7 @@ export function createReaderVisibilityPainter(
 			if (element.style.zIndex !== zIndex) element.style.zIndex = zIndex;
 			element.dataset.readerViewportState = visible ? "visible" : "nearby";
 
-			for (const fixedElement of registry.fixedElementsByBlockId.get(blockId) ??
+			for (const fixedElement of registry.fixedElementsBySceneId.get(sceneId) ??
 				[]) {
 				const fixedPointerEvents = fixedElement.dataset.readerRole?.endsWith(
 					"fixed-fragment-layer",

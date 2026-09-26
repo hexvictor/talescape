@@ -1,7 +1,7 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
 import type { PageType } from "~/server/db/types/tale-reader/page";
-import { blocks } from "../layout-structure/blocks";
+import { keyframes } from "../layout-structure/keyframes";
 import { tales } from "../tales";
 import { entries } from "./entries";
 import { parts } from "./parts";
@@ -45,7 +45,7 @@ export const pagesRelations = relations(pages, ({ one, many }) => ({
 		fields: [pages.entryId],
 		references: [entries.id],
 	}),
-	blocks: many(blocks),
+	keyframes: many(keyframes),
 }));
 
 export type PageSchema = InferSelectModel<typeof pages>;

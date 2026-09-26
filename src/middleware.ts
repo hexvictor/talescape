@@ -11,7 +11,7 @@ const isProtectedRoute = createRouteMatcher([
 	"/library/tale/add",
 	"/library/tale/:taleId/edit",
 	"/library/fragment/add",
-	"/library/fragment/:fragmentId/edit",
+	"/library/fragment/:elementId/edit",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

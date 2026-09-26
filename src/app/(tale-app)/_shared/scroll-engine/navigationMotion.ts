@@ -1,4 +1,4 @@
-import { getAnchorByBlockId } from "../services/readerLookups";
+import { getAnchorBySceneId } from "../services/readerLookups";
 import { clamp } from "../services/readerMath";
 import type {
 	Anchor,
@@ -51,7 +51,8 @@ export function createReaderNavigationMotion(
 	lifecycle: ReaderNavigationMotionOptions,
 ): {
 	cleanup: () => void;
-	scrollToBlock: (blockId: string, options?: ReaderScrollTargetOptions) => void;
+	scrollToScene: (sceneId: string, options?: ReaderScrollTargetOptions) => void;
+	scrollToKeyframe: (keyframeId: string, options?: ReaderScrollTargetOptions) => void;
 	scrollToTimelineEdge: (edge: "end" | "start") => void;
 } {
 	const viewportSpan = Math.max(viewport.width, viewport.height, 1);
@@ -87,7 +88,7 @@ export function createReaderNavigationMotion(
 
 	const getTravelDuration = (distance: number, duration?: number): number => {
 		if (duration !== undefined) return duration;
-		const estimatedBlockCount = Math.max(
+		const estimatedSceneCount = Math.max(
 			1,
 			Math.ceil(
 				(distance / Math.max(compiled.totalScroll, 1)) *
@@ -96,7 +97,7 @@ export function createReaderNavigationMotion(
 		);
 		return clamp(
 			defaultTravelDurationSeconds +
-				estimatedBlockCount * travelSecondsPerEstimatedBlock,
+				estimatedSceneCount * travelSecondsPerEstimatedBlock,
 			defaultTravelDurationSeconds,
 			maximumTravelDurationSeconds,
 		);
@@ -182,20 +183,20 @@ export function createReaderNavigationMotion(
 		);
 	};
 
-	const scrollToBlock = (
-		blockId: string,
+	const scrollToScene = (
+		sceneId: string,
 		options?: ReaderScrollTargetOptions,
 	): void => {
-		const anchor = getAnchorByBlockId(compiled, blockId);
+		const anchor = getAnchorBySceneId(compiled, sceneId);
 		if (!anchor) return;
-		const block = tale.indexMap.blocksById[blockId];
+		const block = tale.indexMap.scenesById[sceneId];
 		const targetScroll =
-			options?.atChoiceEnd && block?.isChoiceBlock
-				? getReadingSegmentEnd(compiled, blockId, anchor.scroll)
+			options?.atChoiceEnd && block?.isChoiceScene
+				? getReadingSegmentEnd(compiled, sceneId, anchor.scroll)
 				: anchor.scroll;
 		const currentScroll = driver.getScroll();
 		const direction = targetScroll >= currentScroll ? 1 : -1;
-		const transitionIndex = compiled.transitionIntoByBlockId[blockId];
+		const transitionIndex = compiled.transitionIntoBySceneId[sceneId];
 		const transition =
 			transitionIndex === undefined ? null : compiled.segments[transitionIndex];
 		const candidateApproachScroll =
@@ -204,7 +205,7 @@ export function createReaderNavigationMotion(
 			transition.start < targetScroll &&
 			direction === 1
 				? transition.start
-				: compiled.anchorIndexByBlockId[blockId] === 0
+				: compiled.anchorIndexBySceneId[sceneId] === 0
 					? null
 					: getFallbackApproach(
 							targetScroll,
@@ -240,9 +241,25 @@ export function createReaderNavigationMotion(
 		);
 	};
 
+	const scrollToKeyframe = (
+		keyframeId: string,
+		options?: ReaderScrollTargetOptions,
+	): void => {
+		const segmentIndex = compiled.segmentIndexByKeyframeId[keyframeId];
+		const segment = compiled.segments[segmentIndex ?? -1];
+		if (!segment || segment.type === "transition") return;
+		const targetAnchor = getAnchorBySceneId(compiled, segment.sceneId);
+		if (!targetAnchor) return;
+		navigateToTarget(
+			{ approachScroll: null, targetAnchor, targetScroll: segment.start },
+			options,
+		);
+	};
+
 	return {
 		cleanup: cancelNavigation,
-		scrollToBlock,
+		scrollToScene,
+		scrollToKeyframe,
 		scrollToTimelineEdge,
 	};
 }
@@ -263,16 +280,16 @@ function isBetween(value: number, first: number, second: number): boolean {
  * Finds the end of a block's reading segment.
  *
  * @param compiled - Current compiled timeline.
- * @param blockId - Target block identifier.
+ * @param sceneId - Target block identifier.
  * @param fallback - Value returned when the reading segment is unavailable.
  * @returns Reading segment end.
  */
 function getReadingSegmentEnd(
 	compiled: CompiledReader,
-	blockId: string,
+	sceneId: string,
 	fallback: number,
 ): number {
-	const segmentIndex = compiled.segmentIndexByBlockId[blockId];
+	const segmentIndex = compiled.segmentIndexBySceneId[sceneId];
 	const segment =
 		segmentIndex === undefined ? null : compiled.segments[segmentIndex];
 	return segment?.type === "reading" ? segment.end : fallback;

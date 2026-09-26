@@ -4,11 +4,11 @@ import { and, count, eq, inArray } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
 	authors,
-	blocks,
+	scenes,
 	books,
 	branches,
 	entries,
-	fragments,
+	elements,
 	pages,
 	parts,
 	paths,
@@ -45,8 +45,8 @@ export async function getLibraryCounts() {
 		getVisibleAuthorCount(userId),
 		getVisibleTaleCount(userId),
 		getVisibleBranchCount(userId),
-		getVisibleBlockCount(userId),
-		getVisibleFragmentCount(userId),
+		getVisibleSceneCount(userId),
+		getVisibleElementCount(userId),
 		getVisiblePathCount(userId),
 		getVisiblePartCount(userId),
 		getVisibleEntryCount(userId),
@@ -57,10 +57,10 @@ export async function getLibraryCounts() {
 		books: booksCount,
 		authors: authorsCount,
 		tales: talesCount,
-		nodes: branchesCount + blocksCount + fragmentsCount,
+		frames: branchesCount + blocksCount + fragmentsCount,
 		branches: branchesCount,
-		blocks: blocksCount,
-		fragments: fragmentsCount,
+		scenes: blocksCount,
+		elements: fragmentsCount,
 		paths: pathsCount,
 		parts: partsCount,
 		entries: entriesCount,
@@ -75,8 +75,8 @@ export async function getCountsByTaleIds(
 	if (taleIds.length === 0) {
 		return {
 			branches: new Map<number, number>(),
-			blocks: new Map<number, number>(),
-			fragments: new Map<number, number>(),
+			scenes: new Map<number, number>(),
+			elements: new Map<number, number>(),
 			paths: new Map<number, number>(),
 			parts: new Map<number, number>(),
 			entries: new Map<number, number>(),
@@ -86,8 +86,8 @@ export async function getCountsByTaleIds(
 
 	const [
 		branchCounts,
-		blockCounts,
-		fragmentCounts,
+		sceneCounts,
+		elementCounts,
 		pathCounts,
 		partCounts,
 		entryCounts,
@@ -104,25 +104,25 @@ export async function getCountsByTaleIds(
 			)
 			.groupBy(branches.taleId),
 		db
-			.select({ taleId: blocks.taleId, value: count() })
-			.from(blocks)
+			.select({ taleId: scenes.taleId, value: count() })
+			.from(scenes)
 			.where(
 				and(
-					inArray(blocks.taleId, taleIds),
-					blockAccessCondition(blocks.id, blocks, userId),
+					inArray(scenes.taleId, taleIds),
+					blockAccessCondition(scenes.id, scenes, userId),
 				),
 			)
-			.groupBy(blocks.taleId),
+			.groupBy(scenes.taleId),
 		db
-			.select({ taleId: fragments.taleId, value: count() })
-			.from(fragments)
+			.select({ taleId: elements.taleId, value: count() })
+			.from(elements)
 			.where(
 				and(
-					inArray(fragments.taleId, taleIds),
-					fragmentAccessCondition(fragments.id, fragments, userId),
+					inArray(elements.taleId, taleIds),
+					fragmentAccessCondition(elements.id, elements, userId),
 				),
 			)
-			.groupBy(fragments.taleId),
+			.groupBy(elements.taleId),
 		db
 			.select({ taleId: paths.taleId, value: count() })
 			.from(paths)
@@ -153,8 +153,8 @@ export async function getCountsByTaleIds(
 
 	return {
 		branches: toCountMap(branchCounts),
-		blocks: toCountMap(blockCounts),
-		fragments: toCountMap(fragmentCounts),
+		scenes: toCountMap(sceneCounts),
+		elements: toCountMap(elementCounts),
 		paths: toCountMap(pathCounts),
 		parts: toCountMap(partCounts),
 		entries: toCountMap(entryCounts),
@@ -203,28 +203,28 @@ async function getVisibleBranchCount(userId: string | null) {
 	return row?.value ?? 0;
 }
 
-async function getVisibleBlockCount(userId: string | null) {
+async function getVisibleSceneCount(userId: string | null) {
 	const [row] = await db
 		.select({ value: count() })
-		.from(blocks)
+		.from(scenes)
 		.where(
 			and(
-				visibleTaleByIdCondition(blocks.taleId, userId),
-				blockAccessCondition(blocks.id, blocks, userId),
+				visibleTaleByIdCondition(scenes.taleId, userId),
+				blockAccessCondition(scenes.id, scenes, userId),
 			),
 		);
 
 	return row?.value ?? 0;
 }
 
-async function getVisibleFragmentCount(userId: string | null) {
+async function getVisibleElementCount(userId: string | null) {
 	const [row] = await db
 		.select({ value: count() })
-		.from(fragments)
+		.from(elements)
 		.where(
 			and(
-				visibleTaleByIdCondition(fragments.taleId, userId),
-				fragmentAccessCondition(fragments.id, fragments, userId),
+				visibleTaleByIdCondition(elements.taleId, userId),
+				fragmentAccessCondition(elements.id, elements, userId),
 			),
 		);
 

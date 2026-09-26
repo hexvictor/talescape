@@ -1,6 +1,6 @@
 import type {
-	BlockSize,
-	ResolvedBlockSize,
+	ResolvedSceneSize,
+	SceneSize,
 	Tale,
 	ViewportSize,
 } from "../types";
@@ -35,19 +35,28 @@ function manualSize(
 		: value;
 }
 
-function measureContentBlockSize(
-	size: Extract<BlockSize, { mode: "content" }>,
+function measureContentSceneSize(
+	size: Extract<SceneSize, { mode: "content" }>,
 	viewport: ViewportSize,
 	element: HTMLElement | null | undefined,
 ) {
+	const container = element?.querySelector<HTMLElement>(
+		'[data-reader-role="scene-container"]',
+	);
+	// scrollHeight is an integer and includes descendant overflow. For a
+	// content-responsive Scene we need the authored container's actual layout
+	// box: it preserves fractional Frame sizing and excludes visual overflow
+	// that should not silently extend camera travel.
+	const bounds =
+		container?.getBoundingClientRect() ?? element?.getBoundingClientRect();
 	return {
 		height: clampSize(
-			element?.scrollHeight ?? viewport.height,
+			bounds?.height ?? viewport.height,
 			contentLimit(size.minHeight, size.minHeightUnit, "height", viewport),
 			contentLimit(size.maxHeight, size.maxHeightUnit, "height", viewport),
 		),
 		width: clampSize(
-			element?.scrollWidth ?? viewport.width,
+			bounds?.width ?? viewport.width,
 			contentLimit(size.minWidth, size.minWidthUnit, "width", viewport),
 			contentLimit(size.maxWidth, size.maxWidthUnit, "width", viewport),
 		),
@@ -74,14 +83,14 @@ export async function waitForReaderAssets(root: HTMLElement | null) {
 
 export function measureBlocks(
 	tale: Tale,
-	blockIds: string[],
+	sceneIds: string[],
 	viewport: ViewportSize,
 	root: HTMLElement | null,
 ) {
-	countReaderDiagnostic("measureBlocks()", { blockCount: blockIds.length });
-	const result: Record<string, ResolvedBlockSize> = {};
-	for (const id of blockIds) {
-		const block = tale.indexMap.blocksById[id];
+	countReaderDiagnostic("measureBlocks()", { sceneCount: sceneIds.length });
+	const result: Record<string, ResolvedSceneSize> = {};
+	for (const id of sceneIds) {
+		const block = tale.indexMap.scenesById[id];
 		if (!block) continue;
 		const size = block.size;
 		if (size.mode === "manual") {
@@ -95,12 +104,36 @@ export function measureBlocks(
 		const element = root?.querySelector<HTMLElement>(
 			`[data-reader-measure-block="${id}"]`,
 		);
-		result[id] = measureContentBlockSize(size, viewport, element);
+		result[id] = measureContentSceneSize(size, viewport, element);
 		logReaderDiagnostic("content-sized block measured", {
-			blockId: id,
+			sceneId: id,
 			height: result[id].height,
 			width: result[id].width,
 		});
+	}
+	return result;
+}
+
+/**
+ * Measures rendered Frame boxes in the offscreen content-size layer. Frame
+ * measurements intentionally start at the Frame element, so Scene container
+ * padding never becomes part of a Frame's reading span.
+ */
+export function measureFrames(
+	root: HTMLElement | null,
+): Record<string, ResolvedSceneSize> {
+	const result: Record<string, ResolvedSceneSize> = {};
+	if (!root) return result;
+	for (const element of root.querySelectorAll<HTMLElement>(
+		"[data-reader-frame-id]",
+	)) {
+		const frameId = element.dataset.readerFrameId;
+		if (!frameId) continue;
+
+		result[frameId] = {
+			height: Math.max(element.scrollHeight, 1),
+			width: Math.max(element.scrollWidth, 1),
+		};
 	}
 	return result;
 }

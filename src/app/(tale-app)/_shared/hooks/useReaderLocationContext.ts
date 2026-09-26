@@ -4,7 +4,7 @@ import { useTaleAppStore } from "../contexts/TaleAppStoreContext";
 import { useTaleReaderStore } from "../contexts/TaleReaderStoreContext";
 import type {
 	ReaderLocation,
-	ResolvedTaleBlock,
+	ResolvedTaleScene,
 	TaleBranch,
 	TaleEntry,
 	TalePage,
@@ -12,7 +12,7 @@ import type {
 } from "../types";
 
 type ReaderLocationContext = {
-	block: ResolvedTaleBlock | null;
+	block: ResolvedTaleScene | null;
 	branch: TaleBranch | null;
 	entry: TaleEntry | null;
 	location: ReaderLocation | null;
@@ -34,7 +34,7 @@ export function useReaderLocationContext(): ReaderLocationContext {
 	const tale = useTaleAppStore((state) => state.document.tale);
 
 	return {
-		block: anchor ? (tale.indexMap.blocksById[anchor.blockId] ?? null) : null,
+		block: anchor ? (tale.indexMap.scenesById[anchor.sceneId] ?? null) : null,
 		branch: anchor
 			? (tale.indexMap.branchesById[anchor.branchId] ?? null)
 			: null,

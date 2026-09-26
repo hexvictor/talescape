@@ -30,7 +30,7 @@ export function useTaleDebugState(): TaleDebugState {
 		compiled: state.reader.compiled,
 		open: state.debug.open,
 		phase: state.engine.phase,
-		seenBlocks: state.progress.data.seenBlockIds.length,
+		seenBlocks: state.progress.data.seenSceneIds.length,
 		toggleDebug: state.debug.toggleOpen,
 	}));
 	return {

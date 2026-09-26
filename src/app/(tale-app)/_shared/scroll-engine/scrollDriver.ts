@@ -57,7 +57,7 @@ function getSmoothScrollDuration(
 /**
  * Creates the GSAP-backed virtual scroll driver used by the reader camera.
  *
- * The driver owns one virtual scroll value. Native document scrolling is not
+ * The driver owns one virtual scroll value. Native document active is not
  * allowed to drive the reader camera, which prevents native-scroll correction
  * from fighting the timeline engine.
  *

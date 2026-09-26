@@ -5,7 +5,7 @@
  * @returns Lookup keyed by entity id.
  *
  * @example
- * const blocksById = recordById(blocks);
+ * const scenesById = recordById(scenes);
  */
 export function recordById<T extends { id: string }>(
 	items: readonly T[],
@@ -25,7 +25,7 @@ export function recordById<T extends { id: string }>(
  * @returns Relationship id lookup.
  *
  * @example
- * const blockIdsByPage = groupIdsBy(blocks, block => block.pageId, block => block.id);
+ * const sceneIdsByPage = groupIdsBy(scenes, block => block.pageId, block => block.id);
  */
 export function groupIdsBy<T>(
 	items: readonly T[],

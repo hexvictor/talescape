@@ -1,6 +1,6 @@
 import type { StoreApi } from "zustand";
 import type { TaleReaderState } from "../../(reader)/_shared/stores/createTaleReaderStore";
-import type { Anchor, CompiledReader, ReaderLocation } from "../types";
+import type { Anchor, CompiledReader, ReaderLocation, Tale } from "../types";
 
 type PendingLocation = {
 	anchor: Anchor;
@@ -11,7 +11,7 @@ type PendingLocation = {
  * Coalesces high-frequency reader location changes while preserving every
  * reached location for progress tracking.
  *
- * @param compiled - Compiled route used to include blocks skipped between frames.
+ * @param compiled - Compiled route used to include scenes skipped between frames.
  * @param store - Reader store receiving navigation and progress updates.
  * @param publishIntervalMs - Minimum interval between live navigation updates.
  * @param settleDelayMs - Idle delay before the final navigation and progress flush.
@@ -24,6 +24,7 @@ type PendingLocation = {
 export function createReaderStatePublisher(
 	compiled: CompiledReader,
 	store: StoreApi<TaleReaderState>,
+	tale: Tale,
 	publishIntervalMs: number,
 	settleDelayMs: number,
 ): {
@@ -31,10 +32,10 @@ export function createReaderStatePublisher(
 	flush: () => void;
 	publish: (anchor: Anchor, segmentIndex: number) => void;
 } {
-	const reachedLocationsByBlockId = new Map<string, ReaderLocation>();
+	const reachedLocationsByKeyframeId = new Map<string, ReaderLocation>();
 	let lastObservedAnchorIndex: number | null = null;
 	let lastPublishedAt = 0;
-	let publishedBlockId: string | null = null;
+	let publishedLocationKey: string | null = null;
 	let pending: PendingLocation | null = null;
 	let publishTimer: number | null = null;
 	let settleTimer: number | null = null;
@@ -42,20 +43,52 @@ export function createReaderStatePublisher(
 	const locationForAnchor = (
 		anchor: Anchor,
 		segmentIndex: number,
-	): ReaderLocation => ({
-		blockId: anchor.blockId,
-		branchId: anchor.branchId,
-		entryId: anchor.entryId,
-		pageId: anchor.pageId,
-		partId: anchor.partId,
-		segmentIndex,
-	});
+	): ReaderLocation => {
+		const directSegment = compiled.segments[segmentIndex];
+		let keyframeId =
+			directSegment && directSegment.type !== "transition"
+				? directSegment.keyframeId
+				: null;
+		if (!keyframeId) {
+			for (let distance = 1; distance < compiled.segments.length; distance++) {
+				for (const candidateIndex of [
+					segmentIndex - distance,
+					segmentIndex + distance,
+				]) {
+					const candidate = compiled.segments[candidateIndex];
+					if (
+						candidate &&
+						candidate.type !== "transition" &&
+						candidate.sceneId === anchor.sceneId
+					) {
+						keyframeId = candidate.keyframeId;
+						break;
+					}
+				}
+				if (keyframeId) break;
+			}
+		}
+		const step = keyframeId ? tale.indexMap.keyframesById[keyframeId] : undefined;
+		const pageId = step?.pageId ?? compiled.pages.find((page) => keyframeId && page.keyframeIds.includes(keyframeId))?.id;
+		const page = pageId
+			? tale.indexMap.pagesById[pageId]
+			: undefined;
+		return {
+			sceneId: anchor.sceneId,
+			keyframeId: keyframeId ?? `${anchor.sceneId}:default-keyframe`,
+			branchId: anchor.branchId,
+			entryId: page?.entryId ?? anchor.entryId,
+			pageId: page?.id ?? anchor.pageId,
+			partId: page?.partId ?? anchor.partId,
+			segmentIndex,
+		};
+	};
 
 	const collectReachedLocations = (
 		anchor: Anchor,
 		segmentIndex: number,
 	): void => {
-		const anchorIndex = compiled.anchorIndexByBlockId[anchor.blockId];
+		const anchorIndex = compiled.anchorIndexBySceneId[anchor.sceneId];
 		if (anchorIndex === undefined) return;
 
 		if (lastObservedAnchorIndex !== null) {
@@ -67,38 +100,35 @@ export function createReaderStatePublisher(
 			) {
 				const crossedAnchor = compiled.anchors[index];
 				if (!crossedAnchor) continue;
-				reachedLocationsByBlockId.set(
-					crossedAnchor.blockId,
-					locationForAnchor(
-						crossedAnchor,
-						compiled.segmentIndexByBlockId[crossedAnchor.blockId] ??
-							segmentIndex,
-					),
+				const location = locationForAnchor(
+					crossedAnchor,
+					compiled.segmentIndexBySceneId[crossedAnchor.sceneId] ?? segmentIndex,
 				);
+				reachedLocationsByKeyframeId.set(location.keyframeId, location);
 			}
 		} else {
-			reachedLocationsByBlockId.set(
-				anchor.blockId,
-				locationForAnchor(anchor, segmentIndex),
-			);
+			const location = locationForAnchor(anchor, segmentIndex);
+			reachedLocationsByKeyframeId.set(location.keyframeId, location);
 		}
 		lastObservedAnchorIndex = anchorIndex;
 	};
 
 	const publishPendingLocation = (): void => {
 		publishTimer = null;
-		if (!pending || pending.location.blockId === publishedBlockId) return;
-		publishedBlockId = pending.location.blockId;
+		if (!pending) return;
+		const locationKey = `${pending.location.sceneId}:${pending.location.keyframeId}`;
+		if (locationKey === publishedLocationKey) return;
+		publishedLocationKey = locationKey;
 		lastPublishedAt = performance.now();
 		store.getState().navigation.setCurrent(pending.location, pending.anchor);
 	};
 
 	const flushReachedLocations = (): void => {
-		if (reachedLocationsByBlockId.size === 0) return;
+		if (reachedLocationsByKeyframeId.size === 0) return;
 		store
 			.getState()
-			.progress.markLocationsReached([...reachedLocationsByBlockId.values()]);
-		reachedLocationsByBlockId.clear();
+			.progress.markLocationsReached([...reachedLocationsByKeyframeId.values()]);
+		reachedLocationsByKeyframeId.clear();
 	};
 
 	const flush = (): void => {
@@ -120,7 +150,11 @@ export function createReaderStatePublisher(
 		flush,
 		publish: (anchor, segmentIndex) => {
 			const location = locationForAnchor(anchor, segmentIndex);
-			if (pending?.location.blockId === location.blockId) return;
+			if (
+				pending?.location.sceneId === location.sceneId &&
+				pending.location.keyframeId === location.keyframeId
+			)
+				return;
 			pending = { anchor, location };
 			collectReachedLocations(anchor, segmentIndex);
 

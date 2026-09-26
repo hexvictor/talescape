@@ -4,7 +4,8 @@ import { useRef } from "react";
 import { TaleStudioToolbar } from "~/app/(tale-app)/(studio)/_shared/components/TaleStudioToolbar/TaleStudioToolbar";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import { TaleEditorBranchGraph } from "../TaleEditorBranchGraph/TaleEditorBranchGraph";
-import { TaleEditorActiveBlockAutoSelector } from "./TaleEditorActiveBlockAutoSelector";
+import { TaleEditorActiveSceneAutoSelector } from "./TaleEditorActiveSceneAutoSelector";
+import { TaleEditorLeftRail } from "./TaleEditorLeftRail";
 import { TaleEditorLivePreview } from "./TaleEditorLivePreview";
 import { TaleEditorSelectionSidebar } from "./TaleEditorSelectionSidebar";
 
@@ -32,12 +33,13 @@ export function TaleEditor(): React.JSX.Element {
 			data-reader-role="editor-workspace"
 			className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
 		>
-			<TaleEditorActiveBlockAutoSelector />
+			<TaleEditorActiveSceneAutoSelector />
 			<TaleStudioToolbar />
 			<div
 				ref={editorBodyRef}
 				className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden"
 			>
+				<TaleEditorLeftRail />
 				<TaleEditorLivePreview />
 				{effectiveGraphOpen ? (
 					<main className="relative flex min-h-[45dvh] min-w-0 flex-1 flex-col md:min-h-0 md:flex-row">

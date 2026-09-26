@@ -23,23 +23,28 @@ export async function getLibraryTaleDetail(taleId: number) {
 					permissions: true,
 				},
 			},
-			blocks: {
+			scenes: {
 				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
 					branch: true,
-					page: {
+					keyframes: {
+						orderBy: (model, { asc }) => [asc(model.order)],
 						with: {
-							entry: true,
-							part: true,
+							page: {
+								with: {
+									entry: true,
+									part: true,
+								},
+							},
 						},
 					},
 					permissions: true,
 				},
 			},
-			fragments: {
+			elements: {
 				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
-					block: true,
+					scene: true,
 					permissions: true,
 				},
 			},
@@ -76,8 +81,8 @@ export async function getLibraryTaleDetail(taleId: number) {
 
 	const {
 		branches: branchRecords,
-		blocks: blockRecords,
-		fragments: fragmentRecords,
+		scenes: sceneRecords,
+		elements: elementRecords,
 		paths: pathRecords,
 		parts,
 		entries,
@@ -88,25 +93,36 @@ export async function getLibraryTaleDetail(taleId: number) {
 	const branches = branchRecords
 		.filter((branch) => canViewResource(branch, userId))
 		.map((branch) => ({ ...branch, index: branch.order }));
-	const blocks = blockRecords
-		.filter((block) => canViewResource(block, userId))
-		.map((block) => ({
-			...block,
-			index: block.order,
-			page: { ...block.page, index: block.page.order },
-			entry: block.page.entry,
-			entryId: block.page.entryId,
-			part: block.page.part,
-			partId: block.page.partId,
+	const scenes = sceneRecords
+		.filter((scene) => canViewResource(scene, userId))
+		.map((scene) => ({
+			...scene,
+			index: scene.order,
+			page: scene.keyframes.find((keyframe) => keyframe.page)?.page
+				? {
+						...scene.keyframes.find((keyframe) => keyframe.page)!.page!,
+						index: scene.keyframes.find((keyframe) => keyframe.page)!.page!
+							.order,
+					}
+				: null,
+			entry:
+				scene.keyframes.find((keyframe) => keyframe.page)?.page?.entry ?? null,
+			entryId:
+				scene.keyframes.find((keyframe) => keyframe.page)?.page?.entryId ??
+				null,
+			part:
+				scene.keyframes.find((keyframe) => keyframe.page)?.page?.part ?? null,
+			partId:
+				scene.keyframes.find((keyframe) => keyframe.page)?.page?.partId ?? null,
 		}));
-	const fragments = fragmentRecords
-		.filter((fragment) => canViewResource(fragment, userId))
-		.map((fragment) => ({
-			...fragment,
-			block: fragment.block
-				? { ...fragment.block, index: fragment.block.order }
-				: fragment.block,
-			index: fragment.order,
+	const elements = elementRecords
+		.filter((element) => canViewResource(element, userId))
+		.map((element) => ({
+			...element,
+			scene: element.scene
+				? { ...element.scene, index: element.scene.order }
+				: element.scene,
+			index: element.order,
 		}));
 	const paths = pathRecords.filter((path) => canViewResource(path, userId));
 
@@ -116,8 +132,8 @@ export async function getLibraryTaleDetail(taleId: number) {
 			accessLabel: getAccessLabel(tale, userId),
 			nodeCounts: {
 				branches: branches.length,
-				blocks: blocks.length,
-				fragments: fragments.length,
+				scenes: scenes.length,
+				elements: elements.length,
 				paths: paths.length,
 				parts: parts.length,
 				entries: entries.length,
@@ -125,8 +141,8 @@ export async function getLibraryTaleDetail(taleId: number) {
 			},
 		},
 		branches,
-		blocks,
-		fragments,
+		scenes,
+		elements,
 		paths,
 		parts: parts.map((part) => ({ ...part, index: part.order })),
 		entries: entries.map((entry) => ({ ...entry, index: entry.order })),

@@ -111,13 +111,13 @@ function isImportableTale(value: unknown): value is Tale {
 		typeof value.id === "number" &&
 		typeof value.title === "string" &&
 		isRecord(value.indexMap) &&
-		isRecord(value.indexMap.blocksById) &&
+		isRecord(value.indexMap.scenesById) &&
 		isRecord(value.indexMap.branchesById) &&
 		isRecord(value.indexMap.entriesById) &&
 		isRecord(value.indexMap.pagesById) &&
 		isRecord(value.indexMap.partsById) &&
 		isRecord(value.order) &&
-		Array.isArray(value.order.blockIds) &&
+		Array.isArray(value.order.sceneIds) &&
 		Array.isArray(value.order.branchIds)
 	);
 }

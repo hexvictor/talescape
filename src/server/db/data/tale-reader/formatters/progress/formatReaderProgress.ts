@@ -14,12 +14,14 @@ export function formatReaderProgress(
 	progress: ReaderProgressSchema,
 ): SavedReaderProgress {
 	return {
-		blockId:
-			progress.lastBlockId === null ? null : String(progress.lastBlockId),
+		sceneId:
+			progress.lastSceneId === null ? null : String(progress.lastSceneId),
+		keyframeId: progress.lastKeyframeId === null ? null : String(progress.lastKeyframeId),
 		committedAnimationIds: progress.committedAnimationIds,
 		id: progress.id,
-		innerProgress: Number(progress.lastBlockInnerProgress),
-		seenBlockIds: progress.seenBlockIds.map(String),
+		innerProgress: Number(progress.lastKeyframeInnerProgress),
+		seenSceneIds: progress.seenSceneIds.map(String),
+		seenKeyframeIds: progress.seenKeyframeIds.map(String),
 		seenEntryIds: progress.seenEntryIds.map(String),
 		seenPageIds: progress.seenPageIds.map(String),
 		seenPartIds: progress.seenPartIds.map(String),

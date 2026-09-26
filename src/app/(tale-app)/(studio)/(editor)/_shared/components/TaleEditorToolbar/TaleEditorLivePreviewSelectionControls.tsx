@@ -1,7 +1,8 @@
 "use client";
 
-import { BoxSelect, GitBranch, ScanSearch } from "lucide-react";
+import { Frame, GitBranch, LayoutTemplate, ScanSearch } from "lucide-react";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
+import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 
 /**
@@ -16,21 +17,30 @@ import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/Tal
  * <TaleEditorLivePreviewSelectionControls />
  */
 export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
-	const { activeBlockId, activeBranchId } = useTaleReaderStoreShallow(
-		(state) => ({
-			activeBlockId: state.navigation.current?.blockId ?? null,
+	const toolbarButtonClass =
+		"grid h-9 w-9 place-items-center border-2 border-foreground bg-background text-foreground/72 shadow-[2px_2px_0_hsl(var(--secondary))] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35";
+	const { activeSceneId, activeBranchId, activeKeyframeId } =
+		useTaleReaderStoreShallow((state) => ({
+			activeSceneId: state.navigation.current?.sceneId ?? null,
 			activeBranchId: state.navigation.current?.branchId ?? null,
-		}),
+			activeKeyframeId: state.navigation.current?.keyframeId ?? null,
+		}));
+	const activeFrameId = useTaleAppStore((state) =>
+		activeKeyframeId
+			? (state.document.tale.indexMap.keyframesById[activeKeyframeId]?.frameId ?? null)
+			: null,
 	);
 	const {
 		inspectorControlsOpen,
-		selectBlockForEditing,
+		openInspector,
+		selectSceneForEditing,
 		selectBranchForEditing,
 		setRightPanelOpen,
 		toggleInspectorControls,
 	} = useTaleStudioStoreShallow((state) => ({
 		inspectorControlsOpen: state.studioSelection.inspectorControlsOpen,
-		selectBlockForEditing: state.studioSelection.selectBlockForEditing,
+		openInspector: state.studioSelection.openInspector,
+		selectSceneForEditing: state.studioSelection.selectSceneForEditing,
 		selectBranchForEditing: state.studioSelection.selectBranchForEditing,
 		setRightPanelOpen: state.editorLayout.setRightPanelOpen,
 		toggleInspectorControls: state.studioSelection.toggleInspectorControls,
@@ -51,21 +61,38 @@ export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 		>
 			<button
 				type="button"
-				disabled={!activeBlockId}
-				className="flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/72 px-3 text-foreground/68 text-xs hover:bg-foreground/8 hover:text-foreground disabled:opacity-35"
-				title="Select active block"
+				disabled={!activeSceneId}
+				className={toolbarButtonClass}
+				title="Select active Scene"
 				onClick={() => {
-					if (!activeBlockId) return;
-					selectBlockForEditing(activeBlockId);
+					if (!activeSceneId) return;
+					selectSceneForEditing(activeSceneId);
 					openSidebar();
 				}}
 			>
-				<BoxSelect size={14} />
+				<LayoutTemplate size={15} />
+			</button>
+			<button
+				type="button"
+				disabled={!activeSceneId || !activeFrameId}
+				className={toolbarButtonClass}
+				title="Select active Frame"
+				onClick={() => {
+					if (!activeSceneId || !activeFrameId) return;
+					openInspector({
+						id: activeFrameId,
+						sceneId: activeSceneId,
+						type: "frame",
+					});
+					openSidebar();
+				}}
+			>
+				<Frame size={15} />
 			</button>
 			<button
 				type="button"
 				disabled={!activeBranchId}
-				className="flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/72 px-3 text-foreground/68 text-xs hover:bg-foreground/8 hover:text-foreground disabled:opacity-35"
+				className={toolbarButtonClass}
 				title="Select active branch"
 				onClick={() => {
 					if (!activeBranchId) return;
@@ -73,15 +100,13 @@ export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 					openSidebar();
 				}}
 			>
-				<GitBranch size={14} />
+				<GitBranch size={15} />
 			</button>
 			<button
 				type="button"
 				aria-pressed={inspectorControlsOpen}
-				className={`grid h-9 w-9 place-items-center rounded border ${
-					inspectorControlsOpen
-						? "border-primary/45 bg-primary/16 text-primary"
-						: "border-foreground/12 bg-background/72 text-foreground/58 hover:bg-foreground/8 hover:text-foreground"
+				className={`${toolbarButtonClass} ${
+					inspectorControlsOpen ? "bg-primary text-primary-foreground" : ""
 				}`}
 				title="Toggle preview inspector"
 				onClick={() => {

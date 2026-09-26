@@ -16,12 +16,15 @@ import {
 	TaleRenderContext,
 	type TaleRenderSlots,
 } from "~/app/(tale-app)/_shared/contexts/TaleRenderContext";
+import type { Tale, TaleInspectorTarget } from "~/app/(tale-app)/_shared/types";
 import { api } from "~/trpc/react";
-import { StudioBlock } from "../components/TaleStudioRenderer/StudioBlock";
 import { StudioDebugHeaderActions } from "../components/TaleStudioRenderer/StudioDebugHeaderActions";
-import { StudioFragment } from "../components/TaleStudioRenderer/StudioFragment";
-import { StudioNodeOverlay } from "../components/TaleStudioRenderer/StudioNodeOverlay";
-import { StudioTextFragmentContent } from "../components/TaleStudioRenderer/StudioTextFragmentContent";
+import { StudioElement } from "../components/TaleStudioRenderer/StudioElement";
+import { StudioFrameOverlay } from "../components/TaleStudioRenderer/StudioFrameOverlay";
+import { StudioScene } from "../components/TaleStudioRenderer/StudioScene";
+import { StudioTextElementContent } from "../components/TaleStudioRenderer/StudioTextElementContent";
+import { useStudioDraftRecovery } from "../hooks/useStudioDraftRecovery";
+import { useStudioWorkspacePersistence } from "../hooks/useStudioWorkspacePersistence";
 import { createTaleStudioDraftPayload } from "../services/createTaleStudioDraftPayload";
 import {
 	createTaleJsonExport,
@@ -47,8 +50,40 @@ type TaleStudioToolbar = {
 	settingsOpen: boolean;
 };
 
+type StudioDialog =
+	| {
+			confirmLabel?: string;
+			description?: string;
+			kind: "confirm";
+			onConfirm: () => void;
+			title: string;
+	  }
+	| {
+			defaultValue?: string;
+			description?: string;
+			kind: "prompt";
+			label?: string;
+			onConfirm: (value: string) => void;
+			title: string;
+	  }
+	| { description?: string; kind: "notice"; title: string };
+
+type TaleStudioDialogs = {
+	confirm: (
+		dialog: Omit<Extract<StudioDialog, { kind: "confirm" }>, "kind">,
+	) => void;
+	notice: (
+		dialog: Omit<Extract<StudioDialog, { kind: "notice" }>, "kind">,
+	) => void;
+	prompt: (
+		dialog: Omit<Extract<StudioDialog, { kind: "prompt" }>, "kind">,
+	) => void;
+};
+
 type TaleStudioContextValue = {
+	recovery: ReturnType<typeof useStudioDraftRecovery>;
 	document: TaleStudioDocument;
+	dialogs: TaleStudioDialogs;
 	store: StoreApi<TaleStudioState>;
 	toolbar: TaleStudioToolbar;
 };
@@ -56,11 +91,11 @@ type TaleStudioContextValue = {
 const TaleStudioContext = createContext<TaleStudioContextValue | null>(null);
 
 const studioRenderers = {
-	Block: StudioBlock,
+	Scene: StudioScene,
 	DebugHeaderActions: StudioDebugHeaderActions,
-	Fragment: StudioFragment,
-	NodeOverlay: StudioNodeOverlay,
-	TextFragmentContent: StudioTextFragmentContent,
+	Element: StudioElement,
+	FrameOverlay: StudioFrameOverlay,
+	TextElementContent: StudioTextElementContent,
 } satisfies TaleRenderSlots;
 
 /**
@@ -88,7 +123,10 @@ export function TaleStudioProvider({
 		}),
 	);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	useStudioWorkspacePersistence(store, tale.id);
+	const recovery = useStudioDraftRecovery();
 	const [savedNoticeVisible, setSavedNoticeVisible] = useState(false);
+	const [dialog, setDialog] = useState<StudioDialog | null>(null);
 	const {
 		isError: saveFailed,
 		isPending: savePending,
@@ -131,11 +169,14 @@ export function TaleStudioProvider({
 					reason: "tale-json-imported",
 				});
 			} catch (error) {
-				window.alert(
-					error instanceof Error
-						? error.message
-						: "The selected file could not be imported.",
-				);
+				setDialog({
+					description:
+						error instanceof Error
+							? error.message
+							: "The selected file could not be imported.",
+					kind: "notice",
+					title: "Import failed",
+				});
 			}
 		},
 		[setTale],
@@ -143,7 +184,13 @@ export function TaleStudioProvider({
 
 	const save = useCallback((): void => {
 		saveDraft(createTaleStudioDraftPayload(tale), {
-			onSuccess: () => {
+			onSuccess: (result) => {
+				if (result.tale) {
+					setTale(result.tale, {
+						markDirty: false,
+						reason: "studio-draft-saved",
+					});
+				}
 				markSaved();
 				setSavedNoticeVisible(true);
 				if (savedNoticeTimerRef.current !== null) {
@@ -155,7 +202,7 @@ export function TaleStudioProvider({
 				);
 			},
 		});
-	}, [markSaved, saveDraft, tale]);
+	}, [markSaved, saveDraft, setTale, tale]);
 
 	const dirtyStatus = getStudioDirtyStatus({
 		dirty,
@@ -163,9 +210,24 @@ export function TaleStudioProvider({
 		savePending,
 		savedNoticeVisible,
 	});
+	const dialogs = useMemo<TaleStudioDialogs>(
+		() => ({
+			confirm: (nextDialog) => setDialog({ ...nextDialog, kind: "confirm" }),
+			notice: (nextDialog) => setDialog({ ...nextDialog, kind: "notice" }),
+			prompt: (nextDialog) => setDialog({ ...nextDialog, kind: "prompt" }),
+		}),
+		[],
+	);
+
+	useEffect(() => {
+		store.setState((state) => sanitizeStudioSelection(state, tale));
+	}, [store, tale]);
+
 	const value = useMemo<TaleStudioContextValue>(
 		() => ({
+			recovery,
 			document: { exportTale, openImportDialog },
+			dialogs,
 			store,
 			toolbar: {
 				closeSettings,
@@ -177,8 +239,10 @@ export function TaleStudioProvider({
 			},
 		}),
 		[
+			recovery,
 			closeSettings,
 			dirtyStatus,
+			dialogs,
 			exportTale,
 			openImportDialog,
 			openSettings,
@@ -205,8 +269,170 @@ export function TaleStudioProvider({
 					}}
 				/>
 				{children}
+				<StudioDialog dialog={dialog} onClose={() => setDialog(null)} />
 			</TaleRenderContext.Provider>
 		</TaleStudioContext.Provider>
+	);
+}
+
+function sanitizeStudioSelection(
+	state: TaleStudioState,
+	tale: Tale,
+): TaleStudioState {
+	const firstSceneId = tale.order.sceneIds[0] ?? null;
+	const selectedSceneId = tale.indexMap.scenesById[
+		state.studioSelection.selectedSceneId ?? ""
+	]
+		? state.studioSelection.selectedSceneId
+		: firstSceneId;
+	const selectedBranchId = tale.indexMap.branchesById[
+		state.studioSelection.selectedBranchId ?? ""
+	]
+		? state.studioSelection.selectedBranchId
+		: null;
+	const inspector = isInspectorTargetAvailable(
+		state.studioSelection.inspector,
+		tale,
+	)
+		? state.studioSelection.inspector
+		: null;
+	const secondaryInspector = isInspectorTargetAvailable(
+		state.studioSelection.secondaryInspector,
+		tale,
+	)
+		? state.studioSelection.secondaryInspector
+		: null;
+	const highlightedBranchId = tale.indexMap.branchesById[
+		state.studioSelection.highlightedBranchId ?? ""
+	]
+		? state.studioSelection.highlightedBranchId
+		: null;
+	const hoveredSceneId = tale.indexMap.scenesById[
+		state.studioSelection.hoveredSceneId ?? ""
+	]
+		? state.studioSelection.hoveredSceneId
+		: null;
+	const selectedPathId = tale.indexMap.pathsById[
+		state.editorGraph.selectedPathId ?? ""
+	]
+		? state.editorGraph.selectedPathId
+		: null;
+	if (
+		selectedSceneId === state.studioSelection.selectedSceneId &&
+		selectedBranchId === state.studioSelection.selectedBranchId &&
+		inspector === state.studioSelection.inspector &&
+		secondaryInspector === state.studioSelection.secondaryInspector &&
+		highlightedBranchId === state.studioSelection.highlightedBranchId &&
+		hoveredSceneId === state.studioSelection.hoveredSceneId &&
+		selectedPathId === state.editorGraph.selectedPathId
+	)
+		return state;
+	return {
+		...state,
+		editorGraph: { ...state.editorGraph, selectedPathId },
+		studioSelection: {
+			...state.studioSelection,
+			highlightedBranchId,
+			hoveredSceneId,
+			inspector,
+			secondaryInspector,
+			selectedBranchId,
+			selectedSceneId,
+		},
+	};
+}
+
+function isInspectorTargetAvailable(
+	target: TaleInspectorTarget | null,
+	tale: Tale,
+): boolean {
+	if (!target) return false;
+	if (
+		"sceneId" in target &&
+		target.sceneId &&
+		!tale.indexMap.scenesById[target.sceneId]
+	)
+		return false;
+	if (target.type === "scene")
+		return Boolean(tale.indexMap.scenesById[target.id]);
+	if (target.type === "frame")
+		return Boolean(tale.indexMap.framesById[target.id]);
+	if (target.type === "element")
+		return Boolean(tale.indexMap.elementsById[target.id]);
+	return Boolean(tale.indexMap.keyframesById[target.id]);
+}
+
+function StudioDialog({
+	dialog,
+	onClose,
+}: {
+	dialog: StudioDialog | null;
+	onClose: () => void;
+}): React.JSX.Element | null {
+	const [value, setValue] = useState("");
+	useEffect(
+		() =>
+			setValue(dialog?.kind === "prompt" ? (dialog.defaultValue ?? "") : ""),
+		[dialog],
+	);
+	if (!dialog) return null;
+	const submit = () => {
+		if (dialog.kind === "confirm") dialog.onConfirm();
+		if (dialog.kind === "prompt") dialog.onConfirm(value.trim());
+		onClose();
+	};
+	return (
+		<div
+			className="fixed inset-0 z-[1100] grid place-items-center bg-black/60 p-4"
+			onMouseDown={onClose}
+		>
+			<section
+				className="w-full max-w-md border-[3px] border-foreground bg-card p-5 text-foreground shadow-[9px_9px_0_var(--comic-teal)]"
+				onMouseDown={(event) => event.stopPropagation()}
+			>
+				<p className="comic-display text-xl">{dialog.title}</p>
+				{dialog.description ? (
+					<p className="mt-2 text-foreground/65 text-sm">
+						{dialog.description}
+					</p>
+				) : null}
+				{dialog.kind === "prompt" ? (
+					<label className="mt-4 grid gap-1 font-bold text-xs uppercase">
+						{dialog.label ?? "Name"}
+						<input
+							autoFocus
+							className="h-10 border border-foreground bg-background px-3 text-sm normal-case"
+							value={value}
+							onChange={(event) => setValue(event.target.value)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" && value.trim()) submit();
+							}}
+						/>
+					</label>
+				) : null}
+				<div className="mt-5 flex justify-end gap-2">
+					<button
+						className="h-9 border border-foreground px-3 font-bold text-xs uppercase hover:bg-foreground/10"
+						type="button"
+						onClick={onClose}
+					>
+						Cancel
+					</button>
+					<button
+						className="h-9 border border-foreground bg-primary px-3 font-bold text-primary-foreground text-xs uppercase shadow-[3px_3px_0_var(--comic-ink)] disabled:opacity-45"
+						disabled={dialog.kind === "prompt" && !value.trim()}
+						type="button"
+						onClick={submit}
+					>
+						{dialog.kind === "notice"
+							? "Close"
+							: dialog.kind === "confirm"
+								? (dialog.confirmLabel ?? "Confirm")
+								: "Create"}
+					</button>
+				</div>
+			</section>
+		</div>
 	);
 }
 

@@ -3,11 +3,11 @@ import {
 	DEFAULT_READER_INPUT_SETTINGS,
 	type ReaderInputSettings,
 } from "../../../../_shared/scroll-engine/readerInputSettings";
-import type { TaleBlockSnapMode } from "../../../../_shared/types";
+import type { TaleSceneSnapMode } from "../../../../_shared/types";
 import type { TaleReaderState } from "../createTaleReaderStore";
 
 export type ReaderInputSettingsKey = keyof ReaderInputSettings;
-export type ReaderSnapModeOverride = TaleBlockSnapMode | "default";
+export type ReaderSnapModeOverride = TaleSceneSnapMode | "default";
 
 export type InputSettingsSlice = {
 	inputSettings: {

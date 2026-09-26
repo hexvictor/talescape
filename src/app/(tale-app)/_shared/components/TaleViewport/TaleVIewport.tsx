@@ -57,7 +57,7 @@ export function TaleReaderViewport({
 		hubDocked,
 		readerContentsOpen,
 		readerHubOpen,
-		measurementBlockIds,
+		measurementSceneIds,
 		setPhase,
 		setProgress,
 		showsNavigation,
@@ -69,7 +69,7 @@ export function TaleReaderViewport({
 		hubDocked: state.derived.hubDocked,
 		readerContentsOpen: state.derived.readerContentsOpen,
 		readerHubOpen: state.derived.isHubOpen,
-		measurementBlockIds: state.reader.measurementBlockIds,
+		measurementSceneIds: state.reader.measurementSceneIds,
 		setPhase: state.engine.setPhase,
 		setProgress: state.engine.setProgress,
 		showsNavigation: state.derived.showsNavigation,
@@ -98,6 +98,11 @@ export function TaleReaderViewport({
 		rightInsetRatio: hubDocked ? 1 : 0,
 		root: isLivePreview ? viewportRoot : null,
 	});
+	const canvasStyle = {
+		...backgroundStyle,
+		"--reader-viewport-height": `${viewport.height}px`,
+		"--reader-viewport-width": `${viewport.width}px`,
+	} as CSSProperties;
 
 	const measurementRef = useRef<HTMLDivElement>(null);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -175,9 +180,7 @@ export function TaleReaderViewport({
 					right: readerHubOpen && hubDocked ? `${dockedHubWidthPx}px` : 0,
 				}}
 			>
-				<div className="absolute inset-0">
-					{compiled ? <ReaderStage /> : null}
-				</div>
+				{compiled ? <ReaderStage /> : null}
 				<ReaderOverlay />
 				{additionalOverlay}
 			</div>
@@ -191,9 +194,9 @@ export function TaleReaderViewport({
 
 	return (
 		<ReaderViewportProvider value={viewportContextValue}>
-			{measurementBlockIds.length > 0 ? (
+			{measurementSceneIds.length > 0 ? (
 				<ReaderMeasurementLayer
-					blockIds={measurementBlockIds}
+					sceneIds={measurementSceneIds}
 					rootRef={measurementRef}
 					tale={resolvedTale}
 					viewport={viewport}
@@ -206,7 +209,7 @@ export function TaleReaderViewport({
 					data-reader-component="TaleReaderViewport"
 					data-reader-role="preview-scroll-root"
 					className="tale-canvas scrollbar-none h-full overflow-hidden overscroll-contain outline-none"
-					style={backgroundStyle}
+					style={canvasStyle}
 				>
 					<main
 						data-reader-component="TaleReaderViewport"
@@ -228,7 +231,7 @@ export function TaleReaderViewport({
 						data-reader-component="TaleReaderViewport"
 						data-reader-role="reader-viewport"
 						className="tale-canvas fixed inset-0 isolate overflow-hidden text-foreground"
-						style={backgroundStyle}
+						style={canvasStyle}
 					>
 						{viewportContent}
 					</main>

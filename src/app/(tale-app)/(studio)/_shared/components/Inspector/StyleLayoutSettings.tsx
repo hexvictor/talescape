@@ -1,14 +1,15 @@
-import type { ReaderStyle, TaleNode } from "~/app/(tale-app)/_shared/types";
+import type { ReaderStyle, TaleFrame } from "~/app/(tale-app)/_shared/types";
 import { OptionalNumberSetting, TextSetting } from "./InspectorValueFields";
 import { FlexStyleSettings } from "./style/FlexStyleSettings";
 import { GridStyleSettings } from "./style/GridStyleSettings";
 import { StyleSelect } from "./style/StyleLayoutFields";
 
-type StyleLayoutMode = TaleNode["mode"] | ReaderStyle["display"];
+type StyleLayoutMode = TaleFrame["mode"] | ReaderStyle["display"];
 
 type StyleLayoutSettingsProps = {
 	layoutMode?: StyleLayoutMode;
 	onChange: (style: ReaderStyle) => void;
+	showItemControls?: boolean;
 	style: ReaderStyle;
 };
 
@@ -27,6 +28,7 @@ type StyleLayoutSettingsProps = {
 export function StyleLayoutSettings({
 	layoutMode,
 	onChange,
+	showItemControls = true,
 	style,
 }: StyleLayoutSettingsProps): React.JSX.Element {
 	const setText = (key: keyof ReaderStyle, value: string): void => {
@@ -41,56 +43,58 @@ export function StyleLayoutSettings({
 
 	return (
 		<>
-			<div className="@container/inspector-group col-span-2 grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2 rounded border border-foreground/8 bg-background/15 p-2">
-				<TextSetting
-					label="Grid area"
-					value={style.gridArea ?? ""}
-					onChange={(value) => setText("gridArea", value)}
-				/>
-				<TextSetting
-					label="Grid column"
-					value={style.gridColumn ?? ""}
-					onChange={(value) => setText("gridColumn", value)}
-				/>
-				<TextSetting
-					label="Grid row"
-					value={style.gridRow ?? ""}
-					onChange={(value) => setText("gridRow", value)}
-				/>
-				<StyleSelect
-					label="Self alignment"
-					value={style.alignSelf ?? "auto"}
-					options={["auto", "start", "center", "end", "stretch"]}
-					onChange={(alignSelf) => onChange({ ...style, alignSelf })}
-				/>
-				<StyleSelect
-					label="Self justification"
-					value={style.justifySelf ?? "auto"}
-					options={["auto", "start", "center", "end", "stretch"]}
-					onChange={(justifySelf) => onChange({ ...style, justifySelf })}
-				/>
-				<OptionalNumberSetting
-					label="Order"
-					value={style.order}
-					onChange={(value) => setNumber("order", value)}
-				/>
-				<TextSetting
-					label="Flex basis"
-					placeholder="auto, 12rem, 40%"
-					value={String(style.flexBasis ?? "")}
-					onChange={(value) => setText("flexBasis", value)}
-				/>
-				<OptionalNumberSetting
-					label="Flex grow"
-					value={style.flexGrow}
-					onChange={(value) => setNumber("flexGrow", value)}
-				/>
-				<OptionalNumberSetting
-					label="Flex shrink"
-					value={style.flexShrink}
-					onChange={(value) => setNumber("flexShrink", value)}
-				/>
-			</div>
+			{showItemControls ? (
+				<div className="@container/inspector-group col-span-full grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2 rounded border border-foreground/8 bg-background/15 p-2">
+					<TextSetting
+						label="Grid area"
+						value={style.gridArea ?? ""}
+						onChange={(value) => setText("gridArea", value)}
+					/>
+					<TextSetting
+						label="Grid column"
+						value={style.gridColumn ?? ""}
+						onChange={(value) => setText("gridColumn", value)}
+					/>
+					<TextSetting
+						label="Grid row"
+						value={style.gridRow ?? ""}
+						onChange={(value) => setText("gridRow", value)}
+					/>
+					<StyleSelect
+						label="Self alignment"
+						value={style.alignSelf ?? "auto"}
+						options={["auto", "start", "center", "end", "stretch"]}
+						onChange={(alignSelf) => onChange({ ...style, alignSelf })}
+					/>
+					<StyleSelect
+						label="Self justification"
+						value={style.justifySelf ?? "auto"}
+						options={["auto", "start", "center", "end", "stretch"]}
+						onChange={(justifySelf) => onChange({ ...style, justifySelf })}
+					/>
+					<OptionalNumberSetting
+						label="Order"
+						value={style.order}
+						onChange={(value) => setNumber("order", value)}
+					/>
+					<TextSetting
+						label="Flex basis"
+						placeholder="auto, 12rem, 40%"
+						value={String(style.flexBasis ?? "")}
+						onChange={(value) => setText("flexBasis", value)}
+					/>
+					<OptionalNumberSetting
+						label="Flex grow"
+						value={style.flexGrow}
+						onChange={(value) => setNumber("flexGrow", value)}
+					/>
+					<OptionalNumberSetting
+						label="Flex shrink"
+						value={style.flexShrink}
+						onChange={(value) => setNumber("flexShrink", value)}
+					/>
+				</div>
+			) : null}
 			{layoutMode === "flex" ? (
 				<FlexStyleSettings onChange={onChange} style={style} />
 			) : null}

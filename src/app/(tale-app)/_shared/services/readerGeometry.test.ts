@@ -6,7 +6,7 @@ import {
 } from "./readerGeometry";
 
 describe("getAdjacentBlockPoint", () => {
-	it("places differently sized blocks edge-to-edge", () => {
+	it("places differently sized scenes edge-to-edge", () => {
 		expect(
 			getAdjacentBlockPoint(
 				{ x: 0, y: 0 },

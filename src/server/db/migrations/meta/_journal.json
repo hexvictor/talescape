@@ -78,6 +78,55 @@
       "when": 1788035802499,
       "tag": "0010_spotty_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788117709540,
+      "tag": "0011_scene_step_refactor",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788118114833,
+      "tag": "0012_scene_step_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788118345460,
+      "tag": "0013_scene_narrative_decoupling",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788252032143,
+      "tag": "0014_branch_aware_steps",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788469678117,
+      "tag": "0015_foamy_omega_flight",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788872463125,
+      "tag": "0016_open_gauntlet",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788874694593,
+      "tag": "0017_green_quentin_quire",
+      "breakpoints": true
     }
   ]
 }

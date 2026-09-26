@@ -4,30 +4,30 @@ import { useEffect } from "react";
 import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import { countReaderDiagnostic } from "../../../services/readerDiagnostics";
-import { TaleBlock } from "../TaleBlock/TaleBlock";
+import { TaleScene } from "../TaleScene/TaleScene";
 
 /**
  * Renders the active block window inside the reader camera stage.
  *
- * @returns Positioned reader blocks for the current render window.
+ * @returns Positioned reader scenes for the current render window.
  *
  * @example
  * <ReaderStage />
  */
 export function ReaderStage(): React.JSX.Element {
 	const { compiled, stageRef, viewport } = useReaderViewportContext();
-	const { renderedBlockIds, renderRevision, scrollApi } =
+	const { renderedSceneIds, renderRevision, scrollApi } =
 		useTaleReaderStoreShallow((state) => ({
-			renderedBlockIds: state.scroll.renderedBlockIds,
+			renderedSceneIds: state.scroll.renderedSceneIds,
 			renderRevision: state.scroll.renderRevision,
 			scrollApi: state.scroll.api,
 		}));
-	const requestedIds = new Set(renderedBlockIds);
+	const requestedIds = new Set(renderedSceneIds);
 	const renderedAnchors = !compiled
 		? []
-		: renderedBlockIds.length === 0
+		: renderedSceneIds.length === 0
 			? compiled.anchors.slice(0, 3)
-			: compiled.anchors.filter((anchor) => requestedIds.has(anchor.blockId));
+			: compiled.anchors.filter((anchor) => requestedIds.has(anchor.sceneId));
 	countReaderDiagnostic("ReaderStage React render", {
 		mountedBlocks: renderedAnchors.length,
 	});
@@ -49,7 +49,7 @@ export function ReaderStage(): React.JSX.Element {
 			}}
 		>
 			{renderedAnchors.map((anchor) => (
-				<TaleBlock key={anchor.blockId} anchor={anchor} />
+				<TaleScene key={anchor.sceneId} anchor={anchor} />
 			))}
 		</div>
 	);

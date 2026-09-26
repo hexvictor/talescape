@@ -20,7 +20,7 @@ export function formatBranches(rows: unknown[]): TaleBranch[] {
 			title?: string | null;
 		};
 		return {
-			blockIds: [],
+			sceneIds: [],
 			description: item.description ?? undefined,
 			id: String(item.id),
 			order: item.order ?? 0,

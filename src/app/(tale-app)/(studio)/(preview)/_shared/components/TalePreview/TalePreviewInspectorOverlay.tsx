@@ -51,16 +51,14 @@ export function TalePreviewInspectorOverlay(): React.JSX.Element | null {
 				<aside
 					data-reader-ui="true"
 					data-reader-component="TalePreviewInspectorOverlay"
-					data-reader-role="secondary-fragment-inspector"
+					data-reader-role="secondary-element-inspector"
 					className="pointer-events-auto absolute top-8 bottom-8 left-[min(40rem,calc(100vw-1rem))] z-70 flex w-[min(30rem,calc(100vw-2rem))] flex-col overflow-hidden border-[3px] border-foreground bg-card shadow-[7px_7px_0_var(--comic-blue)]"
 				>
 					<header className="flex items-center justify-between border-foreground/10 border-b px-4 py-3">
-						<p className="font-black text-primary text-xs uppercase">
-							Fragment
-						</p>
+						<p className="font-black text-primary text-xs uppercase">Element</p>
 						<button
 							type="button"
-							aria-label="Close fragment inspector"
+							aria-label="Close element inspector"
 							className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground"
 							onClick={closeSecondaryInspector}
 						>

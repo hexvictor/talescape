@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
+import { useTaleStudio } from "~/app/(tale-app)/(studio)/_shared/contexts/TaleStudioProvider";
 import {
 	addDraftBlock,
 	addDraftBranch,
@@ -62,13 +63,13 @@ import type {
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
 import {
-	getTaleBlocks,
 	getTaleBranches,
 	getTalePaths,
+	getTaleScenes,
 } from "~/app/(tale-app)/_shared/services/taleLookups";
 import type {
-	ResolvedTaleBlock,
 	ResolvedTaleBranch,
+	ResolvedTaleScene,
 	TalePath,
 } from "~/app/(tale-app)/_shared/types";
 import {
@@ -87,26 +88,26 @@ type PathType = TalePath["type"];
 type BranchEditorNodeData = {
 	active: boolean;
 	branch: ResolvedTaleBranch;
-	blocks: ResolvedTaleBlock[];
+	scenes: ResolvedTaleScene[];
 	blocksExpanded: boolean;
 	descendantsCollapsed: boolean;
 	hasDescendants: boolean;
 	hasSelectedBlock: boolean;
-	activeBlockId: string | null;
+	activeSceneId: string | null;
 	graphDirection: "horizontal" | "vertical";
 	graphDragging: boolean;
 	previewReachable: boolean;
 	incomingPaths: TalePath[];
 	onAddBlock: (branchId: string) => void;
-	onHoverBlock: (blockId: string | null) => void;
+	onHoverBlock: (sceneId: string | null) => void;
 	onHover: (branchId: string | null) => void;
-	onSelectBlock: (blockId: string) => void;
+	onSelectBlock: (sceneId: string) => void;
 	onSelectBranch: (branchId: string) => void;
 	onToggleBlocks: (branchId: string) => void;
 	onToggleDescendants: (branchId: string) => void;
-	onTravelToBlock: (blockId: string) => void;
+	onTravelToBlock: (sceneId: string) => void;
 	outgoingPaths: TalePath[];
-	selectedBlockId: string | null;
+	selectedSceneId: string | null;
 	selectedBranchId: string | null;
 };
 
@@ -114,7 +115,7 @@ type BranchEditorNode = Node<BranchEditorNodeData, "branchEditor">;
 type SortableBlockData = {
 	branchId: string;
 	index: number;
-	type: "block";
+	type: "scene";
 };
 type DroppableBranchData = {
 	branchId: string;
@@ -136,31 +137,32 @@ const emptySelectedBranchIds: string[] = [];
  * <TaleEditorBranchGraph />
  */
 export function TaleEditorBranchGraph(): React.JSX.Element {
+	const { dialogs } = useTaleStudio();
 	const { setTale: setData, tale } = useTaleAppStoreShallow((state) => ({
 		setTale: state.document.setTale,
 		tale: state.document.tale,
 	}));
-	const taleBlocks = useMemo(() => getTaleBlocks(tale), [tale]);
+	const taleBlocks = useMemo(() => getTaleScenes(tale), [tale]);
 	const taleBranches = useMemo(() => getTaleBranches(tale), [tale]);
 	const talePaths = useMemo(() => getTalePaths(tale), [tale]);
 	const {
 		clearGraphSelection,
 		highlightedBranchId,
-		selectBlockForEditing,
+		selectSceneForEditing,
 		selectBranchForEditing,
 		selectPathForEditing,
-		selectedBlockId,
+		selectedSceneId,
 		selectedBranchId,
 		setHighlightedBranchId,
-		setHoveredBlockId,
+		setHoveredSceneId,
 	} = useTaleStudioStoreShallow((state) => state.studioSelection);
 	const showActiveState = useTaleStudioStoreShallow(
 		(state) => state.editorLayout.livePreviewOpen,
 	);
-	const { activeBlockId, activeBranchId, scrollApi, selectedBranchIds } =
+	const { activeSceneId, activeBranchId, scrollApi, selectedBranchIds } =
 		useTaleReaderStoreShallow((state) => ({
-			activeBlockId: showActiveState
-				? (state.navigation.current?.blockId ?? null)
+			activeSceneId: showActiveState
+				? (state.navigation.current?.sceneId ?? null)
 				: null,
 			activeBranchId: showActiveState
 				? (state.navigation.current?.branchId ?? null)
@@ -197,7 +199,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 	>(undefined);
 	const fittedLayoutRevisionRef = useRef<number | null>(null);
 	const resolvedLayoutRevisionRef = useRef<number | null>(null);
-	const [draggedBlock, setDraggedBlock] = useState<ResolvedTaleBlock | null>(
+	const [draggedBlock, setDraggedBlock] = useState<ResolvedTaleScene | null>(
 		null,
 	);
 	const [minimapVisible, setMinimapVisible] = useState(true);
@@ -244,27 +246,26 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 		.join("|");
 	const layoutTrigger = `${graphDirection}:${layoutRequestRevision}:${branchTopologyKey}`;
 	const graphLayoutSourceRef = useRef({
-		blocks: taleBlocks,
+		scenes: taleBlocks,
 		branches: taleBranches,
 		collapsedBranchIds,
 		expandedBranchIds,
 	});
 	graphLayoutSourceRef.current = {
-		blocks: taleBlocks,
+		scenes: taleBlocks,
 		branches: taleBranches,
 		collapsedBranchIds,
 		expandedBranchIds,
 	};
 	const handleAddBlock = useCallback(
 		(branchId: string): void => {
-			setData(addDraftBlock(tale, branchId), { reason: "editor-add-block" });
-			expandBlocks(branchId);
+			dialogs.prompt({ defaultValue: "New Scene", onConfirm: (title) => { setData(addDraftBlock(tale, branchId, title), { reason: "editor-add-block" }); expandBlocks(branchId); }, title: "Name this Scene" });
 		},
-		[expandBlocks, setData, tale],
+		[dialogs, expandBlocks, setData, tale],
 	);
 	const handleAddBranch = useCallback((): void => {
-		setData(addDraftBranch(tale), { reason: "editor-add-branch" });
-	}, [setData, tale]);
+		dialogs.prompt({ defaultValue: "New Branch", onConfirm: (title) => setData(addDraftBranch(tale, title), { reason: "editor-add-branch" }), title: "Name this Branch" });
+	}, [dialogs, setData, tale]);
 	const handleConnect = useCallback(
 		(connection: Connection): void => {
 			if (!connection.source || !connection.target) return;
@@ -290,10 +291,10 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 	const handleDragStart = useCallback(
 		(event: DragStartEvent): void => {
 			setDraggedBlock(
-				tale.indexMap.blocksById[String(event.active.id)] ?? null,
+				tale.indexMap.scenesById[String(event.active.id)] ?? null,
 			);
 		},
-		[tale.indexMap.blocksById],
+		[tale.indexMap.scenesById],
 	);
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent): void => {
@@ -312,7 +313,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 				.filter((block) => block.branchId === targetBranchId)
 				.sort((first, second) => first.order - second.order);
 			const targetIndex =
-				overData.type === "block" ? overData.index : targetBlocks.length;
+				overData.type === "scene" ? overData.index : targetBlocks.length;
 			if (
 				activeData.branchId === targetBranchId &&
 				activeData.index === targetIndex
@@ -337,7 +338,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 		const layoutSource = graphLayoutSourceRef.current;
 		layoutTaleEditorBranchGraph({
 			branches: layoutSource.branches,
-			blocks: layoutSource.blocks,
+			scenes: layoutSource.scenes,
 			collapsedBranchIds: layoutSource.collapsedBranchIds,
 			expandedBranchIds: layoutSource.expandedBranchIds,
 			graphDirection,
@@ -370,11 +371,11 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 		() =>
 			compileBranchEditorGraph({
 				activeBranchId: showActiveState ? activeBranchId : null,
-				activeBlockId,
+				activeSceneId,
 				allBranches: taleBranches,
 				branchPositions,
 				branches: graphBranches,
-				blocks: taleBlocks,
+				scenes: taleBlocks,
 				collapsedBranchIds,
 				edgeType,
 				expandedBranchIds,
@@ -383,17 +384,17 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 				highlightedBranchId,
 				layoutPositions,
 				onAddBlock: handleAddBlock,
-				onHoverBlock: setHoveredBlockId,
+				onHoverBlock: setHoveredSceneId,
 				onHover: setHighlightedBranchId,
-				onSelectBlock: selectBlockForEditing,
+				onSelectBlock: selectSceneForEditing,
 				onSelectBranch: selectBranchForEditing,
 				onToggleBlocks: toggleBlocks,
 				onToggleDescendants: toggleDescendants,
-				onTravelToBlock: (blockId) =>
-					scrollApi?.scrollToBlock(blockId, { motion: "travel" }),
+				onTravelToBlock: (sceneId) =>
+					scrollApi?.scrollToScene(sceneId, { motion: "travel" }),
 				paths: graphPaths,
 				previewVisibleBranchIds,
-				selectedBlockId,
+				selectedSceneId,
 				selectedBranchId,
 				selectedPathId,
 				visibilityMode,
@@ -403,7 +404,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 			}),
 		[
 			activeBranchId,
-			activeBlockId,
+			activeSceneId,
 			branchPositions,
 			collapsedBranchIds,
 			edgeType,
@@ -416,13 +417,13 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 			highlightedBranchId,
 			layoutPositions,
 			previewVisibleBranchIds,
-			selectBlockForEditing,
+			selectSceneForEditing,
 			selectBranchForEditing,
 			scrollApi,
 			selectedBranchId,
-			selectedBlockId,
+			selectedSceneId,
 			selectedPathId,
-			setHoveredBlockId,
+			setHoveredSceneId,
 			setHighlightedBranchId,
 			showActiveState,
 			taleBlocks,
@@ -582,7 +583,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 					onNodeDragStart={(_, node) => {
 						draggingBranchIdRef.current = node.id;
 						setHighlightedBranchId(null);
-						setHoveredBlockId(null);
+						setHoveredSceneId(null);
 						setNodes((currentNodes) =>
 							currentNodes.map((currentNode) => ({
 								...currentNode,
@@ -693,11 +694,11 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
  */
 function compileBranchEditorGraph({
 	activeBranchId,
-	activeBlockId,
+	activeSceneId,
 	allBranches,
 	branchPositions,
 	branches,
-	blocks,
+	scenes,
 	collapsedBranchIds,
 	edgeType,
 	expandedBranchIds,
@@ -715,7 +716,7 @@ function compileBranchEditorGraph({
 	onTravelToBlock,
 	paths,
 	previewVisibleBranchIds,
-	selectedBlockId,
+	selectedSceneId,
 	selectedBranchId,
 	selectedPathId,
 	visibilityMode,
@@ -724,11 +725,11 @@ function compileBranchEditorGraph({
 	unfocusedNodeOpacity,
 }: {
 	activeBranchId: string | null;
-	activeBlockId: string | null;
+	activeSceneId: string | null;
 	allBranches: ResolvedTaleBranch[];
 	branchPositions: Record<string, GraphPosition>;
 	branches: ResolvedTaleBranch[];
-	blocks: ResolvedTaleBlock[];
+	scenes: ResolvedTaleScene[];
 	collapsedBranchIds: Set<string>;
 	edgeType: string;
 	expandedBranchIds: Set<string>;
@@ -737,16 +738,16 @@ function compileBranchEditorGraph({
 	highlightedBranchId: string | null;
 	layoutPositions: Record<string, GraphPosition>;
 	onAddBlock: (branchId: string) => void;
-	onHoverBlock: (blockId: string | null) => void;
+	onHoverBlock: (sceneId: string | null) => void;
 	onHover: (branchId: string | null) => void;
-	onSelectBlock: (blockId: string) => void;
+	onSelectBlock: (sceneId: string) => void;
 	onSelectBranch: (branchId: string) => void;
 	onToggleBlocks: (branchId: string) => void;
 	onToggleDescendants: (branchId: string) => void;
-	onTravelToBlock: (blockId: string) => void;
+	onTravelToBlock: (sceneId: string) => void;
 	paths: TalePath[];
 	previewVisibleBranchIds: Set<string> | null;
-	selectedBlockId: string | null;
+	selectedSceneId: string | null;
 	selectedBranchId: string | null;
 	selectedPathId: string | null;
 	visibilityMode: PathVisibilityMode;
@@ -755,8 +756,8 @@ function compileBranchEditorGraph({
 	unfocusedNodeOpacity: number;
 }): { edges: PathEditorEdge[]; nodes: BranchEditorNode[] } {
 	const branchById = new Map(allBranches.map((branch) => [branch.id, branch]));
-	const blocksByBranchId = new Map<string, ResolvedTaleBlock[]>();
-	for (const block of blocks) {
+	const blocksByBranchId = new Map<string, ResolvedTaleScene[]>();
+	for (const block of scenes) {
 		const branchBlocks = blocksByBranchId.get(block.branchId) ?? [];
 		branchBlocks.push(block);
 		blocksByBranchId.set(block.branchId, branchBlocks);
@@ -806,16 +807,16 @@ function compileBranchEditorGraph({
 		return {
 			data: {
 				active: branch.id === activeBranchId,
-				activeBlockId,
+				activeSceneId,
 				branch,
-				blocks: branchBlocks,
+				scenes: branchBlocks,
 				blocksExpanded: expandedBranchIds.has(branch.id),
 				descendantsCollapsed: collapsedBranchIds.has(branch.id),
 				graphDirection,
 				graphDragging: false,
 				hasDescendants: branchIdsWithChildren.has(branch.id),
 				hasSelectedBlock: branchBlocks.some(
-					(block) => block.id === selectedBlockId,
+					(block) => block.id === selectedSceneId,
 				),
 				incomingPaths: incomingPathsByBranchId.get(branch.id) ?? [],
 				onAddBlock,
@@ -828,7 +829,7 @@ function compileBranchEditorGraph({
 				onTravelToBlock,
 				outgoingPaths: outgoingPathsByBranchId.get(branch.id) ?? [],
 				previewReachable,
-				selectedBlockId,
+				selectedSceneId,
 				selectedBranchId,
 			},
 			id: branch.id,
@@ -876,8 +877,8 @@ function compileBranchEditorGraph({
 			return {
 				data: {
 					activeConnected:
-						activeBlockId === path.fromBlockId ||
-						activeBlockId === path.toBlockId,
+						activeSceneId === path.fromSceneId ||
+						activeSceneId === path.toSceneId,
 					animated:
 						highlightedBranchId === path.fromBranchId ||
 						highlightedBranchId === path.toBranchId,
@@ -1120,11 +1121,11 @@ function BranchEditorNodeView({
 				</button>
 			</header>
 			<div className="mt-3 flex items-center justify-between rounded border border-foreground/8 bg-foreground/[0.025] px-2 py-1.5 text-foreground/45 text-xs">
-				<span>{data.blocks.length} blocks</span>
+				<span>{data.scenes.length} scenes</span>
 				<button
 					type="button"
 					className="grid h-6 w-6 place-items-center rounded text-foreground/65 hover:bg-foreground/8 hover:text-foreground disabled:opacity-25"
-					aria-label={blocksVisible ? "Collapse blocks" : "Expand blocks"}
+					aria-label={blocksVisible ? "Collapse scenes" : "Expand scenes"}
 					disabled={data.descendantsCollapsed}
 					onClick={(event) => {
 						event.stopPropagation();
@@ -1149,18 +1150,18 @@ function BranchEditorNodeView({
 					onWheel={(event) => event.stopPropagation()}
 				>
 					<SortableContext
-						items={data.blocks.map((block) => block.id)}
+						items={data.scenes.map((block) => block.id)}
 						strategy={verticalListSortingStrategy}
 					>
-						{data.blocks.map((block, index) => (
+						{data.scenes.map((block, index) => (
 							<SortableBlockRow
 								key={block.id}
 								block={block}
 								branchId={data.branch.id}
 								index={index}
-								active={data.activeBlockId === block.id}
+								active={data.activeSceneId === block.id}
 								graphDragging={data.graphDragging}
-								selected={data.selectedBlockId === block.id}
+								selected={data.selectedSceneId === block.id}
 								onHoverBlock={data.onHoverBlock}
 								onSelectBlock={data.onSelectBlock}
 								onTravelToBlock={data.onTravelToBlock}
@@ -1180,7 +1181,7 @@ function BranchEditorNodeView({
 							}}
 						>
 							<Plus size={13} />
-							Add Block
+							Add Scene
 						</button>
 					</li>
 				</ul>
@@ -1288,7 +1289,7 @@ function getPathHandleOffset(index: number, total: number): number {
  *
  * @param props - Sortable block row props.
  * @param props.active - Whether the preview currently displays this block.
- * @param props.block - Block represented by the row.
+ * @param props.block - Scene represented by the row.
  * @param props.branchId - Branch containing the block.
  * @param props.graphDragging - Whether a branch node is currently moving.
  * @param props.index - Current block index inside its branch.
@@ -1312,13 +1313,13 @@ function SortableBlockRow({
 	selected,
 }: {
 	active: boolean;
-	block: ResolvedTaleBlock;
+	block: ResolvedTaleScene;
 	branchId: string;
 	graphDragging: boolean;
 	index: number;
-	onHoverBlock: (blockId: string | null) => void;
-	onSelectBlock: (blockId: string) => void;
-	onTravelToBlock: (blockId: string) => void;
+	onHoverBlock: (sceneId: string | null) => void;
+	onSelectBlock: (sceneId: string) => void;
+	onTravelToBlock: (sceneId: string) => void;
 	selected: boolean;
 }): React.JSX.Element {
 	const {
@@ -1333,7 +1334,7 @@ function SortableBlockRow({
 		data: {
 			branchId,
 			index,
-			type: "block",
+			type: "scene",
 		} satisfies SortableBlockData,
 	});
 
@@ -1376,7 +1377,7 @@ function SortableBlockRow({
 			<button
 				type="button"
 				className="grid h-7 w-7 shrink-0 place-items-center rounded border border-foreground/10 text-foreground/55 hover:bg-foreground/10 hover:text-foreground"
-				title="Travel to block"
+				title="Travel to Scene"
 				onPointerDown={(event) => event.stopPropagation()}
 				onClick={(event) => {
 					event.stopPropagation();
@@ -1393,7 +1394,7 @@ function SortableBlockRow({
  * Renders the floating block row shown while dragging.
  *
  * @param props - Drag overlay props.
- * @param props.block - Block being dragged.
+ * @param props.block - Scene being dragged.
  * @returns Drag overlay row.
  *
  * @example
@@ -1402,7 +1403,7 @@ function SortableBlockRow({
 function DraggedBlockOverlay({
 	block,
 }: {
-	block: ResolvedTaleBlock;
+	block: ResolvedTaleScene;
 }): React.JSX.Element {
 	return (
 		<div

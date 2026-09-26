@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
 import { SettingsTabButton } from "./SettingsTabButton";
 import { TaleSettingsPanel } from "./TaleSettingsPanel";
+import { TaleStructurePanel } from "./TaleStructurePanel";
 import { TaleStudioBreakpointSettings } from "./TaleStudioBreakpointSettings";
 import { TaleStudioGraphSettings } from "./TaleStudioGraphSettings";
 
@@ -18,7 +19,9 @@ import { TaleStudioGraphSettings } from "./TaleStudioGraphSettings";
  */
 export function TaleStudioSettingsModal(): React.JSX.Element | null {
 	const { closeSettings, settingsOpen } = useTaleStudio().toolbar;
-	const [activeTab, setActiveTab] = useState<"graph" | "tale">("tale");
+	const [activeTab, setActiveTab] = useState<"graph" | "structure" | "tale">(
+		"tale",
+	);
 
 	if (!settingsOpen) return null;
 
@@ -44,6 +47,8 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
 							<TaleSettingsPanel />
 							<TaleStudioBreakpointSettings />
 						</>
+					) : activeTab === "structure" ? (
+						<TaleStructurePanel />
 					) : (
 						<TaleStudioGraphSettings />
 					)}
@@ -101,12 +106,17 @@ function TaleStudioSettingsTabs({
 	activeTab,
 	onActiveTabChange,
 }: {
-	activeTab: "graph" | "tale";
-	onActiveTabChange: (tab: "graph" | "tale") => void;
+	activeTab: "graph" | "structure" | "tale";
+	onActiveTabChange: (tab: "graph" | "structure" | "tale") => void;
 }): React.JSX.Element {
 	return (
 		<div className="border-foreground/10 border-b px-3 py-2 sm:px-4">
 			<div className="inline-flex rounded border border-foreground/10 bg-foreground/[0.03] p-1">
+				<SettingsTabButton
+					active={activeTab === "structure"}
+					label="Structure"
+					onClick={() => onActiveTabChange("structure")}
+				/>
 				<SettingsTabButton
 					active={activeTab === "tale"}
 					label="Tale"

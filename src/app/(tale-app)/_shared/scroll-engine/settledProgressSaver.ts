@@ -1,10 +1,11 @@
 type SettledProgressPosition = {
-	blockId: string;
+	sceneId: string;
+	keyframeId: string;
 	innerProgress: number;
 };
 
 /**
- * Creates a single rescheduling timer that persists only after scrolling has
+ * Creates a single rescheduling timer that persists only after active has
  * remained idle for the configured delay.
  *
  * @param save - Callback that persists the latest settled position.
@@ -13,14 +14,14 @@ type SettledProgressPosition = {
  *
  * @example
  * const saver = createSettledProgressSaver(savePosition, 280);
- * saver.schedule(blockId, innerProgress);
+ * saver.schedule(sceneId, innerProgress);
  */
 export function createSettledProgressSaver(
 	save: (position: SettledProgressPosition) => void,
 	delayMs: number,
 ): {
 	cancel: () => void;
-	schedule: (blockId: string, innerProgress: number) => void;
+	schedule: (sceneId: string, keyframeId: string, innerProgress: number) => void;
 } {
 	let latest: SettledProgressPosition | null = null;
 	let lastUpdateAt = 0;
@@ -41,8 +42,8 @@ export function createSettledProgressSaver(
 			window.clearTimeout(timer ?? undefined);
 			timer = null;
 		},
-		schedule: (blockId, innerProgress) => {
-			latest = { blockId, innerProgress };
+		schedule: (sceneId, keyframeId, innerProgress) => {
+			latest = { sceneId, keyframeId, innerProgress };
 			lastUpdateAt = performance.now();
 			if (timer === null) {
 				timer = window.setTimeout(flushWhenSettled, delayMs);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Target } from "lucide-react";
+import { PanelsTopLeft, ScanLine } from "lucide-react";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import { TaleEditorLivePreviewSelectionControls } from "./TaleEditorLivePreviewSelectionControls";
 import { TaleEditorPaneVisibilityControls } from "./TaleEditorPaneVisibilityControls";
@@ -15,20 +15,20 @@ import { TaleEditorPaneVisibilityControls } from "./TaleEditorPaneVisibilityCont
  */
 export function TaleEditorToolbarControls(): React.JSX.Element {
 	const {
-		autoSelectActiveBlock,
+		autoSelectTarget,
 		graphOpen,
 		livePreviewOpen,
 		rightPanelOpen,
-		setAutoSelectActiveBlock,
+		setAutoSelectTarget,
 		setGraphOpen,
 		setLivePreviewOpen,
 		setRightPanelOpen,
 	} = useTaleStudioStoreShallow((state) => ({
-		autoSelectActiveBlock: state.editorLayout.autoSelectActiveBlock,
+		autoSelectTarget: state.editorLayout.autoSelectTarget,
 		graphOpen: state.editorLayout.graphOpen,
 		livePreviewOpen: state.editorLayout.livePreviewOpen,
 		rightPanelOpen: state.editorLayout.rightPanelOpen,
-		setAutoSelectActiveBlock: state.editorLayout.setAutoSelectActiveBlock,
+		setAutoSelectTarget: state.editorLayout.setAutoSelectTarget,
 		setGraphOpen: state.editorLayout.setGraphOpen,
 		setLivePreviewOpen: state.editorLayout.setLivePreviewOpen,
 		setRightPanelOpen: state.editorLayout.setRightPanelOpen,
@@ -38,10 +38,24 @@ export function TaleEditorToolbarControls(): React.JSX.Element {
 		<>
 			{livePreviewOpen ? <TaleEditorLivePreviewSelectionControls /> : null}
 			{livePreviewOpen ? (
-				<AutoSelectActiveBlockButton
-					active={autoSelectActiveBlock}
-					onToggle={() => setAutoSelectActiveBlock(!autoSelectActiveBlock)}
-				/>
+				<div className="flex items-center border-2 border-foreground bg-background">
+					<AutoSelectButton
+						active={autoSelectTarget === "scene"}
+						icon={<PanelsTopLeft size={14} />}
+						label="Scene"
+						onToggle={() =>
+							setAutoSelectTarget(autoSelectTarget === "scene" ? "off" : "scene")
+						}
+					/>
+					<AutoSelectButton
+						active={autoSelectTarget === "frame"}
+						icon={<ScanLine size={14} />}
+						label="Frame"
+						onToggle={() =>
+							setAutoSelectTarget(autoSelectTarget === "frame" ? "off" : "frame")
+						}
+					/>
+				</div>
 			) : null}
 			<TaleEditorPaneVisibilityControls
 				graphOpen={graphOpen}
@@ -66,11 +80,15 @@ export function TaleEditorToolbarControls(): React.JSX.Element {
  * @example
  * <AutoSelectActiveBlockButton active onToggle={toggle} />
  */
-function AutoSelectActiveBlockButton({
+function AutoSelectButton({
 	active,
+	icon,
+	label,
 	onToggle,
 }: {
 	active: boolean;
+	icon: React.ReactNode;
+	label: string;
 	onToggle: () => void;
 }): React.JSX.Element {
 	return (
@@ -78,16 +96,16 @@ function AutoSelectActiveBlockButton({
 			type="button"
 			aria-pressed={active}
 			className={[
-				"flex h-9 items-center justify-center gap-2 rounded border px-2.5 font-semibold text-xs transition",
+				"flex h-8 items-center justify-center gap-2 border-0 border-foreground px-2.5 font-bold text-[10px] uppercase transition first:border-r-2",
 				active
 					? "border-primary/45 bg-primary/14 text-primary"
 					: "border-foreground/12 text-foreground/62 hover:bg-foreground/8 hover:text-foreground",
 			].join(" ")}
-			title="Automatically inspect the active block"
+			title={`Automatically inspect the active ${label}`}
 			onClick={onToggle}
 		>
-			<span className="hidden font-medium lg:inline">Auto-Select</span>
-			<Target size={14} />
+			{icon}
+			<span className="hidden lg:inline">Auto {label}</span>
 		</button>
 	);
 }

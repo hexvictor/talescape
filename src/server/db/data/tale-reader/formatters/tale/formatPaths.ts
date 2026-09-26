@@ -13,23 +13,27 @@ export function formatPaths(rows: unknown[]): TalePath[] {
 	return rows.map((row) => {
 		const item = row as {
 			description?: string | null;
-			fromBlockId?: number | null;
+			fromSceneId?: number | null;
+			fromKeyframeId?: number | null;
 			fromBranchId: number;
 			id: number;
 			label?: string | null;
 			order?: number;
-			toBlockId?: number | null;
+			toSceneId?: number | null;
+			toKeyframeId?: number | null;
 			toBranchId: number;
 			type: string;
 		};
 		return {
 			description: item.description ?? "",
-			fromBlockId: String(item.fromBlockId ?? ""),
+			fromSceneId: String(item.fromSceneId ?? ""),
+			fromKeyframeId: item.fromKeyframeId == null ? null : String(item.fromKeyframeId),
 			fromBranchId: String(item.fromBranchId),
 			id: String(item.id),
 			label: item.label ?? "Continue",
 			order: item.order ?? 0,
-			toBlockId: String(item.toBlockId ?? ""),
+			toSceneId: String(item.toSceneId ?? ""),
+			toKeyframeId: item.toKeyframeId == null ? null : String(item.toKeyframeId),
 			toBranchId: String(item.toBranchId),
 			type: normalizePathType(item.type),
 		};

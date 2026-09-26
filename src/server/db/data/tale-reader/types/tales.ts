@@ -4,15 +4,15 @@ import type {
 	SavedReaderProgress,
 	StructurePosition,
 	Tale,
-	TaleBlock,
 	TaleBranch,
 	TaleContent,
+	TaleElement,
 	TaleEntry,
-	TaleFragment,
 	TaleIndexMap,
 	TalePage,
 	TalePart,
 	TalePath,
+	TaleScene,
 } from "~/app/(tale-app)/_shared/types";
 
 export type {
@@ -21,11 +21,11 @@ export type {
 	EntityBounds,
 	StructurePosition,
 	Tale,
-	TaleBlock,
+	TaleScene,
 	TaleBranch,
 	TaleContent,
 	TaleEntry,
-	TaleFragment,
+	TaleElement,
 	TaleIndexMap,
 	TalePage,
 	TalePart,
@@ -35,10 +35,10 @@ export type {
 export type TaleData = { progress: SavedReaderProgress | null; tale: Tale };
 export type TaleStructure = TaleContent;
 
-export type Block = TaleBlock;
+export type Scene = TaleScene;
 export type Branch = TaleBranch;
 export type Entry = TaleEntry;
-export type Fragment = TaleFragment;
+export type Fragment = TaleElement;
 export type Page = TalePage;
 export type Part = TalePart;
 export type Path = TalePath;

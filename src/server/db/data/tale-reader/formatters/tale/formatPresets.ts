@@ -1,12 +1,12 @@
 import type {
 	AnimationPreset,
-	BlockStylePreset,
 	Direction,
 	ReaderStyle,
+	SceneStylePreset,
 	TransitionPreset,
 	VisibilityPreset,
 } from "~/app/(tale-app)/_shared/types";
-import type { BlockFlow } from "~/server/db/types/tale-reader/readerConfig";
+import type { SceneFlow } from "~/server/db/types/tale-reader/readerConfig";
 import { type PresetSource, presetKey } from "./presetKeys";
 
 /**
@@ -87,7 +87,7 @@ export function formatTransitionPresets(
 	return rows.map((row) => {
 		const item = row as {
 			enteringAnimationPresetIds?: number[];
-			flowConfig: BlockFlow;
+			flowConfig: SceneFlow;
 			id: number;
 			leavingAnimationPresetIds?: number[];
 			name: string;
@@ -120,13 +120,13 @@ export function formatTransitionPresets(
 export function formatStylePresets(
 	rows: unknown[],
 	source: PresetSource,
-): BlockStylePreset[] {
+): SceneStylePreset[] {
 	return rows.map((row) => {
 		const item = row as {
 			id: number;
 			name: string;
 			styleConfig: ReaderStyle;
-			target?: BlockStylePreset["target"];
+			target?: SceneStylePreset["target"];
 		};
 		return {
 			id: presetKey(source, item.id),
@@ -147,7 +147,7 @@ export function formatStylePresets(
  * @example
  * const flow = normalizeFlow(row.flowConfig);
  */
-function normalizeFlow(flow: BlockFlow): TransitionPreset["flow"] {
+function normalizeFlow(flow: SceneFlow): TransitionPreset["flow"] {
 	return flow.type === "stack"
 		? flow
 		: {

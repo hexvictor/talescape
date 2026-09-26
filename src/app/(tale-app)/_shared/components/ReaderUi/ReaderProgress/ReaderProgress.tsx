@@ -32,7 +32,7 @@ export function ReaderProgress(): React.JSX.Element | null {
 				data-reader-component="ReaderProgress"
 				data-reader-role="compact-progress-status"
 				className={cn(
-					"pointer-events-auto absolute right-2 bottom-1 rounded border border-foreground/10 bg-background/64 px-2.5 py-1.5 font-medium text-[10px] text-foreground/54 uppercase backdrop-blur-md transition-opacity duration-200",
+					"pointer-events-auto absolute right-2 bottom-1 whitespace-pre-line rounded border border-foreground/10 bg-background/64 px-2.5 py-1.5 font-medium text-[10px] text-foreground/54 uppercase leading-4 backdrop-blur-md transition-opacity duration-200",
 					reduceInactiveUiOpacity
 						? "opacity-25 hover:opacity-100"
 						: "opacity-100",
@@ -41,7 +41,7 @@ export function ReaderProgress(): React.JSX.Element | null {
 			>
 				<span data-reader-story-progress="true">Story 0%</span>
 				<span className="mx-2 text-foreground/20">/</span>
-				<span data-reader-inner-progress="true">Page 0 / 0</span>
+				<span data-reader-inner-progress="true">Preparing progression</span>
 			</div>
 			<div className="absolute inset-x-0 top-[var(--reader-mobile-toolbar-offset,0px)] transition-[top] duration-300 md:top-0">
 				<div className="h-1 bg-foreground/8">
@@ -54,7 +54,7 @@ export function ReaderProgress(): React.JSX.Element | null {
 				<div className="h-1 bg-foreground/8">
 					<div
 						data-reader-transition-progress-fill="true"
-						className="h-full origin-left bg-blue-500 will-change-transform"
+						className="h-full origin-left bg-amber-400 will-change-transform"
 						style={{ transform: "scaleX(0)" }}
 					/>
 				</div>
@@ -62,7 +62,7 @@ export function ReaderProgress(): React.JSX.Element | null {
 					<div
 						data-reader-inner-progress-fill="true"
 						data-reader-progress-phase="reading"
-						className="h-full origin-left bg-[#9fbf8f] will-change-transform data-[reader-progress-phase=enter-pause]:bg-accent data-[reader-progress-phase=leave-pause]:bg-primary"
+						className="h-full origin-left bg-emerald-400 will-change-transform data-[reader-progress-phase=enter-pause]:bg-sky-400 data-[reader-progress-phase=leave-pause]:bg-fuchsia-500"
 						style={{ transform: "scaleX(0)" }}
 					/>
 				</div>

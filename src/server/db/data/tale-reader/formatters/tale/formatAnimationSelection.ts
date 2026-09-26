@@ -8,12 +8,16 @@ import type { AnimationSelection as DbAnimationSelection } from "~/server/db/typ
  * @returns The frontend selection object.
  *
  * @example
- * const selection = formatAnimationSelection(row.animationConfig.entering);
+ * const selection = formatAnimationSelection(row.animationConfig.intro);
  */
 export function formatAnimationSelection(
 	selection?: DbAnimationSelection,
 ): AnimationSelection {
 	return {
 		animations: selection?.tracks ?? [],
+		durationSeconds: selection?.durationSeconds,
+		applyInitialStateBeforeStart:
+			selection?.applyInitialStateBeforeStart ?? true,
+		carryEndStateForward: selection?.carryEndStateForward ?? false,
 	};
 }

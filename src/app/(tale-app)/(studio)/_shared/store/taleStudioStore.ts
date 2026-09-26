@@ -60,7 +60,7 @@ export function createTaleStudioDerivedState(
 	return {
 		get hasGraphSelection() {
 			return Boolean(
-				state.studioSelection.selectedBlockId ||
+				state.studioSelection.selectedSceneId ||
 					state.studioSelection.selectedBranchId ||
 					state.editorGraph.selectedPathId,
 			);

@@ -48,18 +48,33 @@ export function createReaderSnapModel(
 			defaults,
 		);
 		if (transitionTarget) return transitionTarget;
-		const intendedBlockId = transition
+		const internalTarget = getInternalTarget(
+			sorted,
+			fromScroll,
+			scroll,
+			direction,
+			defaults,
+		);
+		if (!transition && internalTarget) return internalTarget;
+		const intendedSceneId = transition
 			? direction === 1
-				? transition.toBlockId
-				: transition.fromBlockId
-			: getCrossedChoiceBlockId(sorted, fromScroll, scroll, direction);
-		if (!intendedBlockId) return null;
+				? transition.toSceneId
+				: transition.fromSceneId
+			: getCrossedChoiceSceneId(sorted, fromScroll, scroll, direction);
+		if (!intendedSceneId) return null;
 
 		const nearest =
 			sorted
-				.filter((point) => point.blockId === intendedBlockId)
+				.filter((point) => point.sceneId === intendedSceneId)
 				.filter((point) => point.mode === "scroll-snap")
 				.filter((point) => isSnapPointDirectionEnabled(point, direction))
+				.filter((point) =>
+					transition
+						? direction === 1
+							? point.type === "scene-start"
+							: point.type === "scene-end"
+						: true,
+				)
 				.sort(
 					(left, right) =>
 						Math.abs(left.scroll - scroll) - Math.abs(right.scroll - scroll),
@@ -91,20 +106,20 @@ export function createReaderSnapModel(
 		defaults: TaleSnapConfig,
 	): ReaderSnapTarget | null {
 		if (!transition) return null;
-		const blockId =
-			direction === 1 ? transition.toBlockId : transition.fromBlockId;
-		if (!blockId) return null;
+		const sceneId =
+			direction === 1 ? transition.toSceneId : transition.fromSceneId;
+		if (!sceneId) return null;
 		const match =
 			sorted.find(
 				(point) =>
-					point.blockId === blockId &&
+					point.sceneId === sceneId &&
 					point.mode === "snap" &&
 					point.transitionStart !== undefined &&
 					point.transitionEnd !== undefined &&
 					isSnapPointDirectionEnabled(point, direction) &&
 					(direction === 1
-						? point.type === "block-start"
-						: point.type === "block-end"),
+						? point.type === "scene-start"
+						: point.type === "scene-end"),
 			) ?? null;
 		if (!match) return null;
 		const settings = resolveSnapSettings(match.settings, defaults.snap);
@@ -117,6 +132,49 @@ export function createReaderSnapModel(
 	}
 
 	return { getSnapTarget };
+}
+
+function getInternalTarget(
+	points: SnapPoint[],
+	fromScroll: number,
+	targetScroll: number,
+	direction: ScrollDirection,
+	defaults: TaleSnapConfig,
+): ReaderSnapTarget | null {
+	const candidates = points
+		.filter((point) =>
+			direction === 1
+				? point.type === "step-start" || point.type === "element-start"
+				: point.type === "step-end" || point.type === "element-end",
+		)
+		.filter((point) => isSnapPointDirectionEnabled(point, direction))
+		.filter((point) => {
+			const boundaryStart = point.transitionStart ?? point.scroll;
+			const boundaryEnd = point.transitionEnd ?? point.scroll;
+			return direction === 1
+				? fromScroll < point.scroll && targetScroll >= boundaryStart
+				: fromScroll > point.scroll && targetScroll <= boundaryEnd;
+		})
+		.sort((left, right) =>
+			direction === 1 ? left.scroll - right.scroll : right.scroll - left.scroll,
+		);
+	const point = candidates[0];
+	if (!point) return null;
+	const settings = resolveSnapSettings(
+		point.settings,
+		point.mode === "snap" ? defaults.snap : defaults.scrollSnap,
+	);
+	if (
+		point.mode === "scroll-snap" &&
+		!isSnapCaptured(point, targetScroll, direction, settings)
+	)
+		return null;
+	return {
+		delayMs: settings.delayMs,
+		durationSeconds: settings.durationSeconds,
+		forced: point.mode === "snap",
+		scroll: point.scroll,
+	};
 }
 
 /**
@@ -132,9 +190,7 @@ function getCrossedTransition(
 	direction: ScrollDirection,
 ): Extract<TimelineSegment, { type: "transition" }> | null {
 	const transitions = segments.filter(
-		(
-			segment,
-		): segment is Extract<TimelineSegment, { type: "transition" }> =>
+		(segment): segment is Extract<TimelineSegment, { type: "transition" }> =>
 			segment.type === "transition",
 	);
 	const ordered = direction === 1 ? transitions : transitions.reverse();
@@ -150,7 +206,7 @@ function getCrossedTransition(
 /**
  * Finds a choice boundary crossed without a following transition.
  */
-function getCrossedChoiceBlockId(
+function getCrossedChoiceSceneId(
 	points: SnapPoint[],
 	fromScroll: number,
 	targetScroll: number,
@@ -165,7 +221,7 @@ function getCrossedChoiceBlockId(
 				(direction === 1
 					? fromScroll < point.scroll && targetScroll >= point.scroll
 					: fromScroll > point.scroll && targetScroll <= point.scroll),
-		)?.blockId ?? null
+		)?.sceneId ?? null
 	);
 }
 
@@ -251,10 +307,20 @@ function getTransitionVisibleFraction(
 	const length = point.transitionEnd - point.transitionStart;
 	if (length <= 0) return -1;
 	const progress = (scroll - point.transitionStart) / length;
-	if (direction === 1 && point.type === "block-start") {
+	if (
+		direction === 1 &&
+		(point.type === "scene-start" ||
+			point.type === "step-start" ||
+			point.type === "element-start")
+	) {
 		return clamp01(progress);
 	}
-	if (direction === -1 && point.type === "block-end") {
+	if (
+		direction === -1 &&
+		(point.type === "scene-end" ||
+			point.type === "step-end" ||
+			point.type === "element-end")
+	) {
 		return clamp01(1 - progress);
 	}
 	return -1;

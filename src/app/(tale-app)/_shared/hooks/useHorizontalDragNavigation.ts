@@ -3,21 +3,21 @@
 import { useRef } from "react";
 
 type HorizontalDragNavigationOptions = {
-	onStep: (direction: -1 | 1) => void;
+	onKeyframe: (direction: -1 | 1) => void;
 	stepDistance?: number;
 };
 
 /**
- * Converts horizontal pointer dragging into discrete navigation steps.
+ * Converts horizontal pointer dragging into discrete navigation keyframes.
  *
  * @param options - Drag step callback and optional pixel threshold.
  * @returns Pointer handlers for a horizontally browsable control.
  *
  * @example
- * const drag = useHorizontalDragNavigation({ onStep: setPage });
+ * const drag = useHorizontalDragNavigation({ onKeyframe: setPage });
  */
 export function useHorizontalDragNavigation({
-	onStep,
+	onKeyframe,
 	stepDistance = 34,
 }: HorizontalDragNavigationOptions): {
 	onPointerCancel: (event: React.PointerEvent<HTMLElement>) => void;
@@ -27,7 +27,7 @@ export function useHorizontalDragNavigation({
 } {
 	const activePointerIdRef = useRef<number | null>(null);
 	const draggingRef = useRef(false);
-	const lastStepXRef = useRef<number | null>(null);
+	const lastKeyframeXRef = useRef<number | null>(null);
 	const startXRef = useRef<number | null>(null);
 	const startYRef = useRef<number | null>(null);
 
@@ -43,7 +43,7 @@ export function useHorizontalDragNavigation({
 	const resetDrag = (event: React.PointerEvent<HTMLElement>): void => {
 		activePointerIdRef.current = null;
 		draggingRef.current = false;
-		lastStepXRef.current = null;
+		lastKeyframeXRef.current = null;
 		startXRef.current = null;
 		startYRef.current = null;
 		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -55,13 +55,13 @@ export function useHorizontalDragNavigation({
 		onPointerDown: (event) => {
 			activePointerIdRef.current = event.pointerId;
 			draggingRef.current = false;
-			lastStepXRef.current = event.clientX;
+			lastKeyframeXRef.current = event.clientX;
 			startXRef.current = event.clientX;
 			startYRef.current = event.clientY;
 		},
 		onPointerMove: (event) => {
 			if (activePointerIdRef.current !== event.pointerId) return;
-			const lastX = lastStepXRef.current;
+			const lastX = lastKeyframeXRef.current;
 			const startX = startXRef.current;
 			const startY = startYRef.current;
 			if (lastX === null || startX === null || startY === null) return;
@@ -79,8 +79,8 @@ export function useHorizontalDragNavigation({
 			}
 			const delta = event.clientX - lastX;
 			if (Math.abs(delta) < stepDistance) return;
-			onStep(delta < 0 ? 1 : -1);
-			lastStepXRef.current = event.clientX;
+			onKeyframe(delta < 0 ? 1 : -1);
+			lastKeyframeXRef.current = event.clientX;
 		},
 		onPointerUp: resetDrag,
 		onPointerCancel: resetDrag,

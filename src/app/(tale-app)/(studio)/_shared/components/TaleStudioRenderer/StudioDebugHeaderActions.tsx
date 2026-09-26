@@ -7,16 +7,16 @@ import { useTaleStudioStoreShallow } from "../../hooks/useTaleStudioStore";
  * Renders Studio inspection actions in the shared reader debug header.
  *
  * @param props - Debug action properties.
- * @param props.blockId - Active reader block identifier, when available.
+ * @param props.sceneId - Active reader block identifier, when available.
  * @returns Controls for inspecting the active block and toggling inspectors.
  *
  * @example
- * <StudioDebugHeaderActions blockId={blockId} />
+ * <StudioDebugHeaderActions sceneId={sceneId} />
  */
 export function StudioDebugHeaderActions({
-	blockId,
+	sceneId,
 }: {
-	blockId: string | null;
+	sceneId: string | null;
 }): React.JSX.Element {
 	const { inspectorControlsOpen, openInspector, toggleInspectorControls } =
 		useTaleStudioStoreShallow((state) => ({
@@ -30,10 +30,10 @@ export function StudioDebugHeaderActions({
 			<button
 				type="button"
 				aria-label="Inspect current block"
-				disabled={!blockId}
+				disabled={!sceneId}
 				className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground disabled:opacity-25"
 				onClick={() => {
-					if (blockId) openInspector({ id: blockId, type: "block" });
+					if (sceneId) openInspector({ id: sceneId, type: "scene" });
 				}}
 			>
 				<ScanSearch size={16} />

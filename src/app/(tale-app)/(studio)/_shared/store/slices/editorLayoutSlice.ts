@@ -3,13 +3,17 @@ import type { TaleStudioState } from "../taleStudioStore";
 
 export type EditorLayoutSlice = {
 	editorLayout: {
-		autoSelectActiveBlock: boolean;
+		activeLeftPanel: "assets" | "narrative" | "settings" | "tree" | null;
+		autoSelectTarget: "frame" | "off" | "scene";
 		graphOpen: boolean;
 		livePreviewOpen: boolean;
 		livePreviewWidth: number;
 		rightPanelOpen: boolean;
 		rightPanelWidth: number;
-		setAutoSelectActiveBlock: (enabled: boolean) => void;
+		setActiveLeftPanel: (
+			panel: "assets" | "narrative" | "settings" | "tree" | null,
+		) => void;
+		setAutoSelectTarget: (target: "frame" | "off" | "scene") => void;
 		setGraphOpen: (open: boolean) => void;
 		setLivePreviewOpen: (open: boolean) => void;
 		setLivePreviewWidth: (width: number) => void;
@@ -34,17 +38,22 @@ export const createEditorLayoutSlice: StateCreator<
 	EditorLayoutSlice
 > = (set) => ({
 	editorLayout: {
-		autoSelectActiveBlock: false,
+		activeLeftPanel: null,
+		autoSelectTarget: "off",
 		graphOpen: true,
 		livePreviewOpen: true,
 		livePreviewWidth: 40,
 		rightPanelOpen: false,
 		rightPanelWidth: 360,
-		setAutoSelectActiveBlock: (autoSelectActiveBlock) =>
+		setActiveLeftPanel: (activeLeftPanel) =>
+			set((state) => ({
+				editorLayout: { ...state.editorLayout, activeLeftPanel },
+			})),
+		setAutoSelectTarget: (autoSelectTarget) =>
 			set((state) => ({
 				editorLayout: {
 					...state.editorLayout,
-					autoSelectActiveBlock,
+					autoSelectTarget,
 				},
 			})),
 		setGraphOpen: (graphOpen) =>

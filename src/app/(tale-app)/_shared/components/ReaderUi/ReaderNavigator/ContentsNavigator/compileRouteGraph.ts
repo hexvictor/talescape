@@ -31,7 +31,7 @@ type CompileRouteGraphOptions = {
 	branches: ResolvedTaleBranch[];
 	currentBranchId: string | null;
 	paths: ResolvedTalePath[];
-	reachableBlockIds: Set<string>;
+	reachableSceneIds: Set<string>;
 	reachableBranchIds: Set<string>;
 	selectedBranchIds: Set<string>;
 };
@@ -43,13 +43,13 @@ type CompileRouteGraphOptions = {
  * @returns React Flow nodes and edges ready for rendering.
  *
  * @example
- * const graph = compileRouteGraph({ branches, paths, currentBranchId, reachableBlockIds, reachableBranchIds, selectedBranchIds });
+ * const graph = compileRouteGraph({ branches, paths, currentBranchId, reachableSceneIds, reachableBranchIds, selectedBranchIds });
  */
 export function compileRouteGraph({
 	branches,
 	currentBranchId,
 	paths,
-	reachableBlockIds,
+	reachableSceneIds,
 	reachableBranchIds,
 	selectedBranchIds,
 }: CompileRouteGraphOptions): {
@@ -69,7 +69,7 @@ export function compileRouteGraph({
 	const currentOptions = graphPaths.filter(
 		(path) =>
 			path.fromBranchId === currentBranchId &&
-			reachableBlockIds.has(path.fromBlockId),
+			reachableSceneIds.has(path.fromSceneId),
 	);
 	const currentOptionColorByPathId = new Map(
 		currentOptions.map(
@@ -103,7 +103,7 @@ export function compileRouteGraph({
 	});
 
 	const edges = graphPaths.map((path): RouteGraphEdge => {
-		const reachable = reachableBlockIds.has(path.fromBlockId);
+		const reachable = reachableSceneIds.has(path.fromSceneId);
 		const selected =
 			selectedBranchIds.has(path.fromBranchId) &&
 			selectedBranchIds.has(path.toBranchId);
