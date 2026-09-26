@@ -57,6 +57,10 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   Inspector consumers.
 - Migrated InspectorHeader hierarchy navigation to Breadcrumbs and retained a
   semantic Inspector heading with stable styling hooks.
+- Added shared Thumbnail, EmptyState and Skeleton display components with stories
+  for fit, selection, disabled, missing-image, action and responsive states.
+- Migrated Studio Element thumbnails, Library empty states and site loading
+  placeholders to the shared display components.
 
 ## Files changed / components / stories
 
@@ -100,6 +104,7 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 - Structural stories pass in Chromium: 4 story files and 50 tests total.
 - Navigation stories pass in Chromium: 5 story files and 54 tests, including
   keyboard tab selection and breadcrumb actions.
+- Display stories pass in Chromium: 6 story files and 57 tests total.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -107,9 +112,9 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 
 ## Exact next steps
 
-1. Add the remaining stable display primitives as real consumers migrate.
-2. Consolidate Inspector property fields and collapsible sections against shared
+1. Consolidate Inspector property fields and collapsible sections against shared
    controls and structural primitives.
+2. Add Tag and StatusBadge when their first domain consumers are migrated.
 3. Continue through resizing, overlays, collections, domain UI and application
    audit.
 

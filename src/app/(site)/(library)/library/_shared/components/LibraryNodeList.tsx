@@ -2,9 +2,9 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge } from "~/components/data-display/badge";
+import { EmptyState } from "~/components/data-display/empty-state";
 import { ComicPanel } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
-import { EmptyState } from "./LibraryCards";
 
 export type NodeLink = {
 	label: string;

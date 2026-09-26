@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
 import { Badge } from "~/components/data-display/badge";
+import { EmptyState } from "~/components/data-display/empty-state";
 import { ComicPanel } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 import type {
@@ -256,26 +257,6 @@ export function AuthorsGrid({ authors }: { authors: LibraryAuthorList }) {
 				</ComicPanel>
 			))}
 		</section>
-	);
-}
-
-export function EmptyState({
-	title,
-	description,
-}: {
-	title: string;
-	description: string;
-}) {
-	return (
-		<ComicPanel
-			className="comic-panel-content-lg text-center"
-			shape="cut-opposite"
-		>
-			<h2 className="font-display text-2xl uppercase">{title}</h2>
-			<p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-6">
-				{description}
-			</p>
-		</ComicPanel>
 	);
 }
 
