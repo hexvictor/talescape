@@ -1089,7 +1089,9 @@
 	border-bottom-width: 1px;
 }
 
-.studio-inspector [data-reader-role="debug-tab-list"] > button {
+.studio-inspector
+	[data-reader-role="debug-tab-list"]
+	> :is(button, [role="tab"]) {
 	flex: 1 0 auto;
 	min-height: 36px;
 	border-width: 0 0 2px;
@@ -1102,7 +1104,9 @@
 	padding: 12px;
 }
 
-.studio-inspector [data-reader-role="inspector-summary"] > p:first-of-type {
+.studio-inspector
+	[data-reader-role="inspector-summary"]
+	> [data-slot="inspector-title"] {
 	font-size: 14px;
 	text-transform: none;
 	color: var(--foreground);

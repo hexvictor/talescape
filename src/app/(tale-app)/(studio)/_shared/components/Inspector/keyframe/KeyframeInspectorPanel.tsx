@@ -193,6 +193,7 @@ export function KeyframeInspectorPanel({
 			/>
 			<DebugTabs
 				active={activeTab}
+				studio
 				onChange={setActiveTab}
 				tabs={[
 					{ id: "narrative", label: "Narrative", icon: <Layers size={14} /> },

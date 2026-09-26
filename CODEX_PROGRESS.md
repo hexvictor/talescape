@@ -50,6 +50,13 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   to shared structural primitives while preserving their comic panel treatment.
 - Removed the unused Radix Label and Select packages and their lockfile-only
   transitive dependencies.
+- Added React Aria-backed Tabs, TabList, Tab and TabPanel primitives plus semantic
+  actionable Breadcrumbs with compact, overflow and keyboard stories.
+- Migrated shared Reader DebugTabs to the Tabs primitives while preserving the
+  `debug-tab-list` selector contract and adding Studio instrumentation only in
+  Inspector consumers.
+- Migrated InspectorHeader hierarchy navigation to Breadcrumbs and retained a
+  semantic Inspector heading with stable styling hooks.
 
 ## Files changed / components / stories
 
@@ -91,6 +98,8 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 - `pnpm test:storybook` passed after the control migration: 3 story files and 46
   Chromium tests, including opening and changing the React Aria Select.
 - Structural stories pass in Chromium: 4 story files and 50 tests total.
+- Navigation stories pass in Chromium: 5 story files and 54 tests, including
+  keyboard tab selection and breadcrumb actions.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -98,11 +107,10 @@ remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
 
 ## Exact next steps
 
-1. Add shared Tabs and Breadcrumbs primitives with compact/responsive stories.
-2. Migrate InspectorHeader and DebugTabs presentation without moving Studio state
-   into generic UI or changing Reader debug behavior unexpectedly.
-3. Add the remaining stable display primitives as real consumers migrate.
-4. Continue through resizing, overlays, collections, domain UI and application
+1. Add the remaining stable display primitives as real consumers migrate.
+2. Consolidate Inspector property fields and collapsible sections against shared
+   controls and structural primitives.
+3. Continue through resizing, overlays, collections, domain UI and application
    audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;

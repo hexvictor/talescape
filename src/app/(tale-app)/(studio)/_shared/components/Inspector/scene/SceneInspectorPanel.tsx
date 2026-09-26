@@ -121,6 +121,7 @@ export function SceneInspectorPanel({
 				/>
 				<DebugTabs
 					active={activeTab}
+					studio
 					onChange={(tab) => {
 						setActiveTab(tab);
 						rememberInspectorTab("scene", tab);

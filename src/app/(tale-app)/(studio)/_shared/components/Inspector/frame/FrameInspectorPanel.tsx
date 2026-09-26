@@ -257,6 +257,7 @@ export function FrameInspectorPanel({
 				/>
 				<DebugTabs
 					active={currentTab}
+					studio
 					onChange={changeTab}
 					tabs={
 						frame.kind === "group"

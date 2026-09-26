@@ -141,6 +141,7 @@ export function ElementInspectorPanel({
 				/>
 				<DebugTabs
 					active={activeTab}
+					studio
 					onChange={(tab) => {
 						setActiveTab(tab);
 						rememberInspectorTab("element", tab);
