@@ -39,6 +39,30 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
   redundant component labels. Add identifiers when creating or changing an
   important surface and review them with the DOM hierarchy.
 
+## Talescape design system
+
+- Before creating or modifying application UI, check `src/components/ui` and
+  existing Talescape shared components for an appropriate primitive or composite.
+- Reuse or compose an existing component when it represents the same stable UI
+  concept. Extend generic behavior at the shared layer rather than copying utility
+  classes into feature code.
+- Generic UI components must not depend on Tale, Branch, Scene, Frame, Keyframe,
+  Element, Trigger, or narrative stores and types. Domain presentation belongs in
+  the narrowest shared tale-app scope that can own it.
+- React Aria behavior stays behind Talescape-owned component APIs. Feature code
+  should import Talescape components instead of React Aria Components directly,
+  except when a complex domain interaction has a documented reason.
+- Every new reusable component and every new shared variant or state must include
+  or update a colocated Storybook story in the same change. Show relevant default,
+  hover/focus, disabled, invalid, loading, empty and responsive states.
+- Use semantic tokens and shared geometry from the design system. Do not add raw
+  brand colors, repeated focus styles, shadows, radii, or clip-path polygons to
+  feature code when a token or shared helper exists.
+- Preserve the Button compatibility API and the Reader/Studio DOM, measurement,
+  animation, overflow and interaction contracts when migrating presentation.
+- `CODEX_PROGRESS.md` records the active design-system phase and verification
+  status. Update it after each meaningful migration checkpoint.
+
 Use three-number Semantic Versioning: `major.minor.patch`.
 
 Branch model:

@@ -4,6 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"build-storybook": "storybook build",
 		"build": "next build",
 		"check": "biome check .",
 		"check:changed": "biome check --changed --since=HEAD",
@@ -51,6 +52,7 @@
 		"dev": "next dev",
 		"preview": "next build && next start",
 		"start": "next start",
+		"storybook": "storybook dev -p 6006",
 		"typecheck": "tsc --noEmit",
 		"prepare": "husky"
 	},
@@ -86,6 +88,7 @@
 		"next": "15.3.8",
 		"postgres": "^3.4.4",
 		"react": "^19.0.0",
+		"react-aria-components": "^1.21.1",
 		"react-dom": "^19.0.0",
 		"server-only": "^0.0.1",
 		"superjson": "^2.2.1",
@@ -100,6 +103,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@playwright/test": "^1.61.0",
+		"@storybook/addon-a11y": "^10.6.0",
+		"@storybook/addon-docs": "^10.6.0",
+		"@storybook/addon-vitest": "^10.6.0",
+		"@storybook/nextjs-vite": "^10.6.0",
 		"@tailwindcss/postcss": "^4.0.15",
 		"@types/locomotive-scroll": "^4.1.4",
 		"@types/node": "^20.14.10",
@@ -110,6 +117,7 @@
 		"fallow": "^2.88.3",
 		"husky": "^9.1.7",
 		"postcss": "^8.5.3",
+		"storybook": "^10.6.0",
 		"tailwindcss": "^4.0.15",
 		"tsx": "^4.20.3",
 		"typescript": "^5.8.2",
