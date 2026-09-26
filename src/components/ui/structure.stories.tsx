@@ -1,13 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { MoreHorizontal, Plus } from "lucide-react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "./button";
 import { CollapsibleSection } from "./collapsible-section";
 import { Field } from "./field";
 import Input from "./input";
 import { Panel, PanelContent, PanelHeading } from "./panel";
 import { PropertyGroup, PropertyRow } from "./property";
+import { ResizeHandle } from "./resize-handle";
 import { SectionHeader } from "./section-header";
+
+const resizeStep = fn();
 
 function StructureShowcase(): React.JSX.Element {
 	return (
@@ -148,5 +151,32 @@ export const InspectorFields: Story = {
 		await expect(canvas.getByRole("spinbutton", { name: "Width" })).toHaveValue(
 			640,
 		);
+	},
+};
+
+export const ResizablePanes: Story = {
+	render: () => (
+		<div className="flex h-48 max-w-xl border-2 border-foreground">
+			<div className="grid flex-1 place-items-center bg-card text-sm">
+				Canvas
+			</div>
+			<ResizeHandle
+				aria-label="Resize Inspector"
+				onDrag={() => undefined}
+				onStep={resizeStep}
+			/>
+			<div className="grid w-48 place-items-center bg-muted text-sm">
+				Inspector
+			</div>
+		</div>
+	),
+	play: async ({ canvasElement }) => {
+		resizeStep.mockClear();
+		const canvas = within(canvasElement);
+		const handle = canvas.getByRole("button", { name: "Resize Inspector" });
+		handle.focus();
+		await userEvent.keyboard("{ArrowRight}");
+		await expect(handle).toHaveFocus();
+		await expect(resizeStep).toHaveBeenCalledWith(16);
 	},
 };

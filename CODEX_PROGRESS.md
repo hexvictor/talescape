@@ -79,6 +79,9 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   duration, loop Frame bounds and editor actions to shared controls and Buttons.
 - Migrated the complete animation-track editor to shared Select, Input, Textarea,
   Slider and Button primitives, with one local adapter for repeated track options.
+- Added a reusable x/y ResizeHandle with pointer dragging, optional keyboard
+  stepping and stable one-element geometry; the Reader VerticalPaneResizeHandle
+  now remains as an instrumentation-preserving compatibility wrapper.
 
 ## Files changed / components / stories
 
@@ -133,6 +136,9 @@ Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
   the 68-test unit suite, Storybook production build and 58 browser stories.
 - Animation-track controls pass targeted Biome and baseline typecheck comparison,
   the 68-test unit suite and the Storybook production build.
+- ResizeHandle passes targeted Biome and baseline typecheck comparison, the
+  68-test unit suite, Storybook production build and 59 browser stories including
+  keyboard step behavior.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -140,11 +146,12 @@ Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
 
 ## Exact next steps
 
-1. Continue replacing remaining Inspector-native selects, inputs and textareas
-   with the shared controls in focused slices.
-2. Migrate resizing and overlay primitives, then remove the remaining direct
-   Radix source dependencies where behavior can be preserved.
-3. Continue through collections, domain UI and the broader application
+1. Migrate the Dialog overlay to a Talescape-owned React Aria compatibility API,
+   preserving portal, focus return, scroll lock and existing consumer props.
+2. Audit whether native overflow can preserve ScrollArea viewport/ref/scrollbar
+   behavior before replacing its remaining direct Radix source dependency.
+3. Continue replacing remaining Inspector-native controls, then collections,
+   domain UI and the broader application
    audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
