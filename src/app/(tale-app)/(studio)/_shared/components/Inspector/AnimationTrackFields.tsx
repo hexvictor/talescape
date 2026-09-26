@@ -1,14 +1,22 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
 	AnimationEasing,
 	AnimationTrack,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { Slider } from "~/components/ui/slider";
+import Textarea from "~/components/ui/textarea";
 
 export function AnimationTrackFields({
 	lockFromValues = false,
@@ -30,36 +38,38 @@ export function AnimationTrackFields({
 			className="col-span-2 space-y-3 rounded border border-foreground/8 bg-foreground/[0.025] p-3"
 		>
 			<div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
-				<Setting label="Property">
-					<select
-						className={settingClassName}
-						value={track.property}
-						onChange={(event) =>
-							onChange(
-								changeTrackProperty(
-									track,
-									event.target.value as AnimationTrack["property"],
-									timingMode,
-								),
-							)
-						}
-					>
-						<option value="opacity">Opacity</option>
-						<option value="translate">Translate</option>
-						<option value="scale">Scale</option>
-						<option value="rotate">Rotate</option>
-						<option value="blur">Blur</option>
-						<option value="motionPath">Motion path</option>
-					</select>
-				</Setting>
-				<button
+				<TrackSelect
+					label="Property"
+					options={[
+						["opacity", "Opacity"],
+						["translate", "Translate"],
+						["scale", "Scale"],
+						["rotate", "Rotate"],
+						["blur", "Blur"],
+						["motionPath", "Motion path"],
+					]}
+					value={track.property}
+					onChange={(property) =>
+						onChange(
+							changeTrackProperty(
+								track,
+								property as AnimationTrack["property"],
+								timingMode,
+							),
+						)
+					}
+				/>
+				<Button
 					type="button"
 					aria-label="Remove animation track"
-					className="grid h-9 w-9 place-items-center rounded text-red-300/65 hover:bg-red-500/10 hover:text-red-200"
+					className="size-9 text-destructive"
+					motion="flat"
+					size="icon"
+					variant="ghost"
 					onClick={onRemove}
 				>
 					<Trash2 size={14} />
-				</button>
+				</Button>
 			</div>
 			{timingMode !== "hover" ? (
 				<TrackFieldSection
@@ -67,22 +77,20 @@ export function AnimationTrackFields({
 				>
 					{timingMode === "timeline" ? (
 						<>
-							<Setting label="Playback">
-								<select
-									className={settingClassName}
-									value={track.playback ?? "scrub"}
-									onChange={(event) =>
-										onChange({
-											...track,
-											playback: event.target
-												.value as AnimationTrack["playback"],
-										})
-									}
-								>
-									<option value="scrub">Follow scroll</option>
-									<option value="commitOnComplete">Keep completed state</option>
-								</select>
-							</Setting>
+							<TrackSelect
+								label="Playback"
+								options={[
+									["scrub", "Follow scroll"],
+									["commitOnComplete", "Keep completed state"],
+								]}
+								value={track.playback ?? "scrub"}
+								onChange={(playback) =>
+									onChange({
+										...track,
+										playback: playback as AnimationTrack["playback"],
+									})
+								}
+							/>
 							<TrackPercent
 								label="Start"
 								value={track.start}
@@ -106,23 +114,20 @@ export function AnimationTrackFields({
 									})
 								}
 							/>
-							<Setting label="Direction">
-								<select
-									className={settingClassName}
-									value={track.loopPlayback ?? "alternate"}
-									onChange={(event) =>
-										onChange({
-											...track,
-											loopPlayback: event.target.value as
-												| "alternate"
-												| "restart",
-										})
-									}
-								>
-									<option value="alternate">Alternate</option>
-									<option value="restart">Restart</option>
-								</select>
-							</Setting>
+							<TrackSelect
+								label="Direction"
+								options={[
+									["alternate", "Alternate"],
+									["restart", "Restart"],
+								]}
+								value={track.loopPlayback ?? "alternate"}
+								onChange={(loopPlayback) =>
+									onChange({
+										...track,
+										loopPlayback: loopPlayback as "alternate" | "restart",
+									})
+								}
+							/>
 						</>
 					)}
 				</TrackFieldSection>
@@ -160,38 +165,36 @@ export function AnimationTrackFields({
 			<TrackFieldSection title="Values">
 				{track.property === "translate" ? (
 					<>
-						<Setting label="Axes">
-							<select
-								className={settingClassName}
-								value={track.axis}
-								onChange={(event) =>
-									onChange({
-										...track,
-										axis: event.target.value as "x" | "xy" | "xyz" | "y",
-									})
-								}
-							>
-								<option value="x">X</option>
-								<option value="y">Y</option>
-								<option value="xy">X and Y</option>
-								<option value="xyz">X, Y and Z</option>
-							</select>
-						</Setting>
-						<Setting label="Unit">
-							<select
-								className={settingClassName}
-								value={track.unit ?? "px"}
-								onChange={(event) =>
-									onChange({
-										...track,
-										unit: event.target.value as "px" | "viewport",
-									})
-								}
-							>
-								<option value="px">Pixels</option>
-								<option value="viewport">Viewport spans</option>
-							</select>
-						</Setting>
+						<TrackSelect
+							label="Axes"
+							options={[
+								["x", "X"],
+								["y", "Y"],
+								["xy", "X and Y"],
+								["xyz", "X, Y and Z"],
+							]}
+							value={track.axis}
+							onChange={(axis) =>
+								onChange({
+									...track,
+									axis: axis as "x" | "xy" | "xyz" | "y",
+								})
+							}
+						/>
+						<TrackSelect
+							label="Unit"
+							options={[
+								["px", "Pixels"],
+								["viewport", "Viewport spans"],
+							]}
+							value={track.unit ?? "px"}
+							onChange={(unit) =>
+								onChange({
+									...track,
+									unit: unit as "px" | "viewport",
+								})
+							}
+						/>
 					</>
 				) : null}
 				{"from" in track ? (
@@ -278,8 +281,9 @@ export function AnimationTrackFields({
 				{track.property === "motionPath" ? (
 					<div className="@min-[28rem]/track-section:col-span-2">
 						<Setting label="SVG path">
-							<textarea
-								className={`${settingClassName} min-h-20 py-2`}
+							<Textarea
+								aria-label="SVG path"
+								density="compact"
 								value={track.path}
 								onChange={(event) =>
 									onChange({ ...track, path: event.target.value })
@@ -290,32 +294,28 @@ export function AnimationTrackFields({
 				) : null}
 			</TrackFieldSection>
 			<TrackFieldSection title="Curve">
-				<Setting label="Easing">
-					<select
-						className={settingClassName}
-						value={track.easing ?? "power2.out"}
-						onChange={(event) =>
-							onChange({
-								...track,
-								easing: event.target.value as AnimationEasing,
-							})
-						}
-					>
-						<option value="linear">Linear</option>
-						<option value="power1.in">Power 1 in</option>
-						<option value="power1.out">Power 1 out</option>
-						<option value="power1.inOut">Power 1 in/out</option>
-						<option value="power2.in">Power 2 in</option>
-						<option value="power2.out">Power 2 out</option>
-						<option value="power2.inOut">Power 2 in/out</option>
-						<option value="power3.in">Power 3 in</option>
-						<option value="power3.out">Power 3 out</option>
-						<option value="power3.inOut">Power 3 in/out</option>
-						<option value="back.out">Back out</option>
-						<option value="elastic.out">Elastic out</option>
-						<option value="bounce.out">Bounce out</option>
-					</select>
-				</Setting>
+				<TrackSelect
+					label="Easing"
+					options={[
+						["linear", "Linear"],
+						["power1.in", "Power 1 in"],
+						["power1.out", "Power 1 out"],
+						["power1.inOut", "Power 1 in/out"],
+						["power2.in", "Power 2 in"],
+						["power2.out", "Power 2 out"],
+						["power2.inOut", "Power 2 in/out"],
+						["power3.in", "Power 3 in"],
+						["power3.out", "Power 3 out"],
+						["power3.inOut", "Power 3 in/out"],
+						["back.out", "Back out"],
+						["elastic.out", "Elastic out"],
+						["bounce.out", "Bounce out"],
+					]}
+					value={track.easing ?? "power2.out"}
+					onChange={(easing) =>
+						onChange({ ...track, easing: easing as AnimationEasing })
+					}
+				/>
 			</TrackFieldSection>
 		</div>
 	);
@@ -346,6 +346,35 @@ function TrackFieldSection({
 	);
 }
 
+function TrackSelect({
+	label,
+	onChange,
+	options,
+	value,
+}: {
+	label: string;
+	onChange: (value: string) => void;
+	options: Array<readonly [string, string]>;
+	value: string;
+}): React.JSX.Element {
+	return (
+		<Setting label={label}>
+			<Select aria-label={label} value={value} onValueChange={onChange}>
+				<SelectTrigger className="w-full" density="compact">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map(([optionValue, optionLabel]) => (
+						<SelectItem key={optionValue} value={optionValue}>
+							{optionLabel}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</Setting>
+	);
+}
+
 /**
  * Renders a numeric track field.
  *
@@ -372,8 +401,9 @@ function TrackNumber({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				disabled={disabled}
 				max={max}
 				min={min}
@@ -398,19 +428,17 @@ function TrackPercent({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<Setting label={`${label} (${Math.round(value * 100)}%)`}>
-			<input
-				aria-label={label}
-				className="h-9 w-full accent-primary disabled:cursor-not-allowed disabled:opacity-45"
-				disabled={disabled}
-				max="100"
-				min="0"
-				step="1"
-				type="range"
-				value={Math.round(value * 100)}
-				onChange={(event) => onChange(Number(event.target.value) / 100)}
-			/>
-		</Setting>
+		<Slider
+			density="compact"
+			formatOptions={{ style: "percent" }}
+			isDisabled={disabled}
+			label={label}
+			maxValue={1}
+			minValue={0}
+			step={0.01}
+			value={value}
+			onChange={onChange}
+		/>
 	);
 }
 

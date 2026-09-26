@@ -77,6 +77,8 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   volume and looping controls to shared compact form primitives.
 - Migrated animation selection preset controls, carry-state toggles, hover
   duration, loop Frame bounds and editor actions to shared controls and Buttons.
+- Migrated the complete animation-track editor to shared Select, Input, Textarea,
+  Slider and Button primitives, with one local adapter for repeated track options.
 
 ## Files changed / components / stories
 
@@ -129,6 +131,8 @@ Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
   after removing the direct Radix Slot dependency.
 - Element Content and animation-selection migrations pass targeted Biome checks,
   the 68-test unit suite, Storybook production build and 58 browser stories.
+- Animation-track controls pass targeted Biome and baseline typecheck comparison,
+  the 68-test unit suite and the Storybook production build.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
