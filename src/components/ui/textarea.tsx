@@ -1,14 +1,30 @@
-import cn from "~/lib/utils/cn";
+"use client";
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+import {
+	TextArea as AriaTextArea,
+	type TextAreaProps as AriaTextAreaProps,
+} from "react-aria-components";
+import cn from "~/lib/utils/cn";
+import { type ControlDensity, controlClassName } from "./control-styles";
+
+export type TextareaProps = Omit<AriaTextAreaProps, "className"> & {
+	className?: string;
+	density?: ControlDensity;
+};
+
+function Textarea({
+	className,
+	density = "default",
+	...props
+}: TextareaProps): React.JSX.Element {
 	return (
-		<textarea
-			data-slot="textarea"
-			className={cn(
-				"field-sizing-content flex min-h-20 w-full border-2 border-input bg-card px-3 py-2 text-base shadow-[3px_3px_0_rgb(var(--foreground-rgb))] outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm",
-				className,
-			)}
+		<AriaTextArea
 			{...props}
+			data-slot="textarea"
+			className={controlClassName(
+				density,
+				cn("field-sizing-content min-h-20 resize-y", className),
+			)}
 		/>
 	);
 }

@@ -9,7 +9,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 4 complete: tokens, geometry and Button React Aria migration.
+Phase 5 complete: React Aria form controls and representative Studio migration.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
@@ -34,12 +34,26 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Migrated Button from Radix Slot to React Aria Button/Link while preserving the
   current compatibility API and rendered visual layers.
 - Added an isolated Storybook Vitest browser project.
+- Added React Aria-backed Input, Textarea, Label, Select, SearchField, Checkbox,
+  Switch, RadioGroup and Slider primitives with default and compact densities.
+- Preserved the existing Input and compound Select compatibility APIs used by
+  Library forms while moving interaction behavior behind Talescape components.
+- Added form-control stories for default, compact, disabled, invalid, empty,
+  responsive and keyboard/change interaction states.
+- Migrated Scene Details and Scene Container controls to shared compact-density
+  components as the representative Studio slice.
+- Migrated the Library tale explorer to the shared SearchField and named Select
+  controls as the representative shared application slice.
 
 ## Files changed / components / stories
 
-- Added Storybook configuration, Button/Foundation stories, tokens/theme/geometry,
-  browser-test configuration, migration log, audit and this checkpoint.
-- Migrated `src/components/ui/button.tsx`; no feature/business logic changed.
+- Added Storybook configuration, Button/Foundation/Form Control stories,
+  tokens/theme/geometry, browser-test configuration, migration log, audit and
+  this checkpoint.
+- Migrated `src/components/ui/button.tsx` and shared form primitives.
+- Migrated Scene Details text fields and Scene Container selects without changing
+  tale data behavior.
+- Migrated Library search/filter controls without changing filtering behavior.
 
 ## Decisions
 
@@ -54,9 +68,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Remaining migration / Radix
 
-Controls, composites and application migration remain. Radix imports now remain in
-ui/label.tsx, ui/select.tsx, overlay/dialog.tsx, layout/scroll-area.tsx and
-data-display/badge.tsx. Button no longer imports Radix Slot.
+Composites and broader application migration remain. Source imports of Radix now
+remain in overlay/dialog.tsx, layout/scroll-area.tsx and data-display/badge.tsx.
+The label/select packages are no longer imported by source, but dependency cleanup
+is deferred because the package manager attempted registry access in the offline
+workspace.
 
 ## Checks and known limitations
 
@@ -67,7 +83,10 @@ data-display/badge.tsx. Button no longer imports Radix Slot.
 - Targeted Biome check passed.
 - `pnpm build-storybook` passed. It reports expected large preview chunks, an empty
   MDX glob and the existing Sentry router-transition configuration notice.
-- `pnpm test:storybook` passed: 2 story files and 39 Chromium tests.
+- `pnpm build` reached Next.js production compilation but could not fetch Google
+  Fonts because this workspace has no external DNS access.
+- `pnpm test:storybook` passed after the control migration: 3 story files and 46
+  Chromium tests, including opening and changing the React Aria Select.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -75,11 +94,12 @@ data-display/badge.tsx. Button no longer imports Radix Slot.
 
 ## Exact next steps
 
-1. Commit the stable tokens, geometry and Button migration.
-2. Build React Aria form controls with compact editor density and stories.
-3. Migrate representative shared and Studio control call sites.
-4. Add display and structural primitives, then Inspector compositions.
-5. Continue through overlays, collections, domain UI and application audit.
+1. Add display and structural primitives with colocated stories.
+2. Compose those primitives into the Inspector shell and repeated field/section
+   patterns without introducing domain state into generic UI.
+3. Continue through overlays, collections, domain UI and application audit.
+4. Remove unused Radix label/select dependencies when lockfile maintenance can run
+   without registry access.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should

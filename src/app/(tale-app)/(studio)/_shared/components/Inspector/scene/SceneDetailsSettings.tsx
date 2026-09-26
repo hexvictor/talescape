@@ -5,6 +5,9 @@ import type {
 	TaleScene,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import Input from "~/components/ui/input";
+import Label from "~/components/ui/label";
+import Textarea from "~/components/ui/textarea";
 
 export function SceneDetailsSettings({
 	scene,
@@ -21,14 +24,21 @@ export function SceneDetailsSettings({
 		<div className="space-y-3">
 			<section className="tale-ui-panel grid gap-3 p-3">
 				<StudioField
+					id={`scene-${scene.id}-name`}
 					label="Scene name"
 					value={scene.title}
 					onChange={(title) => onChange((item) => ({ ...item, title }))}
 				/>
-				<label className="grid gap-1 text-xs">
-					<span className="font-bold uppercase">Description</span>
-					<textarea
-						className="min-h-20 border border-foreground bg-background p-2"
+				<div className="grid gap-1 text-xs">
+					<Label
+						htmlFor={`scene-${scene.id}-description`}
+						className="uppercase"
+					>
+						Description
+					</Label>
+					<Textarea
+						id={`scene-${scene.id}-description`}
+						density="compact"
 						value={scene.description ?? ""}
 						onChange={(event) =>
 							onChange((item) => ({
@@ -37,7 +47,7 @@ export function SceneDetailsSettings({
 							}))
 						}
 					/>
-				</label>
+				</div>
 			</section>
 
 			<div className="grid grid-cols-1 gap-2">
@@ -57,22 +67,27 @@ export function SceneDetailsSettings({
 }
 
 function StudioField({
+	id,
 	label,
 	onChange,
 	value,
 }: {
+	id: string;
 	label: string;
 	onChange: (value: string) => void;
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 text-xs">
-			<span className="font-bold uppercase">{label}</span>
-			<input
-				className="h-9 border border-foreground bg-background px-2"
+		<div className="grid gap-1 text-xs">
+			<Label htmlFor={id} className="uppercase">
+				{label}
+			</Label>
+			<Input
+				id={id}
+				density="compact"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
-		</label>
+		</div>
 	);
 }
