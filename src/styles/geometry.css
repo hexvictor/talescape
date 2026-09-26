@@ -1,0 +1,185 @@
+.ts-geometry {
+	--ts-geometry-slant: 10px;
+	--ts-geometry-inner-decrease: 1px;
+	--ts-geometry-inner-slant: calc(
+		var(--ts-geometry-slant) -
+		var(--ts-geometry-inner-decrease)
+	);
+	--ts-geometry-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+	--ts-geometry-inner-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.ts-geometry-clip {
+	clip-path: var(--ts-geometry-clip-path);
+}
+
+.ts-geometry-inner-clip {
+	clip-path: var(--ts-geometry-inner-clip-path);
+}
+
+.ts-geometry[data-ts-slant="sm"] {
+	--ts-geometry-slant: 6px;
+}
+
+.ts-geometry[data-ts-slant="md"] {
+	--ts-geometry-slant: 10px;
+}
+
+.ts-geometry[data-ts-slant="lg"] {
+	--ts-geometry-slant: 14px;
+}
+
+.ts-geometry[data-ts-slant="xl"] {
+	--ts-geometry-slant: 18px;
+}
+
+.ts-geometry[data-ts-shape="slant-left"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-slant) 0,
+		100% 0,
+		100% 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		var(--ts-geometry-inner-slant) 0,
+		100% 0,
+		100% 100%,
+		0 100%
+	);
+}
+
+.ts-geometry[data-ts-shape="slant-right"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		calc(100% - var(--ts-geometry-slant)) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		calc(100% - var(--ts-geometry-inner-slant)) 100%,
+		0 100%
+	);
+}
+
+.ts-geometry[data-ts-shape="slant-both"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-slant) 0,
+		100% 0,
+		calc(100% - var(--ts-geometry-slant)) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		var(--ts-geometry-inner-slant) 0,
+		100% 0,
+		calc(100% - var(--ts-geometry-inner-slant)) 100%,
+		0 100%
+	);
+}
+
+.ts-geometry[data-ts-shape="corner-left"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-slant) 0,
+		100% 0,
+		100% 100%,
+		0 100%,
+		0 var(--ts-geometry-slant)
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		var(--ts-geometry-inner-slant) 0,
+		100% 0,
+		100% 100%,
+		0 100%,
+		0 var(--ts-geometry-inner-slant)
+	);
+}
+
+.ts-geometry[data-ts-shape="corner-right"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		calc(100% - var(--ts-geometry-slant)) 0,
+		100% var(--ts-geometry-slant),
+		100% 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		calc(100% - var(--ts-geometry-inner-slant)) 0,
+		100% var(--ts-geometry-inner-slant),
+		100% 100%,
+		0 100%
+	);
+}
+
+.ts-geometry[data-ts-shape="corner-bottom-left"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-slant) 100%,
+		0 calc(100% - var(--ts-geometry-slant))
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-inner-slant) 100%,
+		0 calc(100% - var(--ts-geometry-inner-slant))
+	);
+}
+
+.ts-geometry[data-ts-shape="corner-bottom-right"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--ts-geometry-slant)),
+		calc(100% - var(--ts-geometry-slant)) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--ts-geometry-inner-slant)),
+		calc(100% - var(--ts-geometry-inner-slant)) 100%,
+		0 100%
+	);
+}
+
+.ts-geometry[data-ts-shape="corners-left"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-slant) 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-slant) 100%,
+		0 calc(100% - var(--ts-geometry-slant)),
+		0 var(--ts-geometry-slant)
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		var(--ts-geometry-inner-slant) 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-inner-slant) 100%,
+		0 calc(100% - var(--ts-geometry-inner-slant)),
+		0 var(--ts-geometry-inner-slant)
+	);
+}
+
+.ts-geometry[data-ts-shape="corners-right"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		calc(100% - var(--ts-geometry-slant)) 0,
+		100% var(--ts-geometry-slant),
+		100% calc(100% - var(--ts-geometry-slant)),
+		calc(100% - var(--ts-geometry-slant)) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		calc(100% - var(--ts-geometry-inner-slant)) 0,
+		100% var(--ts-geometry-inner-slant),
+		100% calc(100% - var(--ts-geometry-inner-slant)),
+		calc(100% - var(--ts-geometry-inner-slant)) 100%,
+		0 100%
+	);
+}

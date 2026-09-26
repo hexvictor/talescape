@@ -4,67 +4,26 @@
 
 @import "tw-animate-css";
 
+@import "./tokens.css";
+@import "./theme.css";
+@import "./geometry.css";
+
 /* @import "locomotive-scroll/dist/locomotive-scroll.css"; */
 
 @custom-variant dark (&:is(.dark *));
 @source "../../node_modules/@uploadthing/react/dist";
 
-@theme {
-	--font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-	--font-display: var(--font-bangers), "DejaVu Sans Condensed", sans-serif;
-	--font-serif: Georgia, Cambria, "Times New Roman", serif;
-}
-
-@theme inline {
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
-	--color-sidebar: var(--sidebar);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
-}
-
 :root {
 	color-scheme: light;
 	--radius: 0.125rem;
-	--talescape-ink: #080a09;
+	--talescape-ink: var(--ts-ink);
 	--talescape-cream: #fff0cd;
-	--talescape-cyan: #079ee4;
-	--talescape-magenta: #f51d76;
-	--talescape-yellow: #ffd31f;
-	--talescape-paper: #fff8e8;
-	--talescape-paper-muted: #eee3ca;
-	--talescape-teal: #188f8b;
+	--talescape-cyan: var(--ts-cyan);
+	--talescape-magenta: var(--ts-pink);
+	--talescape-yellow: var(--ts-yellow);
+	--talescape-paper: var(--ts-paper);
+	--talescape-paper-muted: var(--ts-paper-muted);
+	--talescape-teal: var(--ts-green);
 	--comic-ink: var(--talescape-ink);
 	--comic-paper: var(--talescape-paper);
 	--comic-cream: var(--talescape-cream);
@@ -81,18 +40,18 @@
 	--comic-frame-shadow-color: rgb(var(--foreground-rgb));
 	--comic-shadow: var(--comic-frame-shadow-offset)
 		var(--comic-frame-shadow-offset) 0 var(--comic-frame-shadow-color);
-	--background: var(--talescape-paper);
-	--foreground: var(--talescape-ink);
-	--card: #fffdf5;
-	--card-foreground: var(--talescape-ink);
-	--popover: #fffdf5;
-	--popover-foreground: var(--talescape-ink);
-	--primary: var(--talescape-magenta);
-	--primary-foreground: #ffffff;
+	--background: var(--ts-background);
+	--foreground: var(--ts-text);
+	--card: var(--ts-surface);
+	--card-foreground: var(--ts-text);
+	--popover: var(--ts-surface);
+	--popover-foreground: var(--ts-text);
+	--primary: var(--ts-primary);
+	--primary-foreground: var(--ts-primary-foreground);
 	--secondary: var(--talescape-cyan);
 	--secondary-foreground: var(--talescape-ink);
 	--muted: var(--talescape-paper-muted);
-	--muted-foreground: #655e52;
+	--muted-foreground: var(--ts-text-muted);
 	--accent: var(--talescape-yellow);
 	--accent-foreground: var(--talescape-ink);
 	--destructive: var(--talescape-magenta);
@@ -583,7 +542,7 @@
 	inset: var(--comic-frame-border-width);
 	overflow: hidden;
 	pointer-events: none;
-	clip-path: var(--button-frame-inner-clip-path);
+	clip-path: var(--ts-geometry-inner-clip-path);
 }
 
 .comic-button-decoration {

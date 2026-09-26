@@ -165,6 +165,11 @@ export const ComposedLink: Story = {
 			<Link href="#button-link-target">Open Codex</Link>
 		</Button>
 	),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const link = canvas.getByRole("link", { name: "Open Codex" });
+		await expect(link).toHaveAttribute("href", "#button-link-target");
+	},
 };
 
 export const PressInteraction: Story = {

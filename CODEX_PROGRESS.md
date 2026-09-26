@@ -9,7 +9,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 2 complete: Storybook foundation and Button compatibility baseline.
+Phase 4 complete: tokens, geometry and Button React Aria migration.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
@@ -28,12 +28,18 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Added Button stories covering every current variant, shape and motion mode plus
   decorations, icons, states, composed links, galleries and click interaction.
 - Added component-first and same-change Storybook guidance to AGENTS.md.
+- Added semantic color, surface, content-type, spacing, radius, shadow, typography
+  and motion tokens, plus Tailwind aliases and reduced-motion durations.
+- Added shared typed angular geometry and Foundation stories.
+- Migrated Button from Radix Slot to React Aria Button/Link while preserving the
+  current compatibility API and rendered visual layers.
+- Added an isolated Storybook Vitest browser project.
 
 ## Files changed / components / stories
 
-- Added `.storybook/main.ts`, `.storybook/preview.tsx`,
-  `src/components/ui/button.stories.tsx`, migration log, audit and this checkpoint.
-- Existing Button is documented but not migrated; no production component changed.
+- Added Storybook configuration, Button/Foundation stories, tokens/theme/geometry,
+  browser-test configuration, migration log, audit and this checkpoint.
+- Migrated `src/components/ui/button.tsx`; no feature/business logic changed.
 
 ## Decisions
 
@@ -48,9 +54,9 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Remaining migration / Radix
 
-All implementation phases remain. Radix imports: ui/button.tsx, ui/label.tsx,
-ui/select.tsx, overlay/dialog.tsx, layout/scroll-area.tsx,
-data-display/badge.tsx under src/components. Dependencies remain unchanged.
+Controls, composites and application migration remain. Radix imports now remain in
+ui/label.tsx, ui/select.tsx, overlay/dialog.tsx, layout/scroll-area.tsx and
+data-display/badge.tsx. Button no longer imports Radix Slot.
 
 ## Checks and known limitations
 
@@ -61,16 +67,19 @@ data-display/badge.tsx under src/components. Dependencies remain unchanged.
 - Targeted Biome check passed.
 - `pnpm build-storybook` passed. It reports expected large preview chunks, an empty
   MDX glob and the existing Sentry router-transition configuration notice.
+- `pnpm test:storybook` passed: 2 story files and 39 Chromium tests.
+- `pnpm test` passed: 18 files and 68 tests.
+- Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
 - Baseline trigger/layer errors are confirmed in this checkout.
 
 ## Exact next steps
 
-1. Commit the stable audit and Storybook baseline.
-2. Extract semantic tokens, Tailwind theme aliases and shared geometry.
-3. Add Foundation stories and migrate Button geometry without visual API changes.
-4. Migrate Button behavior to React Aria and verify composed links/events.
-5. Proceed through controls and subsequent documented phases.
+1. Commit the stable tokens, geometry and Button migration.
+2. Build React Aria form controls with compact editor density and stories.
+3. Migrate representative shared and Studio control call sites.
+4. Add display and structural primitives, then Inspector compositions.
+5. Continue through overlays, collections, domain UI and application audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should
