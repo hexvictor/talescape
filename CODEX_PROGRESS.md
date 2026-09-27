@@ -11,7 +11,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 Phase 6 in progress: structural primitives and Inspector composition.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.1`.
+Current package version: `1.11.2`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -104,6 +104,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   system components. The add-element overlay now uses the accessible Dialog API.
 - Retained the native draggable Keyframe row because its HTML drag event contract
   is behaviorally significant, and added stable Reader/Studio instrumentation.
+- Migrated Element Placement position mode, parent Frame, overflow, anchor and
+  unit controls to the shared compact Select API while preserving placement data.
+- Migrated Element Motion default state, phase visibility and range controls to
+  shared Field, Select, Checkbox and Slider components, and added stable Studio
+  instrumentation to the settings surface.
 
 ## Files changed / components / stories
 
@@ -174,6 +179,9 @@ implementation; feature code continues to consume the Talescape wrapper.
 - The Frame Inspector migration and `1.11.1` version bump pass targeted Biome,
   baseline typecheck comparison, the 68-test unit suite, Storybook production
   build and a frozen offline install.
+- The Element Placement and Motion migration and `1.11.2` version bump pass
+  targeted Biome, baseline typecheck comparison, the 68-test unit suite,
+  Storybook production build and a frozen offline install.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -181,7 +189,7 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Continue with Scene/Element Inspector controls, then graph and broader domain
+1. Continue with Scene Inspector controls, then graph and broader domain
    collections.
 2. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
 
