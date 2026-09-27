@@ -82,6 +82,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Added a reusable x/y ResizeHandle with pointer dragging, optional keyboard
   stepping and stable one-element geometry; the Reader VerticalPaneResizeHandle
   now remains as an instrumentation-preserving compatibility wrapper.
+- Migrated the shared Dialog compatibility API from Radix to React Aria while
+  preserving controlled/uncontrolled state, composed triggers and closes,
+  portal rendering, dismiss behavior, focus containment/return and scroll lock.
+- Added Dialog interaction stories for Escape dismissal, explicit close and
+  trigger focus return, and removed the direct Radix Dialog dependency.
 
 ## Files changed / components / stories
 
@@ -106,8 +111,8 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Remaining migration / Radix
 
-Composites and broader application migration remain. Direct source imports of
-Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
+Composites and broader application migration remain. The only remaining direct
+source import of Radix is in layout/scroll-area.tsx.
 
 ## Checks and known limitations
 
@@ -139,6 +144,10 @@ Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
 - ResizeHandle passes targeted Biome and baseline typecheck comparison, the
   68-test unit suite, Storybook production build and 59 browser stories including
   keyboard step behavior.
+- Dialog passes targeted Biome and baseline typecheck comparison, the 68-test
+  unit suite, Storybook production build and 62 browser stories across 7 files.
+- A frozen offline pnpm install confirms package.json and pnpm-lock.yaml agree
+  after removing the direct Radix Dialog dependency.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -146,11 +155,9 @@ Radix now remain only in overlay/dialog.tsx and layout/scroll-area.tsx.
 
 ## Exact next steps
 
-1. Migrate the Dialog overlay to a Talescape-owned React Aria compatibility API,
-   preserving portal, focus return, scroll lock and existing consumer props.
-2. Audit whether native overflow can preserve ScrollArea viewport/ref/scrollbar
+1. Audit whether native overflow can preserve ScrollArea viewport/ref/scrollbar
    behavior before replacing its remaining direct Radix source dependency.
-3. Continue replacing remaining Inspector-native controls, then collections,
+2. Continue replacing remaining Inspector-native controls, then collections,
    domain UI and the broader application
    audit.
 
