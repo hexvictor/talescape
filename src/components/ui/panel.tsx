@@ -90,7 +90,10 @@ export function PanelContent({
 		<div
 			{...props}
 			data-slot="panel-content"
-			className={cn(density === "compact" ? "p-3" : "p-4", className)}
+			className={cn(
+				density === "compact" ? "p-3" : "p-[var(--ts-panel-padding)]",
+				className,
+			)}
 		/>
 	);
 }

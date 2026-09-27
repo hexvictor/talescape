@@ -11,7 +11,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 Phase 10 in progress: application chrome and route-level migration.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.5`.
+Current package version: `1.11.6`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -138,6 +138,18 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Added stable Reader and Studio identities to the migrated settings, structure,
   toolbar and Preview control surfaces. The browser color picker and draggable
   Scene row remain native because their platform event behavior is intentional.
+- Retuned the centralized light and dark foundations to the supplied visual
+  references: neutral paper/surfaces, graphite ink, cyan public actions, magenta
+  secondary state, yellow highlights, sharper radii and tighter hard shadows.
+- Added shared control-height, content-width, responsive gutter and panel-padding
+  tokens and wired them into Button, form-control and Panel primitives.
+- Added a scoped Studio semantic palette so editing state remains magenta-led
+  while site and Reader actions remain cyan-led without feature-level raw colors.
+- Migrated the shared site header, footer, primary navigation, app menu, auth
+  status action and compact Reader overlay controls to shared Button behavior,
+  centralized spacing and stable Reader instrumentation.
+- Added a Storybook theme-context comparison and expanded the spacing foundation
+  story to display the actual centralized spacing token scale.
 
 ## Files changed / components / stories
 
@@ -221,6 +233,10 @@ implementation; feature code continues to consume the Talescape wrapper.
   `1.11.5` version bump pass targeted Biome, baseline typecheck comparison, the
   68-test unit suite, 62-test Storybook browser suite, Storybook production build
   and a frozen offline install.
+- The theme/token and shared application-chrome migration and `1.11.6` version
+  bump pass targeted Biome, baseline typecheck comparison, the 68-test unit suite,
+  63-test Storybook browser suite, Storybook production build and a frozen offline
+  install.
 - Full `pnpm lint` reaches 605 files and reports only five existing findings: one
   autofocus finding in TaleStudioProvider and four non-null assertion findings
   in the Library tale-detail query.
@@ -231,8 +247,10 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Audit and migrate remaining site, Library, auth, Reader chrome and mobile surfaces.
-2. Complete route-level visual, responsive and interaction verification, then
+1. Migrate the remaining Library forms and deeper Reader Hub/Navigator controls.
+2. Audit remaining route-specific site, auth and mobile surfaces for token and
+   shared-component adoption.
+3. Complete route-level visual, responsive and interaction verification, then
    perform the final dependency and Storybook coverage audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;

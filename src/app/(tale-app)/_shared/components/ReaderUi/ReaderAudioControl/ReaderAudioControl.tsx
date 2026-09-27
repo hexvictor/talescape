@@ -2,6 +2,7 @@
 
 import { Volume2, VolumeX } from "lucide-react";
 import { useMemo } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
@@ -28,22 +29,24 @@ export function ReaderAudioControl(): React.JSX.Element | null {
 	if (!hasAudio) return null;
 	const Icon = muted ? VolumeX : Volume2;
 	return (
-		<button
-			type="button"
+		<Button
 			data-reader-ui="true"
 			data-reader-component="ReaderAudioControl"
 			data-reader-role="audio-control"
 			aria-label={muted ? "Unmute tale audio" : "Mute tale audio"}
 			aria-pressed={muted}
 			className={cn(
-				"pointer-events-auto absolute bottom-12 left-2 grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground shadow-2xl backdrop-blur-md transition-opacity duration-200",
+				"pointer-events-auto absolute bottom-12 left-2 h-10 w-10 border-foreground/30 bg-background/88 p-0 text-foreground shadow-[3px_3px_0_rgb(var(--foreground-rgb))] backdrop-blur-md transition-opacity duration-200",
 				!reduceInactiveUiOpacity || muted
 					? "opacity-100"
 					: "opacity-30 hover:opacity-100",
 			)}
-			onClick={() => setMuted(!muted)}
+			motion="flat"
+			size="icon"
+			variant="outline"
+			onPress={() => setMuted(!muted)}
 		>
 			<Icon size={17} />
-		</button>
+		</Button>
 	);
 }

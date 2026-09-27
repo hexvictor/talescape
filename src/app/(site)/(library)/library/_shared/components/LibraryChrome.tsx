@@ -31,7 +31,7 @@ export function LibraryChrome({
 	const pathname = usePathname();
 
 	return (
-		<div className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-4 py-8 sm:px-6 lg:py-12">
+		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-6 px-[var(--ts-page-gutter)] py-8 lg:py-12">
 			<ComicPanel
 				accent="primary"
 				className="comic-panel-content"

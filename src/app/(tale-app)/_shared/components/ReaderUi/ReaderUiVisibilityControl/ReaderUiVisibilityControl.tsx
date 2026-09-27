@@ -2,6 +2,7 @@
 
 import { Bug, Eye, EyeOff, Gauge, Navigation } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type { ReaderUiVisibilityMode } from "../../../../(reader)/_shared/stores/slices/uiSlice";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
@@ -75,47 +76,55 @@ export function ReaderUiVisibilityControl(): React.JSX.Element {
 		>
 			{open ? (
 				<div className="absolute bottom-full left-0 pb-2">
-					<div className="flex w-40 flex-col gap-1 rounded-md border border-foreground/12 bg-background/88 p-1.5 shadow-2xl backdrop-blur-md">
+					<div
+						data-reader-component="ReaderUiVisibilityControl"
+						data-reader-role="visibility-options"
+						className="flex w-40 flex-col gap-1 border border-foreground/30 bg-background/92 p-1.5 shadow-[4px_4px_0_rgb(var(--foreground-rgb))] backdrop-blur-md"
+					>
 						{VISIBILITY_OPTIONS.map((option) => {
 							const Icon = option.icon;
 							return (
-								<button
+								<Button
 									key={option.mode}
 									data-reader-component="ReaderUiVisibilityControl"
 									data-reader-role="visibility-option"
 									type="button"
 									className={cn(
-										"flex items-center gap-2 rounded px-2 py-2 text-left text-xs transition",
+										"h-9 w-full justify-start border-0 px-2 text-left text-xs normal-case",
 										option.mode === mode
 											? "bg-foreground/14 text-foreground"
 											: "text-foreground/58 hover:bg-foreground/8 hover:text-foreground",
 									)}
-									onClick={() => {
+									motion="flat"
+									variant="ghost"
+									onPress={() => {
 										setMode(option.mode);
 										if (mobile) setOpen(false);
 									}}
 								>
 									<Icon size={14} />
 									{option.label}
-								</button>
+								</Button>
 							);
 						})}
 					</div>
 				</div>
 			) : null}
-			<button
-				type="button"
+			<Button
 				aria-label="Change reader UI visibility"
 				aria-expanded={open}
 				className={cn(
-					"grid h-10 w-10 place-items-center rounded-lg border border-foreground/12 bg-background/72 text-foreground shadow-2xl backdrop-blur-md transition-opacity duration-200",
+					"h-10 w-10 border-foreground/30 bg-background/88 p-0 text-foreground shadow-[3px_3px_0_rgb(var(--foreground-rgb))] backdrop-blur-md transition-opacity duration-200",
 					open || !reduceInactiveUiOpacity
 						? "opacity-100"
 						: mode === "hidden"
 							? "opacity-15 hover:opacity-100"
 							: "opacity-25 hover:opacity-100",
 				)}
-				onClick={() => {
+				motion="flat"
+				size="icon"
+				variant="outline"
+				onPress={() => {
 					if (mobile) {
 						setOpen((current) => !current);
 						return;
@@ -124,7 +133,7 @@ export function ReaderUiVisibilityControl(): React.JSX.Element {
 				}}
 			>
 				<CurrentIcon size={17} />
-			</button>
+			</Button>
 		</div>
 	);
 }

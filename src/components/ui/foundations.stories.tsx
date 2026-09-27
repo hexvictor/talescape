@@ -27,6 +27,21 @@ const contentTypes = [
 	["Page", "--ts-page"],
 ] as const;
 
+const spacingTokens = [
+	["2", "--ts-space-0-5"],
+	["4", "--ts-space-1"],
+	["8", "--ts-space-2"],
+	["12", "--ts-space-3"],
+	["16", "--ts-space-4"],
+	["20", "--ts-space-5"],
+	["24", "--ts-space-6"],
+	["32", "--ts-space-8"],
+	["40", "--ts-space-10"],
+	["48", "--ts-space-12"],
+	["64", "--ts-space-16"],
+	["80", "--ts-space-20"],
+] as const;
+
 const meta = {
 	parameters: {
 		controls: { disable: true },
@@ -98,6 +113,38 @@ export const Colors: Story = {
 	),
 };
 
+export const ThemeContexts: Story = {
+	render: () => (
+		<div className="grid gap-6 md:grid-cols-2">
+			<section className="border-2 border-foreground bg-card p-5 shadow-[var(--ts-shadow-comic)]">
+				<p className="font-black text-xs uppercase">Site and Reader</p>
+				<p className="mt-1 text-muted-foreground text-sm">
+					Cyan leads actions; magenta and yellow distinguish supporting states.
+				</p>
+				<div className="mt-4 flex gap-2">
+					<div className="h-12 flex-1 bg-primary" />
+					<div className="h-12 flex-1 bg-secondary" />
+					<div className="h-12 flex-1 bg-accent" />
+				</div>
+			</section>
+			<section
+				data-tale-studio-ui="true"
+				className="border-2 border-foreground bg-card p-5 shadow-[var(--ts-shadow-comic)]"
+			>
+				<p className="font-black text-xs uppercase">Studio</p>
+				<p className="mt-1 text-muted-foreground text-sm">
+					Magenta leads editing state; cyan identifies structure and focus.
+				</p>
+				<div className="mt-4 flex gap-2">
+					<div className="h-12 flex-1 bg-primary" />
+					<div className="h-12 flex-1 bg-secondary" />
+					<div className="h-12 flex-1 bg-accent" />
+				</div>
+			</section>
+		</div>
+	),
+};
+
 export const Typography: Story = {
 	render: () => (
 		<TokenSection title="Typography">
@@ -127,10 +174,14 @@ export const SpacingRadiusAndShadows: Story = {
 		<div className="grid gap-8">
 			<TokenSection title="Spacing">
 				<div className="grid gap-3">
-					{[2, 4, 8, 12, 16, 24, 32, 48, 64].map((size) => (
-						<div className="flex items-center gap-3" key={size}>
+					{spacingTokens.map(([size, token]) => (
+						<div className="flex items-center gap-3" key={token}>
 							<code className="w-10 text-xs">{size}px</code>
-							<div className="h-4 bg-ts-cyan" style={{ width: `${size}px` }} />
+							<div
+								className="h-4 bg-ts-cyan"
+								style={{ width: `var(${token})` }}
+							/>
+							<code className="text-ts-text-muted text-xs">{token}</code>
 						</div>
 					))}
 				</div>

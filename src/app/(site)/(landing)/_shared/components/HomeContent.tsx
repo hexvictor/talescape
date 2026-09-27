@@ -55,7 +55,7 @@ const worlds = [
 
 function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 	return (
-		<section className="site-landing-hero relative mx-auto min-h-[min(40rem,calc(100svh-9rem))] w-full overflow-hidden border-foreground border-b-2 bg-background sm:mt-4 sm:min-h-[min(46rem,calc(100svh-5rem))] sm:w-[calc(100%-2rem)] sm:border-2 lg:w-[calc(100%-3rem)] lg:max-w-[96rem]">
+		<section className="site-landing-hero relative mx-auto min-h-[min(40rem,calc(100svh-9rem))] w-full overflow-hidden border-foreground border-b-2 bg-background sm:mt-4 sm:min-h-[min(46rem,calc(100svh-5rem))] sm:w-[calc(100%-2rem)] sm:border-2 lg:w-[calc(100%-3rem)] lg:max-w-[calc(var(--ts-content-max)+6rem)]">
 			<Image
 				src={siteImages.emberCity}
 				alt="A vast illustrated fantasy world featured on Talescape"
@@ -67,7 +67,7 @@ function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 			<div className="site-hero-scrim absolute inset-0" />
 			<div className="comic-hero-strikes absolute top-0 right-0 h-52 w-64 bg-primary" />
 			<div className="comic-hero-bubbles absolute right-0 bottom-0 h-52 w-64 bg-accent" />
-			<div className="relative z-10 mx-auto flex min-h-[min(40rem,calc(100svh-9rem))] w-full max-w-[90rem] items-center px-5 py-10 sm:min-h-[min(46rem,calc(100svh-5rem))] sm:px-8 sm:py-12 lg:px-12">
+			<div className="relative z-10 mx-auto flex min-h-[min(40rem,calc(100svh-9rem))] w-full max-w-[var(--ts-content-max)] items-center px-[var(--ts-page-gutter)] py-10 sm:min-h-[min(46rem,calc(100svh-5rem))] sm:py-12">
 				<div className="max-w-2xl">
 					<ComicRail accent="secondary">
 						<Flame size={15} /> Interactive stories, unbound
@@ -135,7 +135,7 @@ function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 async function TrendingTales() {
 	const tales = await getFeaturedTales();
 	return (
-		<section className="mx-auto w-full max-w-[90rem] px-5 py-12 sm:px-8 lg:px-12">
+		<section className="mx-auto w-full max-w-[var(--ts-content-max)] px-[var(--ts-page-gutter)] py-12">
 			<div className="mb-6 flex items-center justify-between gap-4">
 				<ComicRail accent="secondary">
 					<TrendingUp size={16} /> Trending tales
@@ -166,7 +166,7 @@ async function TrendingTales() {
 
 function DiscoveryBands() {
 	return (
-		<section className="mx-auto grid w-full max-w-[90rem] gap-10 px-5 pb-14 sm:px-8 lg:grid-cols-[1.35fr_0.9fr] lg:px-12">
+		<section className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-10 px-[var(--ts-page-gutter)] pb-14 lg:grid-cols-[1.35fr_0.9fr]">
 			<div>
 				<ComicRail accent="primary">
 					<Globe2 size={16} /> Explore worlds

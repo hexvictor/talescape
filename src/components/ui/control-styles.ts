@@ -7,8 +7,8 @@ export const controlBaseClassName =
 
 export function controlDensityClassName(density: ControlDensity): string {
 	return density === "compact"
-		? "min-h-9 px-2.5 py-1.5 text-xs shadow-[2px_2px_0_rgb(var(--foreground-rgb))]"
-		: "min-h-11 px-3 py-2 text-base shadow-[3px_3px_0_rgb(var(--foreground-rgb))] md:text-sm";
+		? "min-h-[var(--ts-control-height-compact)] px-2.5 py-1.5 text-xs shadow-[2px_2px_0_rgb(var(--foreground-rgb))]"
+		: "min-h-[var(--ts-control-height)] px-3 py-2 text-base shadow-[3px_3px_0_rgb(var(--foreground-rgb))] md:text-sm";
 }
 
 export function controlClassName(

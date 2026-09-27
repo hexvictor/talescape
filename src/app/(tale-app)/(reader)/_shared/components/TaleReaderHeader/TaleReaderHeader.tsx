@@ -64,7 +64,7 @@ function MobileReaderHeader(): React.JSX.Element {
 					? "opacity-100"
 					: "opacity-25 hover:opacity-100",
 			)}
-			buttonClassName="grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[4px_4px_0_var(--comic-teal)]"
+			buttonClassName="border-2 border-white bg-[var(--comic-ink)] text-white shadow-[3px_3px_0_var(--comic-teal)]"
 			menuOpen={menuOpen}
 			menuItems={[
 				{ href: "/", icon: Home, label: "Home" },

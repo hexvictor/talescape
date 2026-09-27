@@ -91,3 +91,29 @@ baseline.
 Notes: the Tale background color input remains native to retain the browser color
 picker. The draggable Scene row remains native to preserve its HTML drag event
 contract. Both exceptions stay within instrumented Studio surfaces.
+
+## Theme foundations and shared application chrome
+
+Page / feature: global light/dark themes, site shell, authentication status and
+compact Reader overlay controls.
+
+Existing UI: the centralized palette used warm cream surfaces and teal legacy
+aliases that no longer matched the supplied white, graphite, cyan, magenta and
+yellow direction. Shared chrome still mixed native buttons, rounded glass panels,
+hard-coded content widths and one-off spacing.
+
+Replaced with: neutral paper and raised surfaces, cyan-led public semantics,
+magenta-led scoped Studio semantics, sharper radii, tighter hard shadows and
+central control-height/content-width/gutter/panel-spacing tokens. Header, footer,
+navigation, app menu, auth status and Reader audio/autoplay/visibility/mobile
+actions now compose shared Button behavior.
+
+New primitive: none. Button, form-control and Panel sizing now consume the new
+foundation tokens rather than repeating fixed dimensions.
+
+Story added: a site/Reader versus Studio semantic-context comparison, plus an
+expanded spacing scale that reads every spacing token directly.
+
+Notes: authored Tale element styles are not recolored by this migration. The
+Studio palette swap is scoped to the existing Studio workspace root, preserving
+cyan public actions while retaining magenta editing-selection conventions.
