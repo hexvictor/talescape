@@ -87,6 +87,12 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   portal rendering, dismiss behavior, focus containment/return and scroll lock.
 - Added Dialog interaction stories for Escape dismissal, explicit close and
   trigger focus return, and removed the direct Radix Dialog dependency.
+- Audited the remaining ScrollArea dependency. Native overflow cannot preserve
+  its hidden native viewport plus hover-only overlay thumb without changing
+  scrollbar visibility, content width and cross-browser behavior, so Radix stays
+  encapsulated behind the Talescape ScrollArea API as a documented exception.
+- Migrated all Keyframe Inspector native details and action controls to shared
+  Field, Input, Textarea, SearchField, Select, Checkbox and Button components.
 
 ## Files changed / components / stories
 
@@ -112,7 +118,8 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 ## Remaining migration / Radix
 
 Composites and broader application migration remain. The only remaining direct
-source import of Radix is in layout/scroll-area.tsx.
+source import of Radix is the intentionally retained layout/scroll-area.tsx
+implementation; feature code continues to consume the Talescape wrapper.
 
 ## Checks and known limitations
 
@@ -148,6 +155,8 @@ source import of Radix is in layout/scroll-area.tsx.
   unit suite, Storybook production build and 62 browser stories across 7 files.
 - A frozen offline pnpm install confirms package.json and pnpm-lock.yaml agree
   after removing the direct Radix Dialog dependency.
+- The Keyframe Inspector control migration passes targeted Biome and baseline
+  typecheck comparison, the 68-test unit suite and Storybook production build.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -155,11 +164,11 @@ source import of Radix is in layout/scroll-area.tsx.
 
 ## Exact next steps
 
-1. Audit whether native overflow can preserve ScrollArea viewport/ref/scrollbar
-   behavior before replacing its remaining direct Radix source dependency.
-2. Continue replacing remaining Inspector-native controls, then collections,
-   domain UI and the broader application
-   audit.
+1. Migrate the Frame hierarchy/search collection and remaining Frame Inspector
+   controls to shared components while preserving recursive group behavior.
+2. Continue with Scene/Element Inspector controls, then graph and broader domain
+   collections.
+3. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should

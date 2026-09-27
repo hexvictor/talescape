@@ -7,7 +7,6 @@ import {
 	Layers,
 	MousePointer2,
 	Plus,
-	Search,
 	Sparkles,
 	Trash2,
 	X,
@@ -25,6 +24,18 @@ import type {
 	TaleKeyframe,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import { SearchField } from "~/components/ui/search-field";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import Textarea from "~/components/ui/textarea";
 import { useTaleStudio } from "../../../contexts/TaleStudioProvider";
 import { useTaleStudioStore } from "../../../hooks/useTaleStudioStore";
 import {
@@ -36,6 +47,8 @@ import { FrameProgressionSettings } from "../FrameSettings";
 import { InspectorHeader } from "../InspectorFields";
 import { NarrativePanel } from "../NarrativePanel";
 import { ElementThumbnail } from "../element/ElementThumbnail";
+
+const CONTINUE_PAGE_VALUE = "__continue_page__";
 
 type KeyframeActionTarget = {
 	element?: ResolvedTaleElement;
@@ -214,68 +227,81 @@ export function KeyframeInspectorPanel({
 				{activeTab === "details" ? (
 					<>
 						<Section title="Details">
-							<label className="grid gap-1">
-								Name
-								<input
-									className="h-9 w-full border bg-background px-2"
+							<Field label="Name">
+								<Input
+									aria-label="Name"
+									density="compact"
+									className="w-full"
 									value={keyframe.title}
 									onChange={(e) =>
 										commit((item) => ({ ...item, title: e.target.value }))
 									}
 								/>
-							</label>
-							<label className="grid gap-1">
-								Description
-								<textarea
-									className="min-h-16 w-full border bg-background p-2"
+							</Field>
+							<Field label="Description">
+								<Textarea
+									aria-label="Description"
+									density="compact"
+									className="min-h-16 w-full"
 									value={keyframe.description ?? ""}
 									onChange={(e) =>
 										commit((item) => ({ ...item, description: e.target.value }))
 									}
 								/>
-							</label>
-							<label className="grid gap-1">
-								Branch
-								<select
-									className="h-9 min-w-0 border bg-background px-2"
+							</Field>
+							<Field label="Branch">
+								<Select
+									aria-label="Branch"
 									value={keyframe.branchId}
-									onChange={(e) =>
-										commit((item) => ({ ...item, branchId: e.target.value }))
+									onValueChange={(branchId) =>
+										commit((item) => ({ ...item, branchId }))
 									}
 								>
-									{tale.order.branchIds.map((id) => (
-										<option key={id} value={id}>
-											{tale.indexMap.branchesById[id]?.title}
-										</option>
-									))}
-								</select>
-							</label>
+									<SelectTrigger density="compact" className="w-full">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										{tale.order.branchIds.map((id) => (
+											<SelectItem key={id} value={id}>
+												{tale.indexMap.branchesById[id]?.title ??
+													`Branch ${id}`}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</Field>
 						</Section>
 						<Section title="Page marker">
-							<select
+							<Select
 								aria-label="Page marker"
-								className="h-9 w-full min-w-0 border bg-background px-2"
-								value={keyframe.pageId ?? ""}
-								onChange={(e) =>
+								value={keyframe.pageId ?? CONTINUE_PAGE_VALUE}
+								onValueChange={(pageId) =>
 									commit((item) => ({
 										...item,
-										pageId: e.target.value || null,
+										pageId: pageId === CONTINUE_PAGE_VALUE ? null : pageId,
 									}))
 								}
 							>
-								<option value="">Continue current page</option>
-								{tale.order.pageIds.map((id) => {
-									const page = tale.indexMap.pagesById[id];
-									return (
-										<option key={id} value={id}>
-											{page?.title ?? `Page ${id}`} /{" "}
-											{page
-												? tale.indexMap.entriesById[page.entryId]?.title
-												: ""}
-										</option>
-									);
-								})}
-							</select>
+								<SelectTrigger density="compact" className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value={CONTINUE_PAGE_VALUE}>
+										Continue current page
+									</SelectItem>
+									{tale.order.pageIds.map((id) => {
+										const page = tale.indexMap.pagesById[id];
+										return (
+											<SelectItem key={id} value={id}>
+												{page?.title ?? `Page ${id}`} /{" "}
+												{page
+													? tale.indexMap.entriesById[page.entryId]?.title
+													: ""}
+											</SelectItem>
+										);
+									})}
+								</SelectContent>
+							</Select>
 						</Section>
 						<div className="grid gap-2">
 							<Button
@@ -345,45 +371,44 @@ export function KeyframeInspectorPanel({
 								)}
 							</div>
 							<div className="flex gap-2">
-								<label className="flex h-9 min-w-0 flex-1 items-center gap-2 border px-2">
-									<Search size={13} />
-									<input
-										aria-label="Search elements and groups"
-										className="min-w-0 flex-1 bg-transparent outline-none"
-										placeholder="Search"
-										value={query}
-										onChange={(event) => setQuery(event.target.value)}
-									/>
-								</label>
-								<select
-									className="h-9 border bg-background px-2"
+								<SearchField
+									aria-label="Search elements and groups"
+									className="min-w-0 flex-1"
+									density="compact"
+									placeholder="Search"
+									value={query}
+									onChange={setQuery}
+								/>
+								<Select
+									aria-label="Filter action targets"
 									value={filter}
-									onChange={(event) =>
-										setFilter(event.target.value as typeof filter)
-									}
+									onValueChange={(value) => setFilter(value as typeof filter)}
 								>
-									<option value="all">All</option>
-									<option value="element">Elements</option>
-									<option value="group">Groups</option>
-								</select>
+									<SelectTrigger density="compact">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All</SelectItem>
+										<SelectItem value="element">Elements</SelectItem>
+										<SelectItem value="group">Groups</SelectItem>
+									</SelectContent>
+								</Select>
 							</div>
 							<div className="max-h-52 overflow-y-auto border">
 								{visibleTargets.map((target) => (
-									<label
+									<Checkbox
 										key={`${target.type}:${target.id}`}
-										className="flex items-center gap-2 border-foreground/10 border-b p-2 last:border-0"
+										className="flex w-full items-center gap-2 border-foreground/10 border-b p-2 last:border-0"
+										density="compact"
+										isSelected={selectedIds.includes(target.id)}
+										onChange={(selected) =>
+											setSelectedIds((current) =>
+												selected
+													? [...current, target.id]
+													: current.filter((id) => id !== target.id),
+											)
+										}
 									>
-										<input
-											type="checkbox"
-											checked={selectedIds.includes(target.id)}
-											onChange={(event) =>
-												setSelectedIds((current) =>
-													event.target.checked
-														? [...current, target.id]
-														: current.filter((id) => id !== target.id),
-												)
-											}
-										/>
 										{"element" in target && target.element ? (
 											<ElementThumbnail element={target.element} />
 										) : (
@@ -395,7 +420,7 @@ export function KeyframeInspectorPanel({
 										<span className="text-[9px] text-foreground/45 uppercase">
 											{target.kind}
 										</span>
-									</label>
+									</Checkbox>
 								))}
 								{visibleTargets.length === 0 ? (
 									<p className="p-4 text-center text-foreground/45">
@@ -462,9 +487,10 @@ export function KeyframeInspectorPanel({
 											) : (
 												<Boxes size={18} />
 											)}
-											<button
-												type="button"
-												className="min-w-0 flex-1 text-left"
+											<Button
+												className="h-auto min-w-0 flex-1 justify-start border-0 p-0 text-left font-normal normal-case"
+												motion="flat"
+												variant="ghost"
 												onClick={() =>
 													onOpenActionTarget(
 														openInspector,
@@ -474,28 +500,35 @@ export function KeyframeInspectorPanel({
 													)
 												}
 											>
-												<span className="block truncate font-bold">
-													{target.label}
+												<span className="min-w-0 flex-1">
+													<span className="block truncate font-bold">
+														{target.label}
+													</span>
+													<span className="block text-[9px] text-foreground/45 uppercase">
+														{target.kind}
+													</span>
 												</span>
-												<span className="text-[9px] text-foreground/45 uppercase">
-													{target.kind}
-												</span>
-											</button>
-											<select
-												className="h-8 border bg-background px-2"
+											</Button>
+											<Select
+												aria-label={`Action type for ${target.label}`}
 												value={action.type}
-												onChange={(event) =>
+												onValueChange={(type) =>
 													updateAction(action.targetId, action.targetType, {
-														type: event.target.value as KeyframeAction["type"],
+														type: type as KeyframeAction["type"],
 													})
 												}
 											>
-												{options.map((option) => (
-													<option key={option} value={option}>
-														{option}
-													</option>
-												))}
-											</select>
+												<SelectTrigger density="compact">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													{options.map((option) => (
+														<SelectItem key={option} value={option}>
+															{option}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
 											{expandable ? (
 												<Button
 													size="icon"
@@ -520,23 +553,30 @@ export function KeyframeInspectorPanel({
 											</Button>
 										</div>
 										{action.targetType === "frame" && expandable ? (
-											<label className="flex items-center justify-between gap-2 text-[10px] uppercase">
-												Animate{" "}
-												<select
-													className="h-8 border bg-background px-2"
+											<div className="flex items-center justify-between gap-2 text-[10px] uppercase">
+												<span>Animate</span>
+												<Select
+													aria-label={`Animation target for ${target.label}`}
 													value={action.animationTarget ?? "self"}
-													onChange={(event) =>
+													onValueChange={(animationTarget) =>
 														updateAction(action.targetId, action.targetType, {
-															animationTarget: event.target.value as
+															animationTarget: animationTarget as
 																| "self"
 																| "children",
 														})
 													}
 												>
-													<option value="self">Group wrapper</option>
-													<option value="children">All children</option>
-												</select>
-											</label>
+													<SelectTrigger density="compact">
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="self">Group wrapper</SelectItem>
+														<SelectItem value="children">
+															All children
+														</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
 										) : null}
 										{expandedActionId === action.id && expandable ? (
 											<AnimationSelectionEditor
@@ -638,9 +678,10 @@ function KeyframeActionMotionSettings({
 					<div key={action.id} className="tale-ui-panel grid gap-2 p-3">
 						<div className="flex min-w-0 items-center gap-2">
 							<Sparkles size={15} className="shrink-0 text-primary" />
-							<button
-								type="button"
-								className="min-w-0 flex-1 text-left"
+							<Button
+								className="h-auto min-w-0 flex-1 justify-start border-0 p-0 text-left font-normal normal-case"
+								motion="flat"
+								variant="ghost"
 								onClick={() =>
 									onOpenTarget({
 										id: action.targetId,
@@ -648,40 +689,49 @@ function KeyframeActionMotionSettings({
 									})
 								}
 							>
-								<span className="block truncate font-bold text-xs">
-									{label}
+								<span className="min-w-0 flex-1">
+									<span className="block truncate font-bold text-xs">
+										{label}
+									</span>
+									<span className="block text-[9px] text-foreground/45 uppercase">
+										{action.targetType} /{" "}
+										{getActionTransitionTitle(action.type)}
+									</span>
 								</span>
-								<span className="text-[9px] text-foreground/45 uppercase">
-									{action.targetType} / {getActionTransitionTitle(action.type)}
-								</span>
-							</button>
-							<button
-								type="button"
-								className="grid h-8 w-8 place-items-center border border-foreground/15 text-foreground/55 hover:bg-foreground/8 hover:text-foreground"
+							</Button>
+							<Button
+								aria-label={`Remove ${label} action`}
+								className="size-8 border border-foreground/15 text-foreground/55 hover:bg-foreground/8 hover:text-foreground"
+								motion="flat"
+								size="icon"
 								title="Remove action"
+								variant="ghost"
 								onClick={() => onRemoveAction(action)}
 							>
 								<X size={14} />
-							</button>
+							</Button>
 						</div>
 						{action.targetType === "frame" ? (
-							<label className="flex items-center justify-between gap-2 text-[10px] uppercase">
-								Animate{" "}
-								<select
-									className="h-8 border bg-background px-2"
+							<div className="flex items-center justify-between gap-2 text-[10px] uppercase">
+								<span>Animate</span>
+								<Select
+									aria-label={`Animation target for ${label}`}
 									value={action.animationTarget ?? "self"}
-									onChange={(event) =>
+									onValueChange={(animationTarget) =>
 										onUpdateAction(action.targetId, action.targetType, {
-											animationTarget: event.target.value as
-												| "self"
-												| "children",
+											animationTarget: animationTarget as "self" | "children",
 										})
 									}
 								>
-									<option value="self">Group wrapper</option>
-									<option value="children">All children</option>
-								</select>
-							</label>
+									<SelectTrigger density="compact">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="self">Group wrapper</SelectItem>
+										<SelectItem value="children">All children</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
 						) : null}
 						<AnimationSelectionEditor
 							defaultOpen
