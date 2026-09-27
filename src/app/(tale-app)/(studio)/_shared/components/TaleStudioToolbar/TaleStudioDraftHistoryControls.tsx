@@ -1,6 +1,7 @@
 "use client";
 
 import { Redo2, RotateCcw, Undo2 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
 
 /**
@@ -75,15 +76,17 @@ function HistoryButton({
 	onClick: () => void;
 }): React.JSX.Element {
 	return (
-		<button
-			type="button"
+		<Button
 			aria-label={label}
-			className="hover:-translate-y-0.5 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[2px_2px_0_var(--comic-ink)] transition hover:bg-accent disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35"
+			className="h-9 w-9 border-2 border-foreground bg-card p-0 text-foreground shadow-[2px_2px_0_var(--comic-ink)]"
 			disabled={disabled}
+			motion="flat"
+			size="icon"
 			title={label}
-			onClick={onClick}
+			variant="outline"
+			onPress={onClick}
 		>
 			{children}
-		</button>
+		</Button>
 	);
 }

@@ -1,9 +1,15 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useState } from "react";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/overlay/dialog";
+import { Tab, TabList, Tabs } from "~/components/ui/tabs";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
-import { SettingsTabButton } from "./SettingsTabButton";
 import { TaleSettingsPanel } from "./TaleSettingsPanel";
 import { TaleStructurePanel } from "./TaleStructurePanel";
 import { TaleStudioBreakpointSettings } from "./TaleStudioBreakpointSettings";
@@ -26,15 +32,19 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
 	if (!settingsOpen) return null;
 
 	return (
-		<div
-			data-reader-component="TaleStudioSettingsModal"
-			data-reader-role="studio-settings-dialog"
-			className="fixed inset-0 z-[1001] grid place-items-center bg-black/48 p-2 sm:p-4"
-			onMouseDown={closeSettings}
+		<Dialog
+			open={settingsOpen}
+			onOpenChange={(open) => {
+				if (!open) closeSettings();
+			}}
 		>
-			<section
-				className="max-h-[calc(100dvh-1rem)] w-full max-w-xl overflow-hidden border-[3px] border-foreground bg-card text-foreground shadow-[9px_9px_0_var(--comic-teal)]"
-				onMouseDown={(event) => event.stopPropagation()}
+			<DialogContent
+				data-reader-component="TaleStudioSettingsModal"
+				data-reader-role="studio-settings-dialog"
+				data-studio-component="TaleStudioSettingsModal"
+				data-studio-role="studio-settings-dialog"
+				className="max-h-[calc(100dvh-1rem)] max-w-xl gap-0 overflow-hidden p-0 shadow-[9px_9px_0_var(--comic-teal)]"
+				closeButtonClassName="top-3 right-3 size-9"
 			>
 				<TaleStudioSettingsHeader />
 				<TaleStudioSettingsTabs
@@ -53,8 +63,8 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
 						<TaleStudioGraphSettings />
 					)}
 				</div>
-			</section>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }
 
@@ -67,27 +77,15 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
  * <TaleStudioSettingsHeader />
  */
 function TaleStudioSettingsHeader(): React.JSX.Element {
-	const { closeSettings } = useTaleStudio().toolbar;
-
 	return (
-		<header className="flex items-start justify-between gap-3 border-foreground/10 border-b px-3 py-3 sm:px-4">
-			<div className="min-w-0">
-				<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
-					Tale Studio Settings
-				</p>
-				<p className="mt-1 text-foreground/45 text-xs">
-					Tale metadata, snap defaults, breakpoints, and graph behavior
-				</p>
-			</div>
-			<button
-				type="button"
-				aria-label="Close Tale Studio settings"
-				className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:bg-foreground/8 hover:text-foreground"
-				onClick={closeSettings}
-			>
-				<X size={16} />
-			</button>
-		</header>
+		<DialogHeader className="border-foreground/10 border-b px-3 py-3 pr-14 sm:px-4 sm:pr-14">
+			<DialogTitle className="font-black text-primary text-xs uppercase tracking-[0.18em]">
+				Tale Studio Settings
+			</DialogTitle>
+			<DialogDescription className="text-foreground/45 text-xs">
+				Tale metadata, snap defaults, breakpoints, and graph behavior
+			</DialogDescription>
+		</DialogHeader>
 	);
 }
 
@@ -111,23 +109,24 @@ function TaleStudioSettingsTabs({
 }): React.JSX.Element {
 	return (
 		<div className="border-foreground/10 border-b px-3 py-2 sm:px-4">
-			<div className="inline-flex rounded border border-foreground/10 bg-foreground/[0.03] p-1">
-				<SettingsTabButton
-					active={activeTab === "structure"}
-					label="Structure"
-					onClick={() => onActiveTabChange("structure")}
-				/>
-				<SettingsTabButton
-					active={activeTab === "tale"}
-					label="Tale"
-					onClick={() => onActiveTabChange("tale")}
-				/>
-				<SettingsTabButton
-					active={activeTab === "graph"}
-					label="Graph"
-					onClick={() => onActiveTabChange("graph")}
-				/>
-			</div>
+			<Tabs
+				selectedKey={activeTab}
+				onSelectionChange={(key) =>
+					onActiveTabChange(String(key) as "graph" | "structure" | "tale")
+				}
+			>
+				<TabList aria-label="Studio settings sections" density="compact">
+					<Tab density="compact" id="structure">
+						Structure
+					</Tab>
+					<Tab density="compact" id="tale">
+						Tale
+					</Tab>
+					<Tab density="compact" id="graph">
+						Graph
+					</Tab>
+				</TabList>
+			</Tabs>
 		</div>
 	);
 }

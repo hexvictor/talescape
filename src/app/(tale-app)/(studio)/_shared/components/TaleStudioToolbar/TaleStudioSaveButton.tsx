@@ -1,4 +1,5 @@
 import { Save } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
 
@@ -19,15 +20,16 @@ export function TaleStudioSaveButton({
 }: { className?: string; isMobile?: boolean }): React.JSX.Element {
 	const { dirtyStatus, save, savePending } = useTaleStudio().toolbar;
 	return (
-		<button
-			type="button"
+		<Button
 			disabled={savePending}
 			className={cn(
 				"flex h-9 min-w-9 items-center justify-center gap-2 rounded border border-primary/45 bg-primary/14 px-2 text-primary text-xs disabled:opacity-45",
 				className,
 			)}
 			aria-label="Save tale"
-			onClick={save}
+			motion="flat"
+			size="sm"
+			onPress={save}
 		>
 			<Save size={14} />
 			{!isMobile && dirtyStatus === "Save" && "Save"}
@@ -41,6 +43,6 @@ export function TaleStudioSaveButton({
 					{dirtyStatus}
 				</span>
 			) : null}
-		</button>
+		</Button>
 	);
 }

@@ -13,6 +13,7 @@ import { AuthStatus } from "~/app/_shared/auth/components";
 import Logo from "~/app/_shared/components/layout/Logo";
 import ThemeToggle from "~/app/_shared/components/layout/ThemeToggle";
 import Separator from "~/components/layout/separator";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { TaleEditorToolbarControls } from "./TaleEditorToolbarControls";
 
@@ -132,10 +133,9 @@ function TaleEditorMobileButtons({
 			data-reader-role="mobile-editor-actions"
 			className="flex min-w-0 items-center gap-2 md:hidden"
 		>
-			<button
+			<Button
 				data-reader-component="TaleEditorMobileButtons"
 				data-reader-role="mobile-controls-toggle"
-				type="button"
 				aria-expanded={controlsOpen}
 				aria-label="Toggle editor header controls"
 				className={cn(
@@ -144,10 +144,13 @@ function TaleEditorMobileButtons({
 						? "bg-primary text-primary-foreground"
 						: "bg-card text-foreground hover:bg-accent",
 				)}
-				onClick={() => onControlsOpenChange(!controlsOpen)}
+				motion="flat"
+				size="icon"
+				variant={controlsOpen ? "default" : "outline"}
+				onPress={() => onControlsOpenChange(!controlsOpen)}
 			>
 				<Settings size={15} />
-			</button>
+			</Button>
 		</div>
 	);
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import AppMenu, {
 	AppMenuItem,
 } from "~/app/_shared/components/layout/AppMenu/AppMenu";
+import { Button } from "~/components/ui/button";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
 import { TaleStudioBreakpointSelect } from "./TaleStudioBreakpointSelect";
 import {
@@ -57,15 +58,16 @@ export function TaleStudioToolbarInlineSettingsControls(): React.JSX.Element {
 			<TaleStudioBreakpointSelect />
 			<ExportTaleButton />
 			<ImportTaleButton />
-			<button
-				type="button"
+			<Button
 				aria-label="Open Tale Studio settings"
 				className="flex h-11 items-center justify-center gap-2 border-2 border-foreground bg-card px-2.5 font-black text-foreground text-xs uppercase shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-accent"
-				onClick={openSettings}
+				motion="flat"
+				variant="outline"
+				onPress={openSettings}
 			>
 				<Settings size={14} />
 				Settings
-			</button>
+			</Button>
 		</>
 	);
 }
@@ -93,14 +95,15 @@ export function TaleStudioToolbarSettingsMenuItems(): React.JSX.Element {
 				<ImportTaleButton className="w-full" />
 			</AppMenuItem>
 			<AppMenuItem hover={false}>
-				<button
-					type="button"
+				<Button
 					className="flex h-11 w-full items-center justify-center gap-2 border-2 border-foreground bg-card px-2.5 font-black text-foreground text-xs uppercase shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-accent"
-					onClick={openSettings}
+					motion="flat"
+					variant="outline"
+					onPress={openSettings}
 				>
 					<Settings size={14} />
 					Settings
-				</button>
+				</Button>
 			</AppMenuItem>
 			<AppMenuItem hover={false}>
 				<TaleStudioSaveButton className="w-full font-semibold" />

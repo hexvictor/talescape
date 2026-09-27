@@ -9,9 +9,9 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 9 in progress: Inspector, graph and domain presentation migration.
+Phase 10 in progress: application chrome and route-level migration.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.4`.
+Current package version: `1.11.5`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -127,6 +127,17 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Preserved native branch and Scene drag targets where React Aria event composition
   could alter React Flow or dnd-kit pointer/drag behavior, and added Studio
   instrumentation to graph, node, collection and timing surfaces.
+- Migrated the remaining Studio editor and Preview toolbar actions, pane controls,
+  workspace switcher, save/import/export/history actions, breakpoint selector and
+  preview overlay controls to the shared Button and Select APIs.
+- Replaced the custom Studio settings overlay and tab buttons with the accessible
+  shared Dialog and Tabs APIs, retaining dismissal, focus, scrolling and sizing.
+- Migrated Tale structure, graph, breakpoint and Tale settings fields to shared
+  Field, Input, Textarea, Select, Checkbox and Slider controls, and removed the
+  obsolete local settings-tab component.
+- Added stable Reader and Studio identities to the migrated settings, structure,
+  toolbar and Preview control surfaces. The browser color picker and draggable
+  Scene row remain native because their platform event behavior is intentional.
 
 ## Files changed / components / stories
 
@@ -206,6 +217,10 @@ implementation; feature code continues to consume the Talescape wrapper.
 - The remaining Inspector plus graph/domain collection migration and `1.11.4`
   version bump pass targeted Biome, baseline typecheck comparison, the 68-test
   unit suite, Storybook production build and a frozen offline install.
+- The Studio toolbar, settings, Preview and workspace chrome migration and
+  `1.11.5` version bump pass targeted Biome, baseline typecheck comparison, the
+  68-test unit suite, 62-test Storybook browser suite, Storybook production build
+  and a frozen offline install.
 - Full `pnpm lint` reaches 605 files and reports only five existing findings: one
   autofocus finding in TaleStudioProvider and four non-null assertion findings
   in the Library tale-detail query.
@@ -216,9 +231,8 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Migrate the remaining Studio toolbar, settings, Preview and workspace chrome.
-2. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
-3. Complete route-level visual, responsive and interaction verification, then
+1. Audit and migrate remaining site, Library, auth, Reader chrome and mobile surfaces.
+2. Complete route-level visual, responsive and interaction verification, then
    perform the final dependency and Storybook coverage audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;

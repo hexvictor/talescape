@@ -67,3 +67,27 @@ Notes: the hidden image file input remains native because it invokes the browser
 file picker. Native Keyframe, branch and Scene drag targets remain where replacing
 their event surface could change HTML drag, React Flow or dnd-kit behavior. These
 exceptions retain stable Reader and Studio instrumentation.
+
+## Studio workspace chrome and settings
+
+Page / feature: Tale Studio editor toolbar, Preview toolbar, workspace navigation,
+settings dialog and Tale structure/configuration forms.
+
+Existing UI: native buttons, selects, inputs, checkboxes and range controls were
+styled independently across the editor and Preview headers and the settings modal.
+The settings overlay also implemented dismissal and tabs locally.
+
+Replaced with: shared Button, Dialog, Tabs, Field, Input, Textarea, Select,
+Checkbox and Slider composition. Existing state updates, history actions, viewport
+selection, workspace routing, modal sizing and scroll behavior remain unchanged.
+
+New primitive: none. This checkpoint consolidates consumers on the existing
+Talescape component APIs and removes the obsolete local settings-tab button.
+
+Story added: none; no new reusable primitive or variant was introduced. Existing
+component stories and the Storybook production build remain the verification
+baseline.
+
+Notes: the Tale background color input remains native to retain the browser color
+picker. The draggable Scene row remains native to preserve its HTML drag event
+contract. Both exceptions stay within instrumented Studio surfaces.

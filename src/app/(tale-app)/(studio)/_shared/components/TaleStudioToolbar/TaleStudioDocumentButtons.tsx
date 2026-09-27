@@ -2,6 +2,7 @@
 
 import { Download, Upload } from "lucide-react";
 import { useTaleStudio } from "~/app/(tale-app)/(studio)/_shared/contexts/TaleStudioProvider";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 
 const taleFileButtonClassName =
@@ -25,14 +26,16 @@ export function ExportTaleButton({
 	const { exportTale } = useTaleStudio().document;
 
 	return (
-		<button
-			type="button"
+		<Button
 			className={cn(taleFileButtonClassName, className)}
-			onClick={exportTale}
+			motion="flat"
+			size="sm"
+			variant="outline"
+			onPress={exportTale}
 		>
 			<Download size={14} />
 			<span>Export</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -54,13 +57,15 @@ export function ImportTaleButton({
 	const { openImportDialog } = useTaleStudio().document;
 
 	return (
-		<button
-			type="button"
+		<Button
 			className={cn(taleFileButtonClassName, className)}
-			onClick={openImportDialog}
+			motion="flat"
+			size="sm"
+			variant="outline"
+			onPress={openImportDialog}
 		>
 			<Upload size={14} />
 			<span>Import</span>
-		</button>
+		</Button>
 	);
 }

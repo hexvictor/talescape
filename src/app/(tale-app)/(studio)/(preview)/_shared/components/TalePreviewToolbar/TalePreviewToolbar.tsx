@@ -21,6 +21,7 @@ import Logo from "~/app/_shared/components/layout/Logo";
 import ThemeToggle from "~/app/_shared/components/layout/ThemeToggle";
 import { useTaleRootStore } from "~/app/_shared/contexts/TaleRootStoreContext";
 import Separator from "~/components/layout/separator";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 
 /**
@@ -62,6 +63,8 @@ function DesktopTalePreviewToolbar(): React.JSX.Element {
 			<header
 				data-reader-component="TalePreviewToolbar"
 				data-reader-role="preview-toolbar"
+				data-studio-component="TalePreviewToolbar"
+				data-studio-role="preview-toolbar"
 				className="relative z-60 flex min-h-[4.75rem] flex-wrap items-center justify-between gap-3 border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--comic-teal)] sm:px-4"
 			>
 				<div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
@@ -170,6 +173,8 @@ function MobileTalePreviewToolbar(): React.JSX.Element {
 			ref={rootRef}
 			data-reader-component="TalePreviewToolbar"
 			data-reader-role="mobile-preview-toolbar"
+			data-studio-component="TalePreviewToolbar"
+			data-studio-role="mobile-preview-toolbar"
 			className={cn(
 				"fixed top-0 left-0 z-1000 w-full border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--comic-teal)] transition-transform duration-300",
 				toolbarVisible ? "translate-y-0" : "-translate-y-full",
@@ -217,7 +222,7 @@ function TalePreviewMobileButtons({
 }): React.JSX.Element {
 	return (
 		<div className="flex items-center gap-2">
-			<button
+			<Button
 				type="button"
 				aria-label="Open Tale Studio controls"
 				className={cn(
@@ -226,10 +231,10 @@ function TalePreviewMobileButtons({
 						? "bg-accent text-accent-foreground"
 						: "bg-card text-foreground hover:bg-secondary",
 				)}
-				onClick={onControlsOpenChange}
+				onPress={onControlsOpenChange}
 			>
 				<Settings size={15} />
-			</button>
+			</Button>
 		</div>
 	);
 }
@@ -247,7 +252,13 @@ function TalePreviewMobileControlsPanel({
 }: { closePanel: () => void }): React.JSX.Element {
 	const { openSettings } = useTaleStudio().toolbar;
 	return (
-		<div className="mt-2 flex max-h-[calc(100dvh-5rem)] flex-col gap-3 overflow-y-auto border-[3px] border-foreground bg-card p-3 shadow-[7px_7px_0_var(--comic-teal)]">
+		<div
+			data-reader-component="TalePreviewMobileControlsPanel"
+			data-reader-role="preview-controls-panel"
+			data-studio-component="TalePreviewMobileControlsPanel"
+			data-studio-role="preview-controls-panel"
+			className="mt-2 flex max-h-[calc(100dvh-5rem)] flex-col gap-3 overflow-y-auto border-[3px] border-foreground bg-card p-3 shadow-[7px_7px_0_var(--comic-teal)]"
+		>
 			<div className="grid gap-1">
 				<AppMenuItem hover={false}>
 					<TaleStudioBreakpointSelect className="w-full" />
@@ -259,18 +270,18 @@ function TalePreviewMobileControlsPanel({
 					<ImportTaleButton className="w-full" />
 				</AppMenuItem>
 				<AppMenuItem hover={false}>
-					<button
+					<Button
 						type="button"
 						aria-label="Open Tale Studio settings"
 						className="flex h-11 w-full items-center justify-center gap-2 border-2 border-foreground bg-card px-2.5 font-black text-foreground text-xs uppercase shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-accent"
-						onClick={() => {
+						onPress={() => {
 							closePanel();
 							openSettings();
 						}}
 					>
 						<Settings size={14} />
 						Settings
-					</button>
+					</Button>
 				</AppMenuItem>
 				<AppMenuItem hover={false}>
 					<TaleStudioSaveButton className="w-full" />
