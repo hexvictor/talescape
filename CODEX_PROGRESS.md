@@ -11,6 +11,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 Phase 6 in progress: structural primitives and Inspector composition.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
+Current package version: `1.11.1`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -98,6 +99,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   recursive groups, compact geometry and selection callbacks.
 - Added the required Studio identity attributes to the Frame hierarchy and branch
   surfaces while preserving their existing Reader instrumentation.
+- Migrated the Frame Inspector summary, visibility toggles, group defaults,
+  layout fields, nested child controls and add-element workflow to shared design
+  system components. The add-element overlay now uses the accessible Dialog API.
+- Retained the native draggable Keyframe row because its HTML drag event contract
+  is behaviorally significant, and added stable Reader/Studio instrumentation.
 
 ## Files changed / components / stories
 
@@ -117,7 +123,8 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   accents. Do not recolor authored Reader content indiscriminately.
 - Keep domain ownership at narrowest shared scope; generic UI knows no story data.
 - Component-first and same-change Storybook coverage become repository guidance.
-- Use Conventional Commits for stable phases. No changelog/version change.
+- Use Conventional Commits for stable phases. Bump the patch version once for
+  each user-requested continuation; do not edit the changelog without approval.
 - Never run `npm run dev` (standing user instruction).
 
 ## Remaining migration / Radix
@@ -164,6 +171,9 @@ implementation; feature code continues to consume the Talescape wrapper.
   typecheck comparison, the 68-test unit suite and Storybook production build.
 - The Frame hierarchy control migration passes targeted Biome and baseline
   typecheck comparison plus the 68-test unit suite.
+- The Frame Inspector migration and `1.11.1` version bump pass targeted Biome,
+  baseline typecheck comparison, the 68-test unit suite, Storybook production
+  build and a frozen offline install.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -171,11 +181,9 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Migrate the remaining Frame Inspector controls to shared components while
-   preserving recursive group and keyframe behavior.
-2. Continue with Scene/Element Inspector controls, then graph and broader domain
+1. Continue with Scene/Element Inspector controls, then graph and broader domain
    collections.
-3. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
+2. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should
