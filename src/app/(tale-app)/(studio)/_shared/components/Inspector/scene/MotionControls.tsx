@@ -1,15 +1,20 @@
 "use client";
 
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
 	Direction,
 	SceneCameraPath,
 	SceneFlow,
 	StackPlacementPosition,
 } from "~/app/(tale-app)/_shared/types";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 
 /**
  * Edits physical scene placement independently from camera framing.
@@ -33,12 +38,16 @@ export function FlowSettings({
 				label="Scene placement"
 				readerRole="flow-mode-setting"
 			>
-				<select
-					className={settingClassName}
+				<SceneSettingSelect
+					label="Scene placement"
 					value={flow.type}
-					onChange={(event) =>
+					options={[
+						{ label: "Adjacent", value: "linear" },
+						{ label: "Stacked", value: "stack" },
+					]}
+					onChange={(value) =>
 						onChange(
-							event.target.value === "stack"
+							value === "stack"
 								? {
 										horizontalPlacement: "center",
 										placement: "blockEdge",
@@ -52,89 +61,88 @@ export function FlowSettings({
 									},
 						)
 					}
-				>
-					<option value="linear">Adjacent</option>
-					<option value="stack">Stacked</option>
-				</select>
+				/>
 			</Setting>
 			{flow.type === "linear" ? (
 				<>
 					<Setting label="Placement direction">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Placement direction"
 							value={flow.direction}
-							onChange={(event) =>
+							options={directions.map((direction) => ({
+								label: direction,
+								value: direction,
+							}))}
+							onChange={(value) =>
 								onChange({
 									...flow,
-									direction: event.target.value as Direction,
+									direction: value as Direction,
 								})
 							}
-						>
-							{directions.map((direction) => (
-								<option key={direction} value={direction}>
-									{direction}
-								</option>
-							))}
-						</select>
+						/>
 					</Setting>
 					<Setting label="Cross-axis alignment">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Cross-axis alignment"
 							value={flow.alignment ?? "center"}
-							onChange={(event) =>
+							options={[
+								{ label: "Start edge", value: "start" },
+								{ label: "Center", value: "center" },
+								{ label: "End edge", value: "end" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...flow,
-									alignment: event.target.value as "center" | "end" | "start",
+									alignment: value as "center" | "end" | "start",
 								})
 							}
-						>
-							<option value="start">Start edge</option>
-							<option value="center">Center</option>
-							<option value="end">End edge</option>
-						</select>
+						/>
 					</Setting>
 					<Setting label="Placement reference">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Placement reference"
 							value={flow.placement ?? "blockEdge"}
-							onChange={(event) =>
+							options={[
+								{ label: "Previous scene edge", value: "blockEdge" },
+								{
+									label: "Scene edge + camera alignment",
+									value: "blockEdgeWithViewportAlignment",
+								},
+								{ label: "Smart group edge", value: "groupEdge" },
+								{ label: "Previous camera viewport", value: "cameraEdge" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...flow,
-									placement: event.target.value as
+									placement: value as
 										| "blockEdge"
 										| "blockEdgeWithViewportAlignment"
 										| "cameraEdge"
 										| "groupEdge",
 								})
 							}
-						>
-							<option value="blockEdge">Previous scene edge</option>
-							<option value="blockEdgeWithViewportAlignment">
-								Scene edge + camera alignment
-							</option>
-							<option value="groupEdge">Smart group edge</option>
-							<option value="cameraEdge">Previous camera viewport</option>
-						</select>
+						/>
 					</Setting>
 					{flow.placement === "groupEdge" ? (
 						<Setting label="Panel horizontal alignment">
-							<select
-								className={settingClassName}
+							<SceneSettingSelect
+								label="Panel horizontal alignment"
 								value={flow.groupHorizontalAlignment ?? "center"}
-								onChange={(event) =>
+								options={[
+									{ label: "Left", value: "start" },
+									{ label: "Center", value: "center" },
+									{ label: "Right", value: "end" },
+								]}
+								onChange={(value) =>
 									onChange({
 										...flow,
-										groupHorizontalAlignment: event.target.value as
+										groupHorizontalAlignment: value as
 											| "center"
 											| "end"
 											| "start",
 									})
 								}
-							>
-								<option value="start">Left</option>
-								<option value="center">Center</option>
-								<option value="end">Right</option>
-							</select>
+							/>
 						</Setting>
 					) : null}
 					<MotionNumber
@@ -151,61 +159,67 @@ export function FlowSettings({
 						}
 					/>
 					<Setting label="Spacing unit">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Spacing unit"
 							value={flow.spacing?.unit ?? "px"}
-							onChange={(event) =>
+							options={[
+								{ label: "Pixels", value: "px" },
+								{ label: "Viewport spans", value: "viewport" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...flow,
 									spacing: {
-										unit: event.target.value as "px" | "viewport",
+										unit: value as "px" | "viewport",
 										value: flow.spacing?.value ?? 0,
 									},
 								})
 							}
-						>
-							<option value="px">Pixels</option>
-							<option value="viewport">Viewport spans</option>
-						</select>
+						/>
 					</Setting>
 				</>
 			) : (
 				<>
 					<Setting label="Stack preset">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Stack preset"
 							value={getStackPreset(flow)}
-							onChange={(event) =>
+							options={[
+								{ label: "Top left", value: "top-left" },
+								{ label: "Top center", value: "top-center" },
+								{ label: "Top right", value: "top-right" },
+								{ label: "Center left", value: "center-left" },
+								{ label: "Center", value: "center" },
+								{ label: "Center right", value: "center-right" },
+								{ label: "Bottom left", value: "bottom-left" },
+								{ label: "Bottom center", value: "bottom-center" },
+								{ label: "Bottom right", value: "bottom-right" },
+								{ label: "Custom percent", value: "custom" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...flow,
-									...getStackPresetFlow(event.target.value),
+									...getStackPresetFlow(value),
 								})
 							}
-						>
-							<option value="top-left">Top left</option>
-							<option value="top-center">Top center</option>
-							<option value="top-right">Top right</option>
-							<option value="center-left">Center left</option>
-							<option value="center">Center</option>
-							<option value="center-right">Center right</option>
-							<option value="bottom-left">Bottom left</option>
-							<option value="bottom-center">Bottom center</option>
-							<option value="bottom-right">Bottom right</option>
-							<option value="custom">Custom percent</option>
-						</select>
+						/>
 					</Setting>
 					<Setting label="Horizontal alignment">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Horizontal alignment"
 							value={getStackAxisPlacement(
 								flow.horizontalPosition,
 								flow.horizontalPlacement,
 								flow.alignment,
 							)}
-							onChange={(event) => {
-								const placement = event.target.value as
-									| StackPlacementPosition
-									| "custom";
+							options={[
+								{ label: "Left", value: "start" },
+								{ label: "Center", value: "center" },
+								{ label: "Right", value: "end" },
+								{ label: "Custom percent", value: "custom" },
+							]}
+							onChange={(value) => {
+								const placement = value as StackPlacementPosition | "custom";
 								onChange(
 									placement === "custom"
 										? {
@@ -224,25 +238,24 @@ export function FlowSettings({
 											},
 								);
 							}}
-						>
-							<option value="start">Left</option>
-							<option value="center">Center</option>
-							<option value="end">Right</option>
-							<option value="custom">Custom percent</option>
-						</select>
+						/>
 					</Setting>
 					<Setting label="Vertical alignment">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Vertical alignment"
 							value={getStackAxisPlacement(
 								flow.verticalPosition,
 								flow.verticalPlacement,
 								flow.alignment,
 							)}
-							onChange={(event) => {
-								const placement = event.target.value as
-									| StackPlacementPosition
-									| "custom";
+							options={[
+								{ label: "Top", value: "start" },
+								{ label: "Center", value: "center" },
+								{ label: "Bottom", value: "end" },
+								{ label: "Custom percent", value: "custom" },
+							]}
+							onChange={(value) => {
+								const placement = value as StackPlacementPosition | "custom";
 								onChange(
 									placement === "custom"
 										? {
@@ -261,16 +274,12 @@ export function FlowSettings({
 											},
 								);
 							}}
-						>
-							<option value="start">Top</option>
-							<option value="center">Center</option>
-							<option value="end">Bottom</option>
-							<option value="custom">Custom percent</option>
-						</select>
+						/>
 					</Setting>
 					<Setting label="Horizontal position">
-						<input
-							className={settingClassName}
+						<Input
+							aria-label="Horizontal position"
+							density="compact"
 							max="1"
 							min="0"
 							step="0.05"
@@ -290,8 +299,9 @@ export function FlowSettings({
 						/>
 					</Setting>
 					<Setting label="Vertical position">
-						<input
-							className={settingClassName}
+						<Input
+							aria-label="Vertical position"
+							density="compact"
 							max="1"
 							min="0"
 							step="0.05"
@@ -311,25 +321,27 @@ export function FlowSettings({
 						/>
 					</Setting>
 					<Setting label="Placement reference">
-						<select
-							className={settingClassName}
+						<SceneSettingSelect
+							label="Placement reference"
 							value={flow.placement ?? "blockEdge"}
-							onChange={(event) =>
+							options={[
+								{ label: "Previous scene", value: "blockEdge" },
+								{
+									label: "Previous camera viewpoint",
+									value: "blockEdgeWithViewportAlignment",
+								},
+								{ label: "Previous camera viewport", value: "cameraEdge" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...flow,
-									placement: event.target.value as
+									placement: value as
 										| "blockEdge"
 										| "blockEdgeWithViewportAlignment"
 										| "cameraEdge",
 								})
 							}
-						>
-							<option value="blockEdge">Previous scene</option>
-							<option value="blockEdgeWithViewportAlignment">
-								Previous camera viewpoint
-							</option>
-							<option value="cameraEdge">Previous camera viewport</option>
-						</select>
+						/>
 					</Setting>
 				</>
 			)}
@@ -356,14 +368,22 @@ export function CameraPathSettings({
 		<div
 			data-reader-component="CameraPathSettings"
 			data-reader-role="camera-path-settings"
+			data-studio-component="CameraPathSettings"
+			data-studio-role="camera-path-settings"
 			className="@container/inspector-group col-span-2 grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2"
 		>
 			<Setting label="Camera path">
-				<select
-					className={settingClassName}
+				<SceneSettingSelect
+					label="Camera path"
 					value={path.mode}
-					onChange={(event) => {
-						const mode = event.target.value as SceneCameraPath["mode"];
+					options={[
+						{ label: "Auto", value: "auto" },
+						{ label: "Reverse flow", value: "reverse-flow" },
+						{ label: "Straight", value: "straight" },
+						{ label: "Custom", value: "custom" },
+					]}
+					onChange={(value) => {
+						const mode = value as SceneCameraPath["mode"];
 						onChange(
 							mode === "straight"
 								? { direction: "down", mode }
@@ -372,31 +392,24 @@ export function CameraPathSettings({
 									: { mode },
 						);
 					}}
-				>
-					<option value="auto">Auto</option>
-					<option value="reverse-flow">Reverse flow</option>
-					<option value="straight">Straight</option>
-					<option value="custom">Custom</option>
-				</select>
+				/>
 			</Setting>
 			{path.mode === "straight" ? (
 				<Setting label="Direction">
-					<select
-						className={settingClassName}
+					<SceneSettingSelect
+						label="Direction"
 						value={path.direction}
-						onChange={(event) =>
+						options={directions.map((direction) => ({
+							label: direction,
+							value: direction,
+						}))}
+						onChange={(value) =>
 							onChange({
 								...path,
-								direction: event.target.value as Direction,
+								direction: value as Direction,
 							})
 						}
-					>
-						{directions.map((direction) => (
-							<option key={direction} value={direction}>
-								{direction}
-							</option>
-						))}
-					</select>
+					/>
 				</Setting>
 			) : null}
 		</div>
@@ -427,8 +440,9 @@ export function MotionNumber({
 			label={label}
 			readerRole="motion-number-setting"
 		>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				min="0"
 				type="number"
 				value={value ?? ""}
@@ -439,6 +453,33 @@ export function MotionNumber({
 				}
 			/>
 		</Setting>
+	);
+}
+
+function SceneSettingSelect({
+	label,
+	onChange,
+	options,
+	value,
+}: {
+	label: string;
+	onChange: (value: string) => void;
+	options: readonly { label: string; value: string }[];
+	value: string;
+}): React.JSX.Element {
+	return (
+		<Select aria-label={label} value={value} onValueChange={onChange}>
+			<SelectTrigger className="w-full" density="compact">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>
+				{options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 }
 

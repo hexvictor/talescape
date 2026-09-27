@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import {
 	DebugCard,
 	Setting,
-	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { getTaleTransitionPresets } from "~/app/(tale-app)/_shared/services/taleLookups";
@@ -17,6 +16,16 @@ import type {
 	TaleSceneSnapSettings,
 	TaleSceneSnapStrategy,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
 import {
 	CameraPathSettings,
@@ -65,22 +74,21 @@ export function SceneTransitionSettings({
 			title="Size and placement"
 		>
 			<div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
-				<select
-					aria-label="Official transition template"
-					className={settingClassName}
+				<SceneTransitionSelect
+					label="Official transition template"
 					value={transitionPresetId}
-					onChange={(event) => setTransitionPresetId(event.target.value)}
-				>
-					{transitionPresets.map((preset) => (
-						<option key={preset.id} value={preset.id}>
-							{preset.name}
-						</option>
-					))}
-				</select>
-				<button
-					type="button"
-					className="rounded border border-foreground/12 px-3 text-foreground/65 text-xs hover:bg-foreground/8 hover:text-foreground"
-					onClick={() => {
+					options={transitionPresets.map((preset) => ({
+						label: preset.name,
+						value: preset.id,
+					}))}
+					onChange={setTransitionPresetId}
+				/>
+				<Button
+					className="h-9 px-3"
+					motion="flat"
+					size="sm"
+					variant="outline"
+					onPress={() => {
 						const preset = transitionPresets.find(
 							(item) => item.id === transitionPresetId,
 						);
@@ -108,7 +116,7 @@ export function SceneTransitionSettings({
 					}}
 				>
 					Apply
-				</button>
+				</Button>
 			</div>
 			<FlowSettings
 				flow={scene.transition.flow}
@@ -129,26 +137,26 @@ export function SceneTransitionSettings({
 				}
 			/>
 			<div className="col-span-2 grid min-w-0 gap-2 rounded border border-foreground/8 bg-foreground/[0.025] p-2">
-				<Setting label="Animate previous scenes">
-					<input
-						type="checkbox"
-						checked={
-							scene.transition.previousScenesDuringEnter ===
-							"customAllVisiblePrevious"
-						}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								transition: {
-									...item.transition,
-									previousScenesDuringEnter: event.target.checked
-										? "customAllVisiblePrevious"
-										: "keep",
-								},
-							}))
-						}
-					/>
-				</Setting>
+				<Checkbox
+					density="compact"
+					isSelected={
+						scene.transition.previousScenesDuringEnter ===
+						"customAllVisiblePrevious"
+					}
+					onChange={(isSelected) =>
+						onChange((item) => ({
+							...item,
+							transition: {
+								...item.transition,
+								previousScenesDuringEnter: isSelected
+									? "customAllVisiblePrevious"
+									: "keep",
+							},
+						}))
+					}
+				>
+					Animate previous scenes
+				</Checkbox>
 				{scene.transition.previousScenesDuringEnter ===
 				"customAllVisiblePrevious" ? (
 					<AnimationSelectionEditor
@@ -171,21 +179,23 @@ export function SceneTransitionSettings({
 			</div>
 			{scene.position.isFirst ? (
 				<Setting label="Opening scene movement">
-					<select
-						className={settingClassName}
-						value={firstSceneTransitionMode}
-						onChange={(event) => {
+					<SceneTransitionSelect
+						label="Opening scene movement"
+						value={firstSceneTransitionMode ?? "fromPlacement"}
+						options={[
+							{
+								label: "Move from placement direction",
+								value: "fromPlacement",
+							},
+							{ label: "Animate in place", value: "inPlace" },
+						]}
+						onChange={(value) => {
 							setTale({
 								...tale,
-								firstSceneTransitionMode: event.target.value as
-									| "fromPlacement"
-									| "inPlace",
+								firstSceneTransitionMode: value as "fromPlacement" | "inPlace",
 							});
 						}}
-					>
-						<option value="fromPlacement">Move from placement direction</option>
-						<option value="inPlace">Animate in place</option>
-					</select>
+					/>
 				</Setting>
 			) : null}
 		</DebugCard>
@@ -254,6 +264,8 @@ export function SceneSnapSettings({
 		<div
 			data-reader-component="SceneSnapSettings"
 			data-reader-role="scene-snap-settings"
+			data-studio-component="SceneSnapSettings"
+			data-studio-role="scene-snap-settings"
 			className="col-span-2 grid min-w-0 gap-3 border border-foreground/12 bg-background/45 p-3"
 		>
 			<div>
@@ -267,19 +279,17 @@ export function SceneSnapSettings({
 			</div>
 			<div className="grid grid-cols-2 border border-foreground/15 p-0.5">
 				{(["shared", "separate"] as const).map((value) => (
-					<button
+					<Button
 						key={value}
-						type="button"
 						aria-pressed={strategy === value}
-						className={`min-h-8 px-2 font-semibold text-xs uppercase transition-colors ${
-							strategy === value
-								? "bg-primary text-primary-foreground"
-								: "text-foreground/55 hover:bg-foreground/8 hover:text-foreground"
-						}`}
-						onClick={() => setStrategy(value)}
+						className="h-8 min-h-8 w-full border-0 px-2 shadow-none"
+						motion="flat"
+						size="sm"
+						variant={strategy === value ? "default" : "ghost"}
+						onPress={() => setStrategy(value)}
 					>
 						{value === "shared" ? "Both directions" : "Set separately"}
-					</button>
+					</Button>
 				))}
 			</div>
 			{strategy === "shared" ? (
@@ -341,20 +351,21 @@ function SnapBehaviorFields({
 				</p>
 			</div>
 			<Setting label="Mode">
-				<select
-					className={settingClassName}
+				<SceneTransitionSelect
+					label="Mode"
 					value={behavior.mode}
-					onChange={(event) =>
+					options={[
+						{ label: "Scroll snap", value: "scroll-snap" },
+						{ label: "Snap", value: "snap" },
+						{ label: "Off", value: "snap-off" },
+					]}
+					onChange={(value) =>
 						onChange({
 							...behavior,
-							mode: event.target.value as TaleSceneSnapMode,
+							mode: value as TaleSceneSnapMode,
 						})
 					}
-				>
-					<option value="scroll-snap">Scroll snap</option>
-					<option value="snap">Snap</option>
-					<option value="snap-off">Off</option>
-				</select>
+				/>
 			</Setting>
 			<div className="self-end pb-1 text-[0.62rem] text-foreground/42 leading-4">
 				{behavior.mode === "scroll-snap"
@@ -419,8 +430,9 @@ function SnapOverrideNumber({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				min={0}
 				placeholder="Global"
 				step={step}
@@ -436,5 +448,32 @@ function SnapOverrideNumber({
 				}}
 			/>
 		</Setting>
+	);
+}
+
+function SceneTransitionSelect({
+	label,
+	onChange,
+	options,
+	value,
+}: {
+	label: string;
+	onChange: (value: string) => void;
+	options: readonly { label: string; value: string }[];
+	value: string;
+}): React.JSX.Element {
+	return (
+		<Select aria-label={label} value={value} onValueChange={onChange}>
+			<SelectTrigger className="w-full" density="compact">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>
+				{options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 }

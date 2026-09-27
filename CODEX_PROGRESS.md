@@ -11,7 +11,7 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 Phase 6 in progress: structural primitives and Inspector composition.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.2`.
+Current package version: `1.11.3`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -109,6 +109,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Migrated Element Motion default state, phase visibility and range controls to
   shared Field, Select, Checkbox and Slider components, and added stable Studio
   instrumentation to the settings surface.
+- Migrated every remaining native control in the Scene Inspector folder: scene
+  phases, sizing, placement flow, camera paths, transition presets, previous-scene
+  animation behavior and directional snapping now use shared compact controls.
+- Added Studio identity attributes to the Scene Motion, Camera Path and Scene Snap
+  settings surfaces without introducing new DOM wrappers.
 
 ## Files changed / components / stories
 
@@ -182,6 +187,9 @@ implementation; feature code continues to consume the Talescape wrapper.
 - The Element Placement and Motion migration and `1.11.2` version bump pass
   targeted Biome, baseline typecheck comparison, the 68-test unit suite,
   Storybook production build and a frozen offline install.
+- The Scene Inspector control migration and `1.11.3` version bump pass targeted
+  Biome, baseline typecheck comparison, the 68-test unit suite, Storybook
+  production build and a frozen offline install.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -189,9 +197,10 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Continue with Scene Inspector controls, then graph and broader domain
-   collections.
-2. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
+1. Finish the remaining general Inspector controls, including Style, image,
+   narrative and Frame keyframe-length surfaces.
+2. Continue with graph and broader domain collections.
+3. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should
