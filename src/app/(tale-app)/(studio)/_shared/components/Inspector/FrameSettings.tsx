@@ -4,7 +4,6 @@ import {
 	DebugCard,
 	DebugField,
 	Setting,
-	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { DEFAULT_BLOCK_AUTOPLAY_CONFIG } from "~/app/(tale-app)/_shared/services/readerPlaybackSettings";
@@ -17,15 +16,24 @@ import type {
 	TaleSceneSnapMode,
 	TaleSceneSnapSettings,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
 import { useTaleStudioStore } from "../../hooks/useTaleStudioStore";
 import { AnimationSelectionEditor } from "./AnimationSelectionEditor";
 import { FrameHierarchyTree } from "./FrameHierarchyTree";
-import { NumberSetting } from "./InspectorValueFields";
+import { InspectorSelect, NumberSetting } from "./InspectorValueFields";
 import {
 	LoopingAnimationEditor,
 	LoopingAnimationsGroup,
 } from "./LoopingAnimationEditor";
 import { StyleSettings } from "./StyleSettings";
+
+const snapModeOptions = [
+	{ label: "Free", value: "snap-off" },
+	{ label: "Scroll snap", value: "scroll-snap" },
+	{ label: "Snap", value: "snap" },
+] as const;
 
 /**
  * Edits the layout frames owned by a scene.
@@ -178,8 +186,9 @@ export function FrameProgressionSettings({
 		commit: (value: number | null) => void,
 	): React.JSX.Element => (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				min={0}
 				placeholder="Automatic"
 				type="number"
@@ -285,19 +294,14 @@ export function FrameProgressionSettings({
 						transition: { ...item.transition, outroLength },
 					})),
 			)}
-			<label className="col-span-2 flex items-center justify-between gap-3 border border-foreground/10 bg-foreground/[0.025] p-2 text-xs">
-				<span className="font-bold uppercase">
-					Use Keyframe autoplay timing
-				</span>
-				<input
-					checked={autoplay.enabled}
-					className="size-4 accent-primary"
-					type="checkbox"
-					onChange={(event) =>
-						updateAutoplay({ enabled: event.target.checked })
-					}
-				/>
-			</label>
+			<Checkbox
+				className="col-span-2 flex-row-reverse justify-between gap-3 border border-foreground/10 bg-foreground/[0.025] p-2"
+				density="compact"
+				isSelected={autoplay.enabled}
+				onChange={(enabled) => updateAutoplay({ enabled })}
+			>
+				Use Keyframe autoplay timing
+			</Checkbox>
 			{updateNumber("Autoplay enter speed", autoplay.introSpeed, (value) =>
 				updateAutoplay({ introSpeed: value }),
 			)}
@@ -318,36 +322,37 @@ export function FrameProgressionSettings({
 				(value) => updateAutoplay({ pauseBeforeOutroSeconds: value }),
 			)}
 			<Setting label="Snap mode">
-				<select
-					className={settingClassName}
+				<InspectorSelect
+					label="Snap mode"
 					value={snapMode}
-					onChange={(event) =>
+					options={snapModeOptions}
+					onChange={(value) =>
 						onChange((item) => ({
 							...item,
 							snap: {
 								...(typeof item.snap === "boolean" ? {} : item.snap),
-								mode: event.target.value as TaleSceneSnapMode,
+								mode: value as TaleSceneSnapMode,
 								strategy: snapStrategy,
 							},
 						}))
 					}
-				>
-					<option value="snap-off">Free</option>
-					<option value="scroll-snap">Scroll snap</option>
-					<option value="snap">Snap</option>
-				</select>
+				/>
 			</Setting>
 			<Setting label="Snap directions">
-				<select
-					className={settingClassName}
+				<InspectorSelect
+					label="Snap directions"
 					value={snapStrategy}
-					onChange={(event) =>
+					options={[
+						{ label: "Both directions", value: "shared" },
+						{ label: "Set separately", value: "separate" },
+					]}
+					onChange={(value) =>
 						onChange((item) => ({
 							...item,
 							snap: {
 								mode: snapMode,
-								strategy: event.target.value as "separate" | "shared",
-								...(event.target.value === "separate"
+								strategy: value as "separate" | "shared",
+								...(value === "separate"
 									? {
 											backward: { mode: behaviorMode("backward") },
 											forward: { mode: behaviorMode("forward") },
@@ -356,10 +361,7 @@ export function FrameProgressionSettings({
 							},
 						}))
 					}
-				>
-					<option value="shared">Both directions</option>
-					<option value="separate">Set separately</option>
-				</select>
+				/>
 			</Setting>
 			{snapStrategy === "separate"
 				? (["forward", "backward"] as const).map((direction) => (
@@ -369,10 +371,13 @@ export function FrameProgressionSettings({
 								direction === "forward" ? "Forward entry" : "Backward entry"
 							}
 						>
-							<select
-								className={settingClassName}
+							<InspectorSelect
+								label={
+									direction === "forward" ? "Forward entry" : "Backward entry"
+								}
 								value={behaviorMode(direction)}
-								onChange={(event) =>
+								options={snapModeOptions}
+								onChange={(value) =>
 									onChange((item) => ({
 										...item,
 										snap: {
@@ -383,17 +388,13 @@ export function FrameProgressionSettings({
 												...(typeof item.snap === "boolean"
 													? {}
 													: item.snap[direction]),
-												mode: event.target.value as TaleSceneSnapMode,
+												mode: value as TaleSceneSnapMode,
 											},
 											strategy: "separate",
 										},
 									}))
 								}
-							>
-								<option value="snap-off">Free</option>
-								<option value="scroll-snap">Scroll snap</option>
-								<option value="snap">Snap</option>
-							</select>
+							/>
 						</Setting>
 					))
 				: null}
@@ -444,8 +445,9 @@ function FrameSnapBehaviorFields({
 		step = 1,
 	): React.JSX.Element => (
 		<Setting label={label}>
-			<input
-				className={settingClassName}
+			<Input
+				aria-label={label}
+				density="compact"
 				min={0}
 				placeholder="Global"
 				step={step}
@@ -519,40 +521,39 @@ function FrameEditor({
 			</div>
 			<div className="@container/inspector-group grid min-w-0 @min-[32rem]/inspector-group:grid-cols-2 grid-cols-1 gap-2">
 				<Setting label="Display mode">
-					<select
-						className={settingClassName}
+					<InspectorSelect
+						label="Display mode"
 						value={frame.mode}
-						onChange={(event) =>
-							onChange(
-								changeFrameMode(frame, event.target.value as TaleFrame["mode"]),
-							)
+						options={[
+							{ label: "Stack", value: "stack" },
+							{ label: "Flex", value: "flex" },
+							{ label: "Grid", value: "grid" },
+							{ label: "Free", value: "free" },
+						]}
+						onChange={(value) =>
+							onChange(changeFrameMode(frame, value as TaleFrame["mode"]))
 						}
-					>
-						<option value="stack">Stack</option>
-						<option value="flex">Flex</option>
-						<option value="grid">Grid</option>
-						<option value="free">Free</option>
-					</select>
+					/>
 				</Setting>
 				<Setting label="Parent frame">
-					<select
-						className={settingClassName}
-						disabled={frame.id === rootFrameId}
+					<InspectorSelect
+						isDisabled={frame.id === rootFrameId}
+						label="Parent frame"
 						value={frame.parentFrameId ?? ""}
-						onChange={(event) => onParentChange(event.target.value || null)}
-					>
-						<option value="">None</option>
-						{frames
-							.filter(
-								(item) =>
-									item.id !== frame.id && !descendantFrameIds.has(item.id),
-							)
-							.map((item) => (
-								<option key={item.id} value={item.id}>
-									{item.id}
-								</option>
-							))}
-					</select>
+						options={[
+							{ label: "None", value: "" },
+							...frames
+								.filter(
+									(item) =>
+										item.id !== frame.id && !descendantFrameIds.has(item.id),
+								)
+								.map((item) => ({
+									label: item.name?.trim() || `Frame ${item.id}`,
+									value: item.id,
+								})),
+						]}
+						onChange={(value) => onParentChange(value || null)}
+					/>
 				</Setting>
 				<NumberSetting
 					label="Gap"
@@ -560,19 +561,20 @@ function FrameEditor({
 					onChange={(gap) => onChange({ ...frame, gap } as TaleFrame)}
 				/>
 				<Setting label="Overflow">
-					<select
-						className={settingClassName}
+					<InspectorSelect
+						label="Overflow"
 						value={frame.overflow ?? "visible"}
-						onChange={(event) =>
+						options={[
+							{ label: "Visible", value: "visible" },
+							{ label: "Clip", value: "clip" },
+						]}
+						onChange={(value) =>
 							onChange({
 								...frame,
-								overflow: event.target.value as "clip" | "visible",
+								overflow: value as "clip" | "visible",
 							} as TaleFrame)
 						}
-					>
-						<option value="visible">Visible</option>
-						<option value="clip">Clip</option>
-					</select>
+					/>
 				</Setting>
 			</div>
 			<CollapsibleFrameSection
@@ -693,14 +695,16 @@ function CollapsibleFrameSection({
 }): React.JSX.Element {
 	return (
 		<section className="mt-3 rounded border border-foreground/8 bg-background/20 p-2">
-			<button
-				type="button"
-				className="flex w-full items-center justify-between text-left font-bold text-[10px] text-foreground/56 uppercase hover:text-foreground"
-				onClick={onToggle}
+			<Button
+				className="h-8 w-full justify-between border-0 px-1 text-left text-[10px] text-foreground/56 shadow-none"
+				motion="flat"
+				size="sm"
+				variant="ghost"
+				onPress={onToggle}
 			>
 				{title}
 				<span>{open ? "Hide" : "Show"}</span>
-			</button>
+			</Button>
 			{open ? children : null}
 		</section>
 	);

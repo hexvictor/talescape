@@ -43,3 +43,27 @@ Notes: Button's variants, sizes, shapes, motion modes, outer frame, inner surfac
 hover surface, decorations, custom classes/styles and legacy props remain. It also
 accepts React Aria `onPress`. Radix Slot is no longer used by Button; Badge still
 uses it. Existing application token names remain compatibility aliases.
+
+## Inspector, graph and domain collections
+
+Page / feature: Tale Studio Inspector, branch graph, selection panel and left rail.
+
+Existing UI: visible native inputs, selects, textareas and one-off buttons used
+duplicated styling across scene, frame, keyframe, element, style, narrative,
+branch and path editing surfaces.
+
+Replaced with: compact Talescape Field, Input, Textarea, Select, Checkbox, Slider,
+Tabs, Button and Thumbnail composition. Graph state, scene ordering, placement,
+animation, upload and draft update callbacks are unchanged.
+
+New primitive: none. A domain-scoped `InspectorSelect` adapter centralizes the
+compound shared Select markup used by dense Inspector forms.
+
+Story added: none; this checkpoint migrates consumers without adding a shared
+primitive or variant. Existing primitive interaction stories and the Storybook
+production build remain the component verification baseline.
+
+Notes: the hidden image file input remains native because it invokes the browser
+file picker. Native Keyframe, branch and Scene drag targets remain where replacing
+their event surface could change HTML drag, React Flow or dnd-kit behavior. These
+exceptions retain stable Reader and Studio instrumentation.

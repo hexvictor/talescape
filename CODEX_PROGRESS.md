@@ -9,9 +9,9 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 6 in progress: structural primitives and Inspector composition.
+Phase 9 in progress: Inspector, graph and domain presentation migration.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.3`.
+Current package version: `1.11.4`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -114,6 +114,19 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   animation behavior and directional snapping now use shared compact controls.
 - Added Studio identity attributes to the Scene Motion, Camera Path and Scene Snap
   settings surfaces without introducing new DOM wrappers.
+- Finished the visible general Inspector control migration across Style, image
+  uploads, narrative mapping, Frame progression, snapping, hierarchy editing and
+  Keyframe-length distribution. The browser-owned hidden file input and native
+  draggable Keyframe row remain intentionally native.
+- Added a narrow reusable Inspector Select adapter and expanded optional numeric
+  fields so dense domain forms share one compact control contract.
+- Migrated the branch graph toolbar, node actions, Scene travel controls, branch
+  and path forms, narrative tabs, hierarchy rail and asset inventory interactions
+  to shared Button, Tabs, Field, Input, Textarea, Select, Slider, Thumbnail and
+  Checkbox components.
+- Preserved native branch and Scene drag targets where React Aria event composition
+  could alter React Flow or dnd-kit pointer/drag behavior, and added Studio
+  instrumentation to graph, node, collection and timing surfaces.
 
 ## Files changed / components / stories
 
@@ -190,6 +203,12 @@ implementation; feature code continues to consume the Talescape wrapper.
 - The Scene Inspector control migration and `1.11.3` version bump pass targeted
   Biome, baseline typecheck comparison, the 68-test unit suite, Storybook
   production build and a frozen offline install.
+- The remaining Inspector plus graph/domain collection migration and `1.11.4`
+  version bump pass targeted Biome, baseline typecheck comparison, the 68-test
+  unit suite, Storybook production build and a frozen offline install.
+- Full `pnpm lint` reaches 605 files and reports only five existing findings: one
+  autofocus finding in TaleStudioProvider and four non-null assertion findings
+  in the Library tale-detail query.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -197,10 +216,10 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Finish the remaining general Inspector controls, including Style, image,
-   narrative and Frame keyframe-length surfaces.
-2. Continue with graph and broader domain collections.
-3. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
+1. Migrate the remaining Studio toolbar, settings, Preview and workspace chrome.
+2. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
+3. Complete route-level visual, responsive and interaction verification, then
+   perform the final dependency and Storybook coverage audit.
 
 Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
 `pnpm build-storybook` after adding that script. Integration verification should

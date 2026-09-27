@@ -8,6 +8,40 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 
+export function InspectorSelect({
+	isDisabled = false,
+	label,
+	onChange,
+	options,
+	value,
+}: {
+	isDisabled?: boolean;
+	label: string;
+	onChange: (value: string) => void;
+	options: readonly { label: string; value: string }[];
+	value: string;
+}): React.JSX.Element {
+	return (
+		<Select
+			aria-label={label}
+			isDisabled={isDisabled}
+			value={value}
+			onValueChange={onChange}
+		>
+			<SelectTrigger className="w-full" density="compact">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>
+				{options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
+	);
+}
+
 /**
  * Renders a required number input.
  *
@@ -58,11 +92,19 @@ export function NumberSetting({
  */
 export function OptionalNumberSetting({
 	label,
+	max,
+	min,
 	onChange,
+	placeholder = "none",
+	step,
 	value,
 }: {
 	label: string;
+	max?: number;
+	min?: number;
 	onChange: (value: number | undefined) => void;
+	placeholder?: string;
+	step?: number;
 	value?: number;
 }): React.JSX.Element {
 	return (
@@ -70,7 +112,10 @@ export function OptionalNumberSetting({
 			<Input
 				aria-label={label}
 				density="compact"
-				placeholder="none"
+				max={max}
+				min={min}
+				placeholder={placeholder}
+				step={step}
 				type="number"
 				value={value ?? ""}
 				onChange={(event) =>

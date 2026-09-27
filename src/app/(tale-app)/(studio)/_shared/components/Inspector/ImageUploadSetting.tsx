@@ -2,10 +2,10 @@
 
 import { ImagePlus } from "lucide-react";
 import { useRef, useState } from "react";
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Thumbnail } from "~/components/data-display/thumbnail";
+import { Button } from "~/components/ui/button";
+import Input from "~/components/ui/input";
 import { api } from "~/trpc/react";
 import { useUploadThing } from "../../utils/uploadthing";
 
@@ -48,21 +48,24 @@ export function ImageUploadSetting({
 	return (
 		<Setting label={label} className="col-span-full">
 			<div className="grid min-w-0 @min-[28rem]/setting:grid-cols-[minmax(0,1fr)_auto] gap-2">
-				<input
-					className={settingClassName}
+				<Input
+					aria-label={`${label} URL`}
+					density="compact"
 					type="text"
 					value={value}
 					onChange={(event) => onChange(event.target.value)}
 				/>
-				<button
-					className="inline-flex min-h-11 items-center justify-center gap-2 border-2 border-foreground bg-card px-3 font-black text-[10px] text-foreground uppercase shadow-[2px_2px_0_rgb(var(--foreground-rgb))] transition hover:bg-accent"
+				<Button
+					className="h-9 px-3"
 					disabled={isUploading}
-					type="button"
-					onClick={() => inputRef.current?.click()}
+					motion="flat"
+					size="sm"
+					variant="outline"
+					onPress={() => inputRef.current?.click()}
 				>
 					<ImagePlus size={14} />
 					{isUploading ? "Uploading" : "Upload"}
-				</button>
+				</Button>
 				<input
 					ref={inputRef}
 					accept="image/*"
@@ -77,27 +80,28 @@ export function ImageUploadSetting({
 			{uploadedImages.length > 0 ? (
 				<div className="grid max-h-44 grid-cols-3 gap-2 overflow-y-auto rounded border border-foreground/12 bg-background/45 p-2">
 					{uploadedImages.map((image) => (
-						<button
+						<Button
 							key={image.id}
 							aria-pressed={value === image.url}
-							className={`group grid min-w-0 gap-1 border bg-card p-1 text-left transition ${
+							className={`group grid h-auto min-w-0 whitespace-normal border p-1 text-left shadow-none ${
 								value === image.url
 									? "border-primary bg-primary/8"
 									: "border-foreground/12 hover:border-foreground/35"
 							}`}
-							type="button"
-							onClick={() => onChange(image.url)}
+							motion="flat"
+							variant="outline"
+							onPress={() => onChange(image.url)}
 						>
-							<img
-								alt=""
-								className="aspect-video w-full bg-foreground/8 object-cover"
-								loading="lazy"
+							<Thumbnail
+								alt={image.name}
+								className="aspect-video w-full"
+								selected={value === image.url}
 								src={image.url}
 							/>
 							<span className="truncate text-[10px] text-foreground/62">
 								{image.name}
 							</span>
-						</button>
+						</Button>
 					))}
 				</div>
 			) : null}

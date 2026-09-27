@@ -3,6 +3,8 @@
 import { BookOpen, FileText, Play } from "lucide-react";
 import { useState } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { Button } from "~/components/ui/button";
+import { Tab, TabList, Tabs } from "~/components/ui/tabs";
 import { useTaleStudioStore } from "../../hooks/useTaleStudioStore";
 
 export function NarrativePanel({
@@ -48,19 +50,25 @@ export function NarrativePanel({
 			data-studio-role="narrative-mapping"
 			className="space-y-3 text-xs"
 		>
-			<div className="flex border-b" aria-label="Narrative view">
-				{(["tree", "distribution"] as const).map((mode) => (
-					<button
-						key={mode}
-						type="button"
-						aria-pressed={view === mode}
-						className="flex-1 px-3 py-2 capitalize aria-pressed:border-sky-500 aria-pressed:border-b-2 aria-pressed:text-sky-600"
-						onClick={() => setView(mode)}
-					>
-						{mode}
-					</button>
-				))}
-			</div>
+			<Tabs
+				selectedKey={view}
+				onSelectionChange={(key) =>
+					setView(String(key) as "distribution" | "tree")
+				}
+			>
+				<TabList aria-label="Narrative view" density="compact">
+					{(["tree", "distribution"] as const).map((mode) => (
+						<Tab
+							key={mode}
+							className="flex-1 capitalize"
+							density="compact"
+							id={mode}
+						>
+							{mode}
+						</Tab>
+					))}
+				</TabList>
+			</Tabs>
 			{parts.length === 0 ? (
 				<p className="p-3 text-foreground/60">
 					No pages assigned to these keyframes.
@@ -114,12 +122,14 @@ export function NarrativePanel({
 													{keyframes
 														.filter((item) => item.pageId === page.id)
 														.map((item) => (
-															<button
+															<Button
 																key={item.id}
-																type="button"
-																className="inline-flex items-center gap-1 bg-sky-100 px-1.5 py-1 text-sky-800"
+																className="h-7 gap-1 border-primary/25 px-1.5 py-1 text-[10px]"
+																motion="flat"
+																size="sm"
 																title={`${item.title}: ${tale.indexMap.scenesById[item.sceneId]?.title ?? item.sceneId}`}
-																onClick={() =>
+																variant="outline"
+																onPress={() =>
 																	open({
 																		type: "keyframe",
 																		id: item.id,
@@ -129,7 +139,7 @@ export function NarrativePanel({
 															>
 																<Play size={10} />
 																{item.title}
-															</button>
+															</Button>
 														))}
 												</div>
 											))}

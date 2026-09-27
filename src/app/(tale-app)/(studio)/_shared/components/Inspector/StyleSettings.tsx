@@ -1,9 +1,5 @@
 import { Paintbrush } from "lucide-react";
-import {
-	DebugCard,
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { DebugCard } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { ReaderStyle, TaleFrame } from "~/app/(tale-app)/_shared/types";
 import { ImageUploadSetting } from "./ImageUploadSetting";
 import {
@@ -161,23 +157,12 @@ export function StyleSettings({
 				{showDisplayControls ? (
 					<DebugCard title="Display">
 						{layoutMode ? null : (
-							<Setting label="Display">
-								<select
-									className={settingClassName}
-									value={current.display ?? "block"}
-									onChange={(event) =>
-										onChange({
-											...current,
-											display: event.target.value as ReaderStyle["display"],
-										})
-									}
-								>
-									<option value="block">Block</option>
-									<option value="inline-block">Inline block</option>
-									<option value="flex">Flex</option>
-									<option value="grid">Grid</option>
-								</select>
-							</Setting>
+							<StyleSelect
+								label="Display"
+								value={current.display ?? "block"}
+								options={["block", "inline-block", "flex", "grid"]}
+								onChange={(display) => onChange({ ...current, display })}
+							/>
 						)}
 						<StyleLayoutSettings
 							layoutMode={effectiveLayoutMode}
@@ -212,23 +197,12 @@ export function StyleSettings({
 							value={String(current.lineHeight ?? "")}
 							onChange={(value) => setText("lineHeight", value)}
 						/>
-						<Setting label="Text alignment">
-							<select
-								className={settingClassName}
-								value={current.textAlign ?? "left"}
-								onChange={(event) =>
-									onChange({
-										...current,
-										textAlign: event.target.value as ReaderStyle["textAlign"],
-									})
-								}
-							>
-								<option value="left">Left</option>
-								<option value="center">Center</option>
-								<option value="right">Right</option>
-								<option value="justify">Justify</option>
-							</select>
-						</Setting>
+						<StyleSelect
+							label="Text alignment"
+							value={current.textAlign ?? "left"}
+							options={["left", "center", "right", "justify"]}
+							onChange={(textAlign) => onChange({ ...current, textAlign })}
+						/>
 					</DebugCard>
 				) : null}
 				{showAppearanceControls ? (
@@ -305,40 +279,20 @@ export function StyleSettings({
 							value={current.objectPosition ?? ""}
 							onChange={(value) => setText("objectPosition", value)}
 						/>
-						<Setting label="Overflow">
-							<select
-								className={settingClassName}
-								value={current.overflow ?? "visible"}
-								onChange={(event) =>
-									onChange({
-										...current,
-										overflow: event.target.value as ReaderStyle["overflow"],
-									})
-								}
-							>
-								<option value="visible">Visible</option>
-								<option value="hidden">Hidden</option>
-								<option value="clip">Clip</option>
-							</select>
-						</Setting>
-						<Setting label="Opacity">
-							<input
-								className={settingClassName}
-								max={1}
-								min={0}
-								step={0.05}
-								type="number"
-								value={current.opacity ?? ""}
-								onChange={(event) =>
-									setNumber(
-										"opacity",
-										event.target.value === ""
-											? undefined
-											: Number(event.target.value),
-									)
-								}
-							/>
-						</Setting>
+						<StyleSelect
+							label="Overflow"
+							value={current.overflow ?? "visible"}
+							options={["visible", "hidden", "clip"]}
+							onChange={(overflow) => onChange({ ...current, overflow })}
+						/>
+						<OptionalNumberSetting
+							label="Opacity"
+							max={1}
+							min={0}
+							step={0.05}
+							value={current.opacity}
+							onChange={(opacity) => setNumber("opacity", opacity)}
+						/>
 						<TextSetting
 							label="Custom CSS"
 							value={current.cssText ?? ""}
