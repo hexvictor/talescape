@@ -93,6 +93,11 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   encapsulated behind the Talescape ScrollArea API as a documented exception.
 - Migrated all Keyframe Inspector native details and action controls to shared
   Field, Input, Textarea, SearchField, Select, Checkbox and Button components.
+- Migrated the recursive Frame hierarchy search, result rows, expansion controls
+  and Frame/Element rows to shared SearchField and Button behavior while retaining
+  recursive groups, compact geometry and selection callbacks.
+- Added the required Studio identity attributes to the Frame hierarchy and branch
+  surfaces while preserving their existing Reader instrumentation.
 
 ## Files changed / components / stories
 
@@ -157,6 +162,8 @@ implementation; feature code continues to consume the Talescape wrapper.
   after removing the direct Radix Dialog dependency.
 - The Keyframe Inspector control migration passes targeted Biome and baseline
   typecheck comparison, the 68-test unit suite and Storybook production build.
+- The Frame hierarchy control migration passes targeted Biome and baseline
+  typecheck comparison plus the 68-test unit suite.
 - `pnpm test` passed: 18 files and 68 tests.
 - Typecheck after Button migration reports only the same 12 scene-model diagnostics.
 - No live application visual checks performed.
@@ -164,8 +171,8 @@ implementation; feature code continues to consume the Talescape wrapper.
 
 ## Exact next steps
 
-1. Migrate the Frame hierarchy/search collection and remaining Frame Inspector
-   controls to shared components while preserving recursive group behavior.
+1. Migrate the remaining Frame Inspector controls to shared components while
+   preserving recursive group and keyframe behavior.
 2. Continue with Scene/Element Inspector controls, then graph and broader domain
    collections.
 3. Audit remaining site/library/auth/Reader chrome and mobile surfaces.
