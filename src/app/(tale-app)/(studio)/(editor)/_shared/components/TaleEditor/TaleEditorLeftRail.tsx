@@ -65,9 +65,12 @@ export function TaleEditorLeftRail(): React.JSX.Element {
 			data-reader-role="editor-left-rail"
 			data-studio-component="TaleEditorLeftRail"
 			data-studio-role="editor-left-rail"
-			className="flex min-h-0 border-foreground border-r-[3px] bg-card"
+			className="studio-navigation-shell flex min-h-0 border-foreground border-r-[3px] bg-card"
 		>
-			<nav className="flex w-16 shrink-0 flex-col items-center gap-2 p-2">
+			<nav
+				aria-label="Studio tools"
+				className="studio-navigation-rail flex w-16 shrink-0 flex-col items-center gap-2 p-2"
+			>
 				{railItems.map(({ icon: Icon, id, label }) => {
 					const active = id === "map" ? graphOpen : activeLeftPanel === id;
 					return (
@@ -76,7 +79,7 @@ export function TaleEditorLeftRail(): React.JSX.Element {
 							aria-label={label}
 							aria-pressed={active}
 							className={[
-								"grid h-12 w-12 place-items-center border-2 border-foreground p-0 text-[9px] shadow-[2px_2px_0_var(--comic-ink)]",
+								"studio-rail-control grid h-12 w-12 place-items-center border-2 p-0 text-[9px]",
 								active
 									? "bg-primary text-primary-foreground"
 									: "bg-background text-foreground hover:bg-accent",
@@ -99,9 +102,15 @@ export function TaleEditorLeftRail(): React.JSX.Element {
 				})}
 			</nav>
 			{activeLeftPanel ? (
-				<section className="w-[min(25rem,calc(100vw-4rem))] overflow-hidden border-foreground border-l-[3px] bg-background">
-					<header className="flex items-center justify-between border-foreground/15 border-b px-3 py-2">
-						<p className="font-black text-xs uppercase">
+				<section
+					data-reader-component="TaleEditorLeftRail"
+					data-reader-role="editor-left-drawer"
+					data-studio-component="TaleEditorLeftRail"
+					data-studio-role="editor-left-drawer"
+					className="studio-left-drawer w-[min(25rem,calc(100vw-4rem))] overflow-hidden border-foreground border-l-[3px] bg-background"
+				>
+					<header className="studio-drawer-header flex items-center justify-between border-foreground border-b-2 px-3 py-2">
+						<p className="font-display text-sm uppercase">
 							{getPanelTitle(activeLeftPanel)}
 						</p>
 						<Button

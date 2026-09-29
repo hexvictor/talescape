@@ -21,7 +21,7 @@ export function TaleStudioDraftHistoryControls(): React.JSX.Element {
 			data-reader-role="draft-history-controls"
 			data-studio-component="TaleStudioDraftHistoryControls"
 			data-studio-role="draft-history-controls"
-			className="flex min-w-0 items-center gap-1"
+			className="studio-history-controls flex min-w-0 items-center gap-1"
 		>
 			<HistoryButton
 				disabled={!recovery.canUndo || savePending}
@@ -78,7 +78,7 @@ function HistoryButton({
 	return (
 		<Button
 			aria-label={label}
-			className="h-9 w-9 border-2 border-foreground bg-card p-0 text-foreground shadow-[2px_2px_0_var(--comic-ink)]"
+			className="studio-command-control h-9 w-9 border-2 border-foreground bg-card p-0 text-foreground"
 			disabled={disabled}
 			motion="flat"
 			size="icon"

@@ -27,7 +27,7 @@ export function ReaderScrollCue(): React.JSX.Element | null {
 			data-reader-role="scroll-direction-cue"
 			className="pointer-events-none absolute inset-x-0 bottom-14 z-50 flex justify-center"
 		>
-			<div className="rounded-full border border-primary/35 bg-background/70 p-3 text-primary shadow-2xl backdrop-blur-md">
+			<div className="border border-primary/35 bg-background/70 p-3 text-primary shadow-2xl backdrop-blur-md">
 				<ArrowDown
 					className="animate-pulse"
 					size={22}

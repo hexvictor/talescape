@@ -23,7 +23,7 @@ export function TaleStudioSaveButton({
 		<Button
 			disabled={savePending}
 			className={cn(
-				"flex h-9 min-w-9 items-center justify-center gap-2 rounded border border-primary/45 bg-primary/14 px-2 text-primary text-xs disabled:opacity-45",
+				"studio-save-control flex h-9 min-w-9 items-center justify-center gap-2 border-2 border-foreground bg-primary px-3 text-primary-foreground text-xs disabled:opacity-45",
 				className,
 			)}
 			aria-label="Save tale"

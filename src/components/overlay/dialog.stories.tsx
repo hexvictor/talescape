@@ -96,3 +96,40 @@ export const ExplicitClose: Story = {
 		await expect(trigger).toHaveFocus();
 	},
 };
+
+export const HighPriorityOverlay: Story = {
+	render: () => (
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button type="button">Open Studio prompt</Button>
+			</DialogTrigger>
+			<DialogContent overlayClassName="z-[1100]" showCloseButton={false}>
+				<DialogHeader>
+					<DialogTitle>Name this Scene</DialogTitle>
+					<DialogDescription>
+						This overlay stays above the complete Studio workspace.
+					</DialogDescription>
+				</DialogHeader>
+				<Input aria-label="Scene name" defaultValue="New Scene" />
+				<DialogFooter>
+					<DialogClose asChild>
+						<Button type="button">Create</Button>
+					</DialogClose>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const page = within(canvasElement.ownerDocument.body);
+
+		await userEvent.click(
+			canvas.getByRole("button", { name: "Open Studio prompt" }),
+		);
+		const dialog = await page.findByRole("dialog", { name: "Name this Scene" });
+		await expect(dialog.closest("[data-slot='dialog-overlay']")).toHaveClass(
+			"z-[1100]",
+		);
+		await expect(page.queryByRole("button", { name: "Close" })).toBeNull();
+	},
+};

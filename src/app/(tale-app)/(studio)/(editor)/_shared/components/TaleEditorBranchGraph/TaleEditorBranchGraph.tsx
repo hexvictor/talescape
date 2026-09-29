@@ -514,7 +514,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 			data-reader-role="branch-graph"
 			data-studio-component="TaleEditorBranchGraph"
 			data-studio-role="branch-graph"
-			className="relative h-full min-h-0 flex-1 overflow-hidden bg-muted/40"
+			className="studio-graph-canvas relative h-full min-h-0 flex-1 overflow-hidden bg-muted/40"
 		>
 			<DndContext
 				sensors={sensors}
@@ -526,7 +526,7 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 					data-reader-role="graph-controls"
 					data-studio-component="TaleEditorBranchGraph"
 					data-studio-role="graph-controls"
-					className="absolute top-3 right-3 z-20 flex flex-wrap justify-end gap-2"
+					className="studio-floating-toolbar absolute top-3 right-3 z-20 flex flex-wrap justify-end gap-2"
 				>
 					<Button
 						data-reader-component="TaleEditorBranchGraph"

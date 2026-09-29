@@ -65,7 +65,7 @@ function DesktopTalePreviewToolbar(): React.JSX.Element {
 				data-reader-role="preview-toolbar"
 				data-studio-component="TalePreviewToolbar"
 				data-studio-role="preview-toolbar"
-				className="relative z-60 flex min-h-[4.75rem] flex-wrap items-center justify-between gap-3 border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--comic-teal)] sm:px-4"
+				className="studio-topbar relative z-60 flex min-h-[4.75rem] flex-wrap items-center justify-between gap-3 border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--secondary)] sm:px-4"
 			>
 				<div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
 					<div className="hidden shrink-0 sm:block">
@@ -176,7 +176,7 @@ function MobileTalePreviewToolbar(): React.JSX.Element {
 			data-studio-component="TalePreviewToolbar"
 			data-studio-role="mobile-preview-toolbar"
 			className={cn(
-				"fixed top-0 left-0 z-1000 w-full border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--comic-teal)] transition-transform duration-300",
+				"studio-topbar fixed top-0 left-0 z-1000 w-full border-foreground border-b-[3px] bg-card px-3 py-2 text-foreground shadow-[0_4px_0_var(--secondary)] transition-transform duration-300",
 				toolbarVisible ? "translate-y-0" : "-translate-y-full",
 			)}
 		>

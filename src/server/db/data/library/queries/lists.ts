@@ -13,16 +13,17 @@ import {
 import { db } from "~/server/db";
 import {
 	authors,
-	scenes,
 	books,
 	branches,
-	entries,
 	elements,
+	entries,
+	frames,
 	images,
 	keyframes,
 	pages,
 	parts,
 	paths,
+	scenes,
 	talePermissions,
 	tales,
 	users,
@@ -53,6 +54,7 @@ export type LibraryBlockList = Awaited<ReturnType<typeof getLibraryBlocks>>;
 export type LibraryFragmentList = Awaited<
 	ReturnType<typeof getLibraryFragments>
 >;
+export type LibraryFrameList = Awaited<ReturnType<typeof getLibraryFrames>>;
 export type LibraryPathList = Awaited<ReturnType<typeof getLibraryPaths>>;
 export type LibraryPartList = Awaited<ReturnType<typeof getLibraryParts>>;
 export type LibraryEntryList = Awaited<ReturnType<typeof getLibraryEntries>>;
@@ -256,6 +258,40 @@ export async function getLibraryBlocks() {
 						index: row.pageIndex ?? 0,
 					},
 		previewFragment: previews.get(row.block.id) ?? null,
+	}));
+}
+
+export async function getLibraryFrames() {
+	const { userId } = await getSignedInLibraryUser();
+	const rows = await db
+		.select({
+			frame: frames,
+			taleId: tales.id,
+			taleTitle: tales.title,
+			sceneId: scenes.id,
+			sceneTitle: scenes.title,
+			sceneIndex: scenes.order,
+		})
+		.from(frames)
+		.innerJoin(tales, eq(tales.id, frames.taleId))
+		.innerJoin(scenes, eq(scenes.id, frames.sceneId))
+		.where(
+			and(
+				taleAccessCondition(userId),
+				blockAccessCondition(scenes.id, scenes, userId),
+			),
+		)
+		.orderBy(desc(frames.id));
+
+	return rows.map((row) => ({
+		...row.frame,
+		index: row.frame.order,
+		tale: { id: row.taleId, title: row.taleTitle },
+		scene: {
+			id: row.sceneId,
+			index: row.sceneIndex,
+			title: row.sceneTitle,
+		},
 	}));
 }
 

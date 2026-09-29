@@ -133,6 +133,7 @@ function DialogOverlay({
 export type DialogContentProps = Omit<ComponentProps<"div">, "title"> & {
 	closeButtonClassName?: string;
 	isDismissable?: boolean;
+	overlayClassName?: string;
 	showCloseButton?: boolean;
 };
 
@@ -141,11 +142,12 @@ function DialogContent({
 	children,
 	closeButtonClassName,
 	isDismissable = true,
+	overlayClassName,
 	showCloseButton = true,
 	...props
 }: DialogContentProps): React.JSX.Element {
 	return (
-		<DialogOverlay isDismissable={isDismissable}>
+		<DialogOverlay className={overlayClassName} isDismissable={isDismissable}>
 			<AriaModal
 				{...props}
 				data-slot="dialog-content"

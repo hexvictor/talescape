@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type { ReaderHubPanel } from "../../../../(reader)/_shared/stores/slices/hubSlice";
 import {
@@ -141,17 +142,20 @@ export function ReaderHub(): React.JSX.Element {
 	return (
 		<>
 			{!open ? (
-				<button
+				<Button
 					data-reader-ui="true"
 					data-reader-component="ReaderHub"
 					data-reader-role="collapsed-handle"
 					type="button"
+					size="icon"
+					variant="outline"
+					motion="flat"
 					aria-label="Open Reader Hub"
-					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center border-2 border-foreground bg-card text-foreground opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
+					className="pointer-events-auto absolute top-4 right-4 z-45 hidden h-12 w-12 place-items-center opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
 					onClick={openHubOnly}
 				>
 					<BookMarked size={18} />
-				</button>
+				</Button>
 			) : null}
 			<AnimatePresence>
 				{open ? (
@@ -161,7 +165,7 @@ export function ReaderHub(): React.JSX.Element {
 						data-reader-component="ReaderHub"
 						data-reader-role="reader-hub-sidebar"
 						className={cn(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[-7px_0_0_var(--comic-teal)]",
+							"reader-drawer reader-hub-drawer pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[-7px_0_0_var(--comic-teal)]",
 							mobilePortrait
 								? "inset-x-0 bottom-0 h-[70dvh] w-full border-t-[3px]"
 								: "inset-y-0 right-0 max-w-[calc(100vw-1rem)] border-l-[3px]",
@@ -194,7 +198,11 @@ export function ReaderHub(): React.JSX.Element {
 								/>
 							</div>
 						) : null}
-						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 bg-accent px-4 text-accent-foreground">
+						<header
+							data-reader-component="ReaderHub"
+							data-reader-role="drawer-header"
+							className="reader-drawer-header flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 px-4"
+						>
 							<BookMarked size={17} className="text-primary" />
 							<div
 								className={cn(
@@ -208,10 +216,13 @@ export function ReaderHub(): React.JSX.Element {
 									{pageTitle}
 								</p>
 							</div>
-							<button
+							<Button
 								type="button"
+								size="icon"
+								variant="outline"
+								motion="flat"
 								aria-label="Close Reader Hub"
-								className="grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-secondary"
+								className="h-11 w-11 shadow-[3px_3px_0_rgb(var(--foreground-rgb))] hover:bg-secondary"
 								onClick={toggleOpen}
 							>
 								{mobilePortrait ? (
@@ -219,14 +230,18 @@ export function ReaderHub(): React.JSX.Element {
 								) : (
 									<PanelRightClose size={16} />
 								)}
-							</button>
+							</Button>
 						</header>
 						<HubPanelSelector
 							activePanel={activePanel}
 							contextPanels={contextPanels}
 							onSelect={setActivePanel}
 						/>
-						<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
+						<div
+							data-reader-component="ReaderHub"
+							data-reader-role="drawer-content"
+							className="reader-drawer-content min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]"
+						>
 							{activePanel === "community" ? (
 								<div className="space-y-2">
 									{content.comments.map((comment) => (
@@ -312,7 +327,7 @@ function HubPanelSelector({
 		<nav
 			data-reader-component="ReaderHub"
 			data-reader-role="hub-panel-selector"
-			className="flex shrink-0 items-center gap-3 overflow-x-auto border-foreground/10 border-b px-3 py-2 [scrollbar-width:none]"
+			className="reader-drawer-tabs flex shrink-0 items-center gap-3 overflow-x-auto border-foreground/10 border-b px-3 py-2 [scrollbar-width:none]"
 		>
 			<HubPanelGroup
 				activePanel={activePanel}
@@ -349,13 +364,16 @@ function HubPanelGroup({
 			{panels.map((panel) => {
 				const Icon = panel.icon;
 				return (
-					<button
+					<Button
 						key={panel.id}
 						type="button"
+						size="icon"
+						variant={activePanel === panel.id ? "navActive" : "nav"}
+						motion="flat"
 						title={panel.label}
 						aria-label={panel.label}
 						className={cn(
-							"grid h-8 w-8 place-items-center rounded",
+							"h-8 w-8 border-0 p-0",
 							activePanel === panel.id
 								? "bg-primary text-background"
 								: "text-foreground/48 hover:bg-foreground/7 hover:text-foreground",
@@ -363,7 +381,7 @@ function HubPanelGroup({
 						onClick={() => onSelect(panel.id)}
 					>
 						<Icon size={13} />
-					</button>
+					</Button>
 				);
 			})}
 		</div>
@@ -385,7 +403,7 @@ function HubCard({
 		<div
 			data-reader-component="HubCard"
 			data-reader-role="hub-content-card"
-			className="rounded-md border border-foreground/8 bg-foreground/[0.035] p-3"
+			className="reader-hub-card border border-foreground/15 bg-foreground/[0.035] p-3"
 		>
 			{children}
 		</div>

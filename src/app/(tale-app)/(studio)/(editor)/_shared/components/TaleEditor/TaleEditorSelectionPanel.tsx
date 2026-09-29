@@ -74,7 +74,9 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 		<aside
 			data-reader-component="TaleEditorSelectionPanel"
 			data-reader-role="editor-right-panel"
-			className="h-[45dvh] w-full overflow-hidden border-foreground/10 border-t bg-background/84 md:h-full md:border-t-0 md:border-l"
+			data-studio-component="TaleEditorSelectionPanel"
+			data-studio-role="editor-right-panel"
+			className="studio-inspector-drawer h-[45dvh] w-full overflow-hidden border-foreground border-t-[3px] bg-card md:h-full md:border-t-0 md:border-l-[3px]"
 			style={isMobile ? undefined : { width }}
 		>
 			<div className="h-full min-h-0 overflow-y-auto p-3">

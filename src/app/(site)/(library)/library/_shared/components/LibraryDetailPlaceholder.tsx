@@ -14,7 +14,7 @@ export function LibraryDetailPlaceholder({
 }) {
 	return (
 		<Suspense fallback={<DetailPageSkeleton />}>
-			<div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-2">
+			<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-4 py-2">
 				<LibraryBreadcrumbs
 					items={[{ label: "Library", href: "/library" }, { label: title }]}
 				/>

@@ -9,9 +9,12 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Phase 10 in progress: application chrome and route-level migration.
+Implementation complete: the centralized application design system now covers
+shared primitives, public discovery routes, Studio workspace chrome and Reader
+navigation and diagnostics. Release integration and final runtime smoke testing
+remain operational checks rather than implementation phases.
 Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.11.6`.
+Current package version: `1.12.0`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -150,6 +153,68 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   centralized spacing and stable Reader instrumentation.
 - Added a Storybook theme-context comparison and expanded the spacing foundation
   story to display the actual centralized spacing token scale.
+- Migrated the remaining Library Tale, Author and Book form controls to shared
+  Field, Select and Checkbox primitives while preserving server-form names and
+  submitted values.
+- Migrated Reader Hub settings and ordinary Reader Hub/Navigator commands to
+  shared Button, Input, Slider and Checkbox behavior while retaining Motion-owned
+  animated controls and Reader instrumentation.
+- Added Storybook interaction coverage for Select and Checkbox form submission.
+- Removed page-level `site-paper` decoration and viewport-height sizing from the
+  global Storybook decorator so inline examples render as compact component
+  previews; added a browser-story regression assertion for this contract.
+- Audited public landing, Codex, Library, authentication and loading surfaces;
+  migrated remaining command links and Library navigation to shared Buttons and
+  centralized route widths and responsive gutters.
+- Reworked the owning authentication shell around genuine tale artwork, removed
+  its nested `main`, aligned Clerk controls with shared control-height tokens and
+  added responsive mobile category/navigation bands to public routes.
+- Removed the accidental `talescape: link:` self-dependency and the obsolete
+  lockfile packages it retained; Radix ScrollArea is the only intentional direct
+  Radix dependency left.
+- Added direct Storybook coverage for ComicPanel shapes/decorations, ComicRail,
+  ScrollArea, Separator and ProgressBar, including overflow and accessibility
+  assertions. Decorative separators are now hidden from assistive technology.
+- Migrated the remaining hand-rolled Studio prompt/confirm surface to the shared
+  accessible Dialog, Field, Input and Button APIs, with an explicit high-priority
+  overlay class hook and interaction story.
+- Visually verified compact Storybook previews at desktop and mobile sizes, plus
+  production Home and Codex routes at 1440px and 390px. All checked surfaces have
+  exact viewport width, no horizontal document overflow and no page errors;
+  mobile navigation and theme switching also pass.
+- Rebuilt Home, Library and Codex around the supplied desktop/mobile direction:
+  split illustrated heroes, denser angular discovery shelves, responsive mobile
+  rails, Codex faction/recent-entry panels and a data-backed Library landing page.
+- Retained the full Tale explorer below the new Library discovery composition,
+  so the visual redesign does not remove search, filtering or editing entry points.
+- Corrected shared active-navigation surfaces to use the primary cyan semantic
+  token and completed the responsive public header lockup without duplicating it.
+- Removed the orphaned trigger runtime and obsolete element-layer formatter that
+  referenced model fields absent from the current schema, restoring a clean
+  project typecheck without changing the supported keyframe media runtime.
+- Replaced the Library's former aggregate "Frames" count/browser with real Frame
+  records and access-aware Frame queries, including Tale and Scene navigation.
+- Verified the populated Library against the fully migrated development database
+  at desktop and mobile widths; the public total is 39 accessible Frames from 42
+  stored records, and the dedicated Frame browser renders the same visible set.
+- Corrected the public header to use the light paper surface, automatic wordmark
+  treatment and semantic controls in light mode while retaining its dark surface
+  in dark mode.
+- Reworked the Studio shell around a unified top command bar, ink tool rail,
+  angular structural drawer, drafting-grid graph, framed Preview pane and
+  responsive Inspector drawer without changing workspace state or Tale behavior.
+- Centralized Studio-specific tabs, forms, panel shadows, dialog headings and
+  mobile drawer behavior under the existing scoped Studio theme.
+- Added a responsive Studio workspace composition to Storybook so the chrome can
+  be reviewed without authentication or a live Tale session.
+- Reframed Reader-owned chrome as one visual system: matched story and Hub
+  drawers, an angular entry rail, a compact page console and browser, semantic
+  progress indicators, mobile actions and a distinct diagnostics workspace.
+- Kept authored Tale content outside the Reader UI theme boundary and preserved
+  all existing panel sizing, camera inset, drag, resize, hover, pin and travel
+  behavior.
+- Added an isolated responsive Reader workspace composition to Storybook so the
+  surrounding navigation can be reviewed independently from Tale rendering.
 
 ## Files changed / components / stories
 
@@ -173,11 +238,13 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   each user-requested continuation; do not edit the changelog without approval.
 - Never run `npm run dev` (standing user instruction).
 
-## Remaining migration / Radix
+## Remaining exceptions
 
-Composites and broader application migration remain. The only remaining direct
-source import of Radix is the intentionally retained layout/scroll-area.tsx
-implementation; feature code continues to consume the Talescape wrapper.
+The only remaining direct source import of Radix is the intentionally retained
+`layout/scroll-area.tsx` implementation; feature code consumes the Talescape
+wrapper. Native file/color inputs, HTML drag targets, resize handles, authored
+Reader choice controls and low-level Button compatibility output remain native
+because their platform event, styling or DOM contracts are behaviorally relevant.
 
 ## Checks and known limitations
 
@@ -237,22 +304,59 @@ implementation; feature code continues to consume the Talescape wrapper.
   bump pass targeted Biome, baseline typecheck comparison, the 68-test unit suite,
   63-test Storybook browser suite, Storybook production build and a frozen offline
   install.
-- Full `pnpm lint` reaches 605 files and reports only five existing findings: one
-  autofocus finding in TaleStudioProvider and four non-null assertion findings
-  in the Library tale-detail query.
+- The Library form and deeper Reader Hub/Navigator migration and `1.11.7` version
+  bump pass targeted Biome, baseline typecheck comparison, the 68-test unit suite,
+  64-test Storybook browser suite and Storybook production build.
+- The public route, authentication, mobile and Storybook preview migration and
+  `1.11.8` version bump pass targeted Biome, baseline typecheck comparison, the
+  68-test unit suite, 64-test Storybook browser suite and Storybook production
+  build.
+- The final dependency, route and Storybook coverage audit and `1.11.9` version
+  bump pass the production Next build, 68-test unit suite, 71-test Storybook
+  browser suite, Storybook production build and frozen offline lockfile check.
+- Static Storybook screenshot checks confirm compact content-sized examples at
+  1440x900 and 390x844, with no global decorative background or horizontal
+  overflow. Production Home and Codex checks pass at the same widths.
+- The development database is current through migration 17 and contains one Tale,
+  15 Scenes, 42 Frames, 146 Elements and 49 Keyframes. The populated Library and
+  dedicated Frame browser render successfully from that model.
+- Full `pnpm lint` reaches 605 files and reports only four existing non-null
+  assertion findings in the Library tale-detail query. The prior Studio autofocus
+  finding was removed with the shared Dialog migration.
 - `pnpm test` passed: 18 files and 68 tests.
-- Typecheck after Button migration reports only the same 12 scene-model diagnostics.
-- No live application visual checks performed.
-- Baseline trigger/layer errors are confirmed in this checkout.
+- `pnpm typecheck` passes after removing the two stale scene-model remnants.
+- Live production visual checks were performed for Home, Codex and the populated
+  Library. The Studio route renders its signed-out boundary correctly, but its
+  authenticated workspace cannot be exercised without a signed-in browser session.
+- The `1.11.10` public-page redesign passes targeted Biome, the 68-test unit
+  suite, all 71 Storybook browser tests and the production Next build. Home and
+  Codex were rechecked at 1440x1000 and 390x844 with no document overflow.
+- The production-configured database remains at migration 7 with the old
+  Block/Node/Fragment tables. Applying migrations 8-17 is intentionally pending
+  explicit authorization because it mutates production-configured data.
+- The `1.11.12` header and Studio-shell checkpoint passes typecheck, the 68-test
+  unit suite, all 72 Storybook browser tests, the Storybook production build and
+  the Next production build. Light-mode header screenshots pass at 1440px and
+  390px; the isolated Studio composition passes at both widths.
+- The `1.11.13` Reader workspace checkpoint passes typecheck, the 68-test unit
+  suite, all 73 Storybook browser tests, the Storybook production build and the
+  Next production build. The isolated Reader composition passes desktop and
+  mobile screenshot review without document overflow.
+- The final `1.12.0` release gate passes lint across 606 files, typecheck, the
+  68-test unit suite, all 73 Storybook browser tests, the Storybook production
+  build, a clean Next production build and HTTP smoke checks for Home, Codex,
+  Library and Reader routes.
+- The clean production build removed the stale generated Clerk-chunk failure.
+  Production-configured data still uses the pre-migration schema, so populated
+  Reader and Library data checks remain intentionally separate from this merge.
 
 ## Exact next steps
 
-1. Migrate the remaining Library forms and deeper Reader Hub/Navigator controls.
-2. Audit remaining route-specific site, auth and mobile surfaces for token and
-   shared-component adoption.
-3. Complete route-level visual, responsive and interaction verification, then
-   perform the final dependency and Storybook coverage audit.
+1. Merge and push the stacked Scene/Frame model and application design-system
+   branches into `development` in dependency order.
+2. Verify authenticated Studio interactions when a signed-in browser session is
+   available.
+3. Treat production database migration as a separate release operation, not as
+   part of this development refactor.
 
-Commands needed: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test`;
-`pnpm build-storybook` after adding that script. Integration verification should
-use an existing app server or production/static server, never npm run dev.
+Use a production/static server for integration verification, never npm run dev.

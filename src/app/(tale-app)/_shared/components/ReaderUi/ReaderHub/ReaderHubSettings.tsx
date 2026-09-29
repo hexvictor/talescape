@@ -3,6 +3,9 @@
 import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import Input from "~/components/ui/input";
+import { Slider } from "~/components/ui/slider";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 import type { ReaderInputSettings } from "../../../scroll-engine/readerInputSettings";
@@ -396,25 +399,17 @@ export function ReaderHubSettings(): React.JSX.Element {
 				label="Show story and page status"
 				onChange={settings.setReaderStatusVisible}
 			/>
-			<label className="block rounded-md border border-foreground/8 bg-foreground/[0.035] p-3">
-				<span className="flex items-center justify-between gap-3 text-foreground/72 text-xs">
-					Inactive fade delay
-					<strong className="text-primary">
-						{settings.activityFadeDelaySeconds}s
-					</strong>
-				</span>
-				<input
-					className="mt-3 w-full accent-[#d9b56f]"
-					type="range"
-					min={1}
-					max={15}
+			<div className="rounded-md border border-foreground/8 bg-foreground/[0.035] p-3">
+				<Slider
+					label="Inactive fade delay"
+					density="compact"
+					minValue={1}
+					maxValue={15}
 					step={1}
 					value={settings.activityFadeDelaySeconds}
-					onChange={(event) =>
-						settings.setActivityFadeDelaySeconds(Number(event.target.value))
-					}
+					onChange={settings.setActivityFadeDelaySeconds}
 				/>
-			</label>
+			</div>
 			<div className="space-y-3 pt-2">
 				<div className="flex items-center justify-between gap-3">
 					<div>
@@ -425,13 +420,16 @@ export function ReaderHubSettings(): React.JSX.Element {
 							Changes apply to the next wheel, keyboard, drag, or touch input.
 						</p>
 					</div>
-					<button
+					<Button
 						type="button"
-						className="rounded border border-foreground/12 px-2 py-1 text-[0.68rem] text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
+						size="sm"
+						variant="ghost"
+						motion="flat"
+						className="h-7 px-2 py-1 text-[0.68rem] text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
 						onClick={settings.resetInputSettings}
 					>
 						Reset
-					</button>
+					</Button>
 				</div>
 				{readerInputSettingGroups.map((group) => (
 					<ReaderInputSettingsGroup
@@ -527,11 +525,13 @@ function SettingsNumber({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 rounded border border-foreground/8 bg-background/35 p-2 text-xs">
+		<div className="grid gap-1 rounded border border-foreground/8 bg-background/35 p-2 text-xs">
 			<span className="flex items-center justify-between gap-2">
 				<span className="min-w-0 text-foreground/68">{label}</span>
-				<input
+				<Input
+					aria-label={label}
 					className="h-8 w-24 rounded border border-foreground/10 bg-background px-2 text-right text-foreground/82 outline-none focus:border-primary/45"
+					density="compact"
 					inputMode="decimal"
 					max={max}
 					min={min}
@@ -545,7 +545,7 @@ function SettingsNumber({
 				/>
 			</span>
 			<span className="text-[0.66rem] text-foreground/38">{description}</span>
-		</label>
+		</div>
 	);
 }
 
@@ -565,14 +565,13 @@ function SettingsToggle({
 	onChange: (checked: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-foreground/8 bg-foreground/[0.035] p-3 text-foreground/72 text-xs">
+		<Checkbox
+			className="w-full flex-row-reverse justify-between rounded-md border border-foreground/8 bg-foreground/[0.035] p-3 font-normal text-foreground/72"
+			density="compact"
+			isSelected={checked}
+			onChange={onChange}
+		>
 			{label}
-			<input
-				type="checkbox"
-				className="h-4 w-4 accent-[#d9b56f]"
-				checked={checked}
-				onChange={(event) => onChange(event.target.checked)}
-			/>
-		</label>
+		</Checkbox>
 	);
 }

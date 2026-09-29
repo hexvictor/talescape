@@ -52,7 +52,7 @@ export function TaleEditorPaneVisibilityControls({
 			data-reader-role="editor-pane-visibility"
 			data-studio-component="TaleEditorPaneVisibilityControls"
 			data-studio-role="editor-pane-visibility"
-			className="flex min-w-0 overflow-hidden rounded border border-foreground/12 bg-background/90"
+			className="studio-pane-controls flex min-w-0 overflow-hidden border-2 border-foreground bg-card"
 		>
 			<VisibilityButton
 				active={livePreviewOpen}

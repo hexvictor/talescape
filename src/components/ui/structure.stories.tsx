@@ -65,7 +65,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+	play: async ({ canvasElement }) => {
+		const previewSurface = canvasElement.querySelector(
+			"[data-storybook-preview-surface='true']",
+		);
+		await expect(previewSurface).toBeInTheDocument();
+		await expect(previewSurface).not.toHaveClass("site-paper");
+		await expect(previewSurface).not.toHaveClass("min-h-screen");
+	},
+};
 
 export const CompactInspector: Story = {
 	render: () => (

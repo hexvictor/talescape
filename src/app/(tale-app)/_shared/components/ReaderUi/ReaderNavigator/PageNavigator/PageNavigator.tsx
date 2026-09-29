@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Grid3X3, Pin, PinOff } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
@@ -144,7 +145,7 @@ export function PageNavigator(): React.JSX.Element | null {
 			data-reader-role="page-navigation"
 			aria-label="Reader page navigation"
 			className={cn(
-				"group/page-nav -translate-x-1/2 pointer-events-auto absolute bottom-0 left-1/2 z-40 max-w-[calc(100vw-2rem)] transition-opacity duration-300",
+				"reader-page-navigation group/page-nav -translate-x-1/2 pointer-events-auto absolute bottom-0 left-1/2 z-40 max-w-[calc(100vw-2rem)] transition-opacity duration-300",
 				!reduceInactiveUiOpacity ||
 					recentlyActive ||
 					navigatorVisibility.hovered ||
@@ -173,7 +174,7 @@ export function PageNavigator(): React.JSX.Element | null {
 						<div
 							data-reader-component="PageNavigator"
 							data-reader-role="expanded-page-panel"
-							className="reader-connected-panel overflow-hidden rounded-xl border border-foreground/12 bg-background/94 shadow-2xl backdrop-blur-xl"
+							className="reader-page-browser reader-connected-panel overflow-hidden border border-foreground/12 bg-background/94 shadow-2xl backdrop-blur-xl"
 						>
 							<PageNavigatorGrid
 								currentPageId={currentPage.id}
@@ -187,17 +188,20 @@ export function PageNavigator(): React.JSX.Element | null {
 			</AnimatePresence>
 			<AnimatePresence initial={false} mode="wait">
 				{!navigatorExpanded ? (
-					<button
+					<Button
 						data-reader-component="PageNavigator"
 						data-reader-role="collapsed-handle"
 						key="page-navigator-handle"
 						type="button"
+						size="sm"
+						variant="ghost"
+						motion="flat"
 						aria-label="Show page navigation"
-						className="grid h-5 w-16 place-items-center rounded-t-md border border-foreground/10 border-b-0 bg-background/46 text-foreground/24 transition hover:bg-background/72 hover:text-foreground/72"
+						className="h-5 w-16 border border-foreground/10 border-b-0 bg-background/46 p-0 text-foreground/24 transition hover:bg-background/72 hover:text-foreground/72"
 						onClick={navigatorVisibility.togglePinned}
 					>
 						<Grid3X3 size={11} />
-					</button>
+					</Button>
 				) : (
 					<motion.div
 						key="page-navigator-controls"
@@ -208,16 +212,19 @@ export function PageNavigator(): React.JSX.Element | null {
 						transition={{ duration: 0.18 }}
 					>
 						{navigationPinsVisible && !open ? (
-							<button
+							<Button
 								data-reader-component="PageNavigator"
 								data-reader-role="pin-control"
 								type="button"
+								size="icon"
+								variant="ghost"
+								motion="flat"
 								aria-label={
 									navigatorVisibility.pinned
 										? "Unpin page navigation"
 										: "Pin page navigation"
 								}
-								className="reader-connected-tab reader-connected-tab-top -translate-x-1/2 absolute bottom-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-10 grid h-8 w-8 place-items-center rounded-full border border-b-0 text-foreground/40 opacity-100 transition-opacity hover:text-foreground md:h-7 md:w-7 md:opacity-0 md:group-hover/page-controls:opacity-100"
+								className="reader-connected-tab reader-connected-tab-top -translate-x-1/2 absolute bottom-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-10 h-8 w-8 rounded-full border border-b-0 p-0 text-foreground/40 opacity-100 transition-opacity hover:text-foreground md:h-7 md:w-7 md:opacity-0 md:group-hover/page-controls:opacity-100"
 								onClick={() => {
 									navigatorVisibility.togglePinned();
 									if (navigatorVisibility.pinned) setOpen(false);
@@ -228,31 +235,36 @@ export function PageNavigator(): React.JSX.Element | null {
 								) : (
 									<PinOff size={11} />
 								)}
-							</button>
+							</Button>
 						) : null}
 						<div
 							data-reader-component="PageNavigator"
 							data-reader-role="page-controls"
 							style={currentPartTheme}
-							className="reader-connected-panel reader-connected-panel-bottom relative flex items-center rounded-t-lg border border-foreground/12 border-b-0 p-1.5 shadow-2xl backdrop-blur-md"
+							className="reader-page-console reader-connected-panel reader-connected-panel-bottom relative flex items-center border border-foreground/12 border-b-0 p-1.5 shadow-2xl backdrop-blur-md"
 						>
-							<button
+							<Button
 								data-reader-component="PageNavigator"
 								data-reader-role="previous-page-control"
 								type="button"
+								size="icon"
+								variant="outline"
+								motion="flat"
 								aria-label="Previous page"
-								className="reader-connected-tab reader-connected-tab-left -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
+								className="reader-connected-tab reader-connected-tab-left -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 h-9 w-9 p-0 shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
 								disabled={!previous}
 								onClick={() => travelToRelativePage(-1)}
 							>
 								<ArrowLeft size={15} strokeWidth={2.5} />
-							</button>
-							<button
+							</Button>
+							<Button
 								data-reader-component="PageNavigator"
 								data-reader-role="page-summary-control"
 								type="button"
+								variant="ghost"
+								motion="flat"
 								aria-expanded={open}
-								className="min-w-[11.5rem] rounded-md px-3 py-1 text-center transition hover:bg-[color:var(--reader-part-soft)]"
+								className="h-auto min-w-[11.5rem] border-0 px-3 py-1 text-center normal-case transition hover:bg-[color:var(--reader-part-soft)]"
 								onClick={() => setOpen((current) => !current)}
 							>
 								<div className="flex items-center justify-center">
@@ -263,18 +275,21 @@ export function PageNavigator(): React.JSX.Element | null {
 								<p className="truncate text-[10px] text-foreground/42">
 									{currentEntry.title}
 								</p>
-							</button>
-							<button
+							</Button>
+							<Button
 								data-reader-component="PageNavigator"
 								data-reader-role="next-page-control"
 								type="button"
+								size="icon"
+								variant="outline"
+								motion="flat"
 								aria-label="Next page"
-								className="reader-connected-tab reader-connected-tab-right -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 left-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
+								className="reader-connected-tab reader-connected-tab-right -translate-y-1/2 hover:-translate-y-[calc(50%+1px)] disabled:hover:-translate-y-1/2 absolute top-1/2 left-[calc(100%+var(--reader-connected-tab-distance))] z-10 h-9 w-9 p-0 shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:bg-card disabled:hover:text-foreground"
 								disabled={!next}
 								onClick={() => travelToRelativePage(1)}
 							>
 								<ArrowRight size={15} strokeWidth={2.5} />
-							</button>
+							</Button>
 						</div>
 					</motion.div>
 				)}

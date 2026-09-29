@@ -82,7 +82,7 @@ export function LibraryHeaderSkeleton() {
 
 export function DetailPageSkeleton() {
 	return (
-		<div className="mx-auto grid w-full max-w-5xl gap-5 py-2 md:grid-cols-[14rem_1fr]">
+		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-5 py-2 md:grid-cols-[14rem_1fr]">
 			<Skeleton className="aspect-[3/4] w-full" />
 			<ComicPanel className="p-5" shape="corner-top-right">
 				<div className="space-y-3">

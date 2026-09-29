@@ -87,7 +87,7 @@ const buttonSurfaceClasses = {
 	ghost: "bg-transparent",
 	link: "bg-transparent",
 	nav: "bg-transparent",
-	navActive: "bg-accent",
+	navActive: "bg-primary",
 	ink: "bg-[var(--comic-ink)]",
 } as const;
 

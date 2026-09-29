@@ -11,6 +11,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Expand, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "~/components/ui/button";
 import type { ResolvedTaleBranch, ResolvedTalePath } from "../../../../types";
 import { RouteGraphNode } from "./RouteGraphNode";
 import {
@@ -149,14 +150,17 @@ export function RouteGraphSection({
 						{selectedBranches.length} connected branches
 					</p>
 				</div>
-				<button
+				<Button
 					type="button"
+					size="icon"
+					variant="ghost"
+					motion="flat"
 					aria-label="Open complete route graph"
-					className="grid h-8 w-8 place-items-center rounded border border-foreground/10 text-foreground/48 hover:bg-foreground/8 hover:text-foreground"
+					className="h-8 w-8 border border-foreground/10 p-0 text-foreground/48 hover:bg-foreground/8 hover:text-foreground"
 					onClick={() => setExpanded(true)}
 				>
 					<Expand size={13} />
-				</button>
+				</Button>
 			</header>
 			<div className="h-48">
 				<ReactFlow
@@ -196,14 +200,17 @@ export function RouteGraphSection({
 								Current choices are colored; unavailable routes are dimmed
 							</p>
 						</div>
-						<button
+						<Button
 							type="button"
+							size="icon"
+							variant="ghost"
+							motion="flat"
 							aria-label="Close route graph"
-							className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/52 hover:bg-foreground/8 hover:text-foreground"
+							className="h-9 w-9 border border-foreground/10 p-0 text-foreground/52 hover:bg-foreground/8 hover:text-foreground"
 							onClick={() => setExpanded(false)}
 						>
 							<X size={16} />
-						</button>
+						</Button>
 					</header>
 					<div className="h-[calc(100%-4rem)]">
 						<ReactFlow

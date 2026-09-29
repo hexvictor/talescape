@@ -1,7 +1,10 @@
 import {
+	BarChart3,
 	BookOpen,
 	ChevronRight,
 	CircleUserRound,
+	Clock3,
+	Eye,
 	ImageIcon,
 	Shield,
 	Sparkles,
@@ -14,10 +17,7 @@ import {
 	getCodexLinks,
 	siteImages,
 } from "~/app/(site)/_shared/components/landingCodexData";
-import {
-	CardGridSkeleton,
-	PanelSkeleton,
-} from "~/app/(site)/_shared/components/skeletons";
+import { CardGridSkeleton } from "~/app/(site)/_shared/components/skeletons";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 
@@ -48,15 +48,38 @@ const categories = [
 	},
 ];
 
-async function CodexHero() {
+const factions = [
+	{
+		image: siteImages.crownOfAsh,
+		name: "Lantern Monks",
+		copy: "Seek knowledge and keep the light through the ages.",
+	},
+	{
+		image: siteImages.lastStarbound,
+		name: "Glass Cartel",
+		copy: "Traders in information, artifacts, and influence.",
+	},
+	{
+		image: siteImages.moonlessHarbor,
+		name: "Ashwardens",
+		copy: "Stand between the world and what should not wake.",
+	},
+	{
+		image: siteImages.emberCity,
+		name: "Ochre Choir",
+		copy: "Sing the truth in a world that prefers silence.",
+	},
+] as const;
+
+function CodexHero() {
 	return (
-		<section className="grid items-stretch gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-			<div className="flex flex-col justify-center py-3 lg:py-10">
+		<section className="grid items-stretch gap-5 lg:grid-cols-[0.72fr_1.28fr]">
+			<div className="flex flex-col justify-center py-3 lg:py-8">
 				<ComicRail>World bible</ComicRail>
-				<h1 className="mt-5 max-w-3xl text-balance font-display text-5xl uppercase leading-[0.88] sm:text-7xl">
+				<h1 className="mt-5 max-w-xl font-display text-5xl uppercase leading-[0.88] sm:text-6xl xl:text-7xl">
 					Codex of the Ember Archive
 				</h1>
-				<p className="mt-5 max-w-2xl text-muted-foreground leading-7">
+				<p className="mt-5 max-w-xl text-base leading-7">
 					Explore the people, places, factions, art, and strange histories that
 					make every Talescape world feel inhabited.
 				</p>
@@ -64,7 +87,8 @@ async function CodexHero() {
 					asChild
 					className="mt-7 self-start"
 					shape="slant-right"
-					variant="secondary"
+					size="lg"
+					variant="default"
 				>
 					<Link href="#featured-entries">
 						Explore the archive <ChevronRight />
@@ -72,21 +96,21 @@ async function CodexHero() {
 				</Button>
 			</div>
 			<ComicPanel
-				as="div"
-				className="min-h-72 overflow-hidden lg:min-h-[28rem]"
+				className="min-h-72 overflow-hidden lg:min-h-[20rem]"
 				decoration="dots"
 				shape="cut-opposite"
 				slant="48px"
+				shadow={false}
 			>
-				<div className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[28rem]">
+				<div className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[20rem]">
 					<Image
 						src={siteImages.emberCity}
-						alt="The imagined city held inside the Ember Archive"
+						alt="The city held inside the Ember Archive"
 						fill
 						priority
 						className="object-cover"
 					/>
-					<div className="comic-halftone absolute right-0 bottom-0 size-36 bg-secondary opacity-70 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
+					<div className="comic-halftone absolute right-0 bottom-0 size-36 bg-secondary opacity-80 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
 				</div>
 			</ComicPanel>
 		</section>
@@ -96,22 +120,31 @@ async function CodexHero() {
 function CodexCategories() {
 	return (
 		<section>
-			<ComicRail accent="secondary">Browse categories</ComicRail>
-			<div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			<div className="flex items-center justify-between gap-3">
+				<ComicRail accent="secondary">
+					<Sparkles className="size-4" /> Browse categories
+				</ComicRail>
+				<Button asChild motion="underline" variant="link">
+					<Link href="/library">
+						View all <ChevronRight />
+					</Link>
+				</Button>
+			</div>
+			<div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible xl:grid-cols-4">
 				{categories.map(({ accent, copy, icon: Icon, label }) => (
 					<ComicPanel
 						accent={accent}
 						as="article"
-						className="comic-panel-content flex min-h-32 items-center gap-4"
+						className="comic-panel-content flex min-h-24 w-56 shrink-0 items-center gap-3 sm:w-auto"
 						key={label}
 						shape="corners-right"
 						shadow={false}
-						slant="20px"
+						slant="18px"
 					>
-						<Icon className="size-10 text-primary" strokeWidth={2.4} />
+						<Icon className="size-10 shrink-0 text-primary" strokeWidth={2.4} />
 						<div className="min-w-0">
-							<h2 className="font-display text-2xl uppercase">{label}</h2>
-							<p className="mt-1 text-muted-foreground text-sm">{copy}</p>
+							<h2 className="font-display text-xl uppercase">{label}</h2>
+							<p className="mt-1 text-muted-foreground text-xs">{copy}</p>
 						</div>
 						<ChevronRight className="ml-auto size-5 shrink-0" />
 					</ComicPanel>
@@ -122,15 +155,21 @@ function CodexCategories() {
 }
 
 async function CodexEntryGrid() {
-	const codexEntries = await getCodexEntries();
-
+	const entries = await getCodexEntries();
 	return (
 		<section id="featured-entries" className="scroll-mt-28">
-			<ComicRail accent="primary">
-				<Sparkles className="size-4" /> Featured entries
-			</ComicRail>
-			<div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-				{codexEntries.map((entry, index) => (
+			<div className="flex items-center justify-between gap-3">
+				<ComicRail accent="primary">
+					<Sparkles className="size-4" /> Featured entries
+				</ComicRail>
+				<Button asChild motion="underline" variant="link">
+					<Link href="/library">
+						View all <ChevronRight />
+					</Link>
+				</Button>
+			</div>
+			<div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+				{entries.map((entry, index) => (
 					<ComicPanel
 						accent={
 							index % 3 === 0
@@ -140,36 +179,31 @@ async function CodexEntryGrid() {
 									: "accent"
 						}
 						as="article"
-						className="flex min-h-[25rem] flex-col overflow-hidden"
+						className="grid min-h-40 grid-cols-[44%_1fr] overflow-hidden md:flex md:min-h-[20rem] md:flex-col"
 						decoration={index % 2 === 0 ? "dots" : "strikes"}
 						key={entry.title}
-						shape={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}
-						slant="24px"
+						shape="corner-top-right"
+						shadow={false}
+						slant="20px"
 					>
-						<div className="comic-panel-bleed relative aspect-[16/10]">
-							<Image
-								src={entry.image}
-								alt={entry.title}
-								fill
-								className="object-cover"
-							/>
+						<div className="comic-panel-bleed relative min-h-40 border-foreground border-r-2 md:aspect-[16/9] md:min-h-0 md:border-r-0 md:border-b-2">
+							<Image src={entry.image} alt="" fill className="object-cover" />
 						</div>
-						<div className="comic-panel-content flex flex-1 flex-col pt-4">
-							<p className="font-black text-primary text-xs uppercase">
+						<div className="comic-panel-content flex min-w-0 flex-1 flex-col py-4">
+							<p className="font-black text-primary text-xs uppercase italic">
 								{entry.type}
 							</p>
-							<h2 className="mt-2 font-display text-2xl uppercase leading-none">
+							<h2 className="mt-1 font-display text-xl uppercase leading-none sm:text-2xl">
 								{entry.title}
 							</h2>
-							<p className="mt-3 text-muted-foreground text-sm leading-6">
+							<p className="mt-2 line-clamp-3 text-sm leading-5">
 								{entry.copy}
 							</p>
-							<Link
-								href="#"
-								className="mt-auto inline-flex min-h-11 items-center gap-1 pt-4 font-black text-primary text-xs uppercase"
-							>
-								View entry <ChevronRight className="size-4" />
-							</Link>
+							<div className="mt-auto flex items-center gap-3 pt-3 text-muted-foreground text-xs">
+								<Eye size={14} /> {(12 + index * 4).toFixed(1)}K{" "}
+								<Clock3 size={14} /> {5 + index} min{" "}
+								<ChevronRight className="ml-auto" />
+							</div>
 						</div>
 					</ComicPanel>
 				))}
@@ -178,76 +212,112 @@ async function CodexEntryGrid() {
 	);
 }
 
-async function CodexFooterPanels() {
-	const links = await getCodexLinks();
-
+function FactionWatch() {
 	return (
-		<section className="grid gap-5 lg:grid-cols-2">
-			<ComicPanel
-				accent="secondary"
-				className="comic-panel-content text-secondary-foreground [--comic-panel-background:var(--secondary)]"
-				decoration="strikes"
-				shape="cut-opposite-reverse"
-				slant="28px"
-			>
-				<ComicRail>Faction watch</ComicRail>
-				<div className="mt-5 grid gap-3 sm:grid-cols-2">
-					{["Lantern Monks", "Glass Cartel", "Ashwardens", "Ochre Choir"].map(
-						(faction) => (
-							<div
-								key={faction}
-								className="border-2 border-foreground bg-card p-4 text-card-foreground"
-							>
-								<h2 className="font-display text-xl uppercase">{faction}</h2>
-								<p className="mt-1 text-muted-foreground text-sm">
-									Influence rising across the latest chapter notes.
+		<aside className="lg:row-span-3">
+			<ComicRail accent="secondary">
+				<BarChart3 className="size-4" /> Faction watch
+			</ComicRail>
+			<div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+				{factions.map((faction, index) => (
+					<Link
+						key={faction.name}
+						href="#"
+						className="grid min-h-24 grid-cols-[7rem_1fr] overflow-hidden border-2 border-foreground bg-card"
+					>
+						<div className="relative">
+							<Image src={faction.image} alt="" fill className="object-cover" />
+							<div className="absolute inset-x-0 bottom-0 h-2 bg-secondary" />
+						</div>
+						<div className="flex min-w-0 items-center gap-2 p-3">
+							<Shield className="size-7 shrink-0 text-primary" />
+							<div>
+								<h2 className="font-display text-lg uppercase">
+									{faction.name}
+								</h2>
+								<p className="mt-1 line-clamp-2 text-xs leading-4">
+									{faction.copy}
 								</p>
 							</div>
-						),
-					)}
-				</div>
-			</ComicPanel>
-
-			<ComicPanel
-				accent="primary"
-				className="comic-panel-content"
-				shape="corners-right"
-				slant="24px"
+							<ChevronRight className="ml-auto size-4 shrink-0" />
+						</div>
+					</Link>
+				))}
+			</div>
+			<Button
+				asChild
+				className="mt-3 w-full"
+				shape="slant-both"
+				variant="outline"
 			>
-				<ComicRail accent="primary">Forums and external links</ComicRail>
-				<div className="mt-4 divide-y-2 divide-foreground/15">
-					{links.map((link) => (
-						<Link
-							key={link}
-							href="#"
-							className="flex min-h-12 items-center justify-between gap-4 py-3 font-bold text-sm hover:text-primary"
-						>
-							<span>{link}</span>
-							<ChevronRight className="size-4" />
-						</Link>
-					))}
-				</div>
-				<Button asChild className="mt-5" shape="slant-right" variant="ink">
-					<Link href="/library">Browse connected books</Link>
+				<Link href="/library">
+					Explore all factions <ChevronRight />
+				</Link>
+			</Button>
+		</aside>
+	);
+}
+
+async function RecentEntries() {
+	const links = await getCodexLinks();
+	const images = [
+		siteImages.emberCity,
+		siteImages.lastStarbound,
+		siteImages.crownOfAsh,
+		siteImages.moonlessHarbor,
+	];
+	return (
+		<section>
+			<div className="flex items-center justify-between gap-3">
+				<ComicRail accent="accent">
+					<Clock3 className="size-4" /> Recent entries
+				</ComicRail>
+				<Button asChild motion="underline" variant="link">
+					<Link href="/library">
+						View all <ChevronRight />
+					</Link>
 				</Button>
-			</ComicPanel>
+			</div>
+			<div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+				{links.map((label, index) => (
+					<Link
+						key={label}
+						href="#"
+						className="grid min-h-20 grid-cols-[5rem_1fr] border-2 border-foreground bg-card"
+					>
+						<div className="relative">
+							<Image
+								src={images[index] ?? siteImages.emberCity}
+								alt=""
+								fill
+								className="object-cover"
+							/>
+						</div>
+						<div className="flex min-w-0 items-center gap-2 p-3">
+							<span className="line-clamp-2 font-bold text-xs">{label}</span>
+							<ChevronRight className="ml-auto size-4 shrink-0" />
+						</div>
+					</Link>
+				))}
+			</div>
 		</section>
 	);
 }
 
 export function CodexContent() {
 	return (
-		<div className="mx-auto flex w-full max-w-[90rem] flex-col gap-9 px-4 py-8 sm:px-6 lg:gap-12 lg:py-12">
-			<Suspense fallback={<PanelSkeleton />}>
+		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-8 px-[var(--ts-page-gutter)] py-8 lg:grid-cols-[1fr_20rem] lg:gap-6 lg:py-5">
+			<div className="flex min-w-0 flex-col gap-8">
 				<CodexHero />
-			</Suspense>
-			<CodexCategories />
-			<Suspense fallback={<CardGridSkeleton count={4} />}>
-				<CodexEntryGrid />
-			</Suspense>
-			<Suspense fallback={<PanelSkeleton />}>
-				<CodexFooterPanels />
-			</Suspense>
+				<CodexCategories />
+				<Suspense fallback={<CardGridSkeleton count={4} />}>
+					<CodexEntryGrid />
+				</Suspense>
+				<Suspense fallback={null}>
+					<RecentEntries />
+				</Suspense>
+			</div>
+			<FactionWatch />
 		</div>
 	);
 }

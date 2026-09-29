@@ -3,6 +3,7 @@
 import { ChevronDown, ListTree, PanelLeftClose, Route } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import {
@@ -187,23 +188,28 @@ export function ReaderContents(): React.JSX.Element {
 		);
 		if (!destination) return;
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToKeyframe(destination.firstKeyframeId, { motion: "travel" });
+		scrollApi?.scrollToKeyframe(destination.firstKeyframeId, {
+			motion: "travel",
+		});
 	};
 
 	return (
 		<>
 			{!open ? (
-				<button
+				<Button
 					data-reader-ui="true"
 					data-reader-component="ReaderContents"
 					data-reader-role="collapsed-handle"
 					type="button"
+					size="icon"
+					variant="outline"
+					motion="flat"
 					aria-label="Open story navigation"
-					className="pointer-events-auto absolute top-4 left-4 z-45 hidden h-12 w-12 place-items-center border-2 border-foreground bg-card text-foreground opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
+					className="pointer-events-auto absolute top-4 left-4 z-45 hidden h-12 w-12 place-items-center opacity-80 shadow-[4px_4px_0_var(--comic-teal)] transition-opacity duration-200 hover:opacity-100 md:grid"
 					onClick={openContentsOnly}
 				>
 					<ListTree size={18} />
-				</button>
+				</Button>
 			) : null}
 			<AnimatePresence>
 				{open ? (
@@ -213,7 +219,7 @@ export function ReaderContents(): React.JSX.Element {
 						data-reader-component="ReaderContents"
 						data-reader-role="contents-sidebar"
 						className={cn(
-							"pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[7px_0_0_var(--comic-teal)]",
+							"reader-drawer reader-contents-drawer pointer-events-auto absolute z-80 flex flex-col border-foreground bg-card text-foreground shadow-[7px_0_0_var(--comic-teal)]",
 							mobilePortrait
 								? "inset-x-0 bottom-0 h-[70dvh] w-full border-t-[3px]"
 								: "inset-y-0 left-0 max-w-[calc(100vw-1rem)] border-r-[3px]",
@@ -246,7 +252,11 @@ export function ReaderContents(): React.JSX.Element {
 								/>
 							</div>
 						) : null}
-						<header className="flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 bg-accent px-4">
+						<header
+							data-reader-component="ReaderContents"
+							data-reader-role="drawer-header"
+							className="reader-drawer-header flex h-16 shrink-0 items-center gap-3 border-foreground border-b-2 px-4"
+						>
 							<ListTree size={17} className="text-primary" />
 							<div
 								className={cn(
@@ -262,10 +272,13 @@ export function ReaderContents(): React.JSX.Element {
 									Visible route only
 								</p>
 							</div>
-							<button
+							<Button
 								type="button"
+								size="icon"
+								variant="outline"
+								motion="flat"
 								aria-label="Close story navigation"
-								className="hover:-translate-y-0.5 grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--comic-ink)] transition-transform hover:bg-primary hover:text-primary-foreground"
+								className="hover:-translate-y-0.5 h-11 w-11 shadow-[3px_3px_0_var(--comic-ink)] transition-transform hover:bg-primary hover:text-primary-foreground"
 								onClick={toggleOpen}
 							>
 								{mobilePortrait ? (
@@ -273,9 +286,13 @@ export function ReaderContents(): React.JSX.Element {
 								) : (
 									<PanelLeftClose size={16} />
 								)}
-							</button>
+							</Button>
 						</header>
-						<div className="flex items-center gap-2 border-foreground border-b-2 px-3 py-2">
+						<div
+							data-reader-component="ReaderContents"
+							data-reader-role="drawer-tabs"
+							className="reader-drawer-tabs flex items-center gap-2 border-foreground border-b-2 px-3 py-2"
+						>
 							<NavigationTabButton
 								active={activeTab === "contents"}
 								icon={ListTree}
@@ -289,7 +306,11 @@ export function ReaderContents(): React.JSX.Element {
 								onClick={() => setActiveTab("routes")}
 							/>
 						</div>
-						<div className="min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]">
+						<div
+							data-reader-component="ReaderContents"
+							data-reader-role="drawer-content"
+							className="reader-drawer-content min-h-0 flex-1 overflow-y-auto p-3 [scrollbar-width:none]"
+						>
 							{activeTab === "contents" ? (
 								<ContentsTree
 									contents={contents}
@@ -338,8 +359,10 @@ function NavigationTabButton({
 	onClick: () => void;
 }): React.JSX.Element {
 	return (
-		<button
+		<Button
 			type="button"
+			variant={active ? "navActive" : "outline"}
+			motion="flat"
 			className={cn(
 				"hover:-translate-y-0.5 inline-flex min-h-11 items-center gap-2 border-2 px-3 py-1.5 font-bold text-xs uppercase transition-transform",
 				active
@@ -350,6 +373,6 @@ function NavigationTabButton({
 		>
 			<Icon size={13} />
 			{label}
-		</button>
+		</Button>
 	);
 }

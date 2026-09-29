@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import Input from "./input";
 import Label from "./label";
@@ -49,6 +51,38 @@ function ControlsShowcase(): React.JSX.Element {
 			</RadioGroup>
 			<Slider defaultValue={40} label="Scene spacing" maxValue={100} />
 		</div>
+	);
+}
+
+function FormSubmissionShowcase(): React.JSX.Element {
+	const [result, setResult] = useState("");
+
+	return (
+		<form
+			className="grid max-w-sm gap-4"
+			onSubmit={(event) => {
+				event.preventDefault();
+				const data = new FormData(event.currentTarget);
+				setResult(
+					`visibility=${String(data.get("visibility"))}; editable=${String(data.get("editable"))}`,
+				);
+			}}
+		>
+			<Select name="visibility" aria-label="Visibility" defaultValue="private">
+				<SelectTrigger className="w-full">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="private">Private</SelectItem>
+					<SelectItem value="public">Public</SelectItem>
+				</SelectContent>
+			</Select>
+			<Checkbox name="editable" value="true" defaultSelected>
+				Editable
+			</Checkbox>
+			<Button type="submit">Submit form</Button>
+			<output aria-live="polite">{result}</output>
+		</form>
 	);
 }
 
@@ -190,5 +224,16 @@ export const SelectInteraction: Story = {
 			await within(document.body).findByRole("option", { name: "Free" }),
 		);
 		await expect(trigger).toHaveTextContent("Free");
+	},
+};
+
+export const FormSubmission: Story = {
+	render: () => <FormSubmissionShowcase />,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Submit form" }));
+		await expect(canvas.getByRole("status")).toHaveTextContent(
+			"visibility=private; editable=true",
+		);
 	},
 };

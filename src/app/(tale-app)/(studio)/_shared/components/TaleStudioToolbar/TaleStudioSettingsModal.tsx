@@ -43,7 +43,7 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
 				data-reader-role="studio-settings-dialog"
 				data-studio-component="TaleStudioSettingsModal"
 				data-studio-role="studio-settings-dialog"
-				className="max-h-[calc(100dvh-1rem)] max-w-xl gap-0 overflow-hidden p-0 shadow-[9px_9px_0_var(--comic-teal)]"
+				className="studio-settings-dialog max-h-[calc(100dvh-1rem)] max-w-3xl gap-0 overflow-hidden p-0 shadow-[9px_9px_0_var(--secondary)]"
 				closeButtonClassName="top-3 right-3 size-9"
 			>
 				<TaleStudioSettingsHeader />
@@ -78,8 +78,8 @@ export function TaleStudioSettingsModal(): React.JSX.Element | null {
  */
 function TaleStudioSettingsHeader(): React.JSX.Element {
 	return (
-		<DialogHeader className="border-foreground/10 border-b px-3 py-3 pr-14 sm:px-4 sm:pr-14">
-			<DialogTitle className="font-black text-primary text-xs uppercase tracking-[0.18em]">
+		<DialogHeader className="studio-dialog-header border-foreground border-b-2 px-3 py-4 pr-14 sm:px-5 sm:pr-14">
+			<DialogTitle className="font-display text-lg text-primary uppercase">
 				Tale Studio Settings
 			</DialogTitle>
 			<DialogDescription className="text-foreground/45 text-xs">

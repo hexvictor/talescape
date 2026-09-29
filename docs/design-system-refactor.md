@@ -1,6 +1,6 @@
 # Talescape design-system audit and implementation plan
 
-Status: pre-implementation audit, 2026-09-26.
+Status: implementation complete with documented integration exceptions, 2026-09-27.
 Branch: `refactor/app-design-system`, based on `08a444b`.
 
 ## Scope and visual direction
@@ -217,6 +217,8 @@ An isolated story cannot prove authenticated Studio integration works.
 10. Migrate remaining site/library/auth/Reader chrome and mobile surfaces.
 11. Audit every route/shared component, remove unused Radix dependencies, check
     story coverage, run all gates and report remaining exceptions honestly.
+12. Apply the supplied Home, Library and Codex desktop/mobile visual direction to
+    the real route compositions, retaining responsive behavior and data contracts.
 
 Update CODEX_PROGRESS.md and migration log at every meaningful checkpoint. Commit
 stable phases with repo Conventional Commits, e.g. `refactor(ui): add design tokens`.

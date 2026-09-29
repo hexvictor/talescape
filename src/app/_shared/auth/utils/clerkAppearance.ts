@@ -16,6 +16,12 @@ export const clerkAppearance = {
 		borderRadius: "0px",
 	},
 	elements: {
+		rootBox: {
+			width: "100%",
+		},
+		main: {
+			width: "100%",
+		},
 		cardBox: {
 			backgroundColor: "transparent",
 			border: "0",
@@ -28,7 +34,7 @@ export const clerkAppearance = {
 			backgroundColor: "transparent",
 			boxShadow: "none",
 			color: "var(--card-foreground)",
-			padding: "1rem",
+			padding: "0",
 		},
 		userButtonPopoverCard: {
 			backgroundColor: "var(--popover)",
@@ -81,9 +87,9 @@ export const clerkAppearance = {
 		},
 		socialButtonsProviderIcon: "shrink-0",
 		formButtonPrimary:
-			"rounded-none border-2 border-foreground bg-primary font-black uppercase text-primary-foreground shadow-[3px_3px_0_var(--comic-ink)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_var(--comic-ink)]",
+			"h-[var(--ts-control-height)] rounded-none border-2 border-foreground bg-primary font-black uppercase text-primary-foreground shadow-[3px_3px_0_var(--comic-ink)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_var(--comic-ink)]",
 		formFieldInput:
-			"rounded-none border-2 border-foreground bg-background text-foreground focus:border-ring focus:ring-ring",
+			"h-[var(--ts-control-height)] rounded-none border-2 border-foreground bg-background text-foreground focus:border-ring focus:ring-ring",
 		footerActionText: "text-muted-foreground",
 		footerActionLink: "text-primary hover:text-primary/90",
 		dividerLine: "bg-border",

@@ -17,6 +17,17 @@ import {
 	type TaleRenderSlots,
 } from "~/app/(tale-app)/_shared/contexts/TaleRenderContext";
 import type { Tale, TaleInspectorTarget } from "~/app/(tale-app)/_shared/types";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/overlay/dialog";
+import { Button } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
 import { api } from "~/trpc/react";
 import { StudioDebugHeaderActions } from "../components/TaleStudioRenderer/StudioDebugHeaderActions";
 import { StudioElement } from "../components/TaleStudioRenderer/StudioElement";
@@ -382,46 +393,47 @@ function StudioDialog({
 		onClose();
 	};
 	return (
-		<div
-			className="fixed inset-0 z-[1100] grid place-items-center bg-black/60 p-4"
-			onMouseDown={onClose}
+		<Dialog
+			open={Boolean(dialog)}
+			onOpenChange={(open) => {
+				if (!open) onClose();
+			}}
 		>
-			<section
-				className="w-full max-w-md border-[3px] border-foreground bg-card p-5 text-foreground shadow-[9px_9px_0_var(--comic-teal)]"
-				onMouseDown={(event) => event.stopPropagation()}
+			<DialogContent
+				data-reader-component="StudioDialog"
+				data-reader-role="studio-dialog"
+				data-studio-component="StudioDialog"
+				data-studio-role="studio-dialog"
+				className="max-w-md p-5 shadow-[9px_9px_0_var(--comic-teal)]"
+				overlayClassName="z-[1100]"
+				showCloseButton={false}
 			>
-				<p className="comic-display text-xl">{dialog.title}</p>
-				{dialog.description ? (
-					<p className="mt-2 text-foreground/65 text-sm">
-						{dialog.description}
-					</p>
-				) : null}
+				<DialogHeader>
+					<DialogTitle className="text-xl">{dialog.title}</DialogTitle>
+					{dialog.description ? (
+						<DialogDescription>{dialog.description}</DialogDescription>
+					) : null}
+				</DialogHeader>
 				{dialog.kind === "prompt" ? (
-					<label className="mt-4 grid gap-1 font-bold text-xs uppercase">
-						{dialog.label ?? "Name"}
-						<input
-							autoFocus
-							className="h-10 border border-foreground bg-background px-3 text-sm normal-case"
+					<Field label={dialog.label ?? "Name"}>
+						<Input
+							aria-label={dialog.label ?? "Name"}
+							density="compact"
 							value={value}
 							onChange={(event) => setValue(event.target.value)}
 							onKeyDown={(event) => {
 								if (event.key === "Enter" && value.trim()) submit();
 							}}
 						/>
-					</label>
+					</Field>
 				) : null}
-				<div className="mt-5 flex justify-end gap-2">
-					<button
-						className="h-9 border border-foreground px-3 font-bold text-xs uppercase hover:bg-foreground/10"
-						type="button"
-						onClick={onClose}
-					>
+				<DialogFooter>
+					<Button size="sm" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						className="h-9 border border-foreground bg-primary px-3 font-bold text-primary-foreground text-xs uppercase shadow-[3px_3px_0_var(--comic-ink)] disabled:opacity-45"
+					</Button>
+					<Button
 						disabled={dialog.kind === "prompt" && !value.trim()}
-						type="button"
+						size="sm"
 						onClick={submit}
 					>
 						{dialog.kind === "notice"
@@ -429,10 +441,10 @@ function StudioDialog({
 							: dialog.kind === "confirm"
 								? (dialog.confirmLabel ?? "Confirm")
 								: "Create"}
-					</button>
-				</div>
-			</section>
-		</div>
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

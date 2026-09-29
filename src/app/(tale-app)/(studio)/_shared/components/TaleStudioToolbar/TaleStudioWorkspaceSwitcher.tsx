@@ -44,7 +44,7 @@ export function TaleStudioWorkspaceSwitcher(): React.JSX.Element {
 			data-reader-role="studio-workspace-switcher"
 			data-studio-component="TaleStudioWorkspaceSwitcher"
 			data-studio-role="studio-workspace-switcher"
-			className="flex items-center gap-2"
+			className="studio-workspace-switcher flex items-center gap-1"
 		>
 			{STUDIO_WORKSPACES.map((option) => {
 				const Icon = option.icon;
@@ -59,10 +59,11 @@ export function TaleStudioWorkspaceSwitcher(): React.JSX.Element {
 						data-reader-component="TaleStudioWorkspaceSwitcher"
 						data-reader-role={`${option.value}-mode-control`}
 						key={option.value}
+						aria-pressed={active}
 						aria-label={option.label}
 						title={option.label}
 						className={cn(
-							"flex h-11 items-center gap-2 border-2 border-foreground px-3 font-black text-xs uppercase shadow-[3px_3px_0_rgb(var(--foreground-rgb))] transition-[transform,box-shadow,background-color]",
+							"studio-workspace-control flex h-11 items-center gap-2 border-2 border-foreground px-3 font-black text-xs uppercase transition-[transform,box-shadow,background-color]",
 							active
 								? "bg-accent text-accent-foreground"
 								: "bg-card text-foreground hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-secondary hover:shadow-[1px_1px_0_rgb(var(--foreground-rgb))]",

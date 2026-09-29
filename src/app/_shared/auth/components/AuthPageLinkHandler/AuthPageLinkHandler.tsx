@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import type { MouseEvent, ReactNode } from "react";
+import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
 import { TalescapeLogo } from "~/app/_shared/components/brand/TalescapeLogo";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 
@@ -39,30 +41,41 @@ export default function AuthPageLinkHandler({
 	};
 
 	return (
-		<main
-			className="grid min-h-[calc(100svh-5rem)] flex-1 bg-background lg:grid-cols-[minmax(20rem,0.9fr)_minmax(28rem,1.1fr)]"
+		<div
+			data-site-component="AuthPageLinkHandler"
+			data-site-role="auth-page"
+			className="mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-[var(--ts-content-max)] flex-1 bg-background lg:grid-cols-[minmax(20rem,0.9fr)_minmax(28rem,1.1fr)]"
 			onClickCapture={handleClickCapture}
 		>
-			<section className="relative hidden overflow-hidden border-foreground border-r-[5px] bg-[var(--comic-ink)] p-10 text-[var(--comic-cream)] lg:flex lg:flex-col lg:justify-between">
-				<div className="comic-halftone absolute inset-0 opacity-15" />
+			<section className="relative flex min-h-56 overflow-hidden border-foreground border-b-2 p-6 text-[var(--comic-cream)] lg:min-h-full lg:flex-col lg:justify-between lg:border-r-[5px] lg:border-b-0 lg:p-10">
+				<Image
+					alt="The illuminated city of the Ember Archive"
+					className="object-cover"
+					fill
+					priority
+					sizes="(min-width: 1024px) 42vw, 100vw"
+					src={siteImages.emberCity}
+				/>
+				<div className="site-hero-scrim absolute inset-0" />
+				<div className="comic-hero-strikes absolute top-0 right-0 h-32 w-44 bg-primary" />
 				<TalescapeLogo
 					className="relative z-10"
-					markClassName="h-20"
+					markClassName="h-14 lg:h-20"
 					priority
 					tone="dark-surface"
-					wordmarkClassName="w-44"
+					wordmarkClassName="w-36 lg:w-44"
 				/>
-				<div className="relative z-10 max-w-xl pb-8">
+				<div className="absolute right-5 bottom-5 left-5 z-10 max-w-xl lg:static lg:pb-8">
 					<ComicRail accent="secondary">Your story continues</ComicRail>
-					<p className="mt-6 font-display text-6xl uppercase leading-[0.88]">
-						Keyframe back inside the frame.
+					<p className="mt-4 font-display text-3xl uppercase leading-[0.88] sm:text-4xl lg:mt-6 lg:text-6xl">
+						Every choice leaves a path.
 					</p>
-					<p className="mt-6 max-w-md font-serif text-[var(--comic-cream)]/75 text-lg leading-8">
+					<p className="mt-4 hidden max-w-md text-[var(--comic-cream)]/75 leading-7 sm:block lg:mt-6 lg:text-lg lg:leading-8">
 						Keep your reading paths, worlds, and works in progress together.
 					</p>
 				</div>
 			</section>
-			<section className="flex items-center justify-center px-5 py-10 sm:px-10">
+			<section className="flex items-center justify-center px-[var(--ts-page-gutter)] py-10 sm:py-14">
 				<ComicPanel
 					accent="primary"
 					className="w-full max-w-[32rem] p-4 sm:p-7"
@@ -73,6 +86,6 @@ export default function AuthPageLinkHandler({
 					{children}
 				</ComicPanel>
 			</section>
-		</main>
+		</div>
 	);
 }

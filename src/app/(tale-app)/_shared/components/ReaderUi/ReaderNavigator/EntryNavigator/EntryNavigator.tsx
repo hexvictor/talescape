@@ -10,6 +10,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../../contexts/TaleReaderStoreContext";
 import { usePinnedHoverPanel } from "../../../../hooks/usePinnedHoverPanel";
@@ -225,15 +226,18 @@ export function EntryNavigator(): React.JSX.Element | null {
 				className="relative flex w-full shrink-0 items-center justify-center gap-1 px-1"
 			>
 				<div className="relative">
-					<button
+					<Button
 						data-reader-component="EntryNavigator"
 						data-reader-entry-id={entry.id}
 						data-reader-role="entry-control"
 						type="button"
+						size="icon"
+						variant="ghost"
+						motion="flat"
 						title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
 						aria-label={`Go to ${entry.title}`}
 						className={cn(
-							"grid h-10 w-10 place-items-center rounded-full border font-bold text-xs shadow-lg transition",
+							"h-10 w-10 rounded-full border p-0 font-bold text-xs shadow-lg transition",
 							entry.id === currentEntryId
 								? "border-primary bg-primary text-background"
 								: entry.hasChoiceScene
@@ -274,7 +278,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 						) : (
 							<EntryTypeIcon type={entry.type} size={16} />
 						)}
-					</button>
+					</Button>
 					{entry.id === currentEntryId && entry.pages.length > 1 ? (
 						<span
 							data-reader-component="EntryNavigator"
@@ -299,7 +303,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 			data-reader-role="entry-navigation"
 			aria-label="Entry navigation"
 			className={cn(
-				"group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 flex items-center transition-opacity duration-300 ",
+				"reader-entry-navigation group/entry-nav -translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-40 flex items-center transition-opacity duration-300 ",
 				!reduceInactiveUiOpacity ||
 					recentlyActive ||
 					navigatorVisibility.hovered ||
@@ -322,7 +326,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 						data-reader-role="collapsed-handle"
 						type="button"
 						aria-label="Show entry navigation"
-						className="absolute right-0 grid h-12 w-7 place-items-center rounded-l-md border border-foreground/12 border-r-0 bg-background/78 text-foreground/45 backdrop-blur-md hover:text-foreground"
+						className="reader-entry-collapsed-handle absolute right-0 grid h-12 w-7 place-items-center border border-foreground/12 border-r-0 bg-background/78 text-foreground/45 backdrop-blur-md hover:text-foreground"
 						initial={{ opacity: 0, x: 24 }}
 						animate={{ opacity: 1, x: 0 }}
 						exit={{ opacity: 0, x: 24 }}
@@ -345,17 +349,20 @@ export function EntryNavigator(): React.JSX.Element | null {
 						transition={{ duration: 0.2 }}
 					>
 						{navigationPinsVisible ? (
-							<button
+							<Button
 								data-reader-component="EntryNavigator"
 								data-reader-role="pin-control"
 								type="button"
+								size="icon"
+								variant="ghost"
+								motion="flat"
 								aria-label={
 									navigatorVisibility.pinned
 										? "Unpin entry navigation"
 										: "Pin entry navigation"
 								}
 								className={cn(
-									"reader-connected-tab reader-connected-tab-left -translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 grid h-8 w-8 place-items-center rounded-full border border-r-0 text-foreground/45 opacity-100 transition-opacity duration-100 hover:text-foreground md:h-7 md:w-7",
+									"reader-connected-tab reader-connected-tab-left -translate-y-1/2 absolute top-1/2 right-[calc(100%+var(--reader-connected-tab-distance))] z-10 h-8 w-8 rounded-full border border-r-0 p-0 text-foreground/45 opacity-100 transition-opacity duration-100 hover:text-foreground md:h-7 md:w-7",
 									entryPanelHovered && hoveredEntryPreview === null
 										? "md:pointer-events-auto md:opacity-100"
 										: "md:pointer-events-none md:opacity-0",
@@ -369,7 +376,7 @@ export function EntryNavigator(): React.JSX.Element | null {
 								) : (
 									<PinOff size={11} className="-rotate-90" />
 								)}
-							</button>
+							</Button>
 						) : null}
 						<div
 							ref={entryPanelShellRef}
@@ -394,39 +401,46 @@ export function EntryNavigator(): React.JSX.Element | null {
 										setPartsOpen(false);
 									}}
 								/>
-								<button
+								<Button
 									data-reader-component="EntryNavigator"
 									data-reader-role="previous-entry-control"
 									type="button"
+									size="icon"
+									variant="outline"
+									motion="flat"
 									aria-label="Previous entry"
 									disabled={currentIndex <= 0}
-									className="reader-connected-tab reader-connected-tab-top hover:-translate-y-px grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
+									className="reader-connected-tab reader-connected-tab-top hover:-translate-y-px h-9 w-9 p-0 shadow-[3px_3px_0_var(--secondary)] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
 									onClick={() => {
 										const previousEntry = allEntries[currentIndex - 1];
-										if (previousEntry) travelToPage(previousEntry.firstKeyframeId);
+										if (previousEntry)
+											travelToPage(previousEntry.firstKeyframeId);
 									}}
 								>
 									<ChevronUp size={15} strokeWidth={2.5} />
-								</button>
+								</Button>
 							</div>
-							<button
+							<Button
 								data-reader-component="EntryNavigator"
 								data-reader-role="next-entry-control"
 								type="button"
+								size="icon"
+								variant="outline"
+								motion="flat"
 								aria-label="Next entry"
 								disabled={currentIndex >= allEntries.length - 1}
-								className="reader-connected-tab reader-connected-tab-bottom -translate-x-1/2 hover:-translate-x-1/2 absolute top-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-20 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--secondary)] transition hover:translate-y-px hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
+								className="reader-connected-tab reader-connected-tab-bottom -translate-x-1/2 hover:-translate-x-1/2 absolute top-[calc(100%+var(--reader-connected-tab-distance))] left-1/2 z-20 h-9 w-9 p-0 shadow-[3px_3px_0_var(--secondary)] transition hover:translate-y-px hover:bg-primary hover:text-primary-foreground disabled:cursor-default disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:bg-card disabled:hover:text-foreground"
 								onClick={() => {
 									const nextEntry = allEntries[currentIndex + 1];
 									if (nextEntry) travelToPage(nextEntry.firstKeyframeId);
 								}}
 							>
 								<ChevronDown size={15} strokeWidth={2.5} />
-							</button>
+							</Button>
 							<div
 								data-reader-component="EntryNavigator"
 								data-reader-role="entry-panel"
-								className="reader-connected-panel reader-connected-panel-right flex max-h-[min(82vh,32rem)] flex-col items-center rounded-l-lg border border-foreground/12 border-r-0 px-2 py-3 shadow-2xl backdrop-blur-md"
+								className="reader-entry-panel reader-connected-panel reader-connected-panel-right flex max-h-[min(82vh,32rem)] flex-col items-center border border-foreground/12 border-r-0 px-2 py-3 shadow-2xl backdrop-blur-md"
 								onMouseEnter={showEntryPanelPin}
 								onMouseLeave={scheduleEntryPanelPinHide}
 							>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type { ReaderNavigationEntry } from "../../../../services/readerNavigationView";
 import { ReaderTypeIcon } from "../EntryNavigator/ReaderTypeIcon";
@@ -32,17 +33,20 @@ export function EntryPagesGrid({
 			className="mt-2 flex flex-wrap gap-2 px-2 pb-3 pl-10"
 		>
 			{entry.pages.map((page) => (
-				<button
+				<Button
 					key={page.id}
 					data-reader-component="EntryPagesGrid"
 					data-reader-role="page-control"
 					data-reader-page-id={page.id}
 					type="button"
+					size="icon"
+					variant="ghost"
+					motion="flat"
 					title={`${page.label}: ${page.title}`}
 					aria-label={`Go to ${page.label}: ${page.title}`}
 					style={getReaderPartTheme(page.partNumber)}
 					className={cn(
-						"group/page grid h-9 w-9 place-items-center rounded-full border font-bold text-[10px] transition",
+						"group/page h-9 w-9 rounded-full border p-0 font-bold text-[10px] transition",
 						page.id === currentPageId
 							? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
 							: page.hasChoiceScene
@@ -52,7 +56,7 @@ export function EntryPagesGrid({
 					onClick={() => onNavigate(page.firstKeyframeId)}
 				>
 					{page.number ?? <ReaderTypeIcon type={page.type} size={12} />}
-				</button>
+				</Button>
 			))}
 		</div>
 	);

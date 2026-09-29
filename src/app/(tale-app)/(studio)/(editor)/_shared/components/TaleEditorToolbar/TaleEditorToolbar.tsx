@@ -46,7 +46,9 @@ export function TaleEditorToolbar(): React.JSX.Element {
 			ref={rootRef}
 			data-reader-component="TaleEditorToolbar"
 			data-reader-role="editor-toolbar"
-			className="relative z-60 flex min-h-[4.75rem] items-center justify-between gap-2 bg-card px-3 py-2 text-foreground sm:px-4 md:grid md:grid-cols-[auto_1fr_auto]"
+			data-studio-component="TaleEditorToolbar"
+			data-studio-role="editor-toolbar"
+			className="studio-topbar relative z-60 flex min-h-[4.75rem] items-center justify-between gap-2 bg-card px-3 py-2 text-foreground sm:px-4 md:grid md:grid-cols-[auto_1fr_auto]"
 		>
 			<div
 				data-reader-component="TaleEditorToolbar"
@@ -176,7 +178,9 @@ function TaleEditorMobilePanel({
 		<div
 			data-reader-component="TaleEditorMobilePanel"
 			data-reader-role="mobile-editor-controls"
-			className="absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto border-[3px] border-foreground bg-card p-3 shadow-[7px_7px_0_var(--comic-teal)] md:hidden"
+			data-studio-component="TaleEditorMobilePanel"
+			data-studio-role="mobile-command-drawer"
+			className="studio-command-drawer absolute top-full right-3 left-3 z-70 grid max-h-[calc(100dvh-5rem)] gap-3 overflow-y-auto border-[3px] border-foreground bg-card p-3 shadow-[7px_7px_0_var(--secondary)] md:hidden"
 		>
 			<div className="flex flex-grow justify-between gap-2">
 				<TaleEditorToolbarControls />

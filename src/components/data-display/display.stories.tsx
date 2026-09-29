@@ -3,6 +3,7 @@ import { ImageIcon, Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge, StatusBadge, Tag } from "./badge";
 import { EmptyState } from "./empty-state";
+import { ProgressBar } from "./progress-bar";
 import { Skeleton } from "./skeleton";
 import { Thumbnail } from "./thumbnail";
 
@@ -99,6 +100,22 @@ export const CompactElementPreview: Story = {
 				<p className="font-bold">Church backdrop</p>
 				<p className="text-muted-foreground">Image element</p>
 			</div>
+		</div>
+	),
+};
+
+export const ReadingProgress: Story = {
+	render: () => (
+		<div className="grid w-full max-w-md gap-4">
+			<div className="grid gap-1.5">
+				<div className="flex items-center justify-between text-xs">
+					<span className="font-bold uppercase">The Ember Archive</span>
+					<span className="text-muted-foreground">68%</span>
+				</div>
+				<ProgressBar value={68} />
+			</div>
+			<ProgressBar value={135} />
+			<ProgressBar value={-20} />
 		</div>
 	),
 };

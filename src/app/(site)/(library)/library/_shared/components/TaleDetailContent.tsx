@@ -36,7 +36,7 @@ export function TaleDetailContent({
 	activeView: TaleDetailView;
 }) {
 	return (
-		<div className="mx-auto flex w-full max-w-7xl flex-col gap-5 py-2">
+		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-5 py-2">
 			<LibraryBreadcrumbs
 				items={[
 					{ label: "Library", href: "/library" },

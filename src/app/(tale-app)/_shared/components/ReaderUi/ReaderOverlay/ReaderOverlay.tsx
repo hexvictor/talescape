@@ -19,9 +19,10 @@ import { ReaderMobileQuickActions } from "./ReaderMobileQuickActions";
 export function ReaderOverlay(): React.JSX.Element | null {
 	return (
 		<div
+			data-reader-ui="true"
 			data-reader-component="ReaderOverlay"
 			data-reader-role="reader-overlay"
-			className="pointer-events-none absolute inset-0 z-50"
+			className="reader-ui-layer pointer-events-none absolute inset-0 z-50"
 		>
 			<ReaderMobileEdgeGestures />
 			<ReaderProgress />

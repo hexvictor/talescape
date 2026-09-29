@@ -31,18 +31,26 @@ export function TaleEditor(): React.JSX.Element {
 		<div
 			data-reader-component="TaleEditor"
 			data-reader-role="editor-workspace"
-			className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
+			data-studio-component="TaleEditor"
+			data-studio-role="editor-workspace"
+			className="studio-workspace-shell fixed inset-0 z-50 flex flex-col bg-background text-foreground"
 		>
 			<TaleEditorActiveSceneAutoSelector />
 			<TaleStudioToolbar />
 			<div
 				ref={editorBodyRef}
-				className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden"
+				className="studio-workspace-body flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden"
 			>
 				<TaleEditorLeftRail />
 				<TaleEditorLivePreview />
 				{effectiveGraphOpen ? (
-					<main className="relative flex min-h-[45dvh] min-w-0 flex-1 flex-col md:min-h-0 md:flex-row">
+					<main
+						data-reader-component="TaleEditor"
+						data-reader-role="editor-main-surface"
+						data-studio-component="TaleEditor"
+						data-studio-role="editor-main-surface"
+						className="relative flex min-h-[45dvh] min-w-0 flex-1 flex-col md:min-h-0 md:flex-row"
+					>
 						<TaleEditorBranchGraph />
 						<TaleEditorSelectionSidebar editorBodyRef={editorBodyRef} />
 					</main>

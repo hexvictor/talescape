@@ -14,7 +14,10 @@ const preview: Preview = {
 					} as React.CSSProperties
 				}
 			>
-				<div className="site-paper min-h-screen bg-background p-6 text-foreground">
+				<div
+					data-storybook-preview-surface="true"
+					className="bg-background p-6 text-foreground"
+				>
 					<Story />
 				</div>
 			</div>

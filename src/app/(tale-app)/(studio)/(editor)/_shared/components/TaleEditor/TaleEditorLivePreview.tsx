@@ -40,8 +40,10 @@ export function TaleEditorLivePreview(): React.JSX.Element | null {
 			<div
 				data-reader-component="TaleEditorLivePreview"
 				data-reader-role="live-preview-pane"
+				data-studio-component="TaleEditorLivePreview"
+				data-studio-role="live-preview-pane"
 				className={cn(
-					"relative h-[45dvh] w-full border-foreground/10 border-b md:h-auto md:border-r md:border-b-0",
+					"studio-preview-pane relative h-[45dvh] w-full border-foreground border-b-2 md:h-auto md:border-r-2 md:border-b-0",
 					graphOpen
 						? "md:min-w-[22rem] md:max-w-[70vw]"
 						: "min-w-0 max-w-none flex-1",
