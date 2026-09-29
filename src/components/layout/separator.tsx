@@ -13,6 +13,7 @@ export default function Separator({
 
 	return (
 		<div
+			aria-hidden="true"
 			className={cn(
 				isVertical ? "h-6 w-px" : "h-px w-full",
 				"bg-border",

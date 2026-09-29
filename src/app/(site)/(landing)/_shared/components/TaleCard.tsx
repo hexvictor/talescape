@@ -1,13 +1,11 @@
-import { ChevronRight } from "lucide-react";
+import { Bookmark, Clock3, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ProgressBar } from "~/components/data-display/progress-bar";
 import { ComicPanel } from "~/components/layout/comic-panel";
-import cn from "~/lib/utils/cn";
 
 const accents = [
-	"var(--talescape-cyan)",
 	"var(--talescape-magenta)",
+	"var(--talescape-cyan)",
 	"var(--talescape-yellow)",
 ] as const;
 
@@ -16,60 +14,71 @@ type TaleCardProps = {
 	image: string;
 	index: number;
 	meta: string;
-	progress: number;
 	title: string;
 };
 
-/** Renders one compact continuation card on the landing shelf. */
+/** Renders one responsive tale card on the public discovery shelf. */
 export function TaleCard({
 	description,
 	image,
 	index,
 	meta,
-	progress,
 	title,
 }: TaleCardProps): React.JSX.Element {
+	const accent = accents[index % accents.length] ?? "var(--talescape-cyan)";
+	const views = ["12.4K", "9.7K", "15.1K"][index] ?? "12K";
+	const duration = ["6h", "5h", "8h"][index] ?? "6h";
+
 	return (
-		<ComicPanel
-			accent={accents[index % accents.length] ?? "var(--talescape-cyan)"}
-			className={cn(
-				"group hover:-translate-y-1 min-h-64 overflow-hidden transition-transform xl:grid xl:grid-cols-[1.05fr_0.95fr]",
-			)}
-			decoration={index === 1 ? "strikes" : "dots"}
-			shape={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}
+		<Link
+			href="/official/branched"
+			className="block min-w-[15rem] snap-start md:min-w-0"
 		>
-			<div className="relative h-44 overflow-hidden border-foreground border-b-2 xl:h-full xl:min-h-64 xl:border-r-2 xl:border-b-0">
-				<Image
-					alt=""
-					className="object-cover transition-transform duration-300 group-hover:scale-105"
-					fill
-					sizes="(min-width: 1024px) 28rem, 100vw"
-					src={image}
-				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-				<span className="absolute top-3 left-3 bg-[var(--comic-ink)] px-2 py-1 font-black text-[10px] text-[var(--comic-cream)] uppercase">
-					{meta}
-				</span>
-			</div>
-			<div className="flex min-w-0 flex-1 flex-col p-5 xl:p-4">
-				<h3 className="text-pretty font-display text-2xl uppercase leading-none">
-					{title}
-				</h3>
-				<p className="mt-3 line-clamp-2 flex-1 text-muted-foreground text-sm leading-6">
-					{description}
-				</p>
-				<div className="mt-4 flex items-center justify-between gap-2 font-black text-[10px] uppercase">
-					<span>Chapter {index + 2}</span>
-					<span>{progress}%</span>
+			<ComicPanel
+				accent={accent}
+				as="article"
+				className="group grid h-full min-h-[25rem] overflow-hidden sm:min-h-72 lg:grid-cols-[0.54fr_0.46fr]"
+				decoration="dots"
+				shape="corner-top-right"
+				shadow={false}
+			>
+				<div className="relative min-h-48 overflow-hidden border-foreground border-b-2 lg:min-h-0 lg:border-r-2 lg:border-b-0">
+					<Image
+						alt=""
+						className="object-cover transition-transform duration-300 group-hover:scale-105"
+						fill
+						sizes="(min-width: 1024px) 18vw, 15rem"
+						src={image}
+					/>
+					<div
+						className="absolute inset-x-0 bottom-0 h-3"
+						style={{ background: accent }}
+					/>
 				</div>
-				<ProgressBar className="mt-1.5" value={progress} />
-				<Link
-					href="/official/branched"
-					className="mt-3 inline-flex min-h-11 items-center justify-end gap-1 font-black text-xs uppercase focus:outline-none focus-visible:ring-4 focus-visible:ring-ring"
-				>
-					Continue <ChevronRight size={17} />
-				</Link>
-			</div>
-		</ComicPanel>
+				<div className="flex min-w-0 flex-col p-4">
+					<p
+						className="font-black text-xs uppercase italic"
+						style={{ color: accent }}
+					>
+						{meta}
+					</p>
+					<h2 className="mt-2 font-display text-2xl uppercase leading-none">
+						{title}
+					</h2>
+					<p className="mt-3 line-clamp-3 flex-1 text-sm leading-5">
+						{description}
+					</p>
+					<div className="mt-4 flex items-center gap-3 border-foreground/20 border-t pt-3 text-xs">
+						<span className="inline-flex items-center gap-1">
+							<Eye size={15} /> {views}
+						</span>
+						<span className="inline-flex items-center gap-1">
+							<Clock3 size={15} /> {duration}
+						</span>
+						<Bookmark className="ml-auto" style={{ color: accent }} />
+					</div>
+				</div>
+			</ComicPanel>
+		</Link>
 	);
 }

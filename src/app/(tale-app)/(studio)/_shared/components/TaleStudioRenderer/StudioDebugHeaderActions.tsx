@@ -1,6 +1,7 @@
 "use client";
 
 import { ScanSearch, Settings2 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useTaleStudioStoreShallow } from "../../hooks/useTaleStudioStore";
 
 /**
@@ -27,32 +28,36 @@ export function StudioDebugHeaderActions({
 
 	return (
 		<>
-			<button
-				type="button"
+			<Button
 				aria-label="Inspect current block"
 				disabled={!sceneId}
-				className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground disabled:opacity-25"
-				onClick={() => {
+				className="h-9 w-9 border-foreground/10 p-0 text-foreground/55"
+				motion="flat"
+				size="icon"
+				variant="ghost"
+				onPress={() => {
 					if (sceneId) openInspector({ id: sceneId, type: "scene" });
 				}}
 			>
 				<ScanSearch size={16} />
-			</button>
-			<button
-				type="button"
+			</Button>
+			<Button
 				aria-label={
 					inspectorControlsOpen
 						? "Hide inspector buttons"
 						: "Show inspector buttons"
 				}
-				className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground"
-				onClick={toggleInspectorControls}
+				className="h-9 w-9 border-foreground/10 p-0 text-foreground/55"
+				motion="flat"
+				size="icon"
+				variant="ghost"
+				onPress={toggleInspectorControls}
 			>
 				<Settings2
 					className={inspectorControlsOpen ? "text-primary" : undefined}
 					size={16}
 				/>
-			</button>
+			</Button>
 		</>
 	);
 }

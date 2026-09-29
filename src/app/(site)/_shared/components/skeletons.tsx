@@ -1,26 +1,23 @@
+import { Skeleton } from "~/components/data-display/skeleton";
 import { ComicPanel } from "~/components/layout/comic-panel";
-
-function Pulse({ className }: { className: string }) {
-	return <div className={`animate-pulse bg-muted ${className}`} />;
-}
 
 export function HeroSkeleton() {
 	return (
 		<section className="grid min-h-[calc(100dvh-9rem)] items-center gap-8 py-6 md:grid-cols-[1.05fr_0.95fr]">
 			<div className="max-w-2xl space-y-4">
-				<Pulse className="h-4 w-48" />
-				<Pulse className="h-12 w-72 sm:h-16 sm:w-96" />
+				<Skeleton className="h-4 w-48" />
+				<Skeleton className="h-12 w-72 sm:h-16 sm:w-96" />
 				<div className="space-y-2">
-					<Pulse className="h-5 w-full max-w-xl" />
-					<Pulse className="h-5 w-full max-w-lg" />
-					<Pulse className="h-5 w-3/4 max-w-md" />
+					<Skeleton className="h-5 w-full max-w-xl" />
+					<Skeleton className="h-5 w-full max-w-lg" />
+					<Skeleton className="h-5 w-3/4 max-w-md" />
 				</div>
 				<div className="flex gap-3 pt-3">
-					<Pulse className="h-10 w-36" />
-					<Pulse className="h-10 w-32" />
+					<Skeleton className="h-10 w-36" />
+					<Skeleton className="h-10 w-32" />
 				</div>
 			</div>
-			<Pulse className="min-h-[420px] w-full" />
+			<Skeleton className="min-h-[420px] w-full" />
 		</section>
 	);
 }
@@ -44,12 +41,12 @@ export function CardGridSkeleton({
 					className="overflow-hidden"
 					shape="corner-top-right"
 				>
-					<Pulse className={aspect} />
+					<Skeleton className={aspect} />
 					<div className="space-y-3 p-4">
-						<Pulse className="h-3 w-24" />
-						<Pulse className="h-5 w-3/4" />
-						<Pulse className="h-4 w-full" />
-						<Pulse className="h-4 w-2/3" />
+						<Skeleton className="h-3 w-24" />
+						<Skeleton className="h-5 w-3/4" />
+						<Skeleton className="h-4 w-full" />
+						<Skeleton className="h-4 w-2/3" />
 					</div>
 				</ComicPanel>
 			))}
@@ -60,8 +57,8 @@ export function CardGridSkeleton({
 export function PanelSkeleton() {
 	return (
 		<section className="grid gap-5 lg:grid-cols-[1fr_22rem]">
-			<Pulse className="h-44 w-full" />
-			<Pulse className="h-44 w-full" />
+			<Skeleton className="h-44 w-full" />
+			<Skeleton className="h-44 w-full" />
 		</section>
 	);
 }
@@ -70,14 +67,14 @@ export function LibraryHeaderSkeleton() {
 	return (
 		<ComicPanel className="flex flex-col justify-between gap-5 p-5 sm:p-6 lg:flex-row lg:items-end">
 			<div className="w-full max-w-2xl space-y-3">
-				<Pulse className="h-4 w-28" />
-				<Pulse className="h-9 w-80 max-w-full" />
-				<Pulse className="h-5 w-full" />
-				<Pulse className="h-5 w-3/4" />
+				<Skeleton className="h-4 w-28" />
+				<Skeleton className="h-9 w-80 max-w-full" />
+				<Skeleton className="h-5 w-full" />
+				<Skeleton className="h-5 w-3/4" />
 			</div>
 			<div className="flex gap-2">
-				<Pulse className="h-9 w-24" />
-				<Pulse className="h-9 w-24" />
+				<Skeleton className="h-9 w-24" />
+				<Skeleton className="h-9 w-24" />
 			</div>
 		</ComicPanel>
 	);
@@ -85,14 +82,14 @@ export function LibraryHeaderSkeleton() {
 
 export function DetailPageSkeleton() {
 	return (
-		<div className="mx-auto grid w-full max-w-5xl gap-5 py-2 md:grid-cols-[14rem_1fr]">
-			<Pulse className="aspect-[3/4] w-full" />
+		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-5 py-2 md:grid-cols-[14rem_1fr]">
+			<Skeleton className="aspect-[3/4] w-full" />
 			<ComicPanel className="p-5" shape="corner-top-right">
 				<div className="space-y-3">
-					<Pulse className="h-4 w-32" />
-					<Pulse className="h-9 w-72 max-w-full" />
-					<Pulse className="h-5 w-full" />
-					<Pulse className="h-5 w-4/5" />
+					<Skeleton className="h-4 w-32" />
+					<Skeleton className="h-9 w-72 max-w-full" />
+					<Skeleton className="h-5 w-full" />
+					<Skeleton className="h-5 w-4/5" />
 				</div>
 			</ComicPanel>
 		</div>

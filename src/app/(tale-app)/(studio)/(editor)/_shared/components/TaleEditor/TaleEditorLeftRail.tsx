@@ -19,6 +19,7 @@ import type {
 	TaleElement,
 	TaleInspectorTarget,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
 
 type LeftPanel = "assets" | "narrative" | "settings" | "tree";
 
@@ -64,25 +65,30 @@ export function TaleEditorLeftRail(): React.JSX.Element {
 			data-reader-role="editor-left-rail"
 			data-studio-component="TaleEditorLeftRail"
 			data-studio-role="editor-left-rail"
-			className="flex min-h-0 border-foreground border-r-[3px] bg-card"
+			className="studio-navigation-shell flex min-h-0 border-foreground border-r-[3px] bg-card"
 		>
-			<nav className="flex w-16 shrink-0 flex-col items-center gap-2 p-2">
+			<nav
+				aria-label="Studio tools"
+				className="studio-navigation-rail flex w-16 shrink-0 flex-col items-center gap-2 p-2"
+			>
 				{railItems.map(({ icon: Icon, id, label }) => {
 					const active = id === "map" ? graphOpen : activeLeftPanel === id;
 					return (
-						<button
+						<Button
 							key={id}
-							type="button"
 							aria-label={label}
 							aria-pressed={active}
 							className={[
-								"hover:-translate-y-0.5 grid h-12 w-12 place-items-center border-2 border-foreground text-[9px] shadow-[2px_2px_0_var(--comic-ink)] transition",
+								"studio-rail-control grid h-12 w-12 place-items-center border-2 p-0 text-[9px]",
 								active
 									? "bg-primary text-primary-foreground"
 									: "bg-background text-foreground hover:bg-accent",
 							].join(" ")}
+							motion="flat"
+							size="icon"
 							title={label}
-							onClick={() => {
+							variant={active ? "default" : "outline"}
+							onPress={() => {
 								if (id === "map") {
 									setGraphOpen(!graphOpen);
 									return;
@@ -91,24 +97,32 @@ export function TaleEditorLeftRail(): React.JSX.Element {
 							}}
 						>
 							<Icon size={17} />
-						</button>
+						</Button>
 					);
 				})}
 			</nav>
 			{activeLeftPanel ? (
-				<section className="w-[min(25rem,calc(100vw-4rem))] overflow-hidden border-foreground border-l-[3px] bg-background">
-					<header className="flex items-center justify-between border-foreground/15 border-b px-3 py-2">
-						<p className="font-black text-xs uppercase">
+				<section
+					data-reader-component="TaleEditorLeftRail"
+					data-reader-role="editor-left-drawer"
+					data-studio-component="TaleEditorLeftRail"
+					data-studio-role="editor-left-drawer"
+					className="studio-left-drawer w-[min(25rem,calc(100vw-4rem))] overflow-hidden border-foreground border-l-[3px] bg-background"
+				>
+					<header className="studio-drawer-header flex items-center justify-between border-foreground border-b-2 px-3 py-2">
+						<p className="font-display text-sm uppercase">
 							{getPanelTitle(activeLeftPanel)}
 						</p>
-						<button
-							type="button"
+						<Button
 							aria-label="Close structure panel"
-							className="grid h-8 w-8 place-items-center border border-foreground/15 hover:bg-foreground/8"
-							onClick={() => setActiveLeftPanel(null)}
+							className="h-8 w-8 border-foreground/15 p-0"
+							motion="flat"
+							size="icon"
+							variant="ghost"
+							onPress={() => setActiveLeftPanel(null)}
 						>
 							<X size={15} />
-						</button>
+						</Button>
 					</header>
 					<div className="max-h-full overflow-y-auto p-3 text-xs">
 						{activeLeftPanel === "tree" ? (
@@ -149,13 +163,14 @@ function StructureTree({
 							return (
 								<details key={scene.id} open className="border-l pl-2">
 									<summary>
-										<button
-											type="button"
-											className="font-semibold hover:text-primary"
-											onClick={() => onOpen({ id: scene.id, type: "scene" })}
+										<Button
+											className="h-auto border-0 p-0 font-semibold normal-case shadow-none hover:text-primary"
+											motion="flat"
+											variant="ghost"
+											onPress={() => onOpen({ id: scene.id, type: "scene" })}
 										>
 											{scene.title}
-										</button>
+										</Button>
 									</summary>
 									<div className="mt-1 grid gap-1 pl-3">
 										{scene.frameIds.map((frameId) => {
@@ -163,15 +178,16 @@ function StructureTree({
 											if (!frame || frame.kind === "group") return null;
 											return (
 												<div key={frame.id} className="grid gap-1">
-													<button
-														type="button"
-														className="text-left hover:text-primary"
-														onClick={() =>
+													<Button
+														className="h-auto justify-start border-0 p-0 text-left font-normal normal-case shadow-none hover:text-primary"
+														motion="flat"
+														variant="ghost"
+														onPress={() =>
 															onOpen({ id: frame.id, sceneId, type: "frame" })
 														}
 													>
 														{frame.name || "Frame"} ({frame.id})
-													</button>
+													</Button>
 												</div>
 											);
 										})}
@@ -179,11 +195,12 @@ function StructureTree({
 											const keyframe = tale.indexMap.keyframesById[keyframeId];
 											if (!keyframe) return null;
 											return (
-												<button
+												<Button
 													key={keyframe.id}
-													type="button"
-													className="text-left text-foreground/60 hover:text-primary"
-													onClick={() =>
+													className="h-auto justify-start border-0 p-0 text-left font-normal text-foreground/60 normal-case shadow-none hover:text-primary"
+													motion="flat"
+													variant="ghost"
+													onPress={() =>
 														onOpen({
 															id: keyframe.id,
 															sceneId,
@@ -192,7 +209,7 @@ function StructureTree({
 													}
 												>
 													Keyframe: {keyframe.title}
-												</button>
+												</Button>
 											);
 										})}
 									</div>
@@ -231,11 +248,12 @@ function AssetInventory({
 					: undefined;
 				return element && scene
 					? [
-							<button
+							<Button
 								key={element.id}
-								type="button"
-								className="grid grid-cols-[3rem_minmax(0,1fr)] gap-2 border border-foreground/12 p-2 text-left hover:border-primary"
-								onClick={() =>
+								className="grid h-auto w-full grid-cols-[3rem_minmax(0,1fr)] gap-2 whitespace-normal border border-foreground/12 p-2 text-left normal-case shadow-none hover:border-primary"
+								motion="flat"
+								variant="outline"
+								onPress={() =>
 									onOpen({ id: element.id, sceneId: scene.id, type: "element" })
 								}
 							>
@@ -251,7 +269,7 @@ function AssetInventory({
 										{frame?.name || "Frame"} / {element.type}
 									</span>
 								</span>
-							</button>,
+							</Button>,
 						]
 					: [];
 			})}

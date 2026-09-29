@@ -29,31 +29,24 @@ export default function Header({
 
 	return (
 		<header
+			data-reader-component="Header"
+			data-reader-role="site-header"
 			className={cn(
-				"sticky top-0 z-1000 w-full border-foreground border-b-2 bg-card text-card-foreground shadow-[0_3px_0_var(--comic-blue)]",
+				"sticky top-0 z-1000 w-full border-foreground border-b-2 bg-card text-foreground shadow-[0_3px_0_var(--comic-blue)] dark:bg-[var(--comic-ink)] dark:text-white",
 				className,
 			)}
 			{...mainProps}
 		>
-			<div className="mx-auto flex min-h-[4.5rem] w-full max-w-[90rem] items-center justify-between gap-3 px-4 py-2 sm:px-6">
+			<div className="mx-auto flex min-h-[4.75rem] w-full max-w-[var(--ts-content-max)] items-center justify-between gap-3 px-[var(--ts-page-gutter)] py-2">
 				<div
 					className="flex min-w-0 items-center gap-3 sm:gap-8"
 					{...leftProps}
 				>
-					<button
-						type="button"
-						aria-expanded={mobileOpen}
-						aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
-						className="grid size-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_var(--comic-blue)] md:hidden"
-						onClick={() => setMobileOpen((open) => !open)}
-					>
-						{mobileOpen ? <X size={19} /> : <Menu size={19} />}
-					</button>
 					<TalescapeLogo
 						priority
-						markClassName="hidden h-14 sm:block"
+						markClassName="h-14 sm:h-16"
 						tone="auto"
-						wordmarkClassName="w-24 sm:w-32"
+						wordmarkClassName="w-28 sm:w-36"
 					/>
 					<div className="hidden md:block">
 						<MainNav />
@@ -61,7 +54,7 @@ export default function Header({
 				</div>
 
 				<div className="flex shrink-0 items-center gap-2" {...rightProps}>
-					<Button type="button" size="icon" asChild variant="lift">
+					<Button type="button" size="icon" asChild motion="flat" variant="nav">
 						<Link
 							href="/library"
 							aria-label="Search tales"
@@ -70,14 +63,33 @@ export default function Header({
 							<Search size={18} />
 						</Link>
 					</Button>
-					<ThemeToggle />
-					<AuthStatus />
+					<div className="hidden md:block">
+						<ThemeToggle variant="nav" />
+					</div>
+					<div className="hidden md:block">
+						<AuthStatus buttonVariant="nav" />
+					</div>
+					<Button
+						aria-expanded={mobileOpen}
+						aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+						className="md:hidden"
+						motion="flat"
+						size="icon"
+						variant="nav"
+						onPress={() => setMobileOpen((open) => !open)}
+					>
+						{mobileOpen ? <X size={22} /> : <Menu size={22} />}
+					</Button>
 				</div>
 
 				{children}
 			</div>
 			{mobileOpen ? (
-				<div className="absolute inset-x-0 top-full border-foreground border-b-2 bg-card p-4 text-card-foreground shadow-[0_6px_0_var(--comic-blue)] md:hidden">
+				<div
+					data-reader-component="Header"
+					data-reader-role="mobile-navigation-panel"
+					className="absolute inset-x-0 top-full border-foreground border-b-2 bg-card p-4 text-foreground shadow-[0_6px_0_var(--comic-blue)] md:hidden dark:bg-[var(--comic-ink)] dark:text-white"
+				>
 					<MainNav mobile />
 				</div>
 			) : null}

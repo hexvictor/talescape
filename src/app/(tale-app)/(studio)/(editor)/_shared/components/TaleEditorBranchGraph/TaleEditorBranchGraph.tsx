@@ -46,8 +46,8 @@ import {
 	RefreshCcw,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import { useTaleStudio } from "~/app/(tale-app)/(studio)/_shared/contexts/TaleStudioProvider";
+import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import {
 	addDraftBlock,
 	addDraftBranch,
@@ -72,6 +72,7 @@ import type {
 	ResolvedTaleScene,
 	TalePath,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
 import {
 	type PathEditorEdge,
 	TaleEditorBranchGraphEdge,
@@ -259,12 +260,26 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 	};
 	const handleAddBlock = useCallback(
 		(branchId: string): void => {
-			dialogs.prompt({ defaultValue: "New Scene", onConfirm: (title) => { setData(addDraftBlock(tale, branchId, title), { reason: "editor-add-block" }); expandBlocks(branchId); }, title: "Name this Scene" });
+			dialogs.prompt({
+				defaultValue: "New Scene",
+				onConfirm: (title) => {
+					setData(addDraftBlock(tale, branchId, title), {
+						reason: "editor-add-block",
+					});
+					expandBlocks(branchId);
+				},
+				title: "Name this Scene",
+			});
 		},
 		[dialogs, expandBlocks, setData, tale],
 	);
 	const handleAddBranch = useCallback((): void => {
-		dialogs.prompt({ defaultValue: "New Branch", onConfirm: (title) => setData(addDraftBranch(tale, title), { reason: "editor-add-branch" }), title: "Name this Branch" });
+		dialogs.prompt({
+			defaultValue: "New Branch",
+			onConfirm: (title) =>
+				setData(addDraftBranch(tale, title), { reason: "editor-add-branch" }),
+			title: "Name this Branch",
+		});
 	}, [dialogs, setData, tale]);
 	const handleConnect = useCallback(
 		(connection: Connection): void => {
@@ -497,7 +512,9 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 		<section
 			data-reader-component="TaleEditorBranchGraph"
 			data-reader-role="branch-graph"
-			className="relative h-full min-h-0 flex-1 overflow-hidden bg-muted/40"
+			data-studio-component="TaleEditorBranchGraph"
+			data-studio-role="branch-graph"
+			className="studio-graph-canvas relative h-full min-h-0 flex-1 overflow-hidden bg-muted/40"
 		>
 			<DndContext
 				sensors={sensors}
@@ -507,58 +524,68 @@ export function TaleEditorBranchGraph(): React.JSX.Element {
 				<div
 					data-reader-component="TaleEditorBranchGraph"
 					data-reader-role="graph-controls"
-					className="absolute top-3 right-3 z-20 flex flex-wrap justify-end gap-2"
+					data-studio-component="TaleEditorBranchGraph"
+					data-studio-role="graph-controls"
+					className="studio-floating-toolbar absolute top-3 right-3 z-20 flex flex-wrap justify-end gap-2"
 				>
-					<button
-						type="button"
+					<Button
 						data-reader-component="TaleEditorBranchGraph"
 						data-reader-role="reset-layout-control"
-						className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+						className="h-9 w-9 border-foreground/12 bg-background/76 p-0 text-foreground/72"
+						motion="flat"
+						size="icon"
 						title="Reorganize branches"
-						onClick={resetLayout}
+						variant="outline"
+						onPress={resetLayout}
 					>
 						<RefreshCcw size={14} />
-					</button>
-					<button
-						type="button"
+					</Button>
+					<Button
 						data-reader-component="TaleEditorBranchGraph"
 						data-reader-role="minimap-visibility-control"
 						aria-pressed={minimapVisible}
-						className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+						className="h-9 w-9 border-foreground/12 bg-background/76 p-0 text-foreground/72"
+						motion="flat"
+						size="icon"
 						title={minimapVisible ? "Hide minimap" : "Show minimap"}
-						onClick={() => setMinimapVisible((visible) => !visible)}
+						variant="outline"
+						onPress={() => setMinimapVisible((visible) => !visible)}
 					>
 						<MapIcon size={14} />
-					</button>
+					</Button>
 					{minimapVisible ? (
-						<button
-							type="button"
+						<Button
 							data-reader-component="TaleEditorBranchGraph"
 							data-reader-role="minimap-size-control"
 							aria-pressed={minimapCompact}
-							className="grid h-9 w-9 place-items-center rounded border border-foreground/12 bg-background/76 text-foreground/72 hover:bg-foreground/8 hover:text-foreground"
+							className="h-9 w-9 border-foreground/12 bg-background/76 p-0 text-foreground/72"
+							motion="flat"
+							size="icon"
 							title={
 								minimapCompact ? "Use default minimap size" : "Shrink minimap"
 							}
-							onClick={() => setMinimapCompact((compact) => !compact)}
+							variant="outline"
+							onPress={() => setMinimapCompact((compact) => !compact)}
 						>
 							{minimapCompact ? (
 								<Maximize2 size={14} />
 							) : (
 								<Minimize2 size={14} />
 							)}
-						</button>
+						</Button>
 					) : null}
-					<button
-						type="button"
+					<Button
 						data-reader-component="TaleEditorBranchGraph"
 						data-reader-role="add-branch-control"
-						className="flex h-9 items-center gap-2 rounded border border-foreground/12 bg-background/76 px-3 text-foreground/72 text-xs hover:bg-foreground/8 hover:text-foreground"
-						onClick={handleAddBranch}
+						className="h-9 border-foreground/12 bg-background/76 px-3 text-foreground/72"
+						motion="flat"
+						size="sm"
+						variant="outline"
+						onPress={handleAddBranch}
 					>
 						<Plus size={14} />
 						Add Branch
-					</button>
+					</Button>
 				</div>
 				<ReactFlow<BranchEditorNode, PathEditorEdge>
 					fitView
@@ -1020,6 +1047,8 @@ function BranchEditorNodeView({
 		<div
 			data-reader-component="BranchEditorNodeView"
 			data-reader-role="branch-node"
+			data-studio-component="BranchEditorNodeView"
+			data-studio-role="branch-node"
 			className={`relative rounded-lg border bg-background/88 p-3 text-foreground ${
 				data.graphDragging
 					? "shadow-none"
@@ -1082,25 +1111,28 @@ function BranchEditorNodeView({
 				}`}
 			/>
 			<header className="flex items-start gap-2">
-				<button
-					type="button"
-					className="mt-0.5 grid h-7 w-7 place-items-center rounded border border-foreground/10 text-foreground/70 hover:bg-foreground/8 disabled:cursor-not-allowed disabled:opacity-25"
+				<Button
+					className="mt-0.5 h-7 w-7 border-foreground/10 p-0 text-foreground/70"
 					aria-label={
 						data.descendantsCollapsed
 							? "Show descendant branches"
 							: "Hide descendant branches"
 					}
 					disabled={!data.hasDescendants}
+					motion="flat"
+					size="icon"
+					variant="ghost"
 					onClick={(event) => {
 						event.stopPropagation();
 						data.onToggleDescendants(data.branch.id);
 					}}
 				>
 					<GitBranch size={14} />
-				</button>
-				<button
-					type="button"
-					className="min-w-0 flex-1 text-left"
+				</Button>
+				<Button
+					className="h-auto min-w-0 flex-1 justify-start border-0 p-0 text-left normal-case shadow-none"
+					motion="flat"
+					variant="ghost"
 					onClick={(event) => {
 						event.stopPropagation();
 						data.onSelectBranch(data.branch.id);
@@ -1110,7 +1142,7 @@ function BranchEditorNodeView({
 					<p className="truncate text-foreground/45 text-xs">
 						{data.branch.path}
 					</p>
-				</button>
+				</Button>
 				<button
 					type="button"
 					className="branch-node-drag-handle grid h-7 w-7 cursor-grab place-items-center rounded border border-foreground/10 text-foreground/60 hover:bg-foreground/8 hover:text-foreground active:cursor-grabbing"
@@ -1122,11 +1154,13 @@ function BranchEditorNodeView({
 			</header>
 			<div className="mt-3 flex items-center justify-between rounded border border-foreground/8 bg-foreground/[0.025] px-2 py-1.5 text-foreground/45 text-xs">
 				<span>{data.scenes.length} scenes</span>
-				<button
-					type="button"
-					className="grid h-6 w-6 place-items-center rounded text-foreground/65 hover:bg-foreground/8 hover:text-foreground disabled:opacity-25"
+				<Button
+					className="h-6 w-6 border-0 p-0 text-foreground/65 shadow-none"
 					aria-label={blocksVisible ? "Collapse scenes" : "Expand scenes"}
 					disabled={data.descendantsCollapsed}
+					motion="flat"
+					size="icon"
+					variant="ghost"
 					onClick={(event) => {
 						event.stopPropagation();
 						data.onToggleBlocks(data.branch.id);
@@ -1137,7 +1171,7 @@ function BranchEditorNodeView({
 					) : (
 						<ChevronRight size={14} />
 					)}
-				</button>
+				</Button>
 			</div>
 			{blocksVisible ? (
 				<ul
@@ -1171,10 +1205,14 @@ function BranchEditorNodeView({
 					<li
 						data-reader-component="AddBlockListItem"
 						data-reader-role="add-block-row"
+						data-studio-component="AddBlockListItem"
+						data-studio-role="add-block-row"
 					>
-						<button
-							type="button"
-							className="flex w-full items-center justify-center gap-2 rounded border border-foreground/16 border-dashed bg-foreground/[0.025] px-2 py-1.5 text-foreground/55 text-xs hover:border-primary/60 hover:bg-primary/10 hover:text-primary"
+						<Button
+							className="h-8 w-full border-foreground/16 border-dashed bg-foreground/[0.025] px-2 text-foreground/55"
+							motion="flat"
+							size="sm"
+							variant="outline"
 							onClick={(event) => {
 								event.stopPropagation();
 								data.onAddBlock(data.branch.id);
@@ -1182,7 +1220,7 @@ function BranchEditorNodeView({
 						>
 							<Plus size={13} />
 							Add Scene
-						</button>
+						</Button>
 					</li>
 				</ul>
 			) : null}
@@ -1343,6 +1381,8 @@ function SortableBlockRow({
 			ref={setNodeRef}
 			data-reader-component="SortableBlockRow"
 			data-reader-role="branch-block-row"
+			data-studio-component="SortableBlockRow"
+			data-studio-role="branch-block-row"
 			className="flex items-center gap-1"
 			style={{
 				opacity: isDragging ? 0.42 : 1,
@@ -1374,10 +1414,12 @@ function SortableBlockRow({
 				<span className="min-w-0 flex-1 truncate">{block.title}</span>
 				<span className="ml-2 text-foreground/38">#{index + 1}</span>
 			</button>
-			<button
-				type="button"
-				className="grid h-7 w-7 shrink-0 place-items-center rounded border border-foreground/10 text-foreground/55 hover:bg-foreground/10 hover:text-foreground"
+			<Button
+				className="h-7 w-7 shrink-0 border-foreground/10 p-0 text-foreground/55"
+				motion="flat"
+				size="icon"
 				title="Travel to Scene"
+				variant="ghost"
 				onPointerDown={(event) => event.stopPropagation()}
 				onClick={(event) => {
 					event.stopPropagation();
@@ -1385,7 +1427,7 @@ function SortableBlockRow({
 				}}
 			>
 				<LocateFixed size={12} />
-			</button>
+			</Button>
 		</li>
 	);
 }

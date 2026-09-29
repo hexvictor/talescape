@@ -7,7 +7,7 @@ import {
 	publicRoutes,
 	useIsPublicRoute,
 } from "~/app/_shared/hooks/useIsPublicRoute";
-import { Button } from "~/components/ui/button";
+import { Button, type ButtonProps } from "~/components/ui/button";
 import UserMenu from "../UserMenu";
 import SkeletonAuthStatus from "./SkeletonAuthStatus";
 
@@ -19,7 +19,11 @@ import SkeletonAuthStatus from "./SkeletonAuthStatus";
  * @example
  * <AuthStatus />
  */
-const AuthStatus = () => {
+const AuthStatus = ({
+	buttonVariant = "default",
+}: {
+	buttonVariant?: ButtonProps["variant"];
+}) => {
 	const isPublicRoute = useIsPublicRoute(publicRoutes);
 	const [mounted, setMounted] = useState(false);
 
@@ -30,7 +34,11 @@ const AuthStatus = () => {
 	if (isPublicRoute) return null;
 
 	return (
-		<div className="flex min-h-9 items-center justify-end">
+		<div
+			data-reader-component="AuthStatus"
+			data-reader-role="authentication-status"
+			className="flex min-h-9 items-center justify-end"
+		>
 			{!mounted ? (
 				<SkeletonAuthStatus />
 			) : (
@@ -40,7 +48,7 @@ const AuthStatus = () => {
 					</ClerkLoading>
 					<ClerkLoaded key="clerk-loaded">
 						<SignedOut key="signed-out">
-							<Button asChild>
+							<Button asChild variant={buttonVariant}>
 								<Link href="/sign-in">Sign in</Link>
 							</Button>
 						</SignedOut>

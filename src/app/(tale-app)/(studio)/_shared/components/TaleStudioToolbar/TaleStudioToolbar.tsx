@@ -27,7 +27,9 @@ export function TaleStudioToolbar(): React.JSX.Element {
 				<div
 					data-reader-component="TaleStudioToolbar"
 					data-reader-role="editor-header-stack"
-					className="relative z-60 border-foreground border-b-[3px] bg-card text-foreground shadow-[0_4px_0_var(--comic-teal)]"
+					data-studio-component="TaleStudioToolbar"
+					data-studio-role="editor-header-stack"
+					className="studio-topbar-frame relative z-60 border-foreground border-b-[3px] bg-card text-foreground shadow-[0_4px_0_var(--secondary)]"
 				>
 					<TaleEditorToolbar />
 				</div>

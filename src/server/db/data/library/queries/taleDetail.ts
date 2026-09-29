@@ -95,26 +95,18 @@ export async function getLibraryTaleDetail(taleId: number) {
 		.map((branch) => ({ ...branch, index: branch.order }));
 	const scenes = sceneRecords
 		.filter((scene) => canViewResource(scene, userId))
-		.map((scene) => ({
-			...scene,
-			index: scene.order,
-			page: scene.keyframes.find((keyframe) => keyframe.page)?.page
-				? {
-						...scene.keyframes.find((keyframe) => keyframe.page)!.page!,
-						index: scene.keyframes.find((keyframe) => keyframe.page)!.page!
-							.order,
-					}
-				: null,
-			entry:
-				scene.keyframes.find((keyframe) => keyframe.page)?.page?.entry ?? null,
-			entryId:
-				scene.keyframes.find((keyframe) => keyframe.page)?.page?.entryId ??
-				null,
-			part:
-				scene.keyframes.find((keyframe) => keyframe.page)?.page?.part ?? null,
-			partId:
-				scene.keyframes.find((keyframe) => keyframe.page)?.page?.partId ?? null,
-		}));
+		.map((scene) => {
+			const page = scene.keyframes.find((keyframe) => keyframe.page)?.page;
+			return {
+				...scene,
+				index: scene.order,
+				page: page ? { ...page, index: page.order } : null,
+				entry: page?.entry ?? null,
+				entryId: page?.entryId ?? null,
+				part: page?.part ?? null,
+				partId: page?.partId ?? null,
+			};
+		});
 	const elements = elementRecords
 		.filter((element) => canViewResource(element, userId))
 		.map((element) => ({

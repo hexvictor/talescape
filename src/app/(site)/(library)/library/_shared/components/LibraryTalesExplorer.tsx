@@ -1,9 +1,8 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ComicPanel } from "~/components/layout/comic-panel";
-import Input from "~/components/ui/input";
+import { SearchField } from "~/components/ui/search-field";
 import {
 	Select,
 	SelectContent,
@@ -56,20 +55,14 @@ export function LibraryTalesExplorer({
 				shadow={false}
 				slant="18px"
 			>
-				<div className="relative block">
-					<Search
-						aria-hidden="true"
-						className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground"
-					/>
-					<Input
-						aria-label="Search tales"
-						className="pl-9"
-						placeholder="Search tales, creators, books, descriptions..."
-						value={query}
-						onChange={(event) => setQuery(event.target.value)}
-					/>
-				</div>
+				<SearchField
+					aria-label="Search tales"
+					placeholder="Search tales, creators, books, descriptions..."
+					value={query}
+					onChange={setQuery}
+				/>
 				<Select
+					aria-label="Sort tales"
 					value={sortMode}
 					onValueChange={(value) => setSortMode(value as TaleSortMode)}
 				>
@@ -82,7 +75,11 @@ export function LibraryTalesExplorer({
 						<SelectItem value="title">Title</SelectItem>
 					</SelectContent>
 				</Select>
-				<Select value={visibility} onValueChange={setVisibility}>
+				<Select
+					aria-label="Filter by visibility"
+					value={visibility}
+					onValueChange={setVisibility}
+				>
 					<SelectTrigger className="w-full lg:w-36">
 						<SelectValue placeholder="Visibility" />
 					</SelectTrigger>
@@ -93,7 +90,11 @@ export function LibraryTalesExplorer({
 						<SelectItem value="private">Private</SelectItem>
 					</SelectContent>
 				</Select>
-				<Select value={status} onValueChange={setStatus}>
+				<Select
+					aria-label="Filter by status"
+					value={status}
+					onValueChange={setStatus}
+				>
 					<SelectTrigger className="w-full lg:w-36">
 						<SelectValue placeholder="Status" />
 					</SelectTrigger>

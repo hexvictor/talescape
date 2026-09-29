@@ -152,15 +152,6 @@ export function formatElements(rows: unknown[]): TaleElement[] {
 	});
 }
 
-function getElementLayer(value: unknown): TaleElement["layer"] {
-	return value === "scene-underlay" ||
-		value === "frame-underlay" ||
-		value === "frame-overlay" ||
-		value === "scene-overlay"
-		? value
-		: "content";
-}
-
 function getElementProgression(value: unknown): TaleElement["progression"] {
 	if (!value || typeof value !== "object") return undefined;
 	const progression = value as NonNullable<TaleElement["progression"]>;

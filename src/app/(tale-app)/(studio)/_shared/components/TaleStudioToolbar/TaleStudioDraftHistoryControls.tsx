@@ -1,6 +1,7 @@
 "use client";
 
 import { Redo2, RotateCcw, Undo2 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useTaleStudio } from "../../contexts/TaleStudioProvider";
 
 /**
@@ -20,7 +21,7 @@ export function TaleStudioDraftHistoryControls(): React.JSX.Element {
 			data-reader-role="draft-history-controls"
 			data-studio-component="TaleStudioDraftHistoryControls"
 			data-studio-role="draft-history-controls"
-			className="flex min-w-0 items-center gap-1"
+			className="studio-history-controls flex min-w-0 items-center gap-1"
 		>
 			<HistoryButton
 				disabled={!recovery.canUndo || savePending}
@@ -75,15 +76,17 @@ function HistoryButton({
 	onClick: () => void;
 }): React.JSX.Element {
 	return (
-		<button
-			type="button"
+		<Button
 			aria-label={label}
-			className="hover:-translate-y-0.5 grid h-9 w-9 place-items-center border-2 border-foreground bg-card text-foreground shadow-[2px_2px_0_var(--comic-ink)] transition hover:bg-accent disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35"
+			className="studio-command-control h-9 w-9 border-2 border-foreground bg-card p-0 text-foreground"
 			disabled={disabled}
+			motion="flat"
+			size="icon"
 			title={label}
-			onClick={onClick}
+			variant="outline"
+			onPress={onClick}
 		>
 			{children}
-		</button>
+		</Button>
 	);
 }

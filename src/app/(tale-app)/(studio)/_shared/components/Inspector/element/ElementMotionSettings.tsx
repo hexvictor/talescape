@@ -8,15 +8,22 @@ import {
 	MousePointer2,
 	Repeat,
 } from "lucide-react";
-import {
-	DebugCard,
-	Setting,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { DebugCard } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
 	ResolvedTaleElement,
 	TaleElement,
 	TaleFrame,
 } from "~/app/(tale-app)/_shared/types";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Field } from "~/components/ui/field";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { Slider } from "~/components/ui/slider";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
 import { HoverAnimationEditor } from "../HoverAnimationEditor";
 import {
@@ -64,6 +71,8 @@ export function ElementMotionSettings({
 		<div
 			data-reader-component="ElementMotionSettings"
 			data-reader-role="element-motion-settings"
+			data-studio-component="ElementMotionSettings"
+			data-studio-role="element-motion-settings"
 			className="space-y-3"
 		>
 			<DebugCard icon={<Eye size={15} />} title="Overall visibility">
@@ -103,19 +112,23 @@ export function ElementMotionSettings({
 						}))
 					}
 				/>
-				<label className="col-span-2 grid gap-1 font-bold text-[9px] text-foreground/48 uppercase">
-					Default state
-					<select
-						className="h-8 min-w-0 border border-foreground bg-background px-2 text-foreground text-xs"
+				<Field label="Default state" className="col-span-2">
+					<Select
+						aria-label="Default state"
 						value={defaultState}
-						onChange={(event) =>
-							onDefaultStateChange(event.target.value as "active" | "inactive")
+						onValueChange={(value) =>
+							onDefaultStateChange(value as "active" | "inactive")
 						}
 					>
-						<option value="inactive">Inactive</option>
-						<option value="active">Active</option>
-					</select>
-				</label>
+						<SelectTrigger density="compact" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="inactive">Inactive</SelectItem>
+							<SelectItem value="active">Active</SelectItem>
+						</SelectContent>
+					</Select>
+				</Field>
 			</DebugCard>
 			{parentAllowsFrameIntro ? (
 				<PhaseVisibilityToggle
@@ -215,34 +228,22 @@ export function ElementMotionSettings({
 				/>
 			) : null}
 			{parentAllowsSceneIntro ? (
-				<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
-					Show during opening transition
-					<input
-						type="checkbox"
-						checked={element.visibleDuringSceneIntro ?? false}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								visibleDuringSceneIntro: event.target.checked,
-							}))
-						}
-					/>
-				</label>
+				<PhaseVisibilityToggle
+					checked={element.visibleDuringSceneIntro ?? false}
+					label="Show during opening transition"
+					onChange={(visibleDuringSceneIntro) =>
+						onChange((item) => ({ ...item, visibleDuringSceneIntro }))
+					}
+				/>
 			) : null}
 			{parentAllowsPreviousBridge ? (
-				<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
-					Show during previous Scene bridge transition
-					<input
-						type="checkbox"
-						checked={element.visibleDuringPreviousBridge ?? false}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								visibleDuringPreviousBridge: event.target.checked,
-							}))
-						}
-					/>
-				</label>
+				<PhaseVisibilityToggle
+					checked={element.visibleDuringPreviousBridge ?? false}
+					label="Show during previous Scene bridge transition"
+					onChange={(visibleDuringPreviousBridge) =>
+						onChange((item) => ({ ...item, visibleDuringPreviousBridge }))
+					}
+				/>
 			) : null}
 			{parentAllowsPreviousBridge && element.visibleDuringPreviousBridge ? (
 				<AnimationSelectionEditor
@@ -271,19 +272,13 @@ export function ElementMotionSettings({
 				/>
 			) : null}
 			{parentAllowsSceneOutro ? (
-				<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
-					Show during Scene outro transition
-					<input
-						type="checkbox"
-						checked={element.visibleDuringSceneOutro ?? false}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								visibleDuringSceneOutro: event.target.checked,
-							}))
-						}
-					/>
-				</label>
+				<PhaseVisibilityToggle
+					checked={element.visibleDuringSceneOutro ?? false}
+					label="Show during Scene outro transition"
+					onChange={(visibleDuringSceneOutro) =>
+						onChange((item) => ({ ...item, visibleDuringSceneOutro }))
+					}
+				/>
 			) : null}
 			{parentAllowsSceneOutro && element.visibleDuringSceneOutro ? (
 				<AnimationSelectionEditor
@@ -299,19 +294,13 @@ export function ElementMotionSettings({
 				/>
 			) : null}
 			{parentAllowsNextBridge ? (
-				<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
-					Show during next Scene bridge transition
-					<input
-						type="checkbox"
-						checked={element.visibleDuringNextBridge ?? false}
-						onChange={(event) =>
-							onChange((item) => ({
-								...item,
-								visibleDuringNextBridge: event.target.checked,
-							}))
-						}
-					/>
-				</label>
+				<PhaseVisibilityToggle
+					checked={element.visibleDuringNextBridge ?? false}
+					label="Show during next Scene bridge transition"
+					onChange={(visibleDuringNextBridge) =>
+						onChange((item) => ({ ...item, visibleDuringNextBridge }))
+					}
+				/>
 			) : null}
 			{parentAllowsNextBridge && element.visibleDuringNextBridge ? (
 				<AnimationSelectionEditor
@@ -496,14 +485,14 @@ function PhaseVisibilityToggle({
 	onChange: (checked: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+		<Checkbox
+			className="w-full flex-row-reverse justify-between gap-3 border border-foreground/20 p-3 font-normal"
+			density="compact"
+			isSelected={checked}
+			onChange={onChange}
+		>
 			{label}
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(event) => onChange(event.target.checked)}
-			/>
-		</label>
+		</Checkbox>
 	);
 }
 
@@ -534,22 +523,15 @@ function RangeField({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<Setting label={label}>
-			<div className="flex h-9 items-center gap-2 border border-foreground/12 bg-background px-2">
-				<input
-					aria-label={label}
-					className="min-w-0 flex-1 accent-primary"
-					max="100"
-					min="0"
-					step="1"
-					type="range"
-					value={Math.round(value * 100)}
-					onChange={(event) => onChange(Number(event.target.value) / 100)}
-				/>
-				<output className="w-10 text-right font-semibold text-[10px] text-foreground/55">
-					{Math.round(value * 100)}%
-				</output>
-			</div>
-		</Setting>
+		<Slider
+			density="compact"
+			formatOptions={{ style: "percent" }}
+			label={label}
+			maxValue={1}
+			minValue={0}
+			step={0.01}
+			value={value}
+			onChange={onChange}
+		/>
 	);
 }

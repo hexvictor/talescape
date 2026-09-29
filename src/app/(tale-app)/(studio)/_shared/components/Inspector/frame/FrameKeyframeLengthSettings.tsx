@@ -5,6 +5,10 @@ import type {
 	FrameActiveLengthConfig,
 	ResolvedTaleKeyframe,
 } from "~/app/(tale-app)/_shared/types";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import { Slider } from "~/components/ui/slider";
+import { InspectorSelect } from "../InspectorValueFields";
 
 const SCALE = 10_000;
 
@@ -57,7 +61,13 @@ export function FrameKeyframeLengthSettings({
 		});
 
 	return (
-		<section className="tale-ui-panel grid gap-3 p-3 text-xs">
+		<section
+			data-reader-component="FrameKeyframeLengthSettings"
+			data-reader-role="frame-keyframe-length-settings"
+			data-studio-component="FrameKeyframeLengthSettings"
+			data-studio-role="frame-keyframe-length-settings"
+			className="tale-ui-panel grid gap-3 p-3 text-xs"
+		>
 			<div>
 				<p className="font-black uppercase">Active reading span</p>
 				<p className="mt-1 text-[10px] text-foreground/48">
@@ -65,37 +75,37 @@ export function FrameKeyframeLengthSettings({
 					Frame&apos;s content, layout, and padding are included.
 				</p>
 			</div>
-			<label className="grid gap-1">
-				Active length mode
-				<select
-					className="h-9 min-w-0 border bg-background px-2"
+			<Field label="Active length mode">
+				<InspectorSelect
+					label="Active length mode"
 					value={config.mode}
-					onChange={(event) =>
-						setMode(event.target.value as FrameActiveLengthConfig["mode"])
+					options={[
+						{ label: "Fit frame content", value: "content" },
+						{ label: "Set lengths manually", value: "manual" },
+					]}
+					onChange={(value) =>
+						setMode(value as FrameActiveLengthConfig["mode"])
 					}
-				>
-					<option value="content">Fit frame content</option>
-					<option value="manual">Set lengths manually</option>
-				</select>
-			</label>
+				/>
+			</Field>
 			{isContent ? (
 				<>
-					<label className="grid gap-1">
-						Distribution display
-						<select
-							className="h-9 min-w-0 border bg-background px-2"
+					<Field label="Distribution display">
+						<InspectorSelect
+							label="Distribution display"
 							value={config.unit ?? "percentage"}
-							onChange={(event) =>
+							options={[
+								{ label: "Percent of frame span", value: "percentage" },
+								{ label: "Relative frame length", value: "length" },
+							]}
+							onChange={(value) =>
 								onChange({
 									...config,
-									unit: event.target.value as "length" | "percentage",
+									unit: value as "length" | "percentage",
 								})
 							}
-						>
-							<option value="percentage">Percent of frame span</option>
-							<option value="length">Relative frame length</option>
-						</select>
-					</label>
+						/>
+					</Field>
 					<KeyframeDistribution
 						lengths={lengths}
 						keyframes={keyframes}
@@ -112,10 +122,10 @@ export function FrameKeyframeLengthSettings({
 						do not need to add up to the Frame&apos;s content size.
 					</p>
 					{keyframes.map((keyframe, index) => (
-						<label className="grid gap-1" key={keyframe.id}>
-							{keyframe.title}
-							<input
-								className="h-9 min-w-0 border bg-background px-2"
+						<Field label={keyframe.title} key={keyframe.id}>
+							<Input
+								aria-label={keyframe.title}
+								density="compact"
 								min={0}
 								type="number"
 								value={values[index] ?? 0}
@@ -125,7 +135,7 @@ export function FrameKeyframeLengthSettings({
 									setAllocation(next);
 								}}
 							/>
-						</label>
+						</Field>
 					))}
 				</div>
 			)}
@@ -176,28 +186,24 @@ function KeyframeDistribution({
 					const previous = index === 0 ? 0 : (boundaries[index - 1] ?? 0);
 					const next = boundaries[index + 1] ?? total;
 					return (
-						<label className="grid gap-1" key={keyframes[index]?.id}>
-							<span>
-								{keyframes[index]?.title} / {keyframes[index + 1]?.title}
-							</span>
-							<input
-								max={Math.max(previous + 1, next - 1)}
-								min={previous + 1}
-								type="range"
-								value={boundary}
-								onChange={(event) => {
-									const moved = Number(event.target.value);
-									const result = [...values];
-									const delta = moved - boundary;
-									result[index] = Math.max(1, (result[index] ?? 0) + delta);
-									result[index + 1] = Math.max(
-										1,
-										(result[index + 1] ?? 0) - delta,
-									);
-									onChange(result);
-								}}
-							/>
-						</label>
+						<Slider
+							key={keyframes[index]?.id}
+							density="compact"
+							label={`${keyframes[index]?.title} / ${keyframes[index + 1]?.title}`}
+							maxValue={Math.max(previous + 1, next - 1)}
+							minValue={previous + 1}
+							value={boundary}
+							onChange={(moved) => {
+								const result = [...values];
+								const delta = moved - boundary;
+								result[index] = Math.max(1, (result[index] ?? 0) + delta);
+								result[index + 1] = Math.max(
+									1,
+									(result[index + 1] ?? 0) - delta,
+								);
+								onChange(result);
+							}}
+						/>
 					);
 				})}
 			</div>

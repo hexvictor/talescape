@@ -4,14 +4,15 @@ import { and, count, eq, inArray } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
 	authors,
-	scenes,
 	books,
 	branches,
-	entries,
 	elements,
+	entries,
+	frames,
 	pages,
 	parts,
 	paths,
+	scenes,
 	tales,
 } from "~/server/db/schema";
 import {
@@ -36,6 +37,7 @@ export async function getLibraryCounts() {
 		branchesCount,
 		blocksCount,
 		fragmentsCount,
+		framesCount,
 		pathsCount,
 		partsCount,
 		entriesCount,
@@ -47,6 +49,7 @@ export async function getLibraryCounts() {
 		getVisibleBranchCount(userId),
 		getVisibleSceneCount(userId),
 		getVisibleElementCount(userId),
+		getVisibleFrameCount(userId),
 		getVisiblePathCount(userId),
 		getVisiblePartCount(userId),
 		getVisibleEntryCount(userId),
@@ -57,7 +60,7 @@ export async function getLibraryCounts() {
 		books: booksCount,
 		authors: authorsCount,
 		tales: talesCount,
-		frames: branchesCount + blocksCount + fragmentsCount,
+		frames: framesCount,
 		branches: branchesCount,
 		scenes: blocksCount,
 		elements: fragmentsCount,
@@ -225,6 +228,21 @@ async function getVisibleElementCount(userId: string | null) {
 			and(
 				visibleTaleByIdCondition(elements.taleId, userId),
 				fragmentAccessCondition(elements.id, elements, userId),
+			),
+		);
+
+	return row?.value ?? 0;
+}
+
+async function getVisibleFrameCount(userId: string | null) {
+	const [row] = await db
+		.select({ value: count() })
+		.from(frames)
+		.innerJoin(scenes, eq(scenes.id, frames.sceneId))
+		.where(
+			and(
+				visibleTaleByIdCondition(frames.taleId, userId),
+				blockAccessCondition(scenes.id, scenes, userId),
 			),
 		);
 

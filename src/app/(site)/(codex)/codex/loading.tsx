@@ -5,7 +5,7 @@ import {
 
 export default function LoadingCodex() {
 	return (
-		<div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-2">
+		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-8 px-[var(--ts-page-gutter)] py-8 lg:py-12">
 			<PanelSkeleton />
 			<CardGridSkeleton count={4} />
 			<PanelSkeleton />

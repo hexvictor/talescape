@@ -31,6 +31,9 @@ import type {
 	TaleFrame,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import { Tab, TabList, Tabs } from "~/components/ui/tabs";
 
 type StructureTab = "branches" | "elements" | "frames" | "scenes";
 
@@ -55,20 +58,26 @@ export function TaleStructurePanel(): React.JSX.Element {
 	const scenes = useMemo(() => getTaleScenes(tale), [tale]);
 
 	return (
-		<section className="space-y-3">
-			<div className="flex flex-wrap items-center gap-1 border border-foreground/12 bg-background p-1">
-				{tabs.map(({ icon: Icon, id, label }) => (
-					<Button
-						key={id}
-						size="sm"
-						variant={tab === id ? "secondary" : "ghost"}
-						onClick={() => setTab(id)}
-					>
-						<Icon size={14} />
-						{label}
-					</Button>
-				))}
-			</div>
+		<section
+			data-reader-component="TaleStructurePanel"
+			data-reader-role="tale-structure-panel"
+			data-studio-component="TaleStructurePanel"
+			data-studio-role="tale-structure-panel"
+			className="space-y-3"
+		>
+			<Tabs
+				selectedKey={tab}
+				onSelectionChange={(key) => setTab(String(key) as StructureTab)}
+			>
+				<TabList aria-label="Tale structure sections" density="compact">
+					{tabs.map(({ icon: Icon, id, label }) => (
+						<Tab key={id} density="compact" id={id}>
+							<Icon size={14} />
+							{label}
+						</Tab>
+					))}
+				</TabList>
+			</Tabs>
 			{tab === "branches" ? (
 				<BranchList
 					branches={branches}
@@ -169,10 +178,10 @@ function BranchList({
 							{branch.title}
 						</summary>
 						<div className="mt-3 grid gap-2">
-							<label className="grid gap-1 text-xs">
-								Name
-								<input
-									className="h-9 min-w-0 border bg-background px-2"
+							<Field label="Name">
+								<Input
+									aria-label={`${branch.title} branch name`}
+									density="compact"
 									value={branch.title}
 									onChange={(event) =>
 										onChange(
@@ -184,7 +193,7 @@ function BranchList({
 										)
 									}
 								/>
-							</label>
+							</Field>
 							<div className="flex items-center justify-between gap-2">
 								<p className="font-bold text-[10px] uppercase">Scenes</p>
 								<Button
@@ -270,11 +279,12 @@ function SceneList({
 	return (
 		<div className="grid gap-2">
 			{scenes.map((scene) => (
-				<button
-					className="grid grid-cols-[96px_minmax(0,1fr)] overflow-hidden border border-foreground/14 text-left hover:border-primary"
+				<Button
+					className="grid h-auto w-full grid-cols-[96px_minmax(0,1fr)] overflow-hidden whitespace-normal border border-foreground/14 p-0 text-left normal-case shadow-none hover:border-primary"
 					key={scene.id}
-					type="button"
-					onClick={() => onOpen(scene.id)}
+					motion="flat"
+					variant="outline"
+					onPress={() => onOpen(scene.id)}
 				>
 					<SceneThumbnail scene={scene} tale={tale} />
 					<span className="min-w-0 p-2">
@@ -286,7 +296,7 @@ function SceneList({
 							elements
 						</span>
 					</span>
-				</button>
+				</Button>
 			))}
 		</div>
 	);
@@ -317,11 +327,12 @@ function FrameList({
 				.flatMap(({ frame, scene }) =>
 					frame
 						? [
-								<button
-									className="grid grid-cols-[72px_minmax(0,1fr)] overflow-hidden border border-foreground/14 text-left hover:border-primary"
+								<Button
+									className="grid h-auto w-full grid-cols-[72px_minmax(0,1fr)] overflow-hidden whitespace-normal border border-foreground/14 p-0 text-left normal-case shadow-none hover:border-primary"
 									key={frame.id}
-									type="button"
-									onClick={() => onOpen(frame.id, scene.id)}
+									motion="flat"
+									variant="outline"
+									onPress={() => onOpen(frame.id, scene.id)}
 								>
 									<FrameThumbnail frame={frame} tale={tale} />
 									<span className="min-w-0 p-2">
@@ -332,7 +343,7 @@ function FrameList({
 											{scene.title}
 										</span>
 									</span>
-								</button>,
+								</Button>,
 							]
 						: [],
 				)}
@@ -361,11 +372,12 @@ function ElementList({
 				.flatMap(({ element, scene }) =>
 					element
 						? [
-								<button
-									className="grid grid-cols-[72px_minmax(0,1fr)] overflow-hidden border border-foreground/14 text-left hover:border-primary"
+								<Button
+									className="grid h-auto w-full grid-cols-[72px_minmax(0,1fr)] overflow-hidden whitespace-normal border border-foreground/14 p-0 text-left normal-case shadow-none hover:border-primary"
 									key={element.id}
-									type="button"
-									onClick={() => onOpen(element.id, scene.id)}
+									motion="flat"
+									variant="outline"
+									onPress={() => onOpen(element.id, scene.id)}
 								>
 									<ElementThumbnail element={element} />
 									<span className="min-w-0 p-2">
@@ -376,7 +388,7 @@ function ElementList({
 											{scene.title}
 										</span>
 									</span>
-								</button>,
+								</Button>,
 							]
 						: [],
 				)}

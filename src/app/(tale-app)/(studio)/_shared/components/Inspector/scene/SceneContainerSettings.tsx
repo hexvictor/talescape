@@ -12,6 +12,15 @@ import type {
 	SceneContainer,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
+import { SectionHeader } from "~/components/ui/section-header";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import { useTaleStudio } from "../../../contexts/TaleStudioProvider";
 import { useTaleStudioStore } from "../../../hooks/useTaleStudioStore";
 import { StyleSettings } from "../StyleSettings";
@@ -41,49 +50,64 @@ export function SceneContainerSettings({
 	if (variant === "style") {
 		return (
 			<div className="space-y-4">
-				<section className="tale-ui-panel grid gap-3 p-3 text-xs">
-					<div>
-						<p className="font-black text-xs uppercase">Frame layout</p>
-						<p className="mt-1 text-[10px] text-foreground/48">
-							Controls how Frames are arranged inside the Scene container.
-						</p>
-					</div>
+				<Panel
+					appearance="comic"
+					data-studio-component="SceneFrameLayoutSection"
+					data-studio-role="inspector-section"
+					className="grid gap-3 p-3 text-xs"
+				>
+					<SectionHeader
+						title="Frame layout"
+						description="Controls how Frames are arranged inside the Scene container."
+					/>
 					<div className="@container/scene-container grid min-w-0 @min-[34rem]/scene-container:grid-cols-2 grid-cols-1 gap-3">
-						<label className="grid min-w-0 gap-1">
-							Display
-							<select
-								className="h-9 min-w-0 border bg-background px-2"
+						<div className="grid min-w-0 gap-1">
+							<span>Display</span>
+							<Select
+								aria-label="Frame display mode"
 								value={container.mode}
-								onChange={(e) =>
+								onValueChange={(value) =>
 									onChange({
 										...container,
-										mode: e.target.value as SceneContainer["mode"],
+										mode: value as SceneContainer["mode"],
 									})
 								}
 							>
-								{["stack", "flex", "grid", "free"].map((value) => (
-									<option key={value}>{value}</option>
-								))}
-							</select>
-						</label>
-						<label className="grid min-w-0 gap-1">
-							Overflow
-							<select
-								className="h-9 min-w-0 border bg-background px-2"
+								<SelectTrigger density="compact" className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{["stack", "flex", "grid", "free"].map((value) => (
+										<SelectItem key={value} value={value}>
+											{value}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="grid min-w-0 gap-1">
+							<span>Overflow</span>
+							<Select
+								aria-label="Frame overflow"
 								value={container.overflow ?? "clip"}
-								onChange={(e) =>
+								onValueChange={(value) =>
 									onChange({
 										...container,
-										overflow: e.target.value as "clip" | "visible",
+										overflow: value as "clip" | "visible",
 									})
 								}
 							>
-								<option value="clip">Clip</option>
-								<option value="visible">Visible</option>
-							</select>
-						</label>
+								<SelectTrigger density="compact" className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="clip">Clip</SelectItem>
+									<SelectItem value="visible">Visible</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
-				</section>
+				</Panel>
 				<StyleSettings
 					layoutMode={
 						container.mode === "stack" || container.mode === "free"

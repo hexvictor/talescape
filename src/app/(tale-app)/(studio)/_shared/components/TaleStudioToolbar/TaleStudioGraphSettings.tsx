@@ -1,6 +1,16 @@
 "use client";
 
 import type { TalePath } from "~/app/(tale-app)/_shared/types";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Field } from "~/components/ui/field";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { Slider } from "~/components/ui/slider";
 import { useTaleStudioStoreShallow } from "../../hooks/useTaleStudioStore";
 import type {
 	EditorEdgeType,
@@ -43,6 +53,8 @@ export function TaleStudioGraphSettings(): React.JSX.Element {
 		<div
 			data-reader-component="TaleStudioGraphSettings"
 			data-reader-role="settings"
+			data-studio-component="TaleStudioGraphSettings"
+			data-studio-role="graph-settings"
 		>
 			<SettingsSelect
 				label="Hover focus"
@@ -142,22 +154,20 @@ function CustomPathVisibilitySettings({
 	return (
 		<div className="mt-3 grid gap-2">
 			{pathTypes.map((type) => (
-				<label
+				<Checkbox
 					key={type}
-					className="flex items-center justify-between rounded border border-foreground/10 bg-foreground/[0.03] px-3 py-2 text-foreground/70 text-xs"
+					className="flex-row-reverse justify-between border border-foreground/10 bg-foreground/[0.03] px-3 py-2 text-foreground/70"
+					density="compact"
+					isSelected={visiblePathTypes.has(type)}
+					onChange={(isSelected) => {
+						const next = new Set(visiblePathTypes);
+						if (isSelected) next.add(type);
+						else next.delete(type);
+						onVisiblePathTypesChange(next);
+					}}
 				>
 					<span className="capitalize">{type}</span>
-					<input
-						type="checkbox"
-						checked={visiblePathTypes.has(type)}
-						onChange={(event) => {
-							const next = new Set(visiblePathTypes);
-							if (event.target.checked) next.add(type);
-							else next.delete(type);
-							onVisiblePathTypesChange(next);
-						}}
-					/>
-				</label>
+				</Checkbox>
 			))}
 		</div>
 	);
@@ -188,20 +198,20 @@ function SettingsSelect({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-4 block text-foreground/62 text-xs first:mt-0">
-			{label}
-			<select
-				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
-				value={value}
-				onChange={(event) => onChange(event.target.value)}
-			>
-				{options.map(([optionValue, optionLabel]) => (
-					<option key={optionValue} value={optionValue}>
-						{optionLabel}
-					</option>
-				))}
-			</select>
-		</label>
+		<Field className="mt-4 first:mt-0" label={label}>
+			<Select value={value} onValueChange={onChange}>
+				<SelectTrigger className="w-full" density="compact">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map(([optionValue, optionLabel]) => (
+						<SelectItem key={optionValue} value={optionValue}>
+							{optionLabel}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</Field>
 	);
 }
 
@@ -227,20 +237,15 @@ function OpacityField({
 	value: number;
 }): React.JSX.Element {
 	return (
-		<label className="text-foreground/62 text-xs">
-			<span className="flex justify-between gap-2">
-				{label}
-				<span>{Math.round(value * 100)}%</span>
-			</span>
-			<input
-				className="mt-2 w-full accent-[#d9b56f]"
-				max="1"
-				min="0"
-				step="0.01"
-				type="range"
-				value={value}
-				onChange={(event) => onChange(Number(event.target.value))}
-			/>
-		</label>
+		<Slider
+			density="compact"
+			formatOptions={{ style: "percent" }}
+			label={label}
+			maxValue={1}
+			minValue={0}
+			step={0.01}
+			value={value}
+			onChange={onChange}
+		/>
 	);
 }

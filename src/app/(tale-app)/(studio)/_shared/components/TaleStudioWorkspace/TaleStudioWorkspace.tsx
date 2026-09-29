@@ -21,6 +21,9 @@ export function TaleStudioWorkspace(): React.JSX.Element {
 			data-tale-studio-ui="true"
 			data-reader-component="TaleStudioWorkspace"
 			data-reader-role="studio-switch-workspace"
+			data-studio-component="TaleStudioWorkspace"
+			data-studio-role="studio-workspace"
+			className="studio-theme"
 		>
 			{workspace === "editor" ? <TaleEditor /> : <TalePreview />}
 			<TaleStudioLoadingOverlay />

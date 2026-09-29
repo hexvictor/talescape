@@ -9,6 +9,7 @@
 /coverage
 /playwright-report
 /test-results
+/storybook-static
 
 # database
 /prisma/db.sqlite

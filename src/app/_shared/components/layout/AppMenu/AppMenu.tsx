@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { AuthStatus } from "~/app/_shared/auth/components";
 import Logo from "~/app/_shared/components/layout/Logo";
 import ThemeToggle from "~/app/_shared/components/layout/ThemeToggle";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 
 export type AppMenuLinkItem = {
@@ -98,15 +99,17 @@ export default function AppMenu({
 			data-reader-role={dataReaderRole}
 			className={cn("relative", className)}
 		>
-			<button
-				type="button"
+			<Button
 				aria-label={menuOpen ? "Close site menu" : "Open site menu"}
 				aria-expanded={menuOpen}
-				className={cn(buttonClassName)}
-				onClick={() => onMenuOpenChange(!menuOpen)}
+				className={cn("p-0", buttonClassName)}
+				motion="flat"
+				size="icon"
+				variant="outline"
+				onPress={() => onMenuOpenChange(!menuOpen)}
 			>
 				{menuOpen ? expandedIcon : collapsedIcon}
-			</button>
+			</Button>
 			{menuOpen ? (
 				<AppMenuPanel
 					childrenPlacement={childrenPlacement}
@@ -154,8 +157,10 @@ function AppMenuPanel({
 	const hasMenuItems = (menuItems?.length ?? 0) > 0;
 	return (
 		<div
+			data-reader-component="AppMenu"
+			data-reader-role="menu-panel"
 			className={cn(
-				"absolute border-[3px] border-foreground bg-card p-3 text-foreground shadow-[7px_7px_0_var(--comic-teal)]",
+				"absolute border-2 border-foreground bg-card p-3 text-foreground shadow-[5px_5px_0_var(--comic-teal)]",
 				getMenuPlacementClassName(menuPlacement),
 			)}
 		>
@@ -261,9 +266,11 @@ function AppMenuLink({
 }): React.JSX.Element {
 	return (
 		<Link
+			data-reader-component="AppMenuLink"
+			data-reader-role="menu-navigation-link"
 			href={href}
 			className={cn(
-				"flex h-10 items-center gap-3 rounded border border-transparent px-2 text-foreground/72 text-sm hover:border-foreground/10 hover:bg-foreground/7 hover:text-foreground",
+				"flex h-10 items-center gap-3 border border-transparent px-2 text-foreground/72 text-sm hover:border-foreground/20 hover:bg-accent hover:text-accent-foreground",
 				className,
 			)}
 		>
@@ -309,7 +316,7 @@ export function AppMenuItem({
 	const menuItemClassName = cn(
 		"flex h-10 items-center gap-3 px-2 text-left text-foreground/72 text-sm",
 		hover
-			? "rounded border border-transparent hover:border-foreground/10 hover:bg-foreground/7 hover:text-foreground"
+			? "border border-transparent hover:border-foreground/20 hover:bg-accent hover:text-accent-foreground"
 			: "",
 		className,
 	);
@@ -319,8 +326,13 @@ export function AppMenuItem({
 	}
 
 	return (
-		<button type="button" onClick={onClick} className={menuItemClassName}>
+		<Button
+			className={menuItemClassName}
+			motion="flat"
+			variant="ghost"
+			onPress={onClick}
+		>
 			{children}
-		</button>
+		</Button>
 	);
 }

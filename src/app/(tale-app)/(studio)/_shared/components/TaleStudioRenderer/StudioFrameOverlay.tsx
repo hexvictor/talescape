@@ -1,6 +1,7 @@
 "use client";
 
 import { Frame } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { useTaleStudioStoreShallow } from "../../hooks/useTaleStudioStore";
 
 /**
@@ -37,17 +38,19 @@ export function StudioFrameOverlay({
 				data-studio-frame-highlight=""
 				className="pointer-events-none absolute inset-0 z-[26] border-2 border-cyan-300 opacity-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)] transition-opacity"
 			/>
-			<button
-				type="button"
+			<Button
 				aria-label={`Inspect Frame ${frameId}`}
-				className="absolute top-2 left-2 z-[27] grid h-8 w-8 place-items-center border-2 border-cyan-300 bg-background text-cyan-500 opacity-0 shadow-[3px_3px_0_hsl(var(--foreground))] transition hover:bg-cyan-300 hover:text-black"
+				className="absolute top-2 left-2 z-[27] h-8 w-8 border-cyan-300 bg-background p-0 text-cyan-500 opacity-0 shadow-[3px_3px_0_hsl(var(--foreground))] hover:bg-cyan-300 hover:text-black"
+				motion="flat"
+				size="icon"
+				variant="outline"
 				onClick={(event) => {
 					event.stopPropagation();
 					openInspector({ sceneId, id: frameId, type: "frame" });
 				}}
 			>
 				<Frame size={14} />
-			</button>
+			</Button>
 		</>
 	);
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import {
 	DebugCard,
 	DebugField,
@@ -7,6 +7,7 @@ import type {
 	ResolvedTaleElement,
 	ResolvedTaleScene,
 } from "~/app/(tale-app)/_shared/types";
+import { Breadcrumbs } from "~/components/ui/breadcrumbs";
 
 /**
  * Renders the inspector title bar.
@@ -36,18 +37,25 @@ export function InspectorHeader({
 			className="border-foreground/10 border-b bg-background/24 px-3 py-3"
 		>
 			{onBack ? (
-				<button
-					type="button"
-					className="mb-2 flex h-8 items-center gap-2 border border-foreground/14 px-2 font-bold text-[10px] text-foreground/58 uppercase transition hover:border-foreground hover:bg-foreground/8 hover:text-foreground"
-					onClick={onBack}
-				>
-					<ArrowLeft size={13} />
-					{backLabel ?? "Back"}
-				</button>
+				<Breadcrumbs
+					aria-label="Inspector hierarchy"
+					className="mb-2"
+					items={[
+						{
+							id: "parent",
+							label: backLabel ?? "Back",
+							onPress: onBack,
+						},
+						{ id: "current", label: title },
+					]}
+				/>
 			) : null}
-			<p className="truncate font-black text-primary text-xs uppercase">
+			<h2
+				data-slot="inspector-title"
+				className="truncate font-black text-primary text-xs uppercase"
+			>
 				{title}
-			</p>
+			</h2>
 			<p className="mt-1 truncate text-foreground/42 text-xs">{subtitle}</p>
 		</header>
 	);

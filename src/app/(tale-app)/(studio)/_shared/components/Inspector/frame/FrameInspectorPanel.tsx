@@ -44,7 +44,25 @@ import type {
 	TaleFrame,
 	TaleInspectorTarget,
 } from "~/app/(tale-app)/_shared/types";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/overlay/dialog";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import Textarea from "~/components/ui/textarea";
 import { useTaleStudio } from "../../../contexts/TaleStudioProvider";
 import { useTaleStudioStore } from "../../../hooks/useTaleStudioStore";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
@@ -257,6 +275,7 @@ export function FrameInspectorPanel({
 				/>
 				<DebugTabs
 					active={currentTab}
+					studio
 					onChange={changeTab}
 					tabs={
 						frame.kind === "group"
@@ -271,10 +290,10 @@ export function FrameInspectorPanel({
 				) : null}
 				{currentTab === "summary" ? (
 					<section className="tale-ui-panel grid gap-3 p-3">
-						<label className="grid gap-1 text-xs">
-							<span className="font-bold uppercase">Frame name</span>
-							<input
-								className="h-9 min-w-0 border border-foreground bg-background px-2"
+						<Field label="Frame name">
+							<Input
+								aria-label="Frame name"
+								density="compact"
 								value={frame.name ?? ""}
 								onChange={(event) =>
 									commitFrame({
@@ -283,7 +302,7 @@ export function FrameInspectorPanel({
 									} as TaleFrame)
 								}
 							/>
-						</label>
+						</Field>
 						<div className="grid grid-cols-2 gap-2">
 							<FrameFact
 								label="Children"
@@ -327,6 +346,10 @@ export function FrameInspectorPanel({
 								key={item.id}
 								type="button"
 								draggable
+								data-reader-component="FrameKeyframeRow"
+								data-reader-role="frame-keyframe-row"
+								data-studio-component="FrameKeyframeRow"
+								data-studio-role="frame-keyframe-row"
 								className="grid min-h-12 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border border-foreground/14 bg-background px-3 text-left transition hover:border-primary hover:bg-primary/8"
 								onDragEnd={() => setDraggedKeyframeId(null)}
 								onDragOver={(event) => event.preventDefault()}
@@ -534,29 +557,34 @@ export function FrameInspectorPanel({
 							</DebugCard>
 						) : null}
 						{frame.kind === "group" && frame.parentFrameId ? (
-							<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
-								Default state
-								<select
-									className="h-8 border bg-background px-2"
+							<div className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+								<span>Default state</span>
+								<Select
+									aria-label="Group default state"
 									value={
 										resolvedTale.indexMap.framesById[frame.parentFrameId]
 											?.defaultElementStates?.[frame.id] ?? "inactive"
 									}
-									onChange={(event) =>
+									onValueChange={(value) =>
 										setTale(
 											setDraftFrameChildDefaultState(
 												tale,
 												{ frameId: frame.id, type: "frame" },
-												event.target.value as "active" | "inactive",
+												value as "active" | "inactive",
 											),
 											{ reason: "group-default-state" },
 										)
 									}
 								>
-									<option value="inactive">Inactive</option>
-									<option value="active">Active</option>
-								</select>
-							</label>
+									<SelectTrigger density="compact">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="inactive">Inactive</SelectItem>
+										<SelectItem value="active">Active</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
 						) : null}
 						{frame.kind === "group" ? (
 							<GroupFramePhaseSettings
@@ -566,53 +594,44 @@ export function FrameInspectorPanel({
 							/>
 						) : null}
 						{previousBridgeAvailable ? (
-							<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+							<Checkbox
+								className="w-full flex-row-reverse justify-between gap-3 border border-foreground/20 p-3 font-normal"
+								density="compact"
+								isSelected={frame.visibleDuringPreviousBridge ?? false}
+								onChange={(visibleDuringPreviousBridge) =>
+									commitFrame({ ...frame, visibleDuringPreviousBridge })
+								}
+							>
 								Show during previous Scene bridge transition
-								<input
-									type="checkbox"
-									checked={frame.visibleDuringPreviousBridge ?? false}
-									onChange={(event) =>
-										commitFrame({
-											...frame,
-											visibleDuringPreviousBridge: event.target.checked,
-										})
-									}
-								/>
-							</label>
+							</Checkbox>
 						) : null}
 						{scene.transition.introEnabled ? (
-							<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+							<Checkbox
+								className="w-full flex-row-reverse justify-between gap-3 border border-foreground/20 p-3 font-normal"
+								density="compact"
+								isSelected={
+									frame.visibleDuringSceneIntro ??
+									frame.visibleBeforeIntro ??
+									false
+								}
+								onChange={(visibleDuringSceneIntro) =>
+									commitFrame({ ...frame, visibleDuringSceneIntro })
+								}
+							>
 								Show during opening transition
-								<input
-									type="checkbox"
-									checked={
-										frame.visibleDuringSceneIntro ??
-										frame.visibleBeforeIntro ??
-										false
-									}
-									onChange={(event) =>
-										commitFrame({
-											...frame,
-											visibleDuringSceneIntro: event.target.checked,
-										})
-									}
-								/>
-							</label>
+							</Checkbox>
 						) : null}
 						{nextBridgeAvailable ? (
-							<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+							<Checkbox
+								className="w-full flex-row-reverse justify-between gap-3 border border-foreground/20 p-3 font-normal"
+								density="compact"
+								isSelected={frame.visibleDuringNextBridge ?? false}
+								onChange={(visibleDuringNextBridge) =>
+									commitFrame({ ...frame, visibleDuringNextBridge })
+								}
+							>
 								Show during next Scene bridge transition
-								<input
-									type="checkbox"
-									checked={frame.visibleDuringNextBridge ?? false}
-									onChange={(event) =>
-										commitFrame({
-											...frame,
-											visibleDuringNextBridge: event.target.checked,
-										})
-									}
-								/>
-							</label>
+							</Checkbox>
 						) : null}
 						{previousBridgeAvailable && frame.visibleDuringPreviousBridge ? (
 							<AnimationSelectionEditor
@@ -630,19 +649,16 @@ export function FrameInspectorPanel({
 							/>
 						) : null}
 						{scene.transition.outroEnabled ? (
-							<label className="flex items-center justify-between gap-3 border border-foreground/20 p-3 text-xs">
+							<Checkbox
+								className="w-full flex-row-reverse justify-between gap-3 border border-foreground/20 p-3 font-normal"
+								density="compact"
+								isSelected={frame.visibleDuringSceneOutro ?? false}
+								onChange={(visibleDuringSceneOutro) =>
+									commitFrame({ ...frame, visibleDuringSceneOutro })
+								}
+							>
 								Show during Scene outro transition
-								<input
-									type="checkbox"
-									checked={frame.visibleDuringSceneOutro ?? false}
-									onChange={(event) =>
-										commitFrame({
-											...frame,
-											visibleDuringSceneOutro: event.target.checked,
-										})
-									}
-								/>
-							</label>
+							</Checkbox>
 						) : null}
 						{scene.transition.introEnabled &&
 						(frame.visibleDuringSceneIntro ?? frame.visibleBeforeIntro) ? (
@@ -901,40 +917,43 @@ export function FrameInspectorPanel({
 							<div className="grid min-w-0 grid-cols-1 gap-3">
 								<FrameSelect
 									label="Display"
+									options={[
+										{ label: "Stack", value: "stack" },
+										{ label: "Flex", value: "flex" },
+										{ label: "Grid", value: "grid" },
+										{ label: "Free", value: "free" },
+									]}
 									value={frame.mode}
 									onChange={(mode) =>
 										commitFrame(
 											changeFrameMode(frame, mode as TaleFrame["mode"]),
 										)
 									}
-								>
-									<option value="stack">Stack</option>
-									<option value="flex">Flex</option>
-									<option value="grid">Grid</option>
-									<option value="free">Free</option>
-								</FrameSelect>
+								/>
 								<FrameSelect
 									label="Overflow"
+									options={[
+										{ label: "Visible", value: "visible" },
+										{ label: "Clip", value: "clip" },
+									]}
 									value={frame.overflow ?? "visible"}
 									onChange={(overflow) =>
 										commitFrame({ ...frame, overflow } as TaleFrame)
 									}
-								>
-									<option value="visible">Visible</option>
-									<option value="clip">Clip</option>
-								</FrameSelect>
+								/>
 								{frame.mode === "flex" ? (
 									<>
 										<FrameSelect
 											label="Direction"
+											options={[
+												{ label: "Row", value: "row" },
+												{ label: "Column", value: "column" },
+											]}
 											value={frame.direction ?? "row"}
 											onChange={(direction) =>
 												commitFrame({ ...frame, direction } as TaleFrame)
 											}
-										>
-											<option value="row">Row</option>
-											<option value="column">Column</option>
-										</FrameSelect>
+										/>
 										<FrameNumberInput
 											label="Gap"
 											value={frame.gap ?? 0}
@@ -1010,6 +1029,10 @@ function FrameContentsTree({
 }): React.JSX.Element {
 	return (
 		<div
+			data-reader-component="FrameContentsTree"
+			data-reader-role="frame-contents-tree"
+			data-studio-component="FrameContentsTree"
+			data-studio-role="frame-contents-tree"
 			className="grid min-h-8 gap-2"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={(event) => {
@@ -1044,9 +1067,10 @@ function FrameContentsTree({
 							) : (
 								<Boxes size={18} />
 							)}
-							<button
-								type="button"
-								className="min-w-0 flex-1 text-left hover:text-primary"
+							<Button
+								className="h-auto min-w-0 flex-1 justify-start border-0 p-0 text-left font-normal normal-case hover:text-primary"
+								motion="flat"
+								variant="ghost"
 								onClick={() =>
 									onOpen({
 										id,
@@ -1056,27 +1080,30 @@ function FrameContentsTree({
 									})
 								}
 							>
-								<span className="block truncate font-bold">
-									{element?.label ?? group?.name ?? "Group"}
+								<span className="min-w-0 flex-1">
+									<span className="block truncate font-bold">
+										{element?.label ?? group?.name ?? "Group"}
+									</span>
+									<span className="block text-[9px] text-foreground/42 uppercase">
+										{element?.type ?? "group"}
+									</span>
 								</span>
-								<span className="text-[9px] text-foreground/42 uppercase">
-									{element?.type ?? "group"}
-								</span>
-							</button>
-							<select
+							</Button>
+							<Select
 								aria-label={`${element?.label ?? group?.name ?? "Group"} default state`}
-								className="h-8 border bg-background px-2 text-[10px]"
 								value={state}
-								onChange={(event) =>
-									onStateChange(
-										child,
-										event.target.value as "active" | "inactive",
-									)
+								onValueChange={(value) =>
+									onStateChange(child, value as "active" | "inactive")
 								}
 							>
-								<option value="inactive">Inactive</option>
-								<option value="active">Active</option>
-							</select>
+								<SelectTrigger density="compact">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="inactive">Inactive</SelectItem>
+									<SelectItem value="active">Active</SelectItem>
+								</SelectContent>
+							</Select>
 							<Button
 								size="icon"
 								title={`Remove ${element ? "element" : "group"}`}
@@ -1128,8 +1155,6 @@ function AddElementDialog({
 	const [caption, setCaption] = useState("");
 	const [audioUrl, setAudioUrl] = useState("");
 
-	if (!open) return null;
-
 	const changeType = (nextType: DraftElementInput["type"]): void => {
 		setType(nextType);
 		const defaultLabel =
@@ -1164,44 +1189,49 @@ function AddElementDialog({
 		(type === "text" ? text.trim().length > 0 : true);
 
 	return (
-		<div
-			className="fixed inset-0 z-[1120] grid place-items-center bg-black/60 p-4"
-			onMouseDown={onClose}
-		>
-			<section
-				className="max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-lg overflow-y-auto border-[3px] border-foreground bg-card p-5 text-foreground shadow-[9px_9px_0_var(--comic-teal)]"
-				onMouseDown={(event) => event.stopPropagation()}
+		<Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+			<DialogContent
+				showCloseButton={false}
+				className="max-h-[min(720px,calc(100dvh-2rem))] max-w-lg overflow-y-auto p-5 shadow-[9px_9px_0_var(--comic-teal)]"
 			>
-				<p className="comic-display text-xl">Add Element</p>
+				<DialogHeader>
+					<DialogTitle>Add Element</DialogTitle>
+				</DialogHeader>
 				<div className="mt-4 grid gap-3">
-					<AddElementField label="Element type">
-						<select
-							className={addElementFieldClassName}
+					<Field label="Element type">
+						<Select
+							aria-label="Element type"
 							value={type}
-							onChange={(event) =>
-								changeType(event.target.value as DraftElementInput["type"])
+							onValueChange={(value) =>
+								changeType(value as DraftElementInput["type"])
 							}
 						>
-							<option value="text">Text</option>
-							<option value="image">Image</option>
-							<option value="audio">Audio</option>
-						</select>
-					</AddElementField>
-					<AddElementField label="Element name">
-						<input
-							className={addElementFieldClassName}
+							<SelectTrigger className="w-full">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="text">Text</SelectItem>
+								<SelectItem value="image">Image</SelectItem>
+								<SelectItem value="audio">Audio</SelectItem>
+							</SelectContent>
+						</Select>
+					</Field>
+					<Field label="Element name">
+						<Input
+							aria-label="Element name"
 							value={label}
 							onChange={(event) => setLabel(event.target.value)}
 						/>
-					</AddElementField>
+					</Field>
 					{type === "text" ? (
-						<AddElementField label="Text">
-							<textarea
-								className={`${addElementFieldClassName} min-h-28 resize-y py-2`}
+						<Field label="Text">
+							<Textarea
+								aria-label="Text"
+								className="min-h-28 resize-y"
 								value={text}
 								onChange={(event) => setText(event.target.value)}
 							/>
-						</AddElementField>
+						</Field>
 					) : null}
 					{type === "image" ? (
 						<>
@@ -1210,78 +1240,52 @@ function AddElementDialog({
 								value={imageUrl}
 								onChange={setImageUrl}
 							/>
-							<AddElementField label="Fallback URL">
-								<input
-									className={addElementFieldClassName}
+							<Field label="Fallback URL">
+								<Input
+									aria-label="Fallback URL"
 									value={fallbackUrl}
 									onChange={(event) => setFallbackUrl(event.target.value)}
 								/>
-							</AddElementField>
-							<AddElementField label="Alt text">
-								<input
-									className={addElementFieldClassName}
+							</Field>
+							<Field label="Alt text">
+								<Input
+									aria-label="Alt text"
 									value={alt}
 									onChange={(event) => setAlt(event.target.value)}
 								/>
-							</AddElementField>
-							<AddElementField label="Caption">
-								<textarea
-									className={`${addElementFieldClassName} min-h-20 resize-y py-2`}
+							</Field>
+							<Field label="Caption">
+								<Textarea
+									aria-label="Caption"
+									className="min-h-20 resize-y"
 									value={caption}
 									onChange={(event) => setCaption(event.target.value)}
 								/>
-							</AddElementField>
+							</Field>
 						</>
 					) : null}
 					{type === "audio" ? (
-						<AddElementField label="Audio URL">
-							<input
-								className={addElementFieldClassName}
+						<Field label="Audio URL">
+							<Input
+								aria-label="Audio URL"
 								value={audioUrl}
 								onChange={(event) => setAudioUrl(event.target.value)}
 							/>
-						</AddElementField>
+						</Field>
 					) : null}
 				</div>
-				<div className="mt-5 flex justify-end gap-2">
-					<button
-						className="h-9 border border-foreground px-3 font-bold text-xs uppercase hover:bg-foreground/10"
-						type="button"
-						onClick={onClose}
-					>
+				<DialogFooter className="mt-5">
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						className="h-9 border border-foreground bg-primary px-3 font-bold text-primary-foreground text-xs uppercase shadow-[3px_3px_0_var(--comic-ink)] disabled:opacity-45"
-						disabled={!canCreate}
-						type="button"
-						onClick={submit}
-					>
+					</Button>
+					<Button disabled={!canCreate} type="button" onClick={submit}>
 						Add
-					</button>
-				</div>
-			</section>
-		</div>
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
-
-function AddElementField({
-	children,
-	label,
-}: {
-	children: React.ReactNode;
-	label: string;
-}): React.JSX.Element {
-	return (
-		<div className="grid gap-1 font-bold text-[10px] text-foreground/52 uppercase">
-			<span>{label}</span>
-			{children}
-		</div>
-	);
-}
-
-const addElementFieldClassName =
-	"min-h-10 border border-foreground bg-background px-3 text-foreground text-sm normal-case outline-none focus:ring-2 focus:ring-ring/40";
 
 function emptyLoop() {
 	return {
@@ -1302,10 +1306,11 @@ function FramePhaseToggle({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(event) => onChange(event.target.checked)}
+			<Checkbox
+				aria-label={label}
+				density="compact"
+				isSelected={checked}
+				onChange={onChange}
 			/>
 		</Setting>
 	);
@@ -1444,27 +1449,31 @@ function FrameFact({ label, value }: { label: string; value: string }) {
 }
 
 function FrameSelect({
-	children,
 	label,
 	onChange,
+	options,
 	value,
 }: {
-	children: React.ReactNode;
 	label: string;
 	onChange: (value: string) => void;
+	options: readonly { label: string; value: string }[];
 	value: string;
 }) {
 	return (
-		<label className="grid gap-1 font-bold text-[9px] text-foreground/48 uppercase">
-			{label}
-			<select
-				className="h-9 min-w-0 border border-foreground bg-background px-2 text-foreground text-xs"
-				value={value}
-				onChange={(event) => onChange(event.target.value)}
-			>
-				{children}
-			</select>
-		</label>
+		<Field label={label}>
+			<Select aria-label={label} value={value} onValueChange={onChange}>
+				<SelectTrigger density="compact" className="w-full">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map((option) => (
+						<SelectItem key={option.value} value={option.value}>
+							{option.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</Field>
 	);
 }
 
@@ -1480,16 +1489,16 @@ function FrameNumberInput({
 	value: number;
 }) {
 	return (
-		<label className="grid gap-1 font-bold text-[9px] text-foreground/48 uppercase">
-			{label}
-			<input
-				className="h-9 min-w-0 border border-foreground bg-background px-2 text-foreground text-xs"
+		<Field label={label}>
+			<Input
+				aria-label={label}
+				density="compact"
 				min={min}
 				type="number"
 				value={value}
 				onChange={(event) => onChange(Number(event.target.value))}
 			/>
-		</label>
+		</Field>
 	);
 }
 

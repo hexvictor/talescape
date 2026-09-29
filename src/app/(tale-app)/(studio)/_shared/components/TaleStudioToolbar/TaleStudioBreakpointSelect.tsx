@@ -4,7 +4,15 @@ import {
 	useTaleAppStore,
 	useTaleAppStoreShallow,
 } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
-import cn from "~/lib/utils/cn";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+
+const BASE_BREAKPOINT_VALUE = "__base__";
 
 /**
  * Selects the active responsive breakpoint used by Tale Studio.
@@ -29,20 +37,24 @@ export function TaleStudioBreakpointSelect({
 		setBreakpointId: state.runtime.setBreakpointId,
 	}));
 	return breakpoints.length > 1 ? (
-		<select
-			className={cn(
-				"h-9 min-w-0 rounded border border-foreground/12 bg-background px-2 text-center text-foreground text-xs outline-none",
-				className,
-			)}
-			value={breakpointId ?? ""}
-			onChange={(event) => setBreakpointId(event.target.value || null)}
+		<Select
+			aria-label="Studio breakpoint"
+			value={breakpointId ?? BASE_BREAKPOINT_VALUE}
+			onValueChange={(value) =>
+				setBreakpointId(value === BASE_BREAKPOINT_VALUE ? null : value)
+			}
 		>
-			<option value="">Base</option>
-			{breakpoints.map((breakpoint) => (
-				<option key={breakpoint.id} value={breakpoint.id}>
-					{breakpoint.label}
-				</option>
-			))}
-		</select>
+			<SelectTrigger className={className} density="compact">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>
+				<SelectItem value={BASE_BREAKPOINT_VALUE}>Base</SelectItem>
+				{breakpoints.map((breakpoint) => (
+					<SelectItem key={breakpoint.id} value={breakpoint.id}>
+						{breakpoint.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	) : null;
 }

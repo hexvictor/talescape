@@ -1,18 +1,16 @@
-import { getLibraryTales } from "~/server/db/data/library/queries";
-import { LibraryBrowsePage } from "../_shared/components/LibraryBrowsePage";
-import { LibraryTalesExplorer } from "../_shared/components/LibraryTalesExplorer";
+import {
+	getLibraryAuthors,
+	getLibraryBooks,
+	getLibraryTales,
+} from "~/server/db/data/library/queries";
+import { LibraryLanding } from "../_shared/components/LibraryLanding";
 
 export default async function LibraryTalesPage() {
-	const tales = await getLibraryTales();
+	const [tales, books, authors] = await Promise.all([
+		getLibraryTales(),
+		getLibraryBooks(),
+		getLibraryAuthors(),
+	]);
 
-	return (
-		<LibraryBrowsePage
-			actionHref="/library/tale/add"
-			actionLabel="Add tale"
-			description="Readable stories and their structure."
-			title="Tales"
-		>
-			<LibraryTalesExplorer tales={tales} />
-		</LibraryBrowsePage>
-	);
+	return <LibraryLanding authors={authors} books={books} tales={tales} />;
 }

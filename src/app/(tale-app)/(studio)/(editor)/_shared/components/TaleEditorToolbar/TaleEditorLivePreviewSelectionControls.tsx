@@ -4,6 +4,7 @@ import { Frame, GitBranch, LayoutTemplate, ScanSearch } from "lucide-react";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import { useTaleAppStore } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleReaderStoreContext";
+import { Button } from "~/components/ui/button";
 
 /**
  * Renders editor actions that target the active block or branch in preview.
@@ -18,7 +19,7 @@ import { useTaleReaderStoreShallow } from "~/app/(tale-app)/_shared/contexts/Tal
  */
 export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 	const toolbarButtonClass =
-		"grid h-9 w-9 place-items-center border-2 border-foreground bg-background text-foreground/72 shadow-[2px_2px_0_hsl(var(--secondary))] transition hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35";
+		"h-9 w-9 border-2 border-foreground bg-background p-0 text-foreground/72 shadow-[2px_2px_0_hsl(var(--secondary))] hover:bg-primary hover:text-primary-foreground";
 	const { activeSceneId, activeBranchId, activeKeyframeId } =
 		useTaleReaderStoreShallow((state) => ({
 			activeSceneId: state.navigation.current?.sceneId ?? null,
@@ -27,7 +28,8 @@ export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 		}));
 	const activeFrameId = useTaleAppStore((state) =>
 		activeKeyframeId
-			? (state.document.tale.indexMap.keyframesById[activeKeyframeId]?.frameId ?? null)
+			? (state.document.tale.indexMap.keyframesById[activeKeyframeId]
+					?.frameId ?? null)
 			: null,
 	);
 	const {
@@ -57,27 +59,33 @@ export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 		<div
 			data-reader-component="TaleEditorLivePreviewSelectionControls"
 			data-reader-role="preview-selection-controls"
+			data-studio-component="TaleEditorLivePreviewSelectionControls"
+			data-studio-role="preview-selection-controls"
 			className="flex items-center gap-2"
 		>
-			<button
-				type="button"
+			<Button
 				disabled={!activeSceneId}
 				className={toolbarButtonClass}
+				motion="flat"
+				size="icon"
 				title="Select active Scene"
-				onClick={() => {
+				variant="outline"
+				onPress={() => {
 					if (!activeSceneId) return;
 					selectSceneForEditing(activeSceneId);
 					openSidebar();
 				}}
 			>
 				<LayoutTemplate size={15} />
-			</button>
-			<button
-				type="button"
+			</Button>
+			<Button
 				disabled={!activeSceneId || !activeFrameId}
 				className={toolbarButtonClass}
+				motion="flat"
+				size="icon"
 				title="Select active Frame"
-				onClick={() => {
+				variant="outline"
+				onPress={() => {
 					if (!activeSceneId || !activeFrameId) return;
 					openInspector({
 						id: activeFrameId,
@@ -88,34 +96,38 @@ export function TaleEditorLivePreviewSelectionControls(): React.JSX.Element {
 				}}
 			>
 				<Frame size={15} />
-			</button>
-			<button
-				type="button"
+			</Button>
+			<Button
 				disabled={!activeBranchId}
 				className={toolbarButtonClass}
+				motion="flat"
+				size="icon"
 				title="Select active branch"
-				onClick={() => {
+				variant="outline"
+				onPress={() => {
 					if (!activeBranchId) return;
 					selectBranchForEditing(activeBranchId);
 					openSidebar();
 				}}
 			>
 				<GitBranch size={15} />
-			</button>
-			<button
-				type="button"
+			</Button>
+			<Button
 				aria-pressed={inspectorControlsOpen}
 				className={`${toolbarButtonClass} ${
 					inspectorControlsOpen ? "bg-primary text-primary-foreground" : ""
 				}`}
+				motion="flat"
+				size="icon"
 				title="Toggle preview inspector"
-				onClick={() => {
+				variant="outline"
+				onPress={() => {
 					toggleInspectorControls();
 					openSidebar();
 				}}
 			>
 				<ScanSearch size={15} />
-			</button>
+			</Button>
 		</div>
 	);
 }

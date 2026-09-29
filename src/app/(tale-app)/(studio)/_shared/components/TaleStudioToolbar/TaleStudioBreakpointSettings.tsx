@@ -3,6 +3,16 @@
 import { useMemo } from "react";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import type { TaleBreakpoint } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 
 /**
  * Renders tale breakpoint authoring controls inside Studio settings.
@@ -45,7 +55,13 @@ export function TaleStudioBreakpointSettings(): React.JSX.Element {
 	};
 
 	return (
-		<section className="mt-6 border-foreground/10 border-t pt-6">
+		<section
+			data-reader-component="TaleStudioBreakpointSettings"
+			data-reader-role="breakpoint-settings"
+			data-studio-component="TaleStudioBreakpointSettings"
+			data-studio-role="breakpoint-settings"
+			className="mt-6 border-foreground/10 border-t pt-6"
+		>
 			<div className="mb-3 grid gap-3 sm:flex sm:items-center sm:justify-between">
 				<div className="min-w-0">
 					<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
@@ -55,9 +71,10 @@ export function TaleStudioBreakpointSettings(): React.JSX.Element {
 						Define responsive breakpoint rules and pick the preview target.
 					</p>
 				</div>
-				<button
-					type="button"
+				<Button
 					className="h-9 rounded border border-foreground/12 px-3 text-foreground/72 text-xs hover:bg-foreground/8 sm:justify-self-end"
+					type="button"
+					variant="ghost"
 					onClick={() =>
 						onChange([
 							...orderedBreakpoints,
@@ -71,7 +88,7 @@ export function TaleStudioBreakpointSettings(): React.JSX.Element {
 					}
 				>
 					Add breakpoint
-				</button>
+				</Button>
 			</div>
 			<div className="space-y-3">
 				{orderedBreakpoints.map((breakpoint) => (
@@ -119,8 +136,12 @@ function BreakpointCard({
 	return (
 		<div className="min-w-0 rounded border border-foreground/10 bg-foreground/[0.03] p-3">
 			<div className="mb-3 grid gap-2 sm:flex sm:items-center sm:justify-between">
-				<label className="flex min-w-0 items-center gap-2 text-foreground/60 text-xs">
-					<input
+				<label
+					className="flex min-w-0 items-center gap-2 text-foreground/60 text-xs"
+					htmlFor={`active-breakpoint-${breakpoint.id}`}
+				>
+					<Input
+						id={`active-breakpoint-${breakpoint.id}`}
 						type="radio"
 						name="active-breakpoint"
 						checked={activeBreakpointId === breakpoint.id}
@@ -128,9 +149,10 @@ function BreakpointCard({
 					/>
 					Preview this breakpoint
 				</label>
-				<button
-					type="button"
+				<Button
 					className="text-foreground/50 text-xs hover:text-foreground"
+					type="button"
+					variant="ghost"
 					onClick={() => {
 						const next = breakpoints
 							.filter((item) => item.id !== breakpoint.id)
@@ -142,7 +164,7 @@ function BreakpointCard({
 					}}
 				>
 					Remove
-				</button>
+				</Button>
 			</div>
 			<div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
 				<SettingsInput
@@ -157,28 +179,31 @@ function BreakpointCard({
 						)
 					}
 				/>
-				<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
-					<span className="font-medium uppercase">Orientation</span>
-					<select
-						className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
-						value={breakpoint.orientation ?? ""}
-						onChange={(event) =>
+				<Field label="Orientation">
+					<Select
+						value={breakpoint.orientation ?? "any"}
+						onValueChange={(value) =>
 							onChange(
 								replaceBreakpoint(breakpoints, breakpoint.id, {
 									...breakpoint,
 									orientation:
-										event.target.value === ""
+										value === "any"
 											? undefined
-											: (event.target.value as "landscape" | "portrait"),
+											: (value as "landscape" | "portrait"),
 								}),
 							)
 						}
 					>
-						<option value="">Any</option>
-						<option value="portrait">Portrait</option>
-						<option value="landscape">Landscape</option>
-					</select>
-				</label>
+						<SelectTrigger className="w-full" density="compact">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="any">Any</SelectItem>
+							<SelectItem value="portrait">Portrait</SelectItem>
+							<SelectItem value="landscape">Landscape</SelectItem>
+						</SelectContent>
+					</Select>
+				</Field>
 				<SettingsNumber
 					label="Min width"
 					value={breakpoint.minWidth}
@@ -254,15 +279,15 @@ function SettingsInput({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
-			<span className="font-medium uppercase">{label}</span>
-			<input
-				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+		<Field label={label}>
+			<Input
+				className="min-w-0"
+				density="compact"
 				type="text"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
-		</label>
+		</Field>
 	);
 }
 
@@ -288,10 +313,10 @@ function SettingsNumber({
 	value: number | undefined;
 }): React.JSX.Element {
 	return (
-		<label className="grid min-w-0 gap-1 text-foreground/52 text-xs">
-			<span className="font-medium uppercase">{label}</span>
-			<input
-				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+		<Field label={label}>
+			<Input
+				className="min-w-0"
+				density="compact"
 				type="number"
 				value={value ?? ""}
 				onChange={(event) =>
@@ -300,7 +325,7 @@ function SettingsNumber({
 					)
 				}
 			/>
-		</label>
+		</Field>
 	);
 }
 

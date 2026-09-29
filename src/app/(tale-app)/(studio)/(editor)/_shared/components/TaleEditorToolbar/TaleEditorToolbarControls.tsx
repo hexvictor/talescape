@@ -2,6 +2,7 @@
 
 import { PanelsTopLeft, ScanLine } from "lucide-react";
 import { useTaleStudioStoreShallow } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
+import { Button } from "~/components/ui/button";
 import { TaleEditorLivePreviewSelectionControls } from "./TaleEditorLivePreviewSelectionControls";
 import { TaleEditorPaneVisibilityControls } from "./TaleEditorPaneVisibilityControls";
 
@@ -44,7 +45,9 @@ export function TaleEditorToolbarControls(): React.JSX.Element {
 						icon={<PanelsTopLeft size={14} />}
 						label="Scene"
 						onToggle={() =>
-							setAutoSelectTarget(autoSelectTarget === "scene" ? "off" : "scene")
+							setAutoSelectTarget(
+								autoSelectTarget === "scene" ? "off" : "scene",
+							)
 						}
 					/>
 					<AutoSelectButton
@@ -52,7 +55,9 @@ export function TaleEditorToolbarControls(): React.JSX.Element {
 						icon={<ScanLine size={14} />}
 						label="Frame"
 						onToggle={() =>
-							setAutoSelectTarget(autoSelectTarget === "frame" ? "off" : "frame")
+							setAutoSelectTarget(
+								autoSelectTarget === "frame" ? "off" : "frame",
+							)
 						}
 					/>
 				</div>
@@ -92,8 +97,7 @@ function AutoSelectButton({
 	onToggle: () => void;
 }): React.JSX.Element {
 	return (
-		<button
-			type="button"
+		<Button
 			aria-pressed={active}
 			className={[
 				"flex h-8 items-center justify-center gap-2 border-0 border-foreground px-2.5 font-bold text-[10px] uppercase transition first:border-r-2",
@@ -101,11 +105,14 @@ function AutoSelectButton({
 					? "border-primary/45 bg-primary/14 text-primary"
 					: "border-foreground/12 text-foreground/62 hover:bg-foreground/8 hover:text-foreground",
 			].join(" ")}
+			motion="flat"
+			size="sm"
 			title={`Automatically inspect the active ${label}`}
-			onClick={onToggle}
+			variant="ghost"
+			onPress={onToggle}
 		>
 			{icon}
 			<span className="hidden lg:inline">Auto {label}</span>
-		</button>
+		</Button>
 	);
 }

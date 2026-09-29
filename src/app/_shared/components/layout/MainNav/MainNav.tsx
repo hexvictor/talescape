@@ -34,7 +34,11 @@ export default function MainNav({ mobile = false }: { mobile?: boolean }) {
 	const pathname = usePathname();
 
 	return (
-		<nav aria-label="Main navigation">
+		<nav
+			aria-label="Main navigation"
+			data-reader-component="MainNav"
+			data-reader-role="primary-navigation"
+		>
 			<ul
 				className={cn(
 					"flex items-center gap-1",

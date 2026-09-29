@@ -28,6 +28,17 @@ import type {
 } from "~/app/(tale-app)/_shared/types";
 import { useTaleRootStore } from "~/app/_shared/contexts/TaleRootStoreContext";
 import { Button } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { Tab, TabList, Tabs } from "~/components/ui/tabs";
+import Textarea from "~/components/ui/textarea";
 
 type PathType = TalePath["type"];
 
@@ -63,7 +74,9 @@ export function TaleEditorSelectionPanel(): React.JSX.Element {
 		<aside
 			data-reader-component="TaleEditorSelectionPanel"
 			data-reader-role="editor-right-panel"
-			className="h-[45dvh] w-full overflow-hidden border-foreground/10 border-t bg-background/84 md:h-full md:border-t-0 md:border-l"
+			data-studio-component="TaleEditorSelectionPanel"
+			data-studio-role="editor-right-panel"
+			className="studio-inspector-drawer h-[45dvh] w-full overflow-hidden border-foreground border-t-[3px] bg-card md:h-full md:border-t-0 md:border-l-[3px]"
 			style={isMobile ? undefined : { width }}
 		>
 			<div className="h-full min-h-0 overflow-y-auto p-3">
@@ -117,29 +130,41 @@ function BranchEditor({
 	const { dialogs } = useTaleStudio();
 	const [tab, setTab] = useState<"details" | "narrative">("details");
 	return (
-		<div data-reader-component="BranchEditor" data-reader-role="branch-form">
-			<div className="mb-3 flex border-b">
-				{(["details", "narrative"] as const).map((value) => (
-					<button
-						type="button"
-						key={value}
-						aria-pressed={tab === value}
-						className="flex-1 p-2 text-xs capitalize aria-pressed:border-sky-500 aria-pressed:border-b-2"
-						onClick={() => setTab(value)}
-					>
-						{value}
-					</button>
-				))}
-			</div>
+		<div
+			data-reader-component="BranchEditor"
+			data-reader-role="branch-form"
+			data-studio-component="BranchEditor"
+			data-studio-role="branch-form"
+		>
+			<Tabs
+				selectedKey={tab}
+				className="mb-3"
+				onSelectionChange={(key) =>
+					setTab(String(key) as "details" | "narrative")
+				}
+			>
+				<TabList aria-label="Branch editor sections" density="compact">
+					{(["details", "narrative"] as const).map((value) => (
+						<Tab
+							key={value}
+							className="flex-1 capitalize"
+							density="compact"
+							id={value}
+						>
+							{value}
+						</Tab>
+					))}
+				</TabList>
+			</Tabs>
 			{tab === "narrative" ? <NarrativePanel branchId={branchId} /> : null}
 			<div hidden={tab !== "details"}>
 				<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
 					Branch
 				</p>
-				<label className="mt-4 block text-foreground/62 text-xs">
-					Title
-					<input
-						className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
+				<Field label="Title" className="mt-4">
+					<Input
+						aria-label="Branch title"
+						density="compact"
 						value={title}
 						onChange={(event) =>
 							onChange(
@@ -150,11 +175,12 @@ function BranchEditor({
 							)
 						}
 					/>
-				</label>
-				<label className="mt-3 block text-foreground/62 text-xs">
-					Description
-					<textarea
-						className="mt-1 min-h-28 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-primary/60"
+				</Field>
+				<Field label="Description" className="mt-3">
+					<Textarea
+						aria-label="Branch description"
+						className="min-h-28"
+						density="compact"
 						value={description}
 						onChange={(event) =>
 							onChange(
@@ -165,7 +191,7 @@ function BranchEditor({
 							)
 						}
 					/>
-				</label>
+				</Field>
 				<BranchSceneList branchId={branchId} tale={tale} onChange={onChange} />
 				{branchId !== tale.bounds.rootBranchId ? (
 					<Button
@@ -285,7 +311,12 @@ function PathEditor({
 	const toBlocks = getPathBranchBlocks(tale, path.toBranchId);
 
 	return (
-		<div data-reader-component="PathEditor" data-reader-role="path-form">
+		<div
+			data-reader-component="PathEditor"
+			data-reader-role="path-form"
+			data-studio-component="PathEditor"
+			data-studio-role="path-form"
+		>
 			<p className="font-black text-[#67e8f9] text-xs uppercase tracking-[0.18em]">
 				Path
 			</p>
@@ -298,30 +329,35 @@ function PathEditor({
 					)
 				}
 			/>
-			<label className="mt-3 block text-foreground/62 text-xs">
-				Type
-				<select
-					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
+			<Field label="Type" className="mt-3">
+				<Select
+					aria-label="Path type"
 					value={path.type}
-					onChange={(event) =>
+					onValueChange={(value) =>
 						onChange(
 							editPath(tale, path.id, (current) => ({
 								...current,
-								type: event.target.value as PathType,
+								type: value as PathType,
 							})),
 						)
 					}
 				>
-					<option value="choice">Choice</option>
-					<option value="linear">Linear</option>
-					<option value="return">Return</option>
-					<option value="teleport">Teleport</option>
-				</select>
-			</label>
-			<label className="mt-3 block text-foreground/62 text-xs">
-				Description
-				<textarea
-					className="mt-1 min-h-24 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
+					<SelectTrigger className="w-full" density="compact">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="choice">Choice</SelectItem>
+						<SelectItem value="linear">Linear</SelectItem>
+						<SelectItem value="return">Return</SelectItem>
+						<SelectItem value="teleport">Teleport</SelectItem>
+					</SelectContent>
+				</Select>
+			</Field>
+			<Field label="Description" className="mt-3">
+				<Textarea
+					aria-label="Path description"
+					className="min-h-24"
+					density="compact"
 					value={path.description ?? ""}
 					onChange={(event) =>
 						onChange(
@@ -332,7 +368,7 @@ function PathEditor({
 						)
 					}
 				/>
-			</label>
+			</Field>
 			<PathBlockSelect
 				scenes={fromBlocks}
 				label="From Scene"
@@ -379,14 +415,14 @@ function EditorTextField({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-4 block text-foreground/62 text-xs">
-			{label}
-			<input
-				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
+		<Field label={label} className="mt-4">
+			<Input
+				aria-label={label}
+				density="compact"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
-		</label>
+		</Field>
 	);
 }
 
@@ -415,20 +451,20 @@ function PathBlockSelect({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-3 block text-foreground/62 text-xs">
-			{label}
-			<select
-				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-[#67e8f9]/60"
-				value={value}
-				onChange={(event) => onChange(event.target.value)}
-			>
-				{scenes.map((block) => (
-					<option key={block.id} value={block.id}>
-						{block.order + 1}. {block.title}
-					</option>
-				))}
-			</select>
-		</label>
+		<Field label={label} className="mt-3">
+			<Select aria-label={label} value={value} onValueChange={onChange}>
+				<SelectTrigger className="w-full" density="compact">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{scenes.map((block) => (
+						<SelectItem key={block.id} value={block.id}>
+							{block.order + 1}. {block.title}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</Field>
 	);
 }
 

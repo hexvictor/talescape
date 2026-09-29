@@ -19,6 +19,8 @@ import type {
 	TaleScene,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
+import { SectionHeader } from "~/components/ui/section-header";
 import { useTaleStudio } from "../../../contexts/TaleStudioProvider";
 import { useTaleStudioStore } from "../../../hooks/useTaleStudioStore";
 import {
@@ -119,6 +121,7 @@ export function SceneInspectorPanel({
 				/>
 				<DebugTabs
 					active={activeTab}
+					studio
 					onChange={(tab) => {
 						setActiveTab(tab);
 						rememberInspectorTab("scene", tab);
@@ -147,26 +150,30 @@ export function SceneInspectorPanel({
 								})
 							}
 						/>
-						<div className="tale-ui-panel mt-3 grid gap-2 p-3">
-							<div className="flex items-center justify-between gap-2">
-								<p className="font-black text-xs uppercase">Scene structure</p>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => {
-										setActiveTab("layout");
-										rememberInspectorTab("scene", "layout");
-									}}
-								>
-									{getSceneProgressionFrameIds(resolvedTale, scene).length}{" "}
-									Frames · {scene.elementIds.length} Elements
-								</Button>
-							</div>
-							<p className="text-[10px] text-foreground/48">
-								Open a Frame to edit its ordered Keyframes, progression, and
-								actions.
-							</p>
-						</div>
+						<Panel
+							appearance="comic"
+							data-studio-component="SceneStructureSection"
+							data-studio-role="inspector-section"
+							className="mt-3 grid gap-2 p-3"
+						>
+							<SectionHeader
+								title="Scene structure"
+								description="Open a Frame to edit its ordered Keyframes, progression, and actions."
+								actions={
+									<Button
+										size="sm"
+										variant="ghost"
+										onClick={() => {
+											setActiveTab("layout");
+											rememberInspectorTab("scene", "layout");
+										}}
+									>
+										{getSceneProgressionFrameIds(resolvedTale, scene).length}{" "}
+										Frames · {scene.elementIds.length} Elements
+									</Button>
+								}
+							/>
+						</Panel>
 					</>
 				) : null}
 				{activeTab === "size" ? (

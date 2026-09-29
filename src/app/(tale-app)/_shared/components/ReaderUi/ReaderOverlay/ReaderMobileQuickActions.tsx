@@ -1,6 +1,7 @@
 "use client";
 
 import { BookMarked, ListTree } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useTaleReaderStoreShallow } from "../../../contexts/TaleReaderStoreContext";
 
@@ -46,7 +47,7 @@ export function ReaderMobileQuickActions(): React.JSX.Element | null {
 			data-reader-component="ReaderMobileQuickActions"
 			data-reader-role="mobile-reader-actions"
 			className={cn(
-				"pointer-events-auto absolute top-[calc(var(--reader-mobile-toolbar-offset,0px)+0.75rem)] right-3 z-60 flex rounded-lg border border-foreground/14 bg-background/92 p-1 shadow-2xl backdrop-blur-md transition-[top,opacity] duration-300 md:hidden",
+				"pointer-events-auto absolute top-[calc(var(--reader-mobile-toolbar-offset,0px)+0.75rem)] right-3 z-60 flex border border-foreground/30 bg-background/92 p-1 shadow-[4px_4px_0_rgb(var(--foreground-rgb))] backdrop-blur-md transition-[top,opacity] duration-300 md:hidden",
 				contentsOpen || hubOpen || !reduceInactiveUiOpacity
 					? "opacity-100"
 					: "opacity-25 hover:opacity-100",
@@ -93,21 +94,24 @@ function MobileQuickActionButton({
 	onClick: () => void;
 }): React.JSX.Element {
 	return (
-		<button
+		<Button
 			data-reader-component="ReaderMobileQuickActions"
 			data-reader-role="mobile-quick-action-control"
 			type="button"
 			aria-label={label}
 			aria-pressed={active}
 			className={cn(
-				"grid h-10 w-10 place-items-center rounded-md transition",
+				"h-10 w-10 border-0 p-0",
 				active
 					? "bg-primary/18 text-primary"
 					: "text-foreground/68 hover:bg-foreground/8 hover:text-foreground",
 			)}
-			onClick={onClick}
+			motion="flat"
+			size="icon"
+			variant="ghost"
+			onPress={onClick}
 		>
 			<Icon size={17} />
-		</button>
+		</Button>
 	);
 }

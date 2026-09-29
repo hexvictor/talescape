@@ -1,10 +1,8 @@
 "use client";
 
-import {
-	DebugCard,
-	Setting,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { DebugCard } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { ResolvedTaleScene } from "~/app/(tale-app)/_shared/types";
+import { Checkbox } from "~/components/ui/checkbox";
 import { MotionNumber } from "./MotionControls";
 import { SceneAnimationSettings } from "./SceneAnimationSettings";
 import { SceneReadingSettings } from "./SceneReadingSettings";
@@ -30,6 +28,8 @@ export function SceneMotionSettings({
 		<div
 			data-reader-component="SceneMotionSettings"
 			data-reader-role="scene-motion-settings"
+			data-studio-component="SceneMotionSettings"
+			data-studio-role="scene-motion-settings"
 			className="space-y-3"
 		>
 			<ScenePhaseSettings scene={scene} onChange={onChange} />
@@ -177,12 +177,8 @@ function PhaseToggle({
 	onChange: (checked: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<Setting label={label}>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(event) => onChange(event.target.checked)}
-			/>
-		</Setting>
+		<Checkbox density="compact" isSelected={checked} onChange={onChange}>
+			{label}
+		</Checkbox>
 	);
 }

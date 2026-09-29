@@ -1,12 +1,14 @@
 "use client";
 
-import { ChevronRight, Frame, Search } from "lucide-react";
+import { ChevronRight, Frame } from "lucide-react";
 import { useState } from "react";
 import type {
 	ResolvedTaleElement,
 	ResolvedTaleScene,
 	TaleFrame,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
+import { SearchField } from "~/components/ui/search-field";
 import cn from "~/lib/utils/cn";
 import { useTaleStudioStore } from "../../hooks/useTaleStudioStore";
 import { ElementThumbnail } from "./element/ElementThumbnail";
@@ -89,34 +91,37 @@ export function FrameHierarchyTree({
 		<div
 			data-reader-component="FrameHierarchyTree"
 			data-reader-role="frame-hierarchy"
+			data-studio-component="FrameHierarchyTree"
+			data-studio-role="frame-hierarchy"
 			className="rounded-md border border-foreground/10 bg-background/20 p-2"
 		>
-			<label className="mb-2 flex h-9 items-center gap-2 border border-foreground/15 bg-background px-2">
-				<Search size={14} className="text-foreground/42" />
-				<input
-					className="min-w-0 flex-1 bg-transparent text-xs outline-none"
-					placeholder="Find Frames or Elements"
-					value={query}
-					onChange={(event) => setQuery(event.target.value)}
-				/>
-			</label>
+			<SearchField
+				aria-label="Find Frames or Elements"
+				className="mb-2"
+				density="compact"
+				placeholder="Find Frames or Elements"
+				value={query}
+				onChange={setQuery}
+			/>
 			{normalizedQuery ? (
 				<div className="mb-2 grid gap-1 border-foreground/8 border-b pb-2">
 					{matchingFrames.map((frame) => (
-						<button
+						<Button
 							key={frame.id}
-							type="button"
-							className="flex items-center gap-2 px-2 py-1.5 text-left text-xs hover:bg-foreground/7"
+							className="h-auto w-full justify-start gap-2 border-0 px-2 py-1.5 text-left font-normal text-xs normal-case hover:bg-foreground/7"
+							motion="flat"
+							variant="ghost"
 							onClick={() => onSelectFrame(frame.id)}
 						>
 							<Frame size={13} /> Frame {frame.id}
-						</button>
+						</Button>
 					))}
 					{matchingElements.map((element) => (
-						<button
+						<Button
 							key={element.id}
-							type="button"
-							className="flex min-w-0 items-center gap-2 px-2 py-1.5 text-left text-xs hover:bg-foreground/7"
+							className="h-auto w-full min-w-0 justify-start gap-2 border-0 px-2 py-1.5 text-left font-normal text-xs normal-case hover:bg-foreground/7"
+							motion="flat"
+							variant="ghost"
 							onClick={() =>
 								openInspector({
 									id: element.id,
@@ -132,7 +137,7 @@ export function FrameHierarchyTree({
 							<span className="shrink-0 text-[9px] text-foreground/38 uppercase">
 								{element.type}
 							</span>
-						</button>
+						</Button>
 					))}
 					{matchingFrames.length + matchingElements.length === 0 ? (
 						<p className="px-2 py-2 text-foreground/42 text-xs">No matches.</p>
@@ -245,28 +250,34 @@ function FrameTreeBranch({
 		<div
 			data-reader-component="FrameTreeBranch"
 			data-reader-role="frame-branch"
+			data-studio-component="FrameTreeBranch"
+			data-studio-role="frame-branch"
 		>
 			<div className="flex min-w-0 items-center gap-1">
-				<button
-					type="button"
+				<Button
 					aria-label={expanded ? "Collapse Frame" : "Expand Frame"}
 					disabled={!hasChildren}
-					className="grid h-7 w-7 shrink-0 place-items-center text-foreground/38 disabled:opacity-20"
+					className="size-7 shrink-0 border-0 p-0 text-foreground/38 disabled:opacity-20"
+					motion="flat"
+					size="icon"
+					variant="ghost"
 					onClick={() => onToggleFrame(frame.id)}
 				>
 					<ChevronRight
 						size={13}
 						className={cn("transition-transform", expanded && "rotate-90")}
 					/>
-				</button>
-				<button
-					type="button"
+				</Button>
+				<Button
+					aria-current={selectedFrameId === frame.id ? "true" : undefined}
 					className={cn(
-						"flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1.5 text-left text-xs",
+						"h-auto min-w-0 flex-1 justify-start gap-2 rounded border-0 px-2 py-1.5 text-left font-normal text-xs normal-case",
 						selectedFrameId === frame.id
 							? "bg-primary/18 text-primary"
 							: "text-foreground/62 hover:bg-foreground/7 hover:text-foreground",
 					)}
+					motion="flat"
+					variant="ghost"
 					onClick={() => onSelectFrame(frame.id)}
 				>
 					<Frame size={13} className="shrink-0" />
@@ -274,7 +285,7 @@ function FrameTreeBranch({
 					<span className="ml-auto shrink-0 text-[9px] text-foreground/32">
 						{frame.children.length}
 					</span>
-				</button>
+				</Button>
 			</div>
 			{expanded ? (
 				<div className="ml-3 border-foreground/10 border-l pl-2">
@@ -336,9 +347,10 @@ function ElementTreeButton({
 }): React.JSX.Element {
 	const element = elementsById[elementId];
 	return (
-		<button
-			type="button"
-			className="flex w-full min-w-0 items-center gap-2 rounded py-1.5 pr-2 pl-9 text-left text-[11px] text-foreground/48 hover:bg-foreground/7 hover:text-foreground"
+		<Button
+			className="h-auto w-full min-w-0 justify-start gap-2 rounded border-0 py-1.5 pr-2 pl-9 text-left font-normal text-[11px] text-foreground/48 normal-case hover:bg-foreground/7 hover:text-foreground"
+			motion="flat"
+			variant="ghost"
 			onClick={() => onInspectElement(elementId)}
 		>
 			{element ? (
@@ -350,7 +362,7 @@ function ElementTreeButton({
 			<span className="shrink-0 text-[9px] text-foreground/32 uppercase">
 				{element?.type ?? "element"}
 			</span>
-		</button>
+		</Button>
 	);
 }
 

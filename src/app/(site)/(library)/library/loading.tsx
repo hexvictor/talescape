@@ -5,7 +5,7 @@ import {
 
 export default function LoadingLibrary() {
 	return (
-		<div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-2">
+		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-8 py-2">
 			<LibraryHeaderSkeleton />
 			<CardGridSkeleton count={4} aspect="aspect-[3/4]" />
 			<CardGridSkeleton count={3} />

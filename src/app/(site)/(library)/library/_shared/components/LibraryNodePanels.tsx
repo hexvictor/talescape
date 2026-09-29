@@ -1,9 +1,17 @@
-import { BookOpen, Box, FileText, GitBranch, Route } from "lucide-react";
+import {
+	BookOpen,
+	Box,
+	FileText,
+	GitBranch,
+	Layers3,
+	Route,
+} from "lucide-react";
 import type {
 	LibraryBlockList,
 	LibraryBranchList,
 	LibraryEntryList,
 	LibraryFragmentList,
+	LibraryFrameList,
 	LibraryPageList,
 	LibraryPartList,
 	LibraryPathList,
@@ -132,6 +140,32 @@ export function FragmentsPanel({
 						? structureLink("Page", element.taleId, "pages", element.page.id)
 						: null,
 				]),
+			}))}
+		/>
+	);
+}
+
+export function FramesPanel({ frames }: { frames: LibraryFrameList }) {
+	return (
+		<LibraryNodeList
+			emptyTitle="No frames visible"
+			rows={frames.map((frame) => ({
+				id: frame.id,
+				icon: <Layers3 aria-hidden="true" className="size-4" />,
+				title:
+					frame.name ??
+					(frame.isRoot ? "Scene root frame" : `Frame ${frame.index + 1}`),
+				meta: frame.tale.title,
+				detail: `${frame.scene.title ?? `Scene ${frame.scene.index + 1}`} - ${frame.config.mode} layout`,
+				badges: compactLabels([
+					frame.config.kind ?? "frame",
+					frame.isRoot ? "root" : null,
+					frame.visibility,
+				]),
+				links: [
+					taleLink(frame.taleId),
+					structureLink("Scene", frame.taleId, "scenes", frame.scene.id),
+				],
 			}))}
 		/>
 	);

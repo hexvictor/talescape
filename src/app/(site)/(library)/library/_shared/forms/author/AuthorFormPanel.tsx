@@ -3,6 +3,7 @@
 import { Feather } from "lucide-react";
 import { DialogFooter } from "~/components/overlay/dialog";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import Input from "~/components/ui/input";
 import Label from "~/components/ui/label";
 import {
@@ -98,61 +99,49 @@ export default function AuthorFormPanel({
 						</SelectContent>
 					</Select>
 				</div>
-				<div className="flex items-start gap-3 border-secondary border-l-4 bg-muted/35 p-4 text-sm">
-					<Input
-						id="author-editable"
-						type="checkbox"
-						name="editable"
-						className="mt-0.5 size-4"
-						defaultChecked
-					/>
+				<Checkbox
+					name="editable"
+					value="true"
+					defaultSelected
+					className="items-start border-secondary border-l-4 bg-muted/35 p-4"
+				>
 					<span>
-						<Label htmlFor="author-editable" className="block font-medium">
-							Editable
-						</Label>
-						<span className="text-muted-foreground">
+						<span className="block font-medium">Editable</span>
+						<span className="font-normal text-muted-foreground">
 							Allow this author record to be edited later.
 						</span>
 					</span>
-				</div>
+				</Checkbox>
 			</div>
 
 			{canManageOfficial ? (
 				<div className="grid gap-3 border-primary border-l-4 bg-muted/35 p-4 sm:grid-cols-2">
-					<div className="flex items-start gap-3 text-sm">
-						<Input
-							id="author-is-official"
-							type="checkbox"
-							name="isOfficial"
-							className="mt-0.5 size-4"
-							defaultChecked={!isCreate}
-						/>
+					<Checkbox
+						name="isOfficial"
+						value="true"
+						defaultSelected={!isCreate}
+						className="items-start"
+					>
 						<span>
-							<Label htmlFor="author-is-official" className="block font-medium">
-								Official
-							</Label>
-							<span className="text-muted-foreground">
+							<span className="block font-medium">Official</span>
+							<span className="font-normal text-muted-foreground">
 								Published as an admin-owned canonical author.
 							</span>
 						</span>
-					</div>
-					<div className="flex items-start gap-3 text-sm">
-						<Input
-							id="author-is-verified"
-							type="checkbox"
-							name="isVerified"
-							className="mt-0.5 size-4"
-							defaultChecked={!isCreate}
-						/>
+					</Checkbox>
+					<Checkbox
+						name="isVerified"
+						value="true"
+						defaultSelected={!isCreate}
+						className="items-start"
+					>
 						<span>
-							<Label htmlFor="author-is-verified" className="block font-medium">
-								Verified
-							</Label>
-							<span className="text-muted-foreground">
+							<span className="block font-medium">Verified</span>
+							<span className="font-normal text-muted-foreground">
 								Confirmed as a trusted library record.
 							</span>
 						</span>
-					</div>
+					</Checkbox>
 				</div>
 			) : null}
 

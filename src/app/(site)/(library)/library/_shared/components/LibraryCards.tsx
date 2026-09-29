@@ -12,7 +12,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
-import { Badge } from "~/components/data-display/badge";
+import { Badge, StatusBadge, Tag } from "~/components/data-display/badge";
+import { EmptyState } from "~/components/data-display/empty-state";
 import { ComicPanel } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 import type {
@@ -88,8 +89,8 @@ export function TalesGrid({ tales }: { tales: LibraryTaleList }) {
 								{tale.description}
 							</p>
 							<div className="mt-4 flex flex-wrap gap-2">
-								<Badge variant="secondary">{tale.type}</Badge>
-								<Badge variant="outline">{tale.status}</Badge>
+								<Tag>{tale.type}</Tag>
+								<StatusBadge status={tale.status} />
 								{tale.isVerified ? (
 									<Badge variant="outline">
 										<ShieldCheck aria-hidden="true" />
@@ -162,8 +163,8 @@ export function BooksGrid({ books }: { books: LibraryBookList }) {
 					</div>
 					<div className="comic-panel-content pt-4">
 						<div className="flex flex-wrap gap-2">
-							<Badge variant="secondary">{book.status}</Badge>
-							<Badge variant="outline">{book.type}</Badge>
+							<StatusBadge status={book.status} />
+							<Tag>{book.type}</Tag>
 							<Badge variant={book.isOfficial ? "default" : "outline"}>
 								{book.isOfficial ? "Official" : book.visibility}
 							</Badge>
@@ -256,26 +257,6 @@ export function AuthorsGrid({ authors }: { authors: LibraryAuthorList }) {
 				</ComicPanel>
 			))}
 		</section>
-	);
-}
-
-export function EmptyState({
-	title,
-	description,
-}: {
-	title: string;
-	description: string;
-}) {
-	return (
-		<ComicPanel
-			className="comic-panel-content-lg text-center"
-			shape="cut-opposite"
-		>
-			<h2 className="font-display text-2xl uppercase">{title}</h2>
-			<p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-6">
-				{description}
-			</p>
-		</ComicPanel>
 	);
 }
 

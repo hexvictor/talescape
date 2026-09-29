@@ -1,9 +1,10 @@
-import {
-	Setting,
-	settingClassName,
-} from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
+import { Setting } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { ReaderStyle } from "~/app/(tale-app)/_shared/types";
-import { OptionalNumberSetting, TextSetting } from "../InspectorValueFields";
+import {
+	InspectorSelect,
+	OptionalNumberSetting,
+	TextSetting,
+} from "../InspectorValueFields";
 
 export type StyleChangeHandler = (style: ReaderStyle) => void;
 
@@ -76,17 +77,12 @@ export function StyleSelect<Value extends string>({
 }): React.JSX.Element {
 	return (
 		<Setting label={label}>
-			<select
-				className={settingClassName}
+			<InspectorSelect
+				label={label}
 				value={value}
-				onChange={(event) => onChange(event.target.value as Value)}
-			>
-				{options.map((option) => (
-					<option key={option} value={option}>
-						{option}
-					</option>
-				))}
-			</select>
+				options={options.map((option) => ({ label: option, value: option }))}
+				onChange={(nextValue) => onChange(nextValue as Value)}
+			/>
 		</Setting>
 	);
 }

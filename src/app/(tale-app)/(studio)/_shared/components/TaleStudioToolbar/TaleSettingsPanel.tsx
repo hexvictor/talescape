@@ -26,6 +26,17 @@ import type {
 	TaleSnapConfig,
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Field } from "~/components/ui/field";
+import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import Textarea from "~/components/ui/textarea";
 
 type SnapGroup = keyof TaleSnapConfig;
 
@@ -92,6 +103,8 @@ export function TaleSettingsPanel(): React.JSX.Element {
 		<div
 			data-reader-component="TaleSettingsPanel"
 			data-reader-role="tale-settings-form"
+			data-studio-component="TaleSettingsPanel"
+			data-studio-role="tale-settings-form"
 			className="space-y-5"
 		>
 			<section>
@@ -563,30 +576,26 @@ function NarrativeManager({
 						<div className="grid grid-cols-2 gap-2">
 							<SettingsSelect
 								label="Part"
+								options={parts.map((part) => ({
+									label: part.title,
+									value: part.id,
+								}))}
 								value={entry.partId}
 								onChange={(partId) => updateEntry(entry.id, { partId })}
-							>
-								{parts.map((part) => (
-									<option key={part.id} value={part.id}>
-										{part.title}
-									</option>
-								))}
-							</SettingsSelect>
+							/>
 							<SettingsSelect
 								label="Type"
+								options={ENTRY_TYPES.map((type) => ({
+									label: type,
+									value: type,
+								}))}
 								value={entry.type}
 								onChange={(type) =>
 									updateEntry(entry.id, {
 										type: type as TaleEntry["type"],
 									})
 								}
-							>
-								{ENTRY_TYPES.map((type) => (
-									<option key={type} value={type}>
-										{type}
-									</option>
-								))}
-							</SettingsSelect>
+							/>
 						</div>
 						<SettingsToggle
 							checked={entry.isNumbered}
@@ -611,6 +620,10 @@ function NarrativeManager({
 						<div className="grid grid-cols-2 gap-2">
 							<SettingsSelect
 								label="Entry"
+								options={entries.map((entry) => ({
+									label: entry.title,
+									value: entry.id,
+								}))}
 								value={page.entryId}
 								onChange={(entryId) => {
 									const entry = tale.indexMap.entriesById[entryId];
@@ -619,24 +632,16 @@ function NarrativeManager({
 										partId: entry?.partId ?? page.partId,
 									});
 								}}
-							>
-								{entries.map((entry) => (
-									<option key={entry.id} value={entry.id}>
-										{entry.title}
-									</option>
-								))}
-							</SettingsSelect>
+							/>
 							<SettingsSelect
 								label="Type"
+								options={PAGE_TYPES.map((type) => ({
+									label: type,
+									value: type,
+								}))}
 								value={page.type}
 								onChange={(type) => updatePage(page.id, { type })}
-							>
-								{PAGE_TYPES.map((type) => (
-									<option key={type} value={type}>
-										{type}
-									</option>
-								))}
-							</SettingsSelect>
+							/>
 						</div>
 						<SettingsToggle
 							checked={page.isPaginated}
@@ -745,18 +750,17 @@ function SettingsToggle({
 	onChange: (checked: boolean) => void;
 }): React.JSX.Element {
 	return (
-		<label className="flex min-h-9 cursor-pointer items-center justify-between gap-3 rounded border border-foreground/10 bg-background px-2.5 py-2 text-foreground/72 text-xs">
+		<Checkbox
+			className="min-h-9 flex-row-reverse justify-between border border-foreground/10 bg-background px-2.5 py-2 text-foreground/72"
+			density="compact"
+			isSelected={checked}
+			onChange={onChange}
+		>
 			<span className="flex items-center gap-2">
 				{Icon ? <Icon size={14} /> : null}
 				{label}
 			</span>
-			<input
-				checked={checked}
-				className="h-4 w-4 accent-primary"
-				type="checkbox"
-				onChange={(event) => onChange(event.target.checked)}
-			/>
-		</label>
+		</Checkbox>
 	);
 }
 
@@ -847,15 +851,15 @@ function SettingsText({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-4 block text-foreground/62 text-xs">
-			{label}
-			<input
-				className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
+		<Field className="mt-4" label={label}>
+			<Input
+				className="w-full"
+				density="compact"
 				type="text"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
-		</label>
+		</Field>
 	);
 }
 
@@ -886,27 +890,31 @@ function SettingsColor({
 }
 
 function SettingsSelect({
-	children,
 	label,
 	onChange,
+	options,
 	value,
 }: {
-	children: React.ReactNode;
 	label: string;
 	onChange: (value: string) => void;
+	options: { label: string; value: string }[];
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 text-foreground/52 text-xs">
-			<span className="font-medium uppercase">{label}</span>
-			<select
-				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
-				value={value}
-				onChange={(event) => onChange(event.target.value)}
-			>
-				{children}
-			</select>
-		</label>
+		<Field label={label}>
+			<Select value={value} onValueChange={onChange}>
+				<SelectTrigger className="w-full" density="compact">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map((option) => (
+						<SelectItem key={option.value} value={option.value}>
+							{option.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</Field>
 	);
 }
 
@@ -929,14 +937,14 @@ function SettingsTextarea({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="mt-3 block text-foreground/62 text-xs">
-			{label}
-			<textarea
-				className="mt-1 min-h-28 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-primary/60"
+		<Field className="mt-3" label={label}>
+			<Textarea
+				className="min-h-28 w-full"
+				density="compact"
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			/>
-		</label>
+		</Field>
 	);
 }
 
@@ -961,10 +969,10 @@ function SettingsNumber({
 	value: number | null | undefined;
 }): React.JSX.Element {
 	return (
-		<label className="@container grid gap-1 text-foreground/52 text-xs">
-			<span className="font-medium uppercase">{label}</span>
-			<input
-				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+		<Field className="@container" label={label}>
+			<Input
+				className="min-w-0"
+				density="compact"
 				step={step}
 				type="number"
 				value={value ?? ""}
@@ -974,6 +982,6 @@ function SettingsNumber({
 					)
 				}
 			/>
-		</label>
+		</Field>
 	);
 }

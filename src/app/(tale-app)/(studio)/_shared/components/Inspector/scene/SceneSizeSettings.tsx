@@ -1,9 +1,15 @@
 import {
 	DebugCard,
 	Setting,
-	settingClassName,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type { SceneSize } from "~/app/(tale-app)/_shared/types";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import {
 	OptionalUnitNumberSetting,
 	UnitNumberSetting,
@@ -33,17 +39,18 @@ export function SceneSizeSettings({
 		>
 			<div className="rounded border border-foreground/8 bg-background/15 p-3">
 				<Setting label="Sizing mode">
-					<select
-						className={settingClassName}
+					<SceneSizeSelect
+						label="Sizing mode"
 						value={size.mode}
-						onChange={(event) => {
-							const mode = event.target.value as SceneSize["mode"];
+						options={[
+							{ label: "Content responsive", value: "content" },
+							{ label: "Explicit dimensions", value: "manual" },
+						]}
+						onChange={(value) => {
+							const mode = value as SceneSize["mode"];
 							onChange(createSizeForMode(mode, size));
 						}}
-					>
-						<option value="content">Content responsive</option>
-						<option value="manual">Explicit dimensions</option>
-					</select>
+					/>
 				</Setting>
 			</div>
 			<SizeSettingsSection title="Dimensions">
@@ -211,17 +218,39 @@ function AlignmentSetting<Value extends string>({
 			label={label}
 			readerRole="alignment-setting"
 		>
-			<select
-				className={settingClassName}
+			<SceneSizeSelect
+				label={label}
 				value={value}
-				onChange={(event) => onChange(event.target.value as Value)}
-			>
-				{options.map((option) => (
-					<option key={option} value={option}>
-						{option}
-					</option>
-				))}
-			</select>
+				options={options.map((option) => ({ label: option, value: option }))}
+				onChange={(nextValue) => onChange(nextValue as Value)}
+			/>
 		</Setting>
+	);
+}
+
+function SceneSizeSelect({
+	label,
+	onChange,
+	options,
+	value,
+}: {
+	label: string;
+	onChange: (value: string) => void;
+	options: readonly { label: string; value: string }[];
+	value: string;
+}): React.JSX.Element {
+	return (
+		<Select aria-label={label} value={value} onValueChange={onChange}>
+			<SelectTrigger className="w-full" density="compact">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>
+				{options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 }

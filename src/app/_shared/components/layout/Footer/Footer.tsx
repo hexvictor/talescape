@@ -3,11 +3,15 @@ import { TalescapeLogo } from "~/app/_shared/components/brand/TalescapeLogo";
 
 export default function Footer() {
 	return (
-		<footer className="border-[var(--comic-blue)] border-t-[3px] bg-card text-card-foreground">
-			<div className="mx-auto flex min-h-24 w-full max-w-[90rem] flex-col items-center gap-3 px-5 py-5 text-center sm:flex-row sm:px-8 sm:text-left">
+		<footer
+			data-reader-component="Footer"
+			data-reader-role="site-footer"
+			className="border-[var(--comic-blue)] border-t-[3px] bg-[var(--comic-ink)] text-white"
+		>
+			<div className="mx-auto flex min-h-24 w-full max-w-[var(--ts-content-max)] flex-col items-center gap-3 px-[var(--ts-page-gutter)] py-5 text-center sm:flex-row sm:text-left">
 				<TalescapeLogo
 					markClassName="h-20"
-					tone="auto"
+					tone="dark-surface"
 					wordmarkClassName="w-36 sm:w-44"
 				/>
 				<p className="font-serif italic">Every story is a way out.</p>

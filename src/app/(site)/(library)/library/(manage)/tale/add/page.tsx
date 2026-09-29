@@ -3,7 +3,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
+import { Field } from "~/components/ui/field";
 import Input from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import Textarea from "~/components/ui/textarea";
 import { getTaleCreateOptions } from "~/server/db/data/library/queries";
 import { createTaleAction } from "./actions";
@@ -13,9 +21,6 @@ type AddTalePageProps = {
 		error?: string;
 	}>;
 };
-
-const fieldClass =
-	"flex h-11 w-full border-2 border-input bg-card px-3 py-1 text-sm shadow-[3px_3px_0_rgb(var(--foreground-rgb))] outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring/40";
 
 export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 	const [{ canManageOfficial, userId, books }, params] = await Promise.all([
@@ -46,7 +51,7 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 	}
 
 	return (
-		<div className="mx-auto grid w-full max-w-7xl gap-5 py-2 lg:grid-cols-[1fr_24rem]">
+		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-5 py-2 lg:grid-cols-[1fr_24rem]">
 			<form action={createTaleAction} className="grid gap-5">
 				<ComicPanel
 					accent="primary"
@@ -90,7 +95,7 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 						title="Identity"
 					/>
 					<div className="grid gap-4 md:grid-cols-2">
-						<Field label="Title" htmlFor="title">
+						<Field label="Title">
 							<Input
 								id="title"
 								name="title"
@@ -98,83 +103,95 @@ export default async function AddTalePage({ searchParams }: AddTalePageProps) {
 								defaultValue="New Talescape Draft"
 							/>
 						</Field>
-						<Field label="Slug" htmlFor="slug">
+						<Field label="Slug">
 							<Input id="slug" name="slug" placeholder="new-talescape-draft" />
 						</Field>
-						<Field label="Book" htmlFor="bookId">
-							<select id="bookId" name="bookId" className={fieldClass}>
-								<option value="none">No book</option>
+						<Field label="Book">
+							<TaleFormSelect label="Book" name="bookId" defaultValue="none">
+								<SelectItem value="none">No book</SelectItem>
 								{books.map((book) => (
-									<option key={book.id} value={book.id}>
+									<SelectItem key={book.id} value={String(book.id)}>
 										{book.title}
 										{book.author?.fullName ? ` - ${book.author.fullName}` : ""}
-									</option>
+									</SelectItem>
 								))}
-							</select>
+							</TaleFormSelect>
 						</Field>
-						<Field label="Type" htmlFor="type">
-							<select id="type" name="type" className={fieldClass}>
-								<option value="story">Story</option>
-								<option value="codex">Codex</option>
-								<option value="timeline">Timeline</option>
-							</select>
+						<Field label="Type">
+							<TaleFormSelect label="Type" name="type" defaultValue="story">
+								<SelectItem value="story">Story</SelectItem>
+								<SelectItem value="codex">Codex</SelectItem>
+								<SelectItem value="timeline">Timeline</SelectItem>
+							</TaleFormSelect>
 						</Field>
-						<Field label="Visibility" htmlFor="visibility">
-							<select id="visibility" name="visibility" className={fieldClass}>
-								<option value="private">Private</option>
-								<option value="restricted">Restricted</option>
-								<option value="public">Public</option>
-							</select>
+						<Field label="Visibility">
+							<TaleFormSelect
+								label="Visibility"
+								name="visibility"
+								defaultValue="private"
+							>
+								<SelectItem value="private">Private</SelectItem>
+								<SelectItem value="restricted">Restricted</SelectItem>
+								<SelectItem value="public">Public</SelectItem>
+							</TaleFormSelect>
 						</Field>
-						<Field label="Status" htmlFor="status">
-							<select id="status" name="status" className={fieldClass}>
-								<option value="draft">Draft</option>
-								<option value="review">Review</option>
-								<option value="approved">Approved</option>
-								<option value="rejected">Rejected</option>
-								<option value="published">Published</option>
-								<option value="archived">Archived</option>
-							</select>
+						<Field label="Status">
+							<TaleFormSelect label="Status" name="status" defaultValue="draft">
+								<SelectItem value="draft">Draft</SelectItem>
+								<SelectItem value="review">Review</SelectItem>
+								<SelectItem value="approved">Approved</SelectItem>
+								<SelectItem value="rejected">Rejected</SelectItem>
+								<SelectItem value="published">Published</SelectItem>
+								<SelectItem value="archived">Archived</SelectItem>
+							</TaleFormSelect>
 						</Field>
-						<Field label="Cloneable" htmlFor="cloneable">
-							<select id="cloneable" name="cloneable" className={fieldClass}>
-								<option value="private">Private</option>
-								<option value="shared">Shared</option>
-								<option value="public">Public</option>
-							</select>
+						<Field label="Cloneable">
+							<TaleFormSelect
+								label="Cloneable"
+								name="cloneable"
+								defaultValue="private"
+							>
+								<SelectItem value="private">Private</SelectItem>
+								<SelectItem value="shared">Shared</SelectItem>
+								<SelectItem value="public">Public</SelectItem>
+							</TaleFormSelect>
 						</Field>
-						<Field label="Editable" htmlFor="editable">
-							<select id="editable" name="editable" className={fieldClass}>
-								<option value="true">Editable</option>
-								<option value="false">Locked</option>
-							</select>
+						<Field label="Editable">
+							<TaleFormSelect
+								label="Editable"
+								name="editable"
+								defaultValue="true"
+							>
+								<SelectItem value="true">Editable</SelectItem>
+								<SelectItem value="false">Locked</SelectItem>
+							</TaleFormSelect>
 						</Field>
 						{canManageOfficial ? (
 							<>
-								<Field label="Official" htmlFor="isOfficial">
-									<select
-										id="isOfficial"
+								<Field label="Official">
+									<TaleFormSelect
+										label="Official"
 										name="isOfficial"
-										className={fieldClass}
+										defaultValue="false"
 									>
-										<option value="false">Creator tale</option>
-										<option value="true">Official tale</option>
-									</select>
+										<SelectItem value="false">Creator tale</SelectItem>
+										<SelectItem value="true">Official tale</SelectItem>
+									</TaleFormSelect>
 								</Field>
-								<Field label="Verified" htmlFor="isVerified">
-									<select
-										id="isVerified"
+								<Field label="Verified">
+									<TaleFormSelect
+										label="Verified"
 										name="isVerified"
-										className={fieldClass}
+										defaultValue="false"
 									>
-										<option value="false">Not verified</option>
-										<option value="true">Verified</option>
-									</select>
+										<SelectItem value="false">Not verified</SelectItem>
+										<SelectItem value="true">Verified</SelectItem>
+									</TaleFormSelect>
 								</Field>
 							</>
 						) : null}
 					</div>
-					<Field label="Description" htmlFor="description">
+					<Field label="Description">
 						<Textarea
 							id="description"
 							name="description"
@@ -230,22 +247,24 @@ function SectionTitle({
 	);
 }
 
-function Field({
-	label,
-	htmlFor,
+function TaleFormSelect({
 	children,
+	defaultValue,
+	label,
+	name,
 }: {
-	label: string;
-	htmlFor: string;
 	children: ReactNode;
+	defaultValue: string;
+	label: string;
+	name: string;
 }) {
 	return (
-		<div className="grid gap-2">
-			<label htmlFor={htmlFor} className="font-medium text-sm">
-				{label}
-			</label>
-			{children}
-		</div>
+		<Select aria-label={label} name={name} defaultValue={defaultValue}>
+			<SelectTrigger className="w-full">
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent>{children}</SelectContent>
+		</Select>
 	);
 }
 

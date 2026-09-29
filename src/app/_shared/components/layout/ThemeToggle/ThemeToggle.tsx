@@ -1,7 +1,7 @@
 "use client";
 
 import { useTaleRootStoreShallow } from "~/app/_shared/contexts/TaleRootStoreContext";
-import { Button } from "~/components/ui/button";
+import { Button, type ButtonProps } from "~/components/ui/button";
 import { MoonIcon, SunIcon } from "~/components/ui/icons";
 
 /**
@@ -12,7 +12,11 @@ import { MoonIcon, SunIcon } from "~/components/ui/icons";
  * @example
  * <ThemeToggle />
  */
-function ThemeToggle(): React.JSX.Element {
+function ThemeToggle({
+	variant = "lift",
+}: {
+	variant?: ButtonProps["variant"];
+}): React.JSX.Element {
 	const { isDarkTheme, toggleTheme } = useTaleRootStoreShallow((state) => ({
 		isDarkTheme: state.derived.isDarkTheme,
 		toggleTheme: state.theme.toggleTheme,
@@ -23,7 +27,7 @@ function ThemeToggle(): React.JSX.Element {
 	return (
 		<Button
 			type="button"
-			variant="lift"
+			variant={variant}
 			size="icon"
 			aria-label={
 				isDarkTheme ? "Switch to light theme" : "Switch to dark theme"

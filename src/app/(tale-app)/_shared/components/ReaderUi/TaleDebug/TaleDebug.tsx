@@ -10,6 +10,7 @@ import {
 	X,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { useReaderViewportContext } from "../../../contexts/ReaderViewportContext";
 import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
@@ -296,10 +297,10 @@ function TaleDebugContent(): React.JSX.Element {
 			data-reader-component="TaleDebug"
 			data-reader-role="debug-panel"
 			className={cn(
-				"pointer-events-auto flex flex-col overflow-hidden border border-foreground/12 bg-background/92 shadow-2xl backdrop-blur-md",
+				"reader-debug-panel pointer-events-auto flex flex-col overflow-hidden border border-foreground/12 bg-background/92 shadow-2xl backdrop-blur-md",
 				mobile
-					? "absolute inset-x-0 bottom-0 z-[1200] w-full rounded-t-xl border-b-0"
-					: "absolute z-[90] rounded-lg",
+					? "absolute inset-x-0 bottom-0 z-[1200] w-full border-b-0"
+					: "absolute z-[90]",
 			)}
 			style={
 				mobile
@@ -315,7 +316,7 @@ function TaleDebugContent(): React.JSX.Element {
 			<header
 				data-reader-component="TaleDebug"
 				data-reader-role="debug-header"
-				className="flex shrink-0 items-center justify-between gap-4 border-foreground/10 border-b px-4 py-3"
+				className="reader-debug-header flex shrink-0 items-center justify-between gap-4 border-foreground/10 border-b px-4 py-3"
 			>
 				<div
 					data-reader-component="TaleDebug"
@@ -337,16 +338,19 @@ function TaleDebugContent(): React.JSX.Element {
 					{DebugHeaderActions ? (
 						<DebugHeaderActions sceneId={location?.sceneId ?? null} />
 					) : null}
-					<button
+					<Button
 						data-reader-component="TaleDebug"
 						data-reader-role="close-debug-control"
 						type="button"
 						aria-label="Hide reader debug"
-						className="grid h-9 w-9 place-items-center rounded border border-foreground/10 text-foreground/55 hover:text-foreground"
+						size="icon"
+						variant="ghost"
+						motion="flat"
+						className="h-9 w-9 border border-current/30 p-0 text-inherit hover:bg-primary hover:text-primary-foreground"
 						onClick={toggleDebug}
 					>
 						<X size={16} />
-					</button>
+					</Button>
 				</div>
 			</header>
 			{isStudio ? <GlobalSnapControls /> : null}

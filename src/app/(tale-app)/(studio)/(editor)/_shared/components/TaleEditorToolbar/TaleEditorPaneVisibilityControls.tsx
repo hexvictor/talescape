@@ -7,6 +7,7 @@ import {
 	SquareMousePointer,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { Button } from "~/components/ui/button";
 
 /**
  * Renders top-bar controls for editor surface pane visibility.
@@ -49,7 +50,9 @@ export function TaleEditorPaneVisibilityControls({
 		<div
 			data-reader-component="TaleEditorPaneVisibilityControls"
 			data-reader-role="editor-pane-visibility"
-			className="flex min-w-0 overflow-hidden rounded border border-foreground/12 bg-background/90"
+			data-studio-component="TaleEditorPaneVisibilityControls"
+			data-studio-role="editor-pane-visibility"
+			className="studio-pane-controls flex min-w-0 overflow-hidden border-2 border-foreground bg-card"
 		>
 			<VisibilityButton
 				active={livePreviewOpen}
@@ -111,20 +114,22 @@ function VisibilityButton({
 	onClick: () => void;
 }): React.JSX.Element {
 	return (
-		<button
-			type="button"
+		<Button
 			aria-pressed={active}
 			disabled={disabled}
 			aria-label={label}
 			title={label}
-			className={`grid h-9 w-10 place-items-center border-foreground/10 border-r text-xs transition last:border-r-0 disabled:cursor-not-allowed disabled:opacity-45 ${
+			className={`h-9 w-10 border-0 border-foreground/10 border-r p-0 shadow-none last:border-r-0 ${
 				active
 					? "bg-primary/16 text-primary"
 					: "text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
 			}`}
-			onClick={onClick}
+			motion="flat"
+			size="icon"
+			variant="ghost"
+			onPress={onClick}
 		>
 			{children}
-		</button>
+		</Button>
 	);
 }

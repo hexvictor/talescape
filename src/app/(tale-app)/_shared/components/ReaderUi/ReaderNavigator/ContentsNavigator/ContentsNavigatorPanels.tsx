@@ -9,6 +9,7 @@ import {
 	MousePointerClick,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type {
 	ReaderNavigationEntry,
@@ -107,12 +108,15 @@ export function ContentsTree({
 						className="rounded-md border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] p-2"
 					>
 						<div className="mb-2 flex items-center gap-1 rounded hover:bg-foreground/5">
-							<button
+							<Button
 								type="button"
+								size="icon"
+								variant="ghost"
+								motion="flat"
 								aria-label={
 									collapsed ? `Expand ${part.title}` : `Collapse ${part.title}`
 								}
-								className="grid h-9 w-9 shrink-0 place-items-center text-foreground/48 hover:text-foreground"
+								className="h-9 w-9 shrink-0 border-0 p-0 text-foreground/48 hover:text-foreground"
 								onClick={() => togglePart(part.id)}
 							>
 								{collapsed ? (
@@ -120,10 +124,12 @@ export function ContentsTree({
 								) : (
 									<ChevronDown size={15} />
 								)}
-							</button>
-							<button
+							</Button>
+							<Button
 								type="button"
-								className="flex min-w-0 flex-1 items-center gap-3 py-2 pr-2 text-left"
+								variant="ghost"
+								motion="flat"
+								className="h-auto min-w-0 flex-1 justify-start gap-3 border-0 py-2 pr-2 pl-0 text-left normal-case"
 								onClick={() => onNavigate(part.firstKeyframeId)}
 							>
 								<span className="grid h-8 w-8 shrink-0 place-items-center rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft-strong)] text-[color:var(--reader-part-solid)]">
@@ -140,7 +146,7 @@ export function ContentsTree({
 								<span className="text-foreground/38 text-xs">
 									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
 								</span>
-							</button>
+							</Button>
 						</div>
 						{collapsed ? null : (
 							<div className="space-y-1 border-foreground/8 border-l pl-3">
@@ -167,14 +173,17 @@ export function ContentsTree({
 												)}
 											>
 												{entry.pages.length > 1 ? (
-													<button
+													<Button
 														type="button"
+														size="icon"
+														variant="ghost"
+														motion="flat"
 														aria-label={
 															expanded
 																? `Collapse pages in ${entry.title}`
 																: `Expand pages in ${entry.title}`
 														}
-														className="grid h-6 w-6 shrink-0 place-items-center rounded hover:bg-foreground/8"
+														className="h-6 w-6 shrink-0 border-0 p-0 hover:bg-foreground/8"
 														onClick={() => toggleEntry(entry.id)}
 													>
 														{expanded ? (
@@ -182,14 +191,16 @@ export function ContentsTree({
 														) : (
 															<ChevronRight size={13} />
 														)}
-													</button>
+													</Button>
 												) : (
 													<span className="w-6" />
 												)}
-												<button
+												<Button
 													type="button"
+													variant="ghost"
+													motion="flat"
 													title={`${getEntryTypeLabel(entry.type)}: ${entry.title}`}
-													className="flex min-w-0 flex-1 items-center gap-2 text-left"
+													className="h-auto min-w-0 flex-1 justify-start gap-2 border-0 p-0 text-left font-normal normal-case"
 													onClick={() => selectEntry(entry)}
 												>
 													<span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-[color:var(--reader-part-solid)]">
@@ -214,7 +225,7 @@ export function ContentsTree({
 														{entry.pageCount}{" "}
 														{entry.pageCount === 1 ? "page" : "pages"}
 													</span>
-												</button>
+												</Button>
 											</div>
 											{expanded ? (
 												<EntryPagesGrid
@@ -332,26 +343,32 @@ export function RoutesPanel({
 											<span className="min-w-0 flex-1 truncate">
 												{path.label}
 											</span>
-											<button
+											<Button
 												type="button"
+												size="icon"
+												variant="ghost"
+												motion="flat"
 												title="Apply this path"
 												aria-label={`Apply ${path.label}`}
 												disabled={!pathReachable}
-												className="grid h-7 w-7 shrink-0 place-items-center rounded text-foreground/48 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
+												className="h-7 w-7 shrink-0 border-0 p-0 text-foreground/48 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
 												onClick={() => onChoosePath(path)}
 											>
 												<MousePointerClick size={12} />
-											</button>
-											<button
+											</Button>
+											<Button
 												type="button"
+												size="icon"
+												variant="ghost"
+												motion="flat"
 												title="Travel to this choice"
 												aria-label={`Travel to ${path.label} choice`}
 												disabled={!pathReachable}
-												className="grid h-7 w-7 shrink-0 place-items-center rounded text-foreground/48 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
+												className="h-7 w-7 shrink-0 border-0 p-0 text-foreground/48 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
 												onClick={() => onTravelToBlock(path.fromSceneId)}
 											>
 												<LocateFixed size={12} />
-											</button>
+											</Button>
 										</div>
 									);
 								})}

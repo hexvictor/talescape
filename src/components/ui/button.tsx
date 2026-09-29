@@ -1,10 +1,29 @@
-import { Slot } from "@radix-ui/react-slot";
-import { type VariantProps, cva } from "class-variance-authority";
+"use client";
 
+import { type VariantProps, cva } from "class-variance-authority";
+import {
+	type CSSProperties,
+	Children,
+	type ReactElement,
+	cloneElement,
+	isValidElement,
+} from "react";
+import { mergeProps } from "react-aria";
+import {
+	Button as AriaButton,
+	type ButtonProps as AriaButtonProps,
+	Link as AriaLink,
+	type LinkProps as AriaLinkProps,
+} from "react-aria-components";
 import cn from "~/lib/utils/cn";
+import {
+	type GeometryShape,
+	type GeometrySlant,
+	resolveGeometrySlant,
+} from "./geometry";
 
 const buttonVariants = cva(
-	"inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-2 border-foreground font-black text-xs uppercase outline-none transition-[transform,box-shadow,background-color,color,border-color,border-width] focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+	"inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-2 border-foreground font-black text-xs uppercase outline-none transition-[transform,box-shadow,background-color,color,border-color,border-width] focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 	{
 		variants: {
 			variant: {
@@ -20,20 +39,17 @@ const buttonVariants = cva(
 					"border-transparent bg-transparent shadow-none hover:border-foreground hover:bg-accent hover:text-accent-foreground",
 				link: "border-transparent bg-transparent text-primary underline-offset-4 shadow-none hover:text-primary/80",
 				nav: "border-transparent bg-transparent text-current shadow-none hover:bg-accent hover:text-accent-foreground",
-				navActive: "bg-accent text-accent-foreground",
+				navActive: "bg-primary text-primary-foreground",
 				ink: "bg-[var(--comic-ink)] text-[var(--comic-cream)] hover:bg-foreground/90",
 			},
 			size: {
-				default: "h-11 px-4 py-2 has-[>svg]:px-3",
-				sm: "h-11 gap-1.5 px-3 has-[>svg]:px-2.5",
-				lg: "h-13 px-6 has-[>svg]:px-4",
-				icon: "size-11",
+				default: "h-[var(--ts-control-height)] px-4 py-2 has-[>svg]:px-3",
+				sm: "h-[var(--ts-control-height-compact)] gap-1.5 px-3 has-[>svg]:px-2.5",
+				lg: "h-[var(--ts-control-height-large)] px-6 has-[>svg]:px-4",
+				icon: "size-[var(--ts-control-height)]",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-			size: "default",
-		},
+		defaultVariants: { variant: "default", size: "default" },
 	},
 );
 
@@ -71,60 +87,8 @@ const buttonSurfaceClasses = {
 	ghost: "bg-transparent",
 	link: "bg-transparent",
 	nav: "bg-transparent",
-	navActive: "bg-accent",
+	navActive: "bg-primary",
 	ink: "bg-[var(--comic-ink)]",
-} as const;
-
-const buttonSlantSizes = {
-	sm: "6px",
-	md: "10px",
-	lg: "14px",
-	xl: "18px",
-} as const;
-
-const buttonShapeClasses = {
-	rectangle:
-		"[--button-frame-clip-path:polygon(0_0,100%_0,100%_100%,0_100%)] [--button-frame-inner-clip-path:polygon(0_0,100%_0,100%_100%,0_100%)]",
-	"slant-left":
-		"[--button-frame-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,0_100%)] [--button-frame-inner-clip-path:polygon(calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_0,100%_0,100%_100%,0_100%)]",
-	"slant-right":
-		"[--button-frame-clip-path:polygon(0_0,100%_0,calc(100%_-_var(--comic-frame-slant))_100%,0_100%)] [--button-frame-inner-clip-path:polygon(0_0,100%_0,calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_100%,0_100%)]",
-	"slant-both":
-		"[--button-frame-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,calc(100%_-_var(--comic-frame-slant))_100%,0_100%)] [--button-frame-inner-clip-path:polygon(calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_0,100%_0,calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_100%,0_100%)]",
-	"corner-left":
-		"[--button-frame-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,0_100%,0_var(--comic-frame-slant))] [--button-frame-inner-clip-path:polygon(calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_0,100%_0,100%_100%,0_100%,0_calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease)))]",
-	"corner-right":
-		"[--button-frame-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant))_0,100%_var(--comic-frame-slant),100%_100%,0_100%)] [--button-frame-inner-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_0,100%_calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease)),100%_100%,0_100%)]",
-	"corner-bottom-left":
-		"[--button-frame-clip-path:polygon(0_0,100%_0,100%_100%,var(--comic-frame-slant)_100%,0_calc(100%_-_var(--comic-frame-slant)))] [--button-frame-inner-clip-path:polygon(0_0,100%_0,100%_100%,calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_100%,0_calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease)))]",
-	"corner-bottom-right":
-		"[--button-frame-clip-path:polygon(0_0,100%_0,100%_calc(100%_-_var(--comic-frame-slant)),calc(100%_-_var(--comic-frame-slant))_100%,0_100%)] [--button-frame-inner-clip-path:polygon(0_0,100%_0,100%_calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease)),calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_100%,0_100%)]",
-	"corners-left":
-		"[--button-frame-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,var(--comic-frame-slant)_100%,0_calc(100%_-_var(--comic-frame-slant)),0_var(--comic-frame-slant))] [--button-frame-inner-clip-path:polygon(calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_0,100%_0,100%_100%,calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease))_100%,0_calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease)),0_calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease)))]",
-	"corners-right":
-		"[--button-frame-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant))_0,100%_var(--comic-frame-slant),100%_calc(100%_-_var(--comic-frame-slant)),calc(100%_-_var(--comic-frame-slant))_100%,0_100%)] [--button-frame-inner-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_0,100%_calc(var(--comic-frame-slant)_-_var(--comic-frame-inner-slant-decrease)),100%_calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease)),calc(100%_-_var(--comic-frame-slant)_+_var(--comic-frame-inner-slant-decrease))_100%,0_100%)]",
-} as const;
-
-const buttonHoverShapeClasses = {
-	rectangle: "[--button-hover-clip-path:polygon(0_0,100%_0,100%_100%,0_100%)]",
-	"slant-left":
-		"[--button-hover-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,0_100%)]",
-	"slant-right":
-		"[--button-hover-clip-path:polygon(0_0,100%_0,calc(100%_-_var(--comic-frame-slant))_100%,0_100%)]",
-	"slant-both":
-		"[--button-hover-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,calc(100%_-_var(--comic-frame-slant))_100%,0_100%)]",
-	"corner-left":
-		"[--button-hover-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,0_100%,0_var(--comic-frame-slant))]",
-	"corner-right":
-		"[--button-hover-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant))_0,100%_var(--comic-frame-slant),100%_100%,0_100%)]",
-	"corner-bottom-left":
-		"[--button-hover-clip-path:polygon(0_0,100%_0,100%_100%,var(--comic-frame-slant)_100%,0_calc(100%_-_var(--comic-frame-slant)))]",
-	"corner-bottom-right":
-		"[--button-hover-clip-path:polygon(0_0,100%_0,100%_calc(100%_-_var(--comic-frame-slant)),calc(100%_-_var(--comic-frame-slant))_100%,0_100%)]",
-	"corners-left":
-		"[--button-hover-clip-path:polygon(var(--comic-frame-slant)_0,100%_0,100%_100%,var(--comic-frame-slant)_100%,0_calc(100%_-_var(--comic-frame-slant)),0_var(--comic-frame-slant))]",
-	"corners-right":
-		"[--button-hover-clip-path:polygon(0_0,calc(100%_-_var(--comic-frame-slant))_0,100%_var(--comic-frame-slant),100%_calc(100%_-_var(--comic-frame-slant)),calc(100%_-_var(--comic-frame-slant))_100%,0_100%)]",
 } as const;
 
 const comicDecorationPositions = {
@@ -147,83 +111,150 @@ const comicDecorationColors = {
 	accent: "rgb(var(--accent-rgb) / 0.88)",
 } as const;
 
-type ButtonMotion = keyof typeof buttonMotionClasses;
-type ButtonShape = keyof typeof buttonShapeClasses;
-type ButtonSlant = keyof typeof buttonSlantSizes | `${number}px`;
-type ComicDecorationElement = "strikes" | "bubbles";
-type ComicDecorationPosition = keyof typeof comicDecorationPositions;
-type ComicDecorationColor = keyof typeof comicDecorationColors;
+export type ButtonMotion = keyof typeof buttonMotionClasses;
+export type ButtonShape = GeometryShape;
+export type ButtonSlant = GeometrySlant;
+export type ComicDecorationElement = "strikes" | "bubbles";
+export type ComicDecorationPosition = keyof typeof comicDecorationPositions;
+export type ComicDecorationColor = keyof typeof comicDecorationColors;
 
-type ComicDecoration = {
+export type ComicDecoration = {
 	className?: string;
 	color?: ComicDecorationColor | string;
 	element: ComicDecorationElement;
 	position: ComicDecorationPosition;
 };
 
-type ButtonFrameStyle = React.CSSProperties & {
+type ButtonFrameStyle = CSSProperties & {
 	"--comic-frame-inner-slant-decrease"?: string;
 	"--comic-frame-slant"?: string;
+	"--ts-geometry-inner-decrease"?: string;
+	"--ts-geometry-slant"?: string;
 };
 
-function getDefaultMotion(
-	variant: VariantProps<typeof buttonVariants>["variant"],
-): ButtonMotion {
-	if (variant === "link") {
-		return "underline";
-	}
-
-	if (variant === "ghost") {
-		return "color-only";
-	}
-
-	if (variant === "lift") {
-		return "lift-on-hover";
-	}
-
-	return "lifted";
-}
-
-function getSlantValue(slant: ButtonSlant | undefined): string | undefined {
-	if (!slant) {
-		return undefined;
-	}
-
-	return slant in buttonSlantSizes
-		? buttonSlantSizes[slant as keyof typeof buttonSlantSizes]
-		: slant;
-}
-
-function Button({
-	className,
-	comicDecorations,
-	innerSlantDecrease,
-	hoverShape,
-	motion,
-	shape,
-	slanted,
-	slant,
-	variant,
-	size,
-	asChild = false,
-	surfaceClassName,
-	hoverSurfaceClassName,
-	style,
-	...props
-}: React.ComponentProps<"button"> &
+export type ButtonProps = React.ComponentProps<"button"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean;
 		comicDecorations?: ComicDecoration[];
-		innerSlantDecrease?: `${number}px`;
 		hoverShape?: ButtonShape | "match";
+		hoverSurfaceClassName?: string;
+		innerSlantDecrease?: `${number}px`;
 		motion?: ButtonMotion;
+		onPress?: AriaButtonProps["onPress"];
 		shape?: ButtonShape;
 		slanted?: boolean;
 		slant?: ButtonSlant;
 		surfaceClassName?: string;
-		hoverSurfaceClassName?: string;
-	}) {
-	const Comp = asChild ? Slot : "button";
+	};
+
+function getDefaultMotion(
+	variant: VariantProps<typeof buttonVariants>["variant"],
+): ButtonMotion {
+	if (variant === "link") return "underline";
+	if (variant === "ghost") return "color-only";
+	if (variant === "lift") return "lift-on-hover";
+	return "lifted";
+}
+
+type InteractiveProps = Omit<
+	ButtonProps,
+	| "asChild"
+	| "className"
+	| "comicDecorations"
+	| "hoverShape"
+	| "hoverSurfaceClassName"
+	| "innerSlantDecrease"
+	| "motion"
+	| "shape"
+	| "size"
+	| "slant"
+	| "slanted"
+	| "surfaceClassName"
+	| "variant"
+> & {
+	className: string;
+};
+
+function InteractiveButton({
+	asChild,
+	children,
+	className,
+	disabled,
+	onClick,
+	onPress,
+	ref,
+	style,
+	...props
+}: InteractiveProps & { asChild: boolean }): React.JSX.Element {
+	if (asChild) {
+		const child = Children.only(children);
+		if (!isValidElement(child)) {
+			throw new Error("Button with asChild requires one valid React element.");
+		}
+
+		const typedChild = child as ReactElement<
+			React.AnchorHTMLAttributes<HTMLAnchorElement> & { href?: unknown }
+		>;
+		const childProps = typedChild.props;
+		const href = typeof childProps.href === "string" ? childProps.href : "#";
+		const linkProps = props as unknown as Omit<AriaLinkProps, "children">;
+
+		return (
+			<AriaLink
+				{...linkProps}
+				className={className}
+				href={href}
+				isDisabled={disabled}
+				onPress={onPress}
+				ref={ref as React.Ref<HTMLAnchorElement>}
+				style={style}
+				render={(ariaProps) =>
+					cloneElement(
+						typedChild,
+						mergeProps(childProps, ariaProps, { onClick }),
+					)
+				}
+			>
+				{childProps.children}
+			</AriaLink>
+		);
+	}
+
+	const ariaProps = props as unknown as Omit<AriaButtonProps, "children">;
+	return (
+		<AriaButton
+			{...ariaProps}
+			className={className}
+			isDisabled={disabled}
+			onPress={onPress}
+			ref={ref}
+			style={style}
+			render={(buttonProps) => (
+				<button {...mergeProps(buttonProps, { onClick })} />
+			)}
+		>
+			{children}
+		</AriaButton>
+	);
+}
+
+export function Button({
+	asChild = false,
+	className,
+	comicDecorations,
+	hoverShape,
+	hoverSurfaceClassName,
+	innerSlantDecrease,
+	motion,
+	shape,
+	size,
+	slant,
+	slanted,
+	style,
+	surfaceClassName,
+	variant,
+	...props
+}: ButtonProps): React.JSX.Element {
 	const resolvedVariant = variant ?? "default";
 	const resolvedMotion = motion ?? getDefaultMotion(resolvedVariant);
 	const resolvedShape =
@@ -244,17 +275,16 @@ function Button({
 	const hasVisibleFrame =
 		resolvedShape !== "rectangle" || decorations.length > 0;
 	const hasFrame = hasVisibleFrame || Boolean(hoverShape);
-	const frameStyle: ButtonFrameStyle = {
-		...style,
-	};
-	const resolvedSlant = getSlantValue(slant);
+	const resolvedSlant = resolveGeometrySlant(slant);
+	const frameStyle: ButtonFrameStyle = { ...style };
 
 	if (resolvedSlant) {
 		frameStyle["--comic-frame-slant"] = resolvedSlant;
+		frameStyle["--ts-geometry-slant"] = resolvedSlant;
 	}
-
 	if (innerSlantDecrease) {
 		frameStyle["--comic-frame-inner-slant-decrease"] = innerSlantDecrease;
+		frameStyle["--ts-geometry-inner-decrease"] = innerSlantDecrease;
 	}
 
 	const buttonClassName = cn(
@@ -267,16 +297,16 @@ function Button({
 			),
 		}),
 		hasFrame &&
-			"!bg-transparent hover:!bg-transparent relative z-10 w-full border-0 shadow-none [clip-path:var(--button-frame-inner-clip-path)] hover:shadow-none",
+			"!bg-transparent hover:!bg-transparent ts-geometry-inner-clip relative z-10 w-full border-0 shadow-none hover:shadow-none",
 	);
 
 	if (!hasFrame) {
 		return (
-			<Comp
-				data-slot="button"
+			<InteractiveButton
+				{...props}
+				asChild={asChild}
 				className={buttonClassName}
 				style={style}
-				{...props}
 			/>
 		);
 	}
@@ -284,25 +314,24 @@ function Button({
 	return (
 		<span
 			data-tale-interaction-group="true"
+			data-ts-shape={resolvedShape}
 			style={frameStyle}
 			className={cn(
-				"group relative inline-flex p-[var(--comic-frame-border-width)] transition-[transform,filter,padding]",
+				"group ts-geometry relative inline-flex p-[var(--comic-frame-border-width)] transition-[transform,filter,padding]",
 				buttonFrameMotionClasses[resolvedMotion],
-				buttonShapeClasses[resolvedShape],
-				resolvedHoverShape && buttonHoverShapeClasses[resolvedHoverShape],
 				className,
 			)}
 		>
 			{hasVisibleFrame ? (
 				<span
 					aria-hidden="true"
-					className="pointer-events-none absolute inset-0 bg-foreground [clip-path:var(--button-frame-clip-path)]"
+					className="ts-geometry-clip pointer-events-none absolute inset-0 bg-foreground"
 				/>
 			) : null}
 			<span
 				aria-hidden="true"
 				className={cn(
-					"pointer-events-none absolute inset-[var(--comic-frame-border-width)] z-[1] [clip-path:var(--button-frame-inner-clip-path)]",
+					"ts-geometry-inner-clip pointer-events-none absolute inset-[var(--comic-frame-border-width)] z-[1]",
 					buttonSurfaceClasses[resolvedVariant],
 					surfaceClassName,
 				)}
@@ -310,14 +339,19 @@ function Button({
 			{resolvedHoverShape ? (
 				<span
 					aria-hidden="true"
+					data-ts-shape={resolvedHoverShape}
 					className={cn(
-						"pointer-events-none absolute inset-[var(--comic-frame-border-width)] z-[3] bg-accent opacity-0 transition-opacity [clip-path:var(--button-hover-clip-path)] group-hover:opacity-100",
+						"ts-geometry ts-geometry-clip pointer-events-none absolute inset-[var(--comic-frame-border-width)] z-[3] bg-accent opacity-0 transition-opacity group-hover:opacity-100",
 						hoverSurfaceClassName,
 					)}
 				/>
 			) : null}
-			<Comp data-slot="button" className={buttonClassName} {...props} />
-			{decorations.length > 0 && (
+			<InteractiveButton
+				{...props}
+				asChild={asChild}
+				className={buttonClassName}
+			/>
+			{decorations.length > 0 ? (
 				<span aria-hidden="true" className="comic-button-decoration-layer">
 					{decorations.map((decoration, index) => (
 						<span
@@ -339,14 +373,12 @@ function Button({
 													decoration.color as ComicDecorationColor
 												]
 											: decoration.color,
-								} as React.CSSProperties
+								} as CSSProperties
 							}
 						/>
 					))}
 				</span>
-			)}
+			) : null}
 		</span>
 	);
 }
-
-export { Button };
