@@ -6,15 +6,15 @@ import {
 	compileReaderAnimationPlan,
 	createAnimationValues,
 	evaluateBlockAnimation,
-	evaluateFragmentAnimation,
+	evaluateElementAnimation,
 	evaluateNodeAnimation,
 	evaluatePreviousVisibleBlockAnimation,
 	getCompletedAnimationIds,
 	hasAmbientAnimations,
+	resetAnimationStyles,
 	writeAnimationValues,
 } from "../services/readerAnimations";
 import {
-	getReadingLength,
 	getSegmentAnchor,
 	getSegmentCamera,
 	getSegmentProgress,
@@ -24,9 +24,9 @@ import {
 	countReaderDiagnostic,
 	logReaderDiagnostic,
 } from "../services/readerDiagnostics";
-import { getAnchorByBlockId } from "../services/readerLookups";
-import { normalizeTalePlaybackConfig } from "../services/readerPlaybackSettings";
+import { getAnchorBySceneId } from "../services/readerLookups";
 import {
+	normalizeTalePlaybackConfig,
 	resolveAutoplayBoundaryPauseSeconds,
 	resolveAutoplaySegmentSpeed,
 } from "../services/readerPlaybackSettings";
@@ -41,12 +41,15 @@ import type {
 import { attachReaderInputBindings } from "./inputBindings";
 import { createReaderNavigationMotion } from "./navigationMotion";
 import { createProgressPainter } from "./progressPainter";
-import { getSavedInnerProgress } from "./progressPersistence";
+import {
+	getSavedInnerProgress,
+	getSavedKeyframeId,
+} from "./progressPersistence";
 import { createReaderAnimationFramePolicy } from "./readerAnimationFramePolicy";
 import { createReaderAnimationMonitor } from "./readerAnimationMonitor";
 import { createReaderDebugPublisher } from "./readerDebugPublisher";
 import { createReaderDomRegistry } from "./readerDomRegistry";
-import { createReaderFixedFragmentPainter } from "./readerFixedFragments";
+import { createReaderFixedFragmentPainter } from "./readerFixedElements";
 import { compileReaderFramePlans } from "./readerFramePlan";
 import { createReaderStatePublisher } from "./readerStatePublisher";
 import { filterTimelineVisibleAnchors } from "./readerTimelineVisibility";
@@ -74,7 +77,7 @@ type ReaderScrollEngineOptions = {
 
 type PreviousBlockTakeoverFrame = {
 	anchors: Anchor[];
-	blockIds: Set<string>;
+	sceneIds: Set<string>;
 	owner: Anchor;
 	progress: number;
 };
@@ -125,7 +128,7 @@ function composeTakeoverAnimationValues(
  * destination block's custom previous-block entrance takeover.
  *
  * @param compiled - Compiled route metadata.
- * @param owner - Block whose transition owns the takeover.
+ * @param owner - Scene whose transition owns the takeover.
  * @returns Previous anchors declared by the owner block's compiled takeover.
  *
  * @example
@@ -136,34 +139,34 @@ function getPreviousTakeoverAnchorsByOwner(
 	tale: Tale,
 	owner: Anchor,
 ): Anchor[] {
-	const ownerBlock = tale.indexMap.blocksById[owner.blockId];
+	const ownerBlock = tale.indexMap.scenesById[owner.sceneId];
 	if (!ownerBlock) return [];
 	if (
-		ownerBlock.transition.previousBlocksDuringEnter === "fadeActivePrevious"
+		ownerBlock.transition.previousScenesDuringEnter === "fadeActivePrevious"
 	) {
-		const ownerIndex = compiled.anchorIndexByBlockId[owner.blockId];
+		const ownerIndex = compiled.anchorIndexBySceneId[owner.sceneId];
 		const previousAnchor =
 			ownerIndex === undefined ? undefined : compiled.anchors[ownerIndex - 1];
 		return previousAnchor ? [previousAnchor] : [];
 	}
 	return (
-		compiled.previousVisibleBlockIdsByEnteringBlockId[owner.blockId] ?? []
+		compiled.previousVisibleSceneIdsByEnteringSceneId[owner.sceneId] ?? []
 	)
-		.map((blockId) => getAnchorByBlockId(compiled, blockId))
+		.map((sceneId) => getAnchorBySceneId(compiled, sceneId))
 		.filter((anchor): anchor is Anchor => Boolean(anchor));
 }
 
 /**
  * Resolves the active previous-block takeover for the current segment.
  *
- * During an entering transition, progress follows the entering phase. After the
+ * During an intro transition, progress follows the intro phase. After the
  * destination block has entered, the compiled held takeover remains at progress
  * 1 until the reader scrolls back before that transition.
  *
  * @param compiled - Compiled route metadata.
  * @param segment - Current timeline segment.
  * @param segmentProgress - Current segment progress.
- * @returns Takeover frame, or null when no previous blocks should be controlled.
+ * @returns Takeover frame, or null when no previous scenes should be controlled.
  *
  * @example
  * const takeover = getPreviousBlockTakeoverFrame(compiled, segment, progress);
@@ -176,14 +179,14 @@ function getPreviousBlockTakeoverFrame(
 ): PreviousBlockTakeoverFrame | null {
 	const destinationBlock =
 		segment.type === "transition"
-			? tale.indexMap.blocksById[segment.toBlockId]
+			? tale.indexMap.scenesById[segment.toSceneId]
 			: undefined;
 	if (
 		segment.type === "transition" &&
 		destinationBlock &&
-		destinationBlock?.transition.previousBlocksDuringEnter !== "keep"
+		destinationBlock?.transition.previousScenesDuringEnter !== "keep"
 	) {
-		const owner = getAnchorByBlockId(compiled, segment.toBlockId);
+		const owner = getAnchorBySceneId(compiled, segment.toSceneId);
 		if (!owner) return null;
 		const anchors = getPreviousTakeoverAnchorsByOwner(compiled, tale, owner);
 		return createPreviousBlockTakeoverFrame(
@@ -195,17 +198,17 @@ function getPreviousBlockTakeoverFrame(
 
 	const activeAnchorIndex =
 		segment.type === "transition"
-			? segment.fromBlockId === null
+			? segment.fromSceneId === null
 				? -1
-				: compiled.anchorIndexByBlockId[segment.fromBlockId]
-			: compiled.anchorIndexByBlockId[segment.blockId];
-	const heldBlockId =
+				: compiled.anchorIndexBySceneId[segment.fromSceneId]
+			: compiled.anchorIndexBySceneId[segment.sceneId];
+	const heldSceneId =
 		activeAnchorIndex === undefined
 			? null
-			: (compiled.heldPreviousTakeoverBlockIdByAnchorIndex[activeAnchorIndex] ??
+			: (compiled.heldPreviousTakeoverSceneIdByAnchorIndex[activeAnchorIndex] ??
 				null);
-	const owner = heldBlockId
-		? (getAnchorByBlockId(compiled, heldBlockId) ?? null)
+	const owner = heldSceneId
+		? (getAnchorBySceneId(compiled, heldSceneId) ?? null)
 		: null;
 	if (!owner) {
 		return getPendingPreviousBlockTakeoverFrame(
@@ -229,7 +232,7 @@ function getPreviousBlockTakeoverFrame(
  *
  * @param compiled - Compiled route metadata.
  * @param activeAnchorIndex - Route index currently driving the frame.
- * @returns A progress-zero takeover frame, or null when no blocks need it.
+ * @returns A progress-zero takeover frame, or null when no scenes need it.
  *
  * @example
  * const pending = getPendingPreviousBlockTakeoverFrame(compiled, 2);
@@ -243,9 +246,9 @@ function getPendingPreviousBlockTakeoverFrame(
 	const owner = compiled.anchors.find((anchor, index) => {
 		if (index <= activeAnchorIndex) return false;
 		return (
-			tale.indexMap.blocksById[anchor.blockId]?.transition
-				.previousBlocksDuringEnter !== "keep" &&
-			(compiled.previousVisibleBlockIdsByEnteringBlockId[anchor.blockId]
+			tale.indexMap.scenesById[anchor.sceneId]?.transition
+				.previousScenesDuringEnter !== "keep" &&
+			(compiled.previousVisibleSceneIdsByEnteringSceneId[anchor.sceneId]
 				?.length ?? 0) > 0
 		);
 	});
@@ -258,7 +261,7 @@ function getPendingPreviousBlockTakeoverFrame(
  * Creates a takeover frame from an owner block and its controlled anchors.
  *
  * @param anchors - Previous anchors controlled by the owner block.
- * @param owner - Block whose transition owns the takeover.
+ * @param owner - Scene whose transition owns the takeover.
  * @param progress - Takeover progress to apply.
  * @returns A takeover frame, or null when there are no controlled anchors.
  *
@@ -273,18 +276,18 @@ function createPreviousBlockTakeoverFrame(
 	if (anchors.length === 0) return null;
 	return {
 		anchors,
-		blockIds: new Set(anchors.map((anchor) => anchor.blockId)),
+		sceneIds: new Set(anchors.map((anchor) => anchor.sceneId)),
 		owner,
 		progress,
 	};
 }
 
 /**
- * Resolves the destination entering phase progress inside a transition segment.
+ * Resolves the destination intro phase progress inside a transition segment.
  *
  * @param segment - Current transition segment.
  * @param segmentProgress - Current transition progress.
- * @returns Normalized entering progress.
+ * @returns Normalized intro progress.
  *
  * @example
  * const progress = getTransitionEnteringProgress(segment, 0.6);
@@ -292,10 +295,10 @@ function createPreviousBlockTakeoverFrame(
 function getTransitionEnteringProgress(
 	segment: Extract<TimelineSegment, { type: "transition" }>,
 	segmentProgress: number,
-	destinationBlock: Tale["indexMap"]["blocksById"][string],
+	destinationBlock: Tale["indexMap"]["scenesById"][string],
 ): number {
 	const phaseLength = Math.max(
-		destinationBlock.transition.enteringLength ?? segment.length,
+		destinationBlock.transition.introLength ?? segment.length,
 		1,
 	);
 	const traveled = segmentProgress * segment.length;
@@ -307,49 +310,49 @@ function getTransitionEnteringProgress(
 
 /**
  * Applies the incoming block's previous-block takeover rule to controlled
- * blocks during and after the owner block's entering transition.
+ * scenes during and after the owner block's intro transition.
  *
  * This is intentionally separate from the current block's own transition
- * animations. The destination block owns how previously visible blocks should
- * behave while it enters, while each previous block still owns its own leaving
+ * animations. The destination block owns how previously visible scenes should
+ * behave while it enters, while each previous block still owns its own outro
  * tracks if any are configured.
  *
  * @param animationPlan - Compiled animation plan with destination takeover tracks.
- * @param blockId - Block currently being painted.
+ * @param sceneId - Scene currently being painted.
  * @param committedAnimationIds - Completed one-way animation track ids.
  * @param takeover - Active takeover frame.
  * @param target - Mutable animation values for the painted block.
  * @returns Whether a previous-block takeover animation was applied.
  *
  * @example
- * applyPreviousBlockTakeover(animationPlan, anchor.blockId, committedIds, takeover, values);
+ * applyPreviousBlockTakeover(animationPlan, anchor.sceneId, committedIds, takeover, values);
  */
 function applyPreviousBlockTakeover(
 	animationPlan: ReturnType<typeof compileReaderAnimationPlan>,
 	tale: Tale,
-	blockId: string,
+	sceneId: string,
 	committedAnimationIds: ReadonlySet<string>,
 	takeover: PreviousBlockTakeoverFrame | null,
 	target: ReturnType<typeof createAnimationValues>,
 	takeoverTarget: ReturnType<typeof createAnimationValues>,
 ): boolean {
 	if (!takeover) return false;
-	if (blockId === takeover.owner.blockId) return false;
+	if (sceneId === takeover.owner.sceneId) return false;
 
 	const mode =
-		tale.indexMap.blocksById[takeover.owner.blockId]?.transition
-			.previousBlocksDuringEnter;
+		tale.indexMap.scenesById[takeover.owner.sceneId]?.transition
+			.previousScenesDuringEnter;
 	if (!mode) return false;
 	if (mode === "keep") return false;
-	if (!takeover.blockIds.has(blockId)) return false;
+	if (!takeover.sceneIds.has(sceneId)) return false;
 
-	if (mode === "fadeActivePrevious" && !takeover.blockIds.has(blockId)) {
+	if (mode === "fadeActivePrevious" && !takeover.sceneIds.has(sceneId)) {
 		return false;
 	}
 
 	if (mode === "customAllVisiblePrevious") {
 		const tracks =
-			animationPlan.blockAnimationsById.get(takeover.owner.blockId)
+			animationPlan.blockAnimationsById.get(takeover.owner.sceneId)
 				?.previousVisibleDuringEnter ?? [];
 		if (tracks.length === 0) {
 			target.opacity *= 1 - takeover.progress;
@@ -358,7 +361,7 @@ function applyPreviousBlockTakeover(
 		resetReusableAnimationValues(takeoverTarget);
 		const applied = evaluatePreviousVisibleBlockAnimation(
 			animationPlan,
-			takeover.owner.blockId,
+			takeover.owner.sceneId,
 			takeover.progress,
 			committedAnimationIds,
 			takeoverTarget,
@@ -392,7 +395,7 @@ export function createReaderScrollEngine({
 	let animationFrame: number | null = null;
 	let currentIndex = 0;
 	let previousScroll = 0;
-	let renderedBlockIdsKey = "";
+	let renderedSceneIdsKey = "";
 	let previousCameraTransform = "";
 	let lightweightTravelActive = false;
 	let cancelPendingSnap = (): void => undefined;
@@ -404,15 +407,15 @@ export function createReaderScrollEngine({
 	const progressRoot =
 		stage.closest<HTMLElement>("[data-reader-runtime-root='true']") ??
 		stage.parentElement;
-	const paintProgress = createProgressPainter(progressRoot, compiled);
+	const paintProgress = createProgressPainter(progressRoot, compiled, tale);
 	const domRegistry = createReaderDomRegistry(progressRoot ?? stage);
-	const paintFixedFragments = createReaderFixedFragmentPainter(
+	const paintFixedElements = createReaderFixedFragmentPainter(
 		domRegistry,
 		viewport,
 	);
 	const paintVisibility = createReaderVisibilityPainter(
 		domRegistry,
-		compiled.anchorIndexByBlockId,
+		compiled.anchorIndexBySceneId,
 	);
 	const animationPlan = compileReaderAnimationPlan(compiled, tale, viewport);
 	const animationFramePolicy = createReaderAnimationFramePolicy(viewport);
@@ -426,19 +429,90 @@ export function createReaderScrollEngine({
 		viewport,
 	);
 	const debugPublisher = createReaderDebugPublisher(store, 100);
-	const statePublisher = createReaderStatePublisher(compiled, store, 80, 180);
+	const statePublisher = createReaderStatePublisher(
+		compiled,
+		store,
+		tale,
+		80,
+		180,
+	);
 	const blockAnimationValues = createAnimationValues();
 	const takeoverAnimationValues = createAnimationValues();
 	const fragmentAnimationValues = createAnimationValues();
 	const nodeAnimationValues = createAnimationValues();
-	const takeoverStyledBlockIds = new Set<string>();
-	const restingStateByBlockId = new Map<
+	const takeoverStyledSceneIds = new Set<string>();
+	const animatedSceneElementIds = new Set<string>();
+	const animatedFrameElementIds = new Set<string>();
+	const animatedReaderElementIds = new Set<string>();
+	const restingStateBySceneId = new Map<
 		string,
 		{ progress: 0 | 1; revision: number }
 	>();
+	const currentAnimatedElementIds = new Set(
+		[...animationPlan.animatedElementIdsBySceneId.values()].flat(),
+	);
+	const currentAnimatedFrameIds = new Set(
+		[...animationPlan.animatedFrameIdsBySceneId.values()].flat(),
+	);
+	const resetSceneAnimationStyles = (
+		sceneId: string,
+		element: HTMLElement,
+	): void => {
+		resetAnimationStyles(
+			element,
+			tale.indexMap.scenesById[sceneId]?.articleStyle?.opacity,
+		);
+	};
+	const resetFrameAnimationStyles = (
+		frameId: string,
+		element: HTMLElement,
+	): void => {
+		resetAnimationStyles(
+			element,
+			tale.indexMap.framesById[frameId]?.style?.opacity,
+		);
+	};
+	const resetElementAnimationStyles = (
+		elementId: string,
+		element: HTMLElement,
+	): void => {
+		resetAnimationStyles(
+			element,
+			tale.indexMap.elementsById[elementId]?.style?.opacity,
+		);
+	};
+	const resetStaleAnimationStyles = (): void => {
+		for (const [sceneId, element] of domRegistry.sceneElementById) {
+			if (
+				element.dataset.readerAnimationWritten === "true" &&
+				!animationPlan.animatedSceneIds.has(sceneId)
+			) {
+				resetSceneAnimationStyles(sceneId, element);
+			}
+		}
+		for (const [elementId, element] of domRegistry.elementById) {
+			if (
+				element.dataset.readerAnimationWritten === "true" &&
+				!currentAnimatedElementIds.has(elementId)
+			) {
+				resetElementAnimationStyles(elementId, element);
+			}
+		}
+		for (const [frameId, element] of domRegistry.frameElementById) {
+			if (
+				element.dataset.readerAnimationWritten === "true" &&
+				!currentAnimatedFrameIds.has(frameId)
+			) {
+				resetFrameAnimationStyles(frameId, element);
+			}
+		}
+	};
+	resetStaleAnimationStyles();
 	const settledProgressSaver = createSettledProgressSaver(
-		({ blockId, innerProgress }) => {
-			store.getState().progress.savePosition(blockId, innerProgress);
+		({ sceneId, keyframeId, innerProgress }) => {
+			store
+				.getState()
+				.progress.savePosition(sceneId, keyframeId, innerProgress);
 		},
 		280,
 	);
@@ -454,52 +528,52 @@ export function createReaderScrollEngine({
 	const synchronizePreviousBlockTakeoverStyles = (
 		takeover: PreviousBlockTakeoverFrame | null,
 	): void => {
-		const activeBlockIds = takeover?.blockIds ?? new Set<string>();
-		for (const blockId of [...takeoverStyledBlockIds]) {
-			if (activeBlockIds.has(blockId)) continue;
-			const element = domRegistry.blockElementById.get(blockId);
+		const activeSceneIds = takeover?.sceneIds ?? new Set<string>();
+		for (const sceneId of [...takeoverStyledSceneIds]) {
+			if (activeSceneIds.has(sceneId)) continue;
+			const element = domRegistry.sceneElementById.get(sceneId);
 			if (!element) continue;
 			resetReusableAnimationValues(blockAnimationValues);
 			writeAnimationValues(element, blockAnimationValues);
-			takeoverStyledBlockIds.delete(blockId);
+			takeoverStyledSceneIds.delete(sceneId);
 		}
 		if (!takeover) return;
-		for (const blockId of takeover.blockIds) {
-			const element = domRegistry.blockElementById.get(blockId);
+		for (const sceneId of takeover.sceneIds) {
+			const element = domRegistry.sceneElementById.get(sceneId);
 			if (!element) continue;
 			resetReusableAnimationValues(blockAnimationValues);
 			if (
 				applyPreviousBlockTakeover(
 					animationPlan,
 					tale,
-					blockId,
+					sceneId,
 					committedAnimationIds,
 					takeover,
 					blockAnimationValues,
 					takeoverAnimationValues,
 				)
 			) {
-				takeoverStyledBlockIds.add(blockId);
+				takeoverStyledSceneIds.add(sceneId);
 				writeAnimationValues(element, blockAnimationValues);
 			}
 		}
 	};
 	const ensureNearbyBlocksRendered = (anchors: Anchor[]) => {
-		const blockIds = anchors
-			.map((anchor) => anchor.blockId)
+		const sceneIds = anchors
+			.map((anchor) => anchor.sceneId)
 			.sort(
 				(first, second) =>
-					(compiled.anchorIndexByBlockId[first] ?? 0) -
-					(compiled.anchorIndexByBlockId[second] ?? 0),
+					(compiled.anchorIndexBySceneId[first] ?? 0) -
+					(compiled.anchorIndexBySceneId[second] ?? 0),
 			);
-		const key = blockIds.join("|");
-		if (key === renderedBlockIdsKey) return;
-		renderedBlockIdsKey = key;
+		const key = sceneIds.join("|");
+		if (key === renderedSceneIdsKey) return;
+		renderedSceneIdsKey = key;
 		logReaderDiagnostic("render window changed", {
-			active: anchors.map((anchor) => anchor.blockId),
-			mounted: blockIds,
+			active: anchors.map((anchor) => anchor.sceneId),
+			mounted: sceneIds,
 		});
-		store.getState().scroll.setRenderedBlockIds(blockIds);
+		store.getState().scroll.setRenderedSceneIds(sceneIds);
 		window.requestAnimationFrame(requestPaint);
 	};
 	const navigationMotion = createReaderNavigationMotion(
@@ -512,7 +586,7 @@ export function createReaderScrollEngine({
 			onTravelEnd: () => {
 				if (!lightweightTravelActive) return;
 				lightweightTravelActive = false;
-				restingStateByBlockId.clear();
+				restingStateBySceneId.clear();
 				requestPaint();
 			},
 			onTravelStart: () => {
@@ -548,7 +622,9 @@ export function createReaderScrollEngine({
 	 * const start = getReadingStart(anchor);
 	 */
 	const getReadingStart = (anchor: Anchor): number => {
-		const segmentIndex = compiled.segmentIndexByBlockId[anchor.blockId];
+		const segmentIndex = progress.keyframeId
+			? compiled.segmentIndexByKeyframeId[progress.keyframeId]
+			: compiled.segmentIndexBySceneId[anchor.sceneId];
 		const segment = compiled.segments[segmentIndex ?? -1];
 		return segment?.type === "reading" ? segment.start : anchor.scroll;
 	};
@@ -560,7 +636,7 @@ export function createReaderScrollEngine({
 	 * @returns Nothing.
 	 *
 	 * @example
-	 * commitAnimations(["fragment:1:scrolling:opacity-0"]);
+	 * commitAnimations(["fragment:1:active:opacity-0"]);
 	 */
 	const commitAnimations = (animationIds: string[]): void => {
 		const nextIds = animationIds.filter((id) => !committedAnimationIds.has(id));
@@ -580,16 +656,16 @@ export function createReaderScrollEngine({
 	 * restoreDerivedCommittedAnimations();
 	 */
 	const restoreDerivedCommittedAnimations = (): void => {
-		if (!progress.blockId) return;
-		const anchor = getAnchorByBlockId(compiled, progress.blockId);
+		if (!progress.sceneId) return;
+		const anchor = getAnchorBySceneId(compiled, progress.sceneId);
 		if (!anchor) return;
-		const segmentIndex = compiled.segmentIndexByBlockId[anchor.blockId];
+		const segmentIndex = compiled.segmentIndexBySceneId[anchor.sceneId];
 		const segment = compiled.segments[segmentIndex ?? -1];
 		if (!segment) return;
 		commitAnimations(
 			getCompletedAnimationIds(
 				animationPlan,
-				anchor.blockId,
+				anchor.sceneId,
 				segment,
 				progress.innerProgress,
 			),
@@ -601,21 +677,22 @@ export function createReaderScrollEngine({
 		segment: TimelineSegment,
 		segmentProgress: number,
 		frameTimeMs: number,
-		animationDetail: "blocks-only" | "full",
+		animationDetail: "scenes-only" | "full",
 		takeover: PreviousBlockTakeoverFrame | null,
 	): boolean => {
-		restingStateByBlockId.delete(anchor.blockId);
-		const element = domRegistry.blockElementById.get(anchor.blockId);
+		restingStateBySceneId.delete(anchor.sceneId);
+		const element = domRegistry.sceneElementById.get(anchor.sceneId);
 		if (!element) return false;
 		const blockAnimationApplied = evaluateBlockAnimation(
 			animationPlan,
 			tale,
-			anchor.blockId,
+			anchor.sceneId,
 			segment,
 			segmentProgress,
 			committedAnimationIds,
 			frameTimeMs,
 			blockAnimationValues,
+			element.matches(":hover"),
 		);
 		if (!blockAnimationApplied) {
 			resetReusableAnimationValues(blockAnimationValues);
@@ -623,73 +700,90 @@ export function createReaderScrollEngine({
 		const previousTakeoverApplied = applyPreviousBlockTakeover(
 			animationPlan,
 			tale,
-			anchor.blockId,
+			anchor.sceneId,
 			committedAnimationIds,
 			takeover,
 			blockAnimationValues,
 			takeoverAnimationValues,
 		);
 		if (previousTakeoverApplied) {
-			takeoverStyledBlockIds.add(anchor.blockId);
+			takeoverStyledSceneIds.add(anchor.sceneId);
+			animatedSceneElementIds.add(anchor.sceneId);
 			writeAnimationValues(element, blockAnimationValues);
 		} else if (blockAnimationApplied) {
-			takeoverStyledBlockIds.delete(anchor.blockId);
+			takeoverStyledSceneIds.delete(anchor.sceneId);
+			animatedSceneElementIds.add(anchor.sceneId);
 			writeAnimationValues(element, blockAnimationValues);
-		} else if (takeoverStyledBlockIds.delete(anchor.blockId)) {
+		} else if (takeoverStyledSceneIds.delete(anchor.sceneId)) {
 			resetReusableAnimationValues(blockAnimationValues);
+			animatedSceneElementIds.add(anchor.sceneId);
 			writeAnimationValues(element, blockAnimationValues);
+		} else if (animatedSceneElementIds.delete(anchor.sceneId)) {
+			resetSceneAnimationStyles(anchor.sceneId, element);
 		}
 
-		if (animationDetail === "blocks-only") return true;
+		// Child Frames and Elements must receive their authored initial state while
+		// a Scene is intro. Skipping them here causes a one-frame/default-style
+		// flash until the engine switches back to full-detail painting.
+		if (animationDetail === "scenes-only" && segment.type === "reading")
+			return true;
 		if (animationDetail === "full") {
 			commitAnimations(
 				getCompletedAnimationIds(
 					animationPlan,
-					anchor.blockId,
+					anchor.sceneId,
 					segment,
 					segmentProgress,
 				),
 			);
 		}
 
-		for (const fragmentId of animationPlan.animatedFragmentIdsByBlockId.get(
-			anchor.blockId,
+		for (const elementId of animationPlan.animatedElementIdsBySceneId.get(
+			anchor.sceneId,
 		) ?? []) {
-			const fragmentElement = domRegistry.fragmentElementById.get(fragmentId);
+			const fragmentElement = domRegistry.elementById.get(elementId);
 			if (!fragmentElement) continue;
 			if (
-				evaluateFragmentAnimation(
+				evaluateElementAnimation(
 					animationPlan,
-					fragmentId,
+					elementId,
 					segment,
-					anchor.blockId,
+					anchor.sceneId,
 					segmentProgress,
 					committedAnimationIds,
 					frameTimeMs,
 					fragmentAnimationValues,
+					fragmentElement.matches(":hover"),
 				)
 			) {
+				animatedReaderElementIds.add(elementId);
 				writeAnimationValues(fragmentElement, fragmentAnimationValues);
+			} else if (animatedReaderElementIds.delete(elementId)) {
+				resetElementAnimationStyles(elementId, fragmentElement);
 			}
 		}
-		for (const nodeId of animationPlan.animatedNodeIdsByBlockId.get(
-			anchor.blockId,
+		for (const frameId of animationPlan.animatedFrameIdsBySceneId.get(
+			anchor.sceneId,
 		) ?? []) {
-			const nodeElement = domRegistry.nodeElementById.get(nodeId);
+			const nodeElement = domRegistry.frameElementById.get(frameId);
 			if (
 				nodeElement &&
 				evaluateNodeAnimation(
 					animationPlan,
-					nodeId,
+					frameId,
 					segment,
-					anchor.blockId,
+					anchor.sceneId,
 					segmentProgress,
 					committedAnimationIds,
 					frameTimeMs,
 					nodeAnimationValues,
+					nodeElement.matches(":hover"),
 				)
 			) {
+				animatedFrameElementIds.add(frameId);
 				writeAnimationValues(nodeElement, nodeAnimationValues);
+			} else if (nodeElement && animatedFrameElementIds.delete(frameId)) {
+				resetFrameAnimationStyles(frameId, nodeElement);
 			}
 		}
 		return true;
@@ -699,22 +793,22 @@ export function createReaderScrollEngine({
 		anchor: Anchor,
 		progress: 0 | 1,
 		frameTimeMs: number,
-		animationDetail: "blocks-only" | "full",
+		animationDetail: "scenes-only" | "full",
 		takeover: PreviousBlockTakeoverFrame | null,
 		forcePaint = false,
 	) => {
 		const segmentIndex =
 			progress === 1
-				? compiled.transitionOutOfByBlockId[anchor.blockId]
-				: compiled.transitionIntoByBlockId[anchor.blockId];
+				? compiled.transitionOutOfBySceneId[anchor.sceneId]
+				: compiled.transitionIntoBySceneId[anchor.sceneId];
 		if (segmentIndex === undefined) return;
 		const segment = compiled.segments[segmentIndex];
 		if (!segment || segment.type !== "transition") return;
 		const revision = domRegistry.getRevision();
-		const previous = restingStateByBlockId.get(anchor.blockId);
+		const previous = restingStateBySceneId.get(anchor.sceneId);
 		if (
 			!forcePaint &&
-			!animationPlan.ambientBlockIds.has(anchor.blockId) &&
+			!animationPlan.ambientSceneIds.has(anchor.sceneId) &&
 			previous?.progress === progress &&
 			previous.revision === revision
 		)
@@ -728,9 +822,9 @@ export function createReaderScrollEngine({
 			takeover,
 		);
 		if (painted) {
-			restingStateByBlockId.set(anchor.blockId, { progress, revision });
+			restingStateBySceneId.set(anchor.sceneId, { progress, revision });
 		} else {
-			restingStateByBlockId.delete(anchor.blockId);
+			restingStateBySceneId.delete(anchor.sceneId);
 		}
 	};
 
@@ -741,7 +835,8 @@ export function createReaderScrollEngine({
 	) => {
 		if (store.getState().playback.status === "playing") return;
 		settledProgressSaver.schedule(
-			activeAnchor.blockId,
+			activeAnchor.sceneId,
+			getSavedKeyframeId(activeAnchor, segment, compiled.segments),
 			getSavedInnerProgress(activeAnchor, segment, segmentProgress),
 		);
 	};
@@ -755,7 +850,7 @@ export function createReaderScrollEngine({
 
 	const renderReaderAtScroll = (scroll: number, frameTimeMs: number) => {
 		countReaderDiagnostic("renderReaderAtScroll()", {
-			currentBlockId: store.getState().navigation.current?.blockId ?? null,
+			currentSceneId: store.getState().navigation.current?.sceneId ?? null,
 			scroll: Math.round(scroll),
 		});
 		const index = resolveSegmentIndex(
@@ -789,8 +884,8 @@ export function createReaderScrollEngine({
 		const visibleAnchors = filterTimelineVisibleAnchors(
 			spatiallyVisibleAnchors,
 			framePlan.activeAnchorIndex,
-			compiled.anchorIndexByBlockId,
-			framePlan.foregroundBlockIds,
+			compiled.anchorIndexBySceneId,
+			framePlan.foregroundSceneIds,
 			tale,
 		);
 		const nearbyAnchors = viewportVisibility.getNearbyAnchors(
@@ -816,13 +911,13 @@ export function createReaderScrollEngine({
 		);
 		paintVisibility(
 			paintedAnchors,
-			framePlan.foregroundBlockIds,
+			framePlan.foregroundSceneIds,
 			framePlan.activeAnchorIndex,
 		);
 		const reducedAnimations =
 			lightweightTravelActive ||
 			animationFramePolicy.isReduced(scroll, frameTimeMs);
-		const animationDetail = reducedAnimations ? "blocks-only" : "full";
+		const animationDetail = reducedAnimations ? "scenes-only" : "full";
 		animationMonitor.update(
 			paintedAnchors,
 			reducedAnimations,
@@ -831,10 +926,10 @@ export function createReaderScrollEngine({
 		const activeAnchor = getSegmentAnchor(compiled, segment, segmentProgress);
 		if (!activeAnchor) return;
 		for (const anchor of paintedAnchors) {
-			paintFixedFragments(anchor, activeAnchor, segment, segmentProgress);
+			paintFixedElements(anchor, activeAnchor, segment, segmentProgress);
 		}
 		for (const anchor of styledAnchors) {
-			if (framePlan.paintedBlockIds.has(anchor.blockId)) {
+			if (framePlan.paintedSceneIds.has(anchor.sceneId)) {
 				paintAnchorFrame(
 					anchor,
 					segment,
@@ -845,7 +940,7 @@ export function createReaderScrollEngine({
 				);
 				continue;
 			}
-			const anchorIndex = compiled.anchorIndexByBlockId[anchor.blockId];
+			const anchorIndex = compiled.anchorIndexBySceneId[anchor.sceneId];
 			paintRestingAnchor(
 				anchor,
 				framePlan.activeAnchorIndex !== undefined &&
@@ -856,7 +951,7 @@ export function createReaderScrollEngine({
 				frameTimeMs,
 				animationDetail,
 				previousTakeover,
-				previousTakeover?.blockIds.has(anchor.blockId) ?? false,
+				previousTakeover?.sceneIds.has(anchor.sceneId) ?? false,
 			);
 		}
 		if (lightweightTravelActive) {
@@ -878,7 +973,7 @@ export function createReaderScrollEngine({
 		if (
 			hasAmbientAnimations(
 				animationPlan,
-				visibleAnchors.map((anchor) => anchor.blockId),
+				visibleAnchors.map((anchor) => anchor.sceneId),
 			)
 		) {
 			requestPaint();
@@ -911,23 +1006,34 @@ export function createReaderScrollEngine({
 	};
 
 	const getRestoreTarget = () => {
-		const pendingRestoreBlockId = store.getState().scroll.pendingRestoreBlockId;
-		if (!pendingRestoreBlockId && !progress.blockId) return 0;
-		const anchor = pendingRestoreBlockId
-			? getAnchorByBlockId(compiled, pendingRestoreBlockId)
-			: progress.blockId
-				? getAnchorByBlockId(compiled, progress.blockId)
+		const pendingRestoreSceneId = store.getState().scroll.pendingRestoreSceneId;
+		const pendingRestoreKeyframeId =
+			store.getState().scroll.pendingRestoreKeyframeId;
+		if (!pendingRestoreSceneId && !progress.sceneId) return 0;
+		const anchor = pendingRestoreSceneId
+			? getAnchorBySceneId(compiled, pendingRestoreSceneId)
+			: progress.sceneId
+				? getAnchorBySceneId(compiled, progress.sceneId)
 				: compiled.anchors[0];
-		if (pendingRestoreBlockId && anchor) {
-			store.getState().scroll.setPendingRestoreBlockId(null);
+		if (pendingRestoreSceneId && anchor) {
+			store.getState().scroll.setPendingRestoreSceneId(null);
+			store.getState().scroll.setPendingRestoreKeyframeId(null);
 		}
 		if (!anchor) return 0;
-		const block = tale.indexMap.blocksById[anchor.blockId];
-		if (!block) return 0;
-		return pendingRestoreBlockId
-			? getReadingStart(anchor)
-			: getReadingStart(anchor) +
-					getReadingLength(anchor, block, viewport) * progress.innerProgress;
+		if (pendingRestoreSceneId) {
+			const pendingKeyframeSegmentIndex = pendingRestoreKeyframeId
+				? compiled.segmentIndexByKeyframeId[pendingRestoreKeyframeId]
+				: undefined;
+			const pendingKeyframeSegment =
+				compiled.segments[pendingKeyframeSegmentIndex ?? -1];
+			return pendingKeyframeSegment?.start ?? getReadingStart(anchor);
+		}
+		const stepSegmentIndex = progress.keyframeId
+			? compiled.segmentIndexByKeyframeId[progress.keyframeId]
+			: compiled.segmentIndexBySceneId[anchor.sceneId];
+		const stepSegment = compiled.segments[stepSegmentIndex ?? -1];
+		if (!stepSegment) return getReadingStart(anchor);
+		return stepSegment.start + stepSegment.length * progress.innerProgress;
 	};
 
 	const capturePosition = () => {
@@ -948,18 +1054,31 @@ export function createReaderScrollEngine({
 		store
 			.getState()
 			.progress.savePosition(
-				activeAnchor.blockId,
+				activeAnchor.sceneId,
+				getSavedKeyframeId(activeAnchor, segment, compiled.segments),
 				getSavedInnerProgress(activeAnchor, segment, segmentProgress),
 			);
 	};
 	const scrollApi = {
 		capturePosition,
 		repaint: requestPaint,
-		scrollToBlock: (
-			...args: Parameters<typeof navigationMotion.scrollToBlock>
+		scrollToScene: (
+			...args: Parameters<typeof navigationMotion.scrollToScene>
 		) => {
 			store.getState().playback.pause();
-			return navigationMotion.scrollToBlock(...args);
+			return navigationMotion.scrollToScene(...args);
+		},
+		scrollToBlock: (
+			...args: Parameters<typeof navigationMotion.scrollToScene>
+		) => {
+			store.getState().playback.pause();
+			return navigationMotion.scrollToScene(...args);
+		},
+		scrollToKeyframe: (
+			...args: Parameters<typeof navigationMotion.scrollToKeyframe>
+		) => {
+			store.getState().playback.pause();
+			return navigationMotion.scrollToKeyframe(...args);
 		},
 	};
 	let autoplayFrame: number | null = null;
@@ -1041,7 +1160,10 @@ export function createReaderScrollEngine({
 		restoreDerivedCommittedAnimations();
 		driver.setScroll(target);
 		previousScroll = target;
-		currentIndex = compiled.segmentIndexByBlockId[progress.blockId ?? ""] ?? 0;
+		currentIndex =
+			compiled.segmentIndexByKeyframeId[progress.keyframeId ?? ""] ??
+			compiled.segmentIndexBySceneId[progress.sceneId ?? ""] ??
+			0;
 		renderReaderAtScroll(target, performance.now());
 		driver.setUpdateListener(renderDriverFrame);
 		const inputTarget = scrollRoot ?? window;

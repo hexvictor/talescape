@@ -1,15 +1,16 @@
 import type {
 	AnimationPreset,
-	BlockStylePreset,
-	ResolvedTaleBlock,
 	ResolvedTaleBranch,
+	ResolvedTaleElement,
 	ResolvedTaleEntry,
-	ResolvedTaleFragment,
+	ResolvedTaleKeyframe,
 	ResolvedTalePage,
 	ResolvedTalePart,
 	ResolvedTalePath,
+	ResolvedTaleScene,
+	SceneStylePreset,
 	Tale,
-	TaleNode,
+	TaleFrame,
 	TransitionPreset,
 	VisibilityPreset,
 } from "../types";
@@ -26,27 +27,39 @@ export function resolveIds<T>(
 
 export const getTaleAnimationPresets = (tale: Tale): AnimationPreset[] =>
 	resolveIds(tale.order.animationPresetIds, tale.indexMap.animationPresetsById);
-export const getTaleBlocks = (tale: Tale): ResolvedTaleBlock[] =>
-	resolveIds(tale.order.blockIds, tale.indexMap.blocksById);
-export const getTaleBlockStylePresets = (tale: Tale): BlockStylePreset[] =>
+export const getTaleScenes = (tale: Tale): ResolvedTaleScene[] =>
+	resolveIds(tale.order.sceneIds, tale.indexMap.scenesById);
+export const getTaleSceneStylePresets = (tale: Tale): SceneStylePreset[] =>
 	resolveIds(
-		tale.order.blockStylePresetIds,
-		tale.indexMap.blockStylePresetsById,
+		tale.order.sceneStylePresetIds,
+		tale.indexMap.sceneStylePresetsById,
 	);
 export const getTaleBranches = (tale: Tale): ResolvedTaleBranch[] =>
 	resolveIds(tale.order.branchIds, tale.indexMap.branchesById);
 export const getTaleEntries = (tale: Tale): ResolvedTaleEntry[] =>
 	resolveIds(tale.order.entryIds, tale.indexMap.entriesById);
-export const getTaleFragments = (tale: Tale): ResolvedTaleFragment[] =>
-	resolveIds(tale.order.fragmentIds, tale.indexMap.fragmentsById);
-export const getTaleNodes = (tale: Tale): TaleNode[] =>
-	resolveIds(tale.order.nodeIds, tale.indexMap.nodesById);
+export const getTaleElements = (tale: Tale): ResolvedTaleElement[] =>
+	resolveIds(tale.order.elementIds, tale.indexMap.elementsById);
+export const getTaleFrames = (tale: Tale): TaleFrame[] =>
+	resolveIds(tale.order.frameIds, tale.indexMap.framesById);
 export const getTalePages = (tale: Tale): ResolvedTalePage[] =>
 	resolveIds(tale.order.pageIds, tale.indexMap.pagesById);
 export const getTaleParts = (tale: Tale): ResolvedTalePart[] =>
 	resolveIds(tale.order.partIds, tale.indexMap.partsById);
 export const getTalePaths = (tale: Tale): ResolvedTalePath[] =>
 	resolveIds(tale.order.pathIds, tale.indexMap.pathsById);
+export const getTaleKeyframes = (tale: Tale): ResolvedTaleKeyframe[] =>
+	resolveIds(tale.order.keyframeIds, tale.indexMap.keyframesById);
+
+/** Returns progression-owning Frames while excluding nested layout Groups. */
+export const getSceneProgressionFrameIds = (
+	tale: Tale,
+	scene: ResolvedTaleScene,
+): string[] =>
+	scene.frameIds.filter((id) => {
+		const frame = tale.indexMap.framesById[id];
+		return frame?.kind !== "group" && frame?.parentFrameId === null;
+	});
 export const getTaleTransitionPresets = (tale: Tale): TransitionPreset[] =>
 	resolveIds(
 		tale.order.transitionPresetIds,
@@ -60,11 +73,11 @@ export const getTaleVisibilityPresets = (tale: Tale): VisibilityPreset[] =>
 
 export const getBlockFragments = (
 	tale: Tale,
-	block: ResolvedTaleBlock,
-): ResolvedTaleFragment[] =>
-	resolveIds(block.fragmentIds, tale.indexMap.fragmentsById);
+	block: ResolvedTaleScene,
+): ResolvedTaleElement[] =>
+	resolveIds(block.elementIds, tale.indexMap.elementsById);
 
 export const getBlockNodes = (
 	tale: Tale,
-	block: ResolvedTaleBlock,
-): TaleNode[] => resolveIds(block.nodeIds, tale.indexMap.nodesById);
+	block: ResolvedTaleScene,
+): TaleFrame[] => resolveIds(block.frameIds, tale.indexMap.framesById);

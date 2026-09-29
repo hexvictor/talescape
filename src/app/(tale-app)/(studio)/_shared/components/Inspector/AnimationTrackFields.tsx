@@ -11,14 +11,16 @@ import type {
 } from "~/app/(tale-app)/_shared/types";
 
 export function AnimationTrackFields({
+	lockFromValues = false,
 	onChange,
 	onRemove,
 	timingMode,
 	track,
 }: {
+	lockFromValues?: boolean;
 	onChange: (track: AnimationTrack) => void;
 	onRemove: () => void;
-	timingMode: "loop" | "timeline";
+	timingMode: "hover" | "loop" | "timeline";
 	track: AnimationTrack;
 }): React.JSX.Element {
 	return (
@@ -59,97 +61,102 @@ export function AnimationTrackFields({
 					<Trash2 size={14} />
 				</button>
 			</div>
-			<TrackFieldSection title={timingMode === "timeline" ? "Timing" : "Loop"}>
-				{timingMode === "timeline" ? (
-					<>
-						<Setting label="Playback">
-							<select
-								className={settingClassName}
-								value={track.playback ?? "scrub"}
-								onChange={(event) =>
+			{timingMode !== "hover" ? (
+				<TrackFieldSection
+					title={timingMode === "timeline" ? "Timing" : "Loop"}
+				>
+					{timingMode === "timeline" ? (
+						<>
+							<Setting label="Playback">
+								<select
+									className={settingClassName}
+									value={track.playback ?? "scrub"}
+									onChange={(event) =>
+										onChange({
+											...track,
+											playback: event.target
+												.value as AnimationTrack["playback"],
+										})
+									}
+								>
+									<option value="scrub">Follow scroll</option>
+									<option value="commitOnComplete">Keep completed state</option>
+								</select>
+							</Setting>
+							<TrackPercent
+								label="Start"
+								value={track.start}
+								onChange={(start) => onChange({ ...track, start })}
+							/>
+							<TrackPercent
+								label="End"
+								value={track.end}
+								onChange={(end) => onChange({ ...track, end })}
+							/>
+						</>
+					) : (
+						<>
+							<TrackNumber
+								label="Duration (seconds)"
+								value={track.loopDurationSeconds ?? 2.4}
+								onChange={(loopDurationSeconds) =>
 									onChange({
 										...track,
-										playback: event.target.value as AnimationTrack["playback"],
+										loopDurationSeconds: Math.max(loopDurationSeconds, 0.1),
 									})
 								}
-							>
-								<option value="scrub">Follow scroll</option>
-								<option value="commitOnComplete">Keep completed state</option>
-							</select>
-						</Setting>
-						<TrackNumber
-							label="Start"
-							value={track.start}
-							onChange={(start) => onChange({ ...track, start })}
-						/>
-						<TrackNumber
-							label="End"
-							value={track.end}
-							onChange={(end) => onChange({ ...track, end })}
-						/>
-					</>
-				) : (
-					<>
-						<TrackNumber
-							label="Duration (seconds)"
-							value={track.loopDurationSeconds ?? 2.4}
-							onChange={(loopDurationSeconds) =>
-								onChange({
-									...track,
-									loopDurationSeconds: Math.max(loopDurationSeconds, 0.1),
-								})
-							}
-						/>
-						<Setting label="Direction">
-							<select
-								className={settingClassName}
-								value={track.loopPlayback ?? "alternate"}
-								onChange={(event) =>
-									onChange({
-										...track,
-										loopPlayback: event.target.value as "alternate" | "restart",
-									})
-								}
-							>
-								<option value="alternate">Alternate</option>
-								<option value="restart">Restart</option>
-							</select>
-						</Setting>
-					</>
-				)}
-			</TrackFieldSection>
-			<TrackFieldSection title="Visibility">
-				<TrackNumber
-					label="Visible from"
-					max={1}
-					min={0}
-					value={track.visibleRange?.start ?? 0}
-					onChange={(start) =>
-						onChange({
-							...track,
-							visibleRange: {
-								end: Math.max(start, track.visibleRange?.end ?? 1),
-								start,
-							},
-						})
-					}
-				/>
-				<TrackNumber
-					label="Visible until"
-					max={1}
-					min={0}
-					value={track.visibleRange?.end ?? 1}
-					onChange={(end) =>
-						onChange({
-							...track,
-							visibleRange: {
-								end,
-								start: Math.min(end, track.visibleRange?.start ?? 0),
-							},
-						})
-					}
-				/>
-			</TrackFieldSection>
+							/>
+							<Setting label="Direction">
+								<select
+									className={settingClassName}
+									value={track.loopPlayback ?? "alternate"}
+									onChange={(event) =>
+										onChange({
+											...track,
+											loopPlayback: event.target.value as
+												| "alternate"
+												| "restart",
+										})
+									}
+								>
+									<option value="alternate">Alternate</option>
+									<option value="restart">Restart</option>
+								</select>
+							</Setting>
+						</>
+					)}
+				</TrackFieldSection>
+			) : null}
+			{timingMode !== "hover" ? (
+				<TrackFieldSection title="Visibility">
+					<TrackPercent
+						label="Visible from"
+						value={track.visibleRange?.start ?? 0}
+						onChange={(start) =>
+							onChange({
+								...track,
+								visibleRange: {
+									end: Math.max(start, track.visibleRange?.end ?? 1),
+									start,
+								},
+							})
+						}
+					/>
+					<TrackPercent
+						label="Visible until"
+						value={track.visibleRange?.end ?? 1}
+						onChange={(end) =>
+							onChange({
+								...track,
+								visibleRange: {
+									end,
+									start: Math.min(end, track.visibleRange?.start ?? 0),
+								},
+							})
+						}
+					/>
+				</TrackFieldSection>
+			) : null}
 			<TrackFieldSection title="Values">
 				{track.property === "translate" ? (
 					<>
@@ -189,32 +196,46 @@ export function AnimationTrackFields({
 				) : null}
 				{"from" in track ? (
 					<>
-						<TrackNumber
-							label={
-								track.property === "opacity"
-									? "From opacity"
-									: track.property === "translate"
+						{track.property === "opacity" ? (
+							<TrackPercent
+								disabled={lockFromValues}
+								label={lockFromValues ? "From previous phase" : "From opacity"}
+								value={track.from}
+								onChange={(from) => onChange({ ...track, from })}
+							/>
+						) : (
+							<TrackNumber
+								disabled={lockFromValues}
+								label={
+									track.property === "translate"
 										? track.axis === "y"
 											? "From Y"
 											: "From X"
 										: "From"
-							}
-							value={track.from}
-							onChange={(from) => onChange({ ...track, from })}
-						/>
-						<TrackNumber
-							label={
-								track.property === "opacity"
-									? "To opacity"
-									: track.property === "translate"
+								}
+								value={track.from}
+								onChange={(from) => onChange({ ...track, from })}
+							/>
+						)}
+						{track.property === "opacity" ? (
+							<TrackPercent
+								label="To opacity"
+								value={track.to}
+								onChange={(to) => onChange({ ...track, to })}
+							/>
+						) : (
+							<TrackNumber
+								label={
+									track.property === "translate"
 										? track.axis === "y"
 											? "To Y"
 											: "To X"
 										: "To"
-							}
-							value={track.to}
-							onChange={(to) => onChange({ ...track, to })}
-						/>
+								}
+								value={track.to}
+								onChange={(to) => onChange({ ...track, to })}
+							/>
+						)}
 					</>
 				) : (
 					<TrackNumber
@@ -227,6 +248,7 @@ export function AnimationTrackFields({
 				(track.axis === "xy" || track.axis === "xyz") ? (
 					<>
 						<TrackNumber
+							disabled={lockFromValues}
 							label="From Y"
 							value={track.fromY ?? 0}
 							onChange={(fromY) => onChange({ ...track, fromY })}
@@ -241,6 +263,7 @@ export function AnimationTrackFields({
 				{track.property === "translate" && track.axis === "xyz" ? (
 					<>
 						<TrackNumber
+							disabled={lockFromValues}
 							label="From Z"
 							value={track.fromZ ?? 0}
 							onChange={(fromZ) => onChange({ ...track, fromZ })}
@@ -333,12 +356,14 @@ function TrackFieldSection({
  * @returns Numeric track input.
  */
 function TrackNumber({
+	disabled = false,
 	label,
 	max,
 	min,
 	onChange,
 	value,
 }: {
+	disabled?: boolean;
 	label: string;
 	max?: number;
 	min?: number;
@@ -349,12 +374,41 @@ function TrackNumber({
 		<Setting label={label}>
 			<input
 				className={settingClassName}
+				disabled={disabled}
 				max={max}
 				min={min}
 				step="0.05"
 				type="number"
 				value={value}
 				onChange={(event) => onChange(Number(event.target.value))}
+			/>
+		</Setting>
+	);
+}
+
+function TrackPercent({
+	disabled = false,
+	label,
+	onChange,
+	value,
+}: {
+	disabled?: boolean;
+	label: string;
+	onChange: (value: number) => void;
+	value: number;
+}): React.JSX.Element {
+	return (
+		<Setting label={`${label} (${Math.round(value * 100)}%)`}>
+			<input
+				aria-label={label}
+				className="h-9 w-full accent-primary disabled:cursor-not-allowed disabled:opacity-45"
+				disabled={disabled}
+				max="100"
+				min="0"
+				step="1"
+				type="range"
+				value={Math.round(value * 100)}
+				onChange={(event) => onChange(Number(event.target.value) / 100)}
 			/>
 		</Setting>
 	);
@@ -420,7 +474,7 @@ function createTrack(property: AnimationTrack["property"]): AnimationTrack {
 function changeTrackProperty(
 	track: AnimationTrack,
 	property: AnimationTrack["property"],
-	timingMode: "loop" | "timeline",
+	timingMode: "hover" | "loop" | "timeline",
 ): AnimationTrack {
 	const next = createTrack(property);
 	return {
@@ -432,8 +486,11 @@ function changeTrackProperty(
 		loopPlayback: track.loopPlayback,
 		playback:
 			timingMode === "timeline" ? (track.playback ?? "scrub") : undefined,
-		start: timingMode === "loop" ? 0 : track.start,
-		visibleRange: track.visibleRange ?? { end: 1, start: 0 },
+		start: timingMode === "timeline" ? track.start : 0,
+		visibleRange:
+			timingMode === "hover"
+				? undefined
+				: (track.visibleRange ?? { end: 1, start: 0 }),
 	} as AnimationTrack;
 }
 

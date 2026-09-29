@@ -1,4 +1,5 @@
-import { Eye, Pencil } from "lucide-react";
+import { ExternalLink, Eye, Pencil } from "lucide-react";
+import Link from "next/link";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import cn from "~/lib/utils/cn";
 
@@ -27,9 +28,10 @@ const STUDIO_WORKSPACES = [
  * <TaleStudioWorkspaceSwitcher />
  */
 export function TaleStudioWorkspaceSwitcher(): React.JSX.Element {
-	const { setWorkspace, taleId, workspace } = useTaleAppStoreShallow(
+	const { setWorkspace, tale, taleId, workspace } = useTaleAppStoreShallow(
 		(state) => ({
 			setWorkspace: state.runtime.setWorkspace,
+			tale: state.document.tale,
 			taleId: state.document.tale.id,
 			workspace: state.runtime.workspace,
 		}),
@@ -80,6 +82,21 @@ export function TaleStudioWorkspaceSwitcher(): React.JSX.Element {
 					</button>
 				);
 			})}
+			{tale.slug && tale.creator?.username ? (
+				<Link
+					href={
+						tale.isOfficial
+							? `/official/${tale.slug}`
+							: `/${tale.creator.username}/${tale.slug}`
+					}
+					target="_blank"
+					aria-label="Open tale in Reader"
+					title="Open tale in Reader"
+					className="grid h-11 w-11 place-items-center border-2 border-foreground bg-card text-foreground shadow-[3px_3px_0_rgb(var(--foreground-rgb))] transition hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-secondary hover:shadow-[1px_1px_0_rgb(var(--foreground-rgb))]"
+				>
+					<ExternalLink size={15} />
+				</Link>
+			) : null}
 		</div>
 	);
 }

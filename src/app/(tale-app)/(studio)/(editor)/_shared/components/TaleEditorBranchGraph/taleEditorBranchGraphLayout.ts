@@ -4,8 +4,8 @@ import type {
 	GraphPosition,
 } from "~/app/(tale-app)/(studio)/_shared/store/editorGraphTypes";
 import type {
-	ResolvedTaleBlock,
 	ResolvedTaleBranch,
+	ResolvedTaleScene,
 } from "~/app/(tale-app)/_shared/types";
 
 const elk = new ELK();
@@ -15,7 +15,7 @@ const elk = new ELK();
  *
  * @param options - Layout source data.
  * @param options.branches - Visible branch nodes.
- * @param options.blocks - Tale blocks used to estimate expanded node height.
+ * @param options.scenes - Tale scenes used to estimate expanded node height.
  * @param options.collapsedBranchIds - Branches hiding their descendants.
  * @param options.expandedBranchIds - Branches showing their block lists.
  * @param options.graphDirection - Horizontal or vertical graph orientation.
@@ -27,24 +27,26 @@ const elk = new ELK();
  */
 export async function layoutTaleEditorBranchGraph({
 	branches,
-	blocks,
+	scenes,
 	collapsedBranchIds,
 	expandedBranchIds,
 	graphDirection,
 	requestRevision,
 }: {
 	branches: ResolvedTaleBranch[];
-	blocks: ResolvedTaleBlock[];
+	scenes: ResolvedTaleScene[];
 	collapsedBranchIds: Set<string>;
 	expandedBranchIds: Set<string>;
 	graphDirection: EditorGraphDirection;
 	requestRevision: number;
 }): Promise<Record<string, GraphPosition>> {
-	const blockCountByBranchId = new Map<string, number>();
-	for (const block of blocks) {
-		blockCountByBranchId.set(
+	const collapsedIds = toStringSet(collapsedBranchIds);
+	const expandedIds = toStringSet(expandedBranchIds);
+	const sceneCountByBranchId = new Map<string, number>();
+	for (const block of scenes) {
+		sceneCountByBranchId.set(
 			block.branchId,
-			(blockCountByBranchId.get(block.branchId) ?? 0) + 1,
+			(sceneCountByBranchId.get(block.branchId) ?? 0) + 1,
 		);
 	}
 	const graph: ElkNode = {
@@ -61,11 +63,9 @@ export async function layoutTaleEditorBranchGraph({
 		},
 		children: [...branches].sort(compareBranchesForTreeLayout).map((branch) => {
 			const size = getBranchEditorNodeSize({
-				blockCount: blockCountByBranchId.get(branch.id) ?? 0,
-				descendantsCollapsed: collapsedBranchIds.has(branch.id),
-				expanded:
-					expandedBranchIds.has(branch.id) &&
-					!collapsedBranchIds.has(branch.id),
+				sceneCount: sceneCountByBranchId.get(branch.id) ?? 0,
+				descendantsCollapsed: collapsedIds.has(branch.id),
+				expanded: expandedIds.has(branch.id) && !collapsedIds.has(branch.id),
 			});
 			return { height: size.height, id: branch.id, width: size.width };
 		}),
@@ -112,7 +112,7 @@ export function getHiddenDescendantBranchIds(
 		childIdsByParentId.set(branch.parentBranchId, childIds);
 	}
 	const hiddenBranchIds = new Set<string>();
-	const pendingParentIds = [...collapsedBranchIds];
+	const pendingParentIds = [...toStringSet(collapsedBranchIds)];
 	while (pendingParentIds.length > 0) {
 		const parentId = pendingParentIds.pop();
 		if (!parentId) continue;
@@ -123,6 +123,15 @@ export function getHiddenDescendantBranchIds(
 		}
 	}
 	return hiddenBranchIds;
+}
+
+function toStringSet(value: unknown): Set<string> {
+	if (value instanceof Set) return value;
+	if (Array.isArray(value))
+		return new Set(
+			value.filter((item): item is string => typeof item === "string"),
+		);
+	return new Set();
 }
 
 /**
@@ -159,20 +168,20 @@ export function getBranchDepth(
  * @returns Estimated node dimensions.
  *
  * @example
- * const size = getBranchEditorNodeSize({ blockCount: 4, expanded: true, descendantsCollapsed: false });
+ * const size = getBranchEditorNodeSize({ sceneCount: 4, expanded: true, descendantsCollapsed: false });
  */
 function getBranchEditorNodeSize({
-	blockCount,
+	sceneCount,
 	descendantsCollapsed,
 	expanded,
 }: {
-	blockCount: number;
+	sceneCount: number;
 	descendantsCollapsed: boolean;
 	expanded: boolean;
 }): { height: number; width: number } {
 	if (descendantsCollapsed) return { height: 88, width: 248 };
 	if (!expanded) return { height: 128, width: 288 };
-	return { height: Math.min(390, 128 + blockCount * 42), width: 288 };
+	return { height: Math.min(390, 128 + sceneCount * 42), width: 288 };
 }
 
 /**

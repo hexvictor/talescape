@@ -37,18 +37,21 @@ export async function updateReaderProgress(
 	userId: string,
 	input: UpdateReaderProgressInput,
 ) {
-	const lastBlockId = input.blockId === null ? null : Number(input.blockId);
+	const lastSceneId = input.sceneId === null ? null : Number(input.sceneId);
+	const lastKeyframeId = input.keyframeId === null ? null : Number(input.keyframeId);
 
 	const [progress] = await db
 		.update(taleProgresses)
 		.set({
 			committedAnimationIds: input.committedAnimationIds,
-			lastBlockId: Number.isFinite(lastBlockId) ? lastBlockId : null,
-			lastBlockInnerProgress: input.innerProgress.toFixed(4),
-			maxBlockIdReached: Number.isFinite(lastBlockId) ? lastBlockId : null,
+			lastSceneId: Number.isFinite(lastSceneId) ? lastSceneId : null,
+			lastKeyframeId: Number.isFinite(lastKeyframeId) ? lastKeyframeId : null,
+			lastKeyframeInnerProgress: input.innerProgress.toFixed(4),
+			maxSceneIdReached: Number.isFinite(lastSceneId) ? lastSceneId : null,
 			maxReadProgress: "0",
-			seenBlockIds: toNumericIds(input.seenBlockIds),
-			seenBlockProgress: "0",
+			seenSceneIds: toNumericIds(input.seenSceneIds),
+			seenKeyframeIds: toNumericIds(input.seenKeyframeIds),
+			seenKeyframeProgress: "0",
 			seenEntryIds: toNumericIds(input.seenEntryIds),
 			seenPageIds: toNumericIds(input.seenPageIds),
 			seenPartIds: toNumericIds(input.seenPartIds),

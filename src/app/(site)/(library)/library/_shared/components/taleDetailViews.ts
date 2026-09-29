@@ -1,8 +1,8 @@
 export const taleDetailViews = [
 	{ key: "overview", label: "Overview" },
 	{ key: "branches", label: "Branches" },
-	{ key: "blocks", label: "Blocks" },
-	{ key: "fragments", label: "Fragments" },
+	{ key: "scenes", label: "Scenes" },
+	{ key: "elements", label: "Elements" },
 	{ key: "paths", label: "Paths" },
 	{ key: "parts", label: "Parts" },
 	{ key: "entries", label: "Entries" },

@@ -1,6 +1,6 @@
 import { type InferSelectModel, relations, sql } from "drizzle-orm";
 import type {
-	FirstBlockTransitionMode,
+	FirstSceneTransitionMode,
 	TaleBackgroundConfig,
 	TalePlaybackConfig,
 	TaleSnapConfig,
@@ -15,11 +15,12 @@ import type {
 import type { TaleType } from "~/server/db/types/tale-reader/tale";
 import { books } from "../library/books";
 import { users } from "../users";
-import { blocks } from "./layout-structure/blocks";
 import { branches } from "./layout-structure/branches";
-import { fragments } from "./layout-structure/fragments";
-import { nodes } from "./layout-structure/nodes";
+import { elements } from "./layout-structure/elements";
+import { frames } from "./layout-structure/frames";
 import { paths } from "./layout-structure/paths";
+import { scenes } from "./layout-structure/scenes";
+import { keyframes } from "./layout-structure/keyframes";
 import { entries } from "./narrative-structure/entries";
 import { pages } from "./narrative-structure/pages";
 import { parts } from "./narrative-structure/parts";
@@ -43,10 +44,10 @@ export const tales = createTable("tale", (d) => ({
 	status: d.text().notNull().$type<AssetStatus>().default("draft"),
 	cloneable: d.text().notNull().$type<AssetAccessLevel>().default("private"),
 	type: d.text().notNull().$type<TaleType>(),
-	firstBlockTransitionMode: d
+	firstSceneTransitionMode: d
 		.text()
 		.notNull()
-		.$type<FirstBlockTransitionMode>()
+		.$type<FirstSceneTransitionMode>()
 		.default("fromPlacement"),
 	breakpointConfig: d.json().notNull().$type<TaleBreakpoint[]>().default([]),
 	backgroundConfig: d
@@ -108,9 +109,10 @@ export const talesRelations = relations(tales, ({ one, many }) => ({
 	pages: many(pages),
 	branches: many(branches),
 	paths: many(paths),
-	blocks: many(blocks),
-	fragments: many(fragments),
-	nodes: many(nodes),
+	scenes: many(scenes),
+	elements: many(elements),
+	frames: many(frames),
+	keyframes: many(keyframes),
 	permissions: many(talePermissions),
 	progresses: many(taleProgresses),
 }));

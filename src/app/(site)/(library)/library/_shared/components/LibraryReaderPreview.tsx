@@ -11,27 +11,27 @@ import {
 } from "~/components/overlay/dialog";
 import { Button } from "~/components/ui/button";
 import type {
-	FragmentData,
-	FragmentType,
-} from "~/server/db/types/tale-reader/fragment";
+	ElementData,
+	ElementType,
+} from "~/server/db/types/tale-reader/element";
 
 type PreviewFragment = {
 	id: number;
-	type: FragmentType;
-	data: FragmentData;
+	type: ElementType;
+	data: ElementData;
 	orientation: "vertical" | "horizontal";
 };
 
 type LibraryReaderPreviewProps = {
 	title: string;
 	description: string;
-	fragment: PreviewFragment | null;
+	element: PreviewFragment | null;
 };
 
 export function LibraryReaderPreview({
 	title,
 	description,
-	fragment,
+	element,
 }: LibraryReaderPreviewProps) {
 	return (
 		<Dialog>
@@ -48,11 +48,11 @@ export function LibraryReaderPreview({
 				</DialogHeader>
 				<div className="px-6 pb-6">
 					<div className="relative flex min-h-[28rem] items-center justify-center overflow-hidden bg-black text-white">
-						{fragment ? (
-							<PreviewFragment fragment={fragment} />
+						{element ? (
+							<PreviewFragment element={element} />
 						) : (
 							<p className="max-w-sm text-center text-sm text-white/70">
-								This node does not have a readable fragment to preview yet.
+								This node does not have a readable element to preview yet.
 							</p>
 						)}
 					</div>
@@ -63,17 +63,17 @@ export function LibraryReaderPreview({
 }
 
 /**
- * Renders a lightweight fragment preview for the library modal.
+ * Renders a lightweight element preview for the library modal.
  *
- * @param props - The preview fragment props.
- * @param props.fragment - The fragment data selected from the library item.
+ * @param props - The preview element props.
+ * @param props.element - The element data selected from the library item.
  * @returns A static preview that does not depend on the production reader store.
  *
  * @example
- * <PreviewFragment fragment={fragment} />
+ * <PreviewFragment element={element} />
  */
-function PreviewFragment({ fragment }: { fragment: PreviewFragment }) {
-	const data = fragment.data as Record<string, unknown>;
+function PreviewFragment({ element }: { element: PreviewFragment }) {
+	const data = element.data as Record<string, unknown>;
 	const text =
 		typeof data.content === "string"
 			? data.content
@@ -87,7 +87,7 @@ function PreviewFragment({ fragment }: { fragment: PreviewFragment }) {
 				? data.url
 				: "";
 
-	if (fragment.type === "image" && src) {
+	if (element.type === "image" && src) {
 		return (
 			<img
 				src={src}
@@ -97,7 +97,7 @@ function PreviewFragment({ fragment }: { fragment: PreviewFragment }) {
 		);
 	}
 
-	if (fragment.type === "quote") {
+	if (element.type === "quote") {
 		return (
 			<blockquote className="max-w-xl text-center font-serif text-2xl leading-relaxed">
 				{text}

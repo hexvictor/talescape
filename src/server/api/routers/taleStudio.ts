@@ -1,13 +1,21 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
-	addStudioBlock,
-	removeStudioBlock,
-} from "~/server/db/data/tale-reader/mutations/manageStudioBlocks";
+	addStudioEntry,
+	addStudioFrame,
+	addStudioKeyframe,
+	addStudioPage,
+	addStudioPart,
+	addStudioScene,
+	removeStudioFrame,
+	removeStudioKeyframe,
+	removeStudioScene,
+} from "~/server/db/data/tale-reader/mutations/manageStudioScenes";
 import {
 	type SaveTaleStudioDraftInput,
 	saveTaleStudioDraft,
 } from "~/server/db/data/tale-reader/mutations/saveTaleStudioDraft";
+import { getTale } from "~/server/db/data/tale-reader/queries/tales/getTale";
 
 const jsonRecordSchema = z.record(z.string(), z.unknown());
 const requiredJsonSchema = z.any();
@@ -55,22 +63,76 @@ const talePlaybackConfigSchema = z.object({
 });
 
 export const taleStudioRouter = createTRPCRouter({
-	addBlock: protectedProcedure
+	addPart: protectedProcedure
+		.input(z.object({ taleId: z.number().int().positive() }))
+		.mutation(({ ctx, input }) => addStudioPart(ctx.session.userId, input)),
+	addEntry: protectedProcedure
+		.input(
+			z.object({
+				partId: z.number().int().positive(),
+				taleId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) => addStudioEntry(ctx.session.userId, input)),
+	addPage: protectedProcedure
+		.input(
+			z.object({
+				entryId: z.number().int().positive(),
+				taleId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) => addStudioPage(ctx.session.userId, input)),
+	addFrame: protectedProcedure
+		.input(
+			z.object({
+				taleId: z.number().int().positive(),
+				sceneId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) => addStudioFrame(ctx.session.userId, input)),
+	removeFrame: protectedProcedure
+		.input(
+			z.object({
+				taleId: z.number().int().positive(),
+				frameId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) => removeStudioFrame(ctx.session.userId, input)),
+	addScene: protectedProcedure
 		.input(
 			z.object({
 				branchId: z.number().int().positive(),
 				taleId: z.number().int().positive(),
 			}),
 		)
-		.mutation(({ ctx, input }) => addStudioBlock(ctx.session.userId, input)),
-	removeBlock: protectedProcedure
+		.mutation(({ ctx, input }) => addStudioScene(ctx.session.userId, input)),
+	removeScene: protectedProcedure
 		.input(
 			z.object({
-				blockId: z.number().int().positive(),
+				sceneId: z.number().int().positive(),
 				taleId: z.number().int().positive(),
 			}),
 		)
-		.mutation(({ ctx, input }) => removeStudioBlock(ctx.session.userId, input)),
+		.mutation(({ ctx, input }) => removeStudioScene(ctx.session.userId, input)),
+	addKeyframe: protectedProcedure
+		.input(
+			z.object({
+				frameId: z.number().int().positive(),
+				sceneId: z.number().int().positive(),
+				taleId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) => addStudioKeyframe(ctx.session.userId, input)),
+	removeKeyframe: protectedProcedure
+		.input(
+			z.object({
+				keyframeId: z.number().int().positive(),
+				taleId: z.number().int().positive(),
+			}),
+		)
+		.mutation(({ ctx, input }) =>
+			removeStudioKeyframe(ctx.session.userId, input),
+		),
 	saveDraft: protectedProcedure
 		.input(
 			z.object({
@@ -94,12 +156,13 @@ export const taleStudioRouter = createTRPCRouter({
 						title: z.string(),
 					}),
 				),
-				blocks: z.array(
+				scenes: z.array(
 					z.object({
+						containerConfig: z.any().optional(),
 						branchId: z.number(),
 						description: z.string().nullable(),
 						id: z.number(),
-						isChoiceBlock: z.boolean(),
+						isChoiceScene: z.boolean(),
 						order: z.number(),
 						readingConfig: requiredJsonSchema,
 						responsiveConfig: requiredJsonSchema,
@@ -112,42 +175,62 @@ export const taleStudioRouter = createTRPCRouter({
 					}),
 				),
 				description: z.string(),
-				firstBlockTransitionMode: z.enum(["fromPlacement", "inPlace"]),
-				fragments: z.array(
+				firstSceneTransitionMode: z.enum(["fromPlacement", "inPlace"]),
+				elements: z.array(
 					z.object({
 						animationConfig: animationConfigSchema,
 						content: jsonRecordSchema,
 						data: jsonRecordSchema,
 						id: z.number(),
-						nodeId: z.number().nullable(),
+						frameId: z.number().nullable(),
 						order: z.number(),
 						placementConfig: requiredJsonSchema,
 						responsiveConfig: requiredJsonSchema,
+						sceneId: z.number(),
 						styleConfig: nullableJsonSchema,
 						type: z.string(),
 						visibleRange: nullableJsonSchema,
 					}),
 				),
-				nodes: z.array(
+				frames: z.array(
 					z.object({
 						animationConfig: animationConfigSchema,
 						config: requiredJsonSchema,
 						id: z.number(),
 						name: z.string().nullable(),
 						order: z.number(),
-						parentNodeId: z.number().nullable(),
+						parentFrameId: z.number().nullable(),
+						sceneId: z.number(),
 						styleConfig: nullableJsonSchema,
+					}),
+				),
+				keyframes: z.array(
+					z.object({
+						responsiveConfig: z.record(z.any()).optional(),
+						actions: z.array(z.any()),
+						branchId: z.number(),
+						description: z.string().nullable(),
+						frameId: z.number().nullable(),
+						id: z.number(),
+						order: z.number(),
+						pageId: z.number().nullable(),
+						readingConfig: requiredJsonSchema,
+						sceneId: z.number(),
+						snapConfig: snapConfigSchema,
+						title: z.string(),
 					}),
 				),
 				paths: z.array(
 					z.object({
 						description: z.string().nullable(),
-						fromBlockId: z.number(),
+						fromSceneId: z.number(),
+						fromKeyframeId: z.number().nullable(),
 						fromBranchId: z.number(),
 						id: z.number(),
 						label: z.string(),
 						order: z.number(),
-						toBlockId: z.number(),
+						toSceneId: z.number(),
+						toKeyframeId: z.number().nullable(),
 						toBranchId: z.number(),
 						type: pathTypeSchema,
 					}),
@@ -155,9 +238,32 @@ export const taleStudioRouter = createTRPCRouter({
 				pages: z.array(
 					z.object({
 						description: z.string().nullable(),
+						entryId: z.number(),
 						id: z.number(),
 						isPaginated: z.boolean(),
+						order: z.number(),
+						partId: z.number(),
 						title: z.string().nullable(),
+						type: z.string(),
+					}),
+				),
+				entries: z.array(
+					z.object({
+						description: z.string().nullable(),
+						id: z.number(),
+						isNumbered: z.boolean(),
+						order: z.number(),
+						partId: z.number(),
+						title: z.string(),
+						type: z.string(),
+					}),
+				),
+				parts: z.array(
+					z.object({
+						description: z.string().nullable(),
+						id: z.number(),
+						order: z.number(),
+						title: z.string(),
 					}),
 				),
 				playbackConfig: talePlaybackConfigSchema,
@@ -167,9 +273,13 @@ export const taleStudioRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			return saveTaleStudioDraft(
+			const result = await saveTaleStudioDraft(
 				ctx.session.userId,
 				input as SaveTaleStudioDraftInput,
 			);
+			const tale = await getTale({
+				where: (model, { eq }) => eq(model.id, input.taleId),
+			});
+			return { ...result, tale };
 		}),
 });

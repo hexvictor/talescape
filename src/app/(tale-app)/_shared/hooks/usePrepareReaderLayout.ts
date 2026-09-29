@@ -2,28 +2,31 @@
 
 import type { RefObject } from "react";
 import { useEffect, useRef } from "react";
-import { useTaleReaderStoreInstance } from "../contexts/TaleReaderStoreContext";
-import { useTaleReaderStoreShallow } from "../contexts/TaleReaderStoreContext";
-import { compileReader, getCompiledBlockIds } from "../services/readerCompiler";
+import {
+	useTaleReaderStoreInstance,
+	useTaleReaderStoreShallow,
+} from "../contexts/TaleReaderStoreContext";
+import { compileReader, getCompiledSceneIds } from "../services/readerCompiler";
 import {
 	countReaderDiagnostic,
 	logReaderDiagnostic,
 } from "../services/readerDiagnostics";
 import {
 	measureBlocks,
+	measureFrames,
 	waitForReaderAssets,
 } from "../services/readerMeasurement";
-import { getTaleBlocks } from "../services/taleLookups";
+import { getTaleScenes } from "../services/taleLookups";
 import type {
 	CompiledReader,
-	ResolvedBlockSize,
-	ResolvedTaleBlock,
+	ResolvedSceneSize,
+	ResolvedTaleScene,
 	Tale,
 	ViewportSize,
 } from "../types";
 
 function getMeasurementCacheKey(
-	block: ResolvedTaleBlock,
+	block: ResolvedTaleScene,
 	viewport: ViewportSize,
 	revision: number,
 ) {
@@ -71,13 +74,16 @@ export function usePrepareReaderLayout(
 	viewport: ViewportSize,
 ) {
 	const store = useTaleReaderStoreInstance();
-	const measurementCacheRef = useRef<Record<string, ResolvedBlockSize>>({});
+	const measurementCacheRef = useRef<Record<string, ResolvedSceneSize>>({});
+	const frameMeasurementCacheRef = useRef<Record<string, ResolvedSceneSize>>(
+		{},
+	);
 	const compiledCacheRef = useRef<Record<string, CompiledReader>>({});
 	const {
 		revision,
 		selectedBranchIds,
 		setCompiled,
-		setMeasurementBlockIds,
+		setMeasurementSceneIds,
 		setPhase,
 		setProgress,
 		setReady,
@@ -88,7 +94,7 @@ export function usePrepareReaderLayout(
 		revision: state.engine.revision,
 		selectedBranchIds: state.navigation.selectedBranchIds,
 		setCompiled: state.reader.setCompiled,
-		setMeasurementBlockIds: state.reader.setMeasurementBlockIds,
+		setMeasurementSceneIds: state.reader.setMeasurementSceneIds,
 		setPhase: state.engine.setPhase,
 		setProgress: state.engine.setProgress,
 		setReady: state.engine.setReady,
@@ -103,37 +109,53 @@ export function usePrepareReaderLayout(
 			const resolvedTale = tale;
 			if (!currentState.reader.compiled) setReady(false);
 			setStatus("measuring");
-			const routeBlockIds = getCompiledBlockIds(
+			const routeSceneIds = getCompiledSceneIds(
 				resolvedTale,
 				selectedBranchIds,
 			);
-			const allBlockIds = getTaleBlocks(resolvedTale).map((block) => block.id);
+			const allSceneIds = getTaleScenes(resolvedTale).map((block) => block.id);
 			countReaderDiagnostic("layout preparation started", {
-				blockCount: routeBlockIds.length,
+				sceneCount: routeSceneIds.length,
 				revision,
 			});
 			logReaderDiagnostic("layout preparation", {
-				blockCount: routeBlockIds.length,
+				sceneCount: routeSceneIds.length,
 				revision,
 				selectedBranchIds,
 				viewport,
 			});
-			const contentBlockIds = allBlockIds.filter(
-				(blockId) =>
-					resolvedTale.indexMap.blocksById[blockId]?.size.mode === "content",
+			const contentSceneIds = allSceneIds.filter(
+				(sceneId) =>
+					resolvedTale.indexMap.scenesById[sceneId]?.size.mode === "content",
 			);
-			const manualBlockIds = allBlockIds.filter(
-				(blockId) =>
-					resolvedTale.indexMap.blocksById[blockId]?.size.mode !== "content",
+			const manualSceneIds = allSceneIds.filter(
+				(sceneId) =>
+					resolvedTale.indexMap.scenesById[sceneId]?.size.mode !== "content",
 			);
-			const missingContentBlockIds = contentBlockIds.filter((blockId) => {
-				const block = resolvedTale.indexMap.blocksById[blockId];
+			const missingContentSceneIds = contentSceneIds.filter((sceneId) => {
+				const block = resolvedTale.indexMap.scenesById[sceneId];
 				if (!block) return false;
 				return !measurementCacheRef.current[
 					getMeasurementCacheKey(block, viewport, revision)
 				];
 			});
-			setMeasurementBlockIds(missingContentBlockIds);
+			// Explicit-size Scenes do not need an intrinsic Scene measurement, but
+			// their Frames still do when a Frame derives its active span from its
+			// own content. Previously those Frames fell back to Scene travel.
+			const frameMeasurementSceneIds = allSceneIds.filter((sceneId) => {
+				const scene = resolvedTale.indexMap.scenesById[sceneId];
+				return Boolean(
+					scene?.frameIds.some(
+						(frameId) =>
+							resolvedTale.indexMap.framesById[frameId]?.progression?.mode ===
+							"content",
+					),
+				);
+			});
+			const measurementSceneIds = [
+				...new Set([...missingContentSceneIds, ...frameMeasurementSceneIds]),
+			];
+			setMeasurementSceneIds(measurementSceneIds);
 			setPhase("preparing-structure");
 			setProgress(38);
 			await new Promise<void>((resolve) =>
@@ -141,44 +163,46 @@ export function usePrepareReaderLayout(
 			);
 			if (cancelled) return;
 
-			if (missingContentBlockIds.length > 0) {
+			if (measurementSceneIds.length > 0) {
 				setPhase("waiting-for-assets");
 				setProgress(52);
 				await waitForReaderAssets(measurementRef.current);
 				if (cancelled) return;
 			}
+			const measuredFrameSizes = measureFrames(measurementRef.current);
+			Object.assign(frameMeasurementCacheRef.current, measuredFrameSizes);
 
 			setPhase("measuring-layout");
 			setProgress(68);
-			const sizes = measureBlocks(resolvedTale, manualBlockIds, viewport, null);
-			if (missingContentBlockIds.length > 0) {
+			const sizes = measureBlocks(resolvedTale, manualSceneIds, viewport, null);
+			if (missingContentSceneIds.length > 0) {
 				const measuredContentSizes = measureBlocks(
 					resolvedTale,
-					missingContentBlockIds,
+					missingContentSceneIds,
 					viewport,
 					measurementRef.current,
 				);
-				for (const blockId of missingContentBlockIds) {
-					const block = resolvedTale.indexMap.blocksById[blockId];
-					const size = measuredContentSizes[blockId];
+				for (const sceneId of missingContentSceneIds) {
+					const block = resolvedTale.indexMap.scenesById[sceneId];
+					const size = measuredContentSizes[sceneId];
 					if (!block || !size) continue;
 					measurementCacheRef.current[
 						getMeasurementCacheKey(block, viewport, revision)
 					] = size;
 				}
 			}
-			for (const blockId of contentBlockIds) {
-				const block = resolvedTale.indexMap.blocksById[blockId];
+			for (const sceneId of contentSceneIds) {
+				const block = resolvedTale.indexMap.scenesById[sceneId];
 				if (!block) continue;
 				const cachedSize =
 					measurementCacheRef.current[
 						getMeasurementCacheKey(block, viewport, revision)
 					];
-				if (cachedSize) sizes[blockId] = cachedSize;
+				if (cachedSize) sizes[sceneId] = cachedSize;
 			}
 			if (cancelled) return;
 
-			setMeasurementBlockIds([]);
+			setMeasurementSceneIds([]);
 			setPhase("compiling-reader");
 			setProgress(82);
 			setStatus("compiling");
@@ -197,6 +221,7 @@ export function usePrepareReaderLayout(
 					sizes,
 					viewport,
 					snapModeOverride === "default" ? null : snapModeOverride,
+					frameMeasurementCacheRef.current,
 				);
 			compiledCacheRef.current[compiledCacheKey] = compiled;
 			setCompiled(compiled);
@@ -212,7 +237,7 @@ export function usePrepareReaderLayout(
 		void prepare();
 		return () => {
 			cancelled = true;
-			setMeasurementBlockIds([]);
+			setMeasurementSceneIds([]);
 			logReaderDiagnostic("layout preparation cancelled or replaced", {
 				revision,
 			});
@@ -222,7 +247,7 @@ export function usePrepareReaderLayout(
 		revision,
 		selectedBranchIds,
 		setCompiled,
-		setMeasurementBlockIds,
+		setMeasurementSceneIds,
 		setPhase,
 		setProgress,
 		setReady,

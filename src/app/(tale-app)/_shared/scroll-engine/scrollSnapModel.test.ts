@@ -9,7 +9,10 @@ const defaults: TaleSnapConfig = {
 
 const segments: TimelineSegment[] = [
 	{
-		blockId: "block-a",
+		sceneId: "block-a",
+		keyframeId: "step-a",
+		cameraProgressStart: 0,
+		cameraProgressEnd: 1,
 		end: 100,
 		index: 0,
 		length: 100,
@@ -18,15 +21,18 @@ const segments: TimelineSegment[] = [
 	},
 	{
 		end: 150,
-		fromBlockId: "block-a",
+		fromSceneId: "block-a",
 		index: 1,
 		length: 50,
 		start: 100,
-		toBlockId: "block-b",
+		toSceneId: "block-b",
 		type: "transition",
 	},
 	{
-		blockId: "block-b",
+		sceneId: "block-b",
+		keyframeId: "step-b",
+		cameraProgressStart: 0,
+		cameraProgressEnd: 1,
 		end: 250,
 		index: 2,
 		length: 100,
@@ -35,15 +41,18 @@ const segments: TimelineSegment[] = [
 	},
 	{
 		end: 300,
-		fromBlockId: "block-b",
+		fromSceneId: "block-b",
 		index: 3,
 		length: 50,
 		start: 250,
-		toBlockId: "block-c",
+		toSceneId: "block-c",
 		type: "transition",
 	},
 	{
-		blockId: "block-c",
+		sceneId: "block-c",
+		keyframeId: "step-c",
+		cameraProgressStart: 0,
+		cameraProgressEnd: 1,
 		end: 400,
 		index: 4,
 		length: 100,
@@ -54,20 +63,22 @@ const segments: TimelineSegment[] = [
 
 const points: SnapPoint[] = [
 	{
-		blockId: "block-a",
+		sceneId: "block-a",
+		keyframeId: "step-a",
 		direction: "fromNext",
 		id: "block-a-end",
 		mode: "scroll-snap",
 		scroll: 100,
-		type: "block-end",
+		type: "scene-end",
 	},
 	{
-		blockId: "block-c",
+		sceneId: "block-c",
+		keyframeId: "step-c",
 		direction: "fromPrevious",
 		id: "block-c-start",
 		mode: "scroll-snap",
 		scroll: 300,
-		type: "block-start",
+		type: "scene-start",
 	},
 ];
 
@@ -84,7 +95,7 @@ describe("createReaderSnapModel", () => {
 		expect(model.getSnapTarget(80, -1, defaults, 350)).toBeNull();
 	});
 
-	it("keeps scrolling freely while movement remains inside a reading block", () => {
+	it("keeps active freely while movement remains inside a reading block", () => {
 		const model = createReaderSnapModel(points, segments);
 
 		expect(model.getSnapTarget(220, 1, defaults, 180)).toBeNull();
@@ -110,14 +121,15 @@ describe("createReaderSnapModel", () => {
 
 	it("starts strict snap as soon as the direct transition is entered", () => {
 		const strictPoint: SnapPoint = {
-			blockId: "block-b",
+			sceneId: "block-b",
+			keyframeId: "step-b",
 			direction: "fromPrevious",
 			id: "block-b-transition-start",
 			mode: "snap",
 			scroll: 150,
 			transitionEnd: 150,
 			transitionStart: 100,
-			type: "block-start",
+			type: "scene-start",
 		};
 		const model = createReaderSnapModel([strictPoint], segments);
 		const narrowCaptureDefaults: TaleSnapConfig = {
@@ -131,5 +143,43 @@ describe("createReaderSnapModel", () => {
 			forced: true,
 			scroll: 150,
 		});
+	});
+
+	it("snaps to a Frame boundary only after its intra-Scene transition starts", () => {
+		const framePoint: SnapPoint = {
+			sceneId: "block-b",
+			keyframeId: "step-b-2",
+			direction: "fromPrevious",
+			id: "step-b-2-start",
+			mode: "snap",
+			scroll: 225,
+			transitionEnd: 225,
+			transitionStart: 215,
+			type: "step-start",
+		};
+		const model = createReaderSnapModel([framePoint], segments);
+
+		expect(model.getSnapTarget(214, 1, defaults, 190)).toBeNull();
+		expect(model.getSnapTarget(216, 1, defaults, 190)).toMatchObject({
+			forced: true,
+			scroll: 225,
+		});
+	});
+
+	it("does not let a Frame snap replace its parent Scene boundary", () => {
+		const framePoint: SnapPoint = {
+			sceneId: "block-b",
+			keyframeId: "step-b",
+			direction: "fromPrevious",
+			id: "step-b-start",
+			mode: "snap",
+			scroll: 170,
+			transitionEnd: 170,
+			transitionStart: 150,
+			type: "step-start",
+		};
+		const model = createReaderSnapModel([framePoint], segments);
+
+		expect(model.getSnapTarget(151, 1, defaults, 99)).toBeNull();
 	});
 });

@@ -1,10 +1,11 @@
+import { ArrowLeft, FileText } from "lucide-react";
 import {
 	DebugCard,
 	DebugField,
 } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
 import type {
-	ResolvedTaleBlock,
-	ResolvedTaleFragment,
+	ResolvedTaleElement,
+	ResolvedTaleScene,
 } from "~/app/(tale-app)/_shared/types";
 
 /**
@@ -16,23 +17,39 @@ import type {
  * @returns Header markup.
  */
 export function InspectorHeader({
+	backLabel,
+	onBack,
 	subtitle,
 	title,
 }: {
+	backLabel?: string;
+	onBack?: () => void;
 	subtitle: string;
 	title: string;
 }): React.JSX.Element {
 	return (
-		<div
+		<header
 			data-reader-component="InspectorHeader"
 			data-reader-role="inspector-summary"
+			data-studio-component="InspectorHeader"
+			data-studio-role="inspector-summary"
 			className="border-foreground/10 border-b bg-background/24 px-3 py-3"
 		>
+			{onBack ? (
+				<button
+					type="button"
+					className="mb-2 flex h-8 items-center gap-2 border border-foreground/14 px-2 font-bold text-[10px] text-foreground/58 uppercase transition hover:border-foreground hover:bg-foreground/8 hover:text-foreground"
+					onClick={onBack}
+				>
+					<ArrowLeft size={13} />
+					{backLabel ?? "Back"}
+				</button>
+			) : null}
 			<p className="truncate font-black text-primary text-xs uppercase">
 				{title}
 			</p>
 			<p className="mt-1 truncate text-foreground/42 text-xs">{subtitle}</p>
-		</div>
+		</header>
 	);
 }
 
@@ -41,24 +58,29 @@ export function InspectorHeader({
  *
  * @param props - Component props.
  * @param props.block - Inspected block.
- * @returns Block summary.
+ * @returns Scene summary.
  */
-export function BlockSummary({
+export function SceneSummary({
 	block,
 }: {
-	block: ResolvedTaleBlock;
+	block: ResolvedTaleScene;
 }): React.JSX.Element {
 	return (
-		<DebugCard icon={<FileText size={15} />} title="Block">
+		<DebugCard icon={<FileText size={15} />} title="Scene">
 			<DebugField label="Id" value={block.id} />
 			<DebugField label="Description" value={block.description} />
 			<DebugField label="Branch" value={block.branchId} />
 			<DebugField label="Page" value={block.pageId} />
 			<DebugField label="Entry" value={block.entryId} />
 			<DebugField label="Part" value={block.partId} />
-			<DebugField label="Root node" value={block.rootNodeId} />
-			<DebugField label="Nodes" value={String(block.nodeIds.length)} />
-			<DebugField label="Fragments" value={String(block.fragmentIds.length)} />
+			<DebugField label="Root Frame" value={block.rootFrameId} />
+			<DebugField
+				label="Frames"
+				value={String(
+					block.frameIds.filter((id) => id !== block.rootFrameId).length,
+				)}
+			/>
+			<DebugField label="Elements" value={String(block.elementIds.length)} />
 			<DebugField
 				label="Flow"
 				value={
@@ -72,29 +94,28 @@ export function BlockSummary({
 }
 
 /**
- * Renders key fragment metadata.
+ * Renders key Element metadata.
  *
  * @param props - Component props.
- * @param props.fragment - Inspected fragment.
- * @returns Fragment summary.
+ * @param props.Element - Inspected Element.
+ * @returns Element summary.
  */
-export function FragmentSummary({
-	fragment,
+export function ElementSummary({
+	element,
 }: {
-	fragment: ResolvedTaleFragment;
+	element: ResolvedTaleElement;
 }): React.JSX.Element {
 	return (
-		<DebugCard title="Fragment">
-			<DebugField label="Id" value={fragment.id} />
-			<DebugField label="Type" value={fragment.type} />
-			<DebugField label="Node" value={fragment.nodeId} />
-			<DebugField label="Placement" value={fragment.placement.mode} />
-			<DebugField label="Order" value={String(fragment.order)} />
+		<DebugCard title="Element">
+			<DebugField label="Id" value={element.id} />
+			<DebugField label="Type" value={element.type} />
+			<DebugField label="Frame" value={element.frameId} />
+			<DebugField label="Placement" value={element.placement.mode} />
+			<DebugField label="Order" value={String(element.order)} />
 			<DebugField
 				label="Visible range"
-				value={`${fragment.resolvedVisibleRange.start} - ${fragment.resolvedVisibleRange.end}`}
+				value={`${element.resolvedVisibleRange.start} - ${element.resolvedVisibleRange.end}`}
 			/>
 		</DebugCard>
 	);
 }
-import { FileText } from "lucide-react";

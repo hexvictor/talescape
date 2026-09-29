@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Blocks Tale Studio interaction while a save mutation is in flight.
+ * Scenes Tale Studio interaction while a save mutation is in flight.
  *
  * @returns Fullscreen saving backdrop.
  *

@@ -1,23 +1,33 @@
 "use client";
 
+import { useState } from "react";
+import { NarrativePanel } from "~/app/(tale-app)/(studio)/_shared/components/Inspector/NarrativePanel";
 import { TaleInspectorPanel } from "~/app/(tale-app)/(studio)/_shared/components/Inspector/TaleInspectorPanel";
 import { TaleSettingsPanel } from "~/app/(tale-app)/(studio)/_shared/components/TaleStudioToolbar/TaleSettingsPanel";
+import { useTaleStudio } from "~/app/(tale-app)/(studio)/_shared/contexts/TaleStudioProvider";
 import {
 	useTaleStudioStore,
 	useTaleStudioStoreShallow,
 } from "~/app/(tale-app)/(studio)/_shared/hooks/useTaleStudioStore";
 import {
+	addDraftScene,
 	editBranch,
 	editPath,
+	moveBlockInTale,
+	removeDraftBranch,
 } from "~/app/(tale-app)/(studio)/_shared/services/taleDraftEdits";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
-import { getTaleBlocks } from "~/app/(tale-app)/_shared/services/taleLookups";
+import {
+	getSceneProgressionFrameIds,
+	getTaleScenes,
+} from "~/app/(tale-app)/_shared/services/taleLookups";
 import type {
-	ResolvedTaleBlock,
+	ResolvedTaleScene,
 	Tale,
 	TalePath,
 } from "~/app/(tale-app)/_shared/types";
 import { useTaleRootStore } from "~/app/_shared/contexts/TaleRootStoreContext";
+import { Button } from "~/components/ui/button";
 
 type PathType = TalePath["type"];
 
@@ -30,6 +40,7 @@ type PathType = TalePath["type"];
  * <TaleEditorSelectionPanel />
  */
 export function TaleEditorSelectionPanel(): React.JSX.Element {
+	const { dialogs } = useTaleStudio();
 	const isMobile = useTaleRootStore((state) => state.derived.isMobile);
 	const { selectedBranchId, inspector: selectedTarget } =
 		useTaleStudioStoreShallow((state) => state.studioSelection);
@@ -103,42 +114,149 @@ function BranchEditor({
 	tale: Tale;
 	title: string;
 }): React.JSX.Element {
+	const { dialogs } = useTaleStudio();
+	const [tab, setTab] = useState<"details" | "narrative">("details");
 	return (
 		<div data-reader-component="BranchEditor" data-reader-role="branch-form">
-			<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
-				Branch
-			</p>
-			<label className="mt-4 block text-foreground/62 text-xs">
-				Title
-				<input
-					className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
-					value={title}
-					onChange={(event) =>
-						onChange(
-							editBranch(tale, branchId, (current) => ({
-								...current,
-								title: event.target.value,
-							})),
-						)
-					}
-				/>
-			</label>
-			<label className="mt-3 block text-foreground/62 text-xs">
-				Description
-				<textarea
-					className="mt-1 min-h-28 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-primary/60"
-					value={description}
-					onChange={(event) =>
-						onChange(
-							editBranch(tale, branchId, (current) => ({
-								...current,
-								description: event.target.value,
-							})),
-						)
-					}
-				/>
-			</label>
+			<div className="mb-3 flex border-b">
+				{(["details", "narrative"] as const).map((value) => (
+					<button
+						type="button"
+						key={value}
+						aria-pressed={tab === value}
+						className="flex-1 p-2 text-xs capitalize aria-pressed:border-sky-500 aria-pressed:border-b-2"
+						onClick={() => setTab(value)}
+					>
+						{value}
+					</button>
+				))}
+			</div>
+			{tab === "narrative" ? <NarrativePanel branchId={branchId} /> : null}
+			<div hidden={tab !== "details"}>
+				<p className="font-black text-primary text-xs uppercase tracking-[0.18em]">
+					Branch
+				</p>
+				<label className="mt-4 block text-foreground/62 text-xs">
+					Title
+					<input
+						className="mt-1 h-10 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 text-foreground text-sm outline-none focus:border-primary/60"
+						value={title}
+						onChange={(event) =>
+							onChange(
+								editBranch(tale, branchId, (current) => ({
+									...current,
+									title: event.target.value,
+								})),
+							)
+						}
+					/>
+				</label>
+				<label className="mt-3 block text-foreground/62 text-xs">
+					Description
+					<textarea
+						className="mt-1 min-h-28 w-full rounded border border-foreground/12 bg-foreground/[0.04] px-3 py-2 text-foreground text-sm outline-none focus:border-primary/60"
+						value={description}
+						onChange={(event) =>
+							onChange(
+								editBranch(tale, branchId, (current) => ({
+									...current,
+									description: event.target.value,
+								})),
+							)
+						}
+					/>
+				</label>
+				<BranchSceneList branchId={branchId} tale={tale} onChange={onChange} />
+				{branchId !== tale.bounds.rootBranchId ? (
+					<Button
+						className="mt-3"
+						variant="destructive"
+						onClick={() => {
+							dialogs.confirm({
+								confirmLabel: "Remove",
+								description: `Remove ${title} and its scenes?`,
+								onConfirm: () => onChange(removeDraftBranch(tale, branchId)),
+								title: "Remove Branch",
+							});
+						}}
+					>
+						Remove branch
+					</Button>
+				) : null}
+			</div>
 		</div>
+	);
+}
+
+function BranchSceneList({
+	branchId,
+	onChange,
+	tale,
+}: {
+	branchId: string;
+	onChange: (tale: Tale) => void;
+	tale: Tale;
+}): React.JSX.Element {
+	const { dialogs } = useTaleStudio();
+	const openInspector = useTaleStudioStore(
+		(state) => state.studioSelection.openInspector,
+	);
+	const [draggedId, setDraggedId] = useState<string | null>(null);
+	const scenes = getTaleScenes(tale).filter(
+		(scene) => scene.branchId === branchId,
+	);
+	return (
+		<section className="mt-4 border-foreground/12 border-t pt-3">
+			<div className="flex items-center justify-between gap-2">
+				<p className="font-black text-xs uppercase">Scenes</p>
+				<Button
+					size="sm"
+					variant="ghost"
+					onClick={() =>
+						dialogs.prompt({
+							defaultValue: "New Scene",
+							onConfirm: (title) =>
+								onChange(addDraftScene(tale, branchId, title)),
+							title: "Name this Scene",
+						})
+					}
+				>
+					Add scene
+				</Button>
+			</div>
+			<div className="mt-2 grid gap-2">
+				{scenes.map((scene) => (
+					<button
+						key={scene.id}
+						type="button"
+						draggable
+						className="flex min-h-10 items-center justify-between gap-2 border border-foreground/12 bg-background px-2 text-left text-xs hover:border-primary"
+						onClick={() => openInspector({ id: scene.id, type: "scene" })}
+						onDragEnd={() => setDraggedId(null)}
+						onDragOver={(event) => event.preventDefault()}
+						onDragStart={() => setDraggedId(scene.id)}
+						onDrop={() => {
+							if (draggedId && draggedId !== scene.id) {
+								onChange(
+									moveBlockInTale(
+										tale,
+										draggedId,
+										branchId,
+										scenes.findIndex((item) => item.id === scene.id),
+									),
+								);
+							}
+							setDraggedId(null);
+						}}
+					>
+						<span className="min-w-0 truncate font-bold">{scene.title}</span>
+						<span className="text-[10px] text-foreground/45">
+							{getSceneProgressionFrameIds(tale, scene).length} frames
+						</span>
+					</button>
+				))}
+			</div>
+		</section>
 	);
 }
 
@@ -216,22 +334,22 @@ function PathEditor({
 				/>
 			</label>
 			<PathBlockSelect
-				blocks={fromBlocks}
-				label="From block"
-				value={path.fromBlockId}
-				onChange={(fromBlockId) =>
+				scenes={fromBlocks}
+				label="From Scene"
+				value={path.fromSceneId}
+				onChange={(fromSceneId) =>
 					onChange(
-						editPath(tale, path.id, (current) => ({ ...current, fromBlockId })),
+						editPath(tale, path.id, (current) => ({ ...current, fromSceneId })),
 					)
 				}
 			/>
 			<PathBlockSelect
-				blocks={toBlocks}
-				label="To block"
-				value={path.toBlockId}
-				onChange={(toBlockId) =>
+				scenes={toBlocks}
+				label="To Scene"
+				value={path.toSceneId}
+				onChange={(toSceneId) =>
 					onChange(
-						editPath(tale, path.id, (current) => ({ ...current, toBlockId })),
+						editPath(tale, path.id, (current) => ({ ...current, toSceneId })),
 					)
 				}
 			/>
@@ -275,25 +393,25 @@ function EditorTextField({
 /**
  * Renders a block selector for one path endpoint.
  *
- * @param props - Block selector props.
- * @param props.blocks - Selectable branch blocks.
+ * @param props - Scene selector props.
+ * @param props.scenes - Selectable branch scenes.
  * @param props.label - Field label.
  * @param props.onChange - Receives selected block id.
  * @param props.value - Selected block id.
- * @returns Block endpoint selector.
+ * @returns Scene endpoint selector.
  *
  * @example
- * <PathBlockSelect label="From" blocks={blocks} value="1" onChange={setBlock} />
+ * <PathBlockSelect label="From" scenes={scenes} value="1" onChange={setBlock} />
  */
 function PathBlockSelect({
-	blocks,
+	scenes,
 	label,
 	onChange,
 	value,
 }: {
-	blocks: ResolvedTaleBlock[];
+	scenes: ResolvedTaleScene[];
 	label: string;
-	onChange: (blockId: string) => void;
+	onChange: (sceneId: string) => void;
 	value: string;
 }): React.JSX.Element {
 	return (
@@ -304,7 +422,7 @@ function PathBlockSelect({
 				value={value}
 				onChange={(event) => onChange(event.target.value)}
 			>
-				{blocks.map((block) => (
+				{scenes.map((block) => (
 					<option key={block.id} value={block.id}>
 						{block.order + 1}. {block.title}
 					</option>
@@ -315,20 +433,20 @@ function PathBlockSelect({
 }
 
 /**
- * Gets ordered blocks for one branch.
+ * Gets ordered scenes for one branch.
  *
  * @param tale - Current tale.
  * @param branchId - Branch id to read.
- * @returns Ordered branch blocks.
+ * @returns Ordered branch scenes.
  *
  * @example
- * const blocks = getPathBranchBlocks(tale, path.fromBranchId);
+ * const scenes = getPathBranchBlocks(tale, path.fromBranchId);
  */
 function getPathBranchBlocks(
 	tale: Tale,
 	branchId: string,
-): ResolvedTaleBlock[] {
-	return getTaleBlocks(tale)
+): ResolvedTaleScene[] {
+	return getTaleScenes(tale)
 		.filter((block) => block.branchId === branchId)
 		.sort((first, second) => first.order - second.order);
 }

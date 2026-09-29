@@ -1,21 +1,21 @@
 import type {
-	TaleBlock,
-	TaleBlockSnapApproach,
-	TaleBlockSnapBehavior,
-	TaleBlockSnapConfig,
-	TaleBlockSnapDirection,
-	TaleBlockSnapMode,
-	TaleBlockSnapSettings,
+	TaleScene,
+	TaleSceneSnapApproach,
+	TaleSceneSnapBehavior,
+	TaleSceneSnapConfig,
+	TaleSceneSnapDirection,
+	TaleSceneSnapMode,
+	TaleSceneSnapSettings,
 	TaleSnapConfig,
 } from "../types";
 
-export const defaultBlockSnapConfig: TaleBlockSnapConfig = {
+export const defaultBlockSnapConfig: TaleSceneSnapConfig = {
 	mode: "scroll-snap",
 	settings: null,
 	strategy: "shared",
 };
 
-const disabledSnapBehavior: TaleBlockSnapBehavior = {
+const disabledSnapBehavior: TaleSceneSnapBehavior = {
 	mode: "snap-off",
 	settings: null,
 };
@@ -42,11 +42,11 @@ export const defaultTaleSnapConfig: TaleSnapConfig = {
  * @returns Normalized block snap config.
  *
  * @example
- * const snap = normalizeBlockSnapConfig(row.transitionConfig?.snap);
+ * const snap = normalizeSceneSnapConfig(row.transitionConfig?.snap);
  */
-export function normalizeBlockSnapConfig(
-	snap: boolean | Partial<TaleBlockSnapConfig> | null | undefined,
-): TaleBlockSnapConfig {
+export function normalizeSceneSnapConfig(
+	snap: boolean | Partial<TaleSceneSnapConfig> | null | undefined,
+): TaleSceneSnapConfig {
 	if (snap === false)
 		return { mode: "snap-off", settings: null, strategy: "shared" };
 	if (snap === true || snap == null) return defaultBlockSnapConfig;
@@ -88,8 +88,8 @@ export function normalizeBlockSnapConfig(
 }
 
 function normalizeSnapBehavior(
-	behavior: Partial<TaleBlockSnapBehavior>,
-): TaleBlockSnapBehavior {
+	behavior: Partial<TaleSceneSnapBehavior>,
+): TaleSceneSnapBehavior {
 	return {
 		mode:
 			behavior.mode === "snap" ||
@@ -111,8 +111,8 @@ function normalizeSnapBehavior(
  * const direction = normalizeBlockSnapDirection(block.snap.direction);
  */
 export function normalizeBlockSnapDirection(
-	direction: TaleBlockSnapDirection | null | undefined,
-): TaleBlockSnapDirection {
+	direction: TaleSceneSnapDirection | null | undefined,
+): TaleSceneSnapDirection {
 	if (direction === "fromPrevious" || direction === "fromNext") {
 		return direction;
 	}
@@ -152,18 +152,18 @@ export function normalizeTaleSnapConfig(
  * @example
  * if (isBlockSnapEnabled(block)) addSnapPoint(block);
  */
-export function isBlockSnapEnabled(block: TaleBlock): boolean {
+export function isBlockSnapEnabled(block: TaleScene): boolean {
 	return (
-		resolveBlockSnapBehavior(block.snap, "forward").mode !== "snap-off" ||
-		resolveBlockSnapBehavior(block.snap, "backward").mode !== "snap-off"
+		resolveSceneSnapBehavior(block.snap, "forward").mode !== "snap-off" ||
+		resolveSceneSnapBehavior(block.snap, "backward").mode !== "snap-off"
 	);
 }
 
 /** Resolves the behavior authored for one direction of entry into a block. */
-export function resolveBlockSnapBehavior(
-	config: TaleBlockSnapConfig,
-	approach: TaleBlockSnapApproach,
-): TaleBlockSnapBehavior {
+export function resolveSceneSnapBehavior(
+	config: TaleSceneSnapConfig,
+	approach: TaleSceneSnapApproach,
+): TaleSceneSnapBehavior {
 	if (config.strategy !== "separate") {
 		return { mode: config.mode, settings: config.settings ?? null };
 	}
@@ -182,7 +182,7 @@ export function resolveBlockSnapBehavior(
  * @example
  * const mode = getBlockSnapMode(block);
  */
-export function getBlockSnapMode(block: TaleBlock): TaleBlockSnapMode {
+export function getBlockSnapMode(block: TaleScene): TaleSceneSnapMode {
 	return block.snap.mode;
 }
 
@@ -197,8 +197,8 @@ export function getBlockSnapMode(block: TaleBlock): TaleBlockSnapMode {
  * const snap = resolveSnapSettings(block.snap.settings, defaults);
  */
 export function resolveSnapSettings(
-	blockSettings: TaleBlockSnapSettings | null | undefined,
-	defaults: TaleBlockSnapSettings,
+	blockSettings: TaleSceneSnapSettings | null | undefined,
+	defaults: TaleSceneSnapSettings,
 ): {
 	capturePx: number | null;
 	delayMs: number;

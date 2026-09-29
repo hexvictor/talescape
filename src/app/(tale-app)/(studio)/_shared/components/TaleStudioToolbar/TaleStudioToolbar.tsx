@@ -17,7 +17,9 @@ import { TaleStudioSettingsModal } from "./TaleStudioSettingsModal";
  */
 export function TaleStudioToolbar(): React.JSX.Element {
 	const workspace = useTaleAppStore((state) => state.runtime.workspace);
-	const { savePending } = useTaleStudio().toolbar;
+	const {
+		toolbar: { savePending },
+	} = useTaleStudio();
 
 	return (
 		<>

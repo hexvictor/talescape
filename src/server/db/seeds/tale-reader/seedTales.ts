@@ -12,7 +12,7 @@ export async function seedTales(): Promise<void> {
 	logSeedStart("Tales");
 	const [book] = await db.select({ id: books.id }).from(books).limit(1);
 
-	await db.insert(tales).values([
+	const taleRows: (typeof tales.$inferInsert)[] = [
 		{
 			bookId: book?.id ?? null,
 			cloneable: "private",
@@ -58,7 +58,7 @@ export async function seedTales(): Promise<void> {
 					order: 3,
 				},
 			],
-			firstBlockTransitionMode: "inPlace",
+			firstSceneTransitionMode: "inPlace",
 			backgroundConfig: {
 				dark: { color: "#070a0c", imageUrl: null },
 				light: { color: "#fff8e8", imageUrl: null },
@@ -88,7 +88,9 @@ export async function seedTales(): Promise<void> {
 			type: "story",
 			visibility: "public",
 		},
-	]);
+	];
+
+	await db.insert(tales).values(taleRows);
 
 	logSeedComplete("Tales");
 }

@@ -27,7 +27,9 @@ type ViewportSizeOptions = {
  * const viewport = useViewportSize({ maximumRightInsetPx: 448, rightInsetRatio: 0.42 });
  */
 export function useViewportSize(options: ViewportSizeOptions = {}) {
-	const setViewportSize = useTaleReaderStore((state) => state.ui.setViewportSize);
+	const setViewportSize = useTaleReaderStore(
+		(state) => state.ui.setViewportSize,
+	);
 	const size = useTaleReaderStore((state) => state.ui.viewport);
 	const store = useTaleReaderStoreInstance();
 	const timerRef = useRef<number | null>(null);
@@ -41,7 +43,10 @@ export function useViewportSize(options: ViewportSizeOptions = {}) {
 		const update = () => {
 			const sourceWidth = root?.clientWidth ?? window.innerWidth;
 			const sourceHeight = root?.clientHeight ?? window.innerHeight;
-			const leftInset = Math.min(maximumLeftInsetPx, sourceWidth * leftInsetRatio);
+			const leftInset = Math.min(
+				maximumLeftInsetPx,
+				sourceWidth * leftInsetRatio,
+			);
 			const rightInset = Math.min(
 				maximumRightInsetPx,
 				sourceWidth * rightInsetRatio,

@@ -1,8 +1,8 @@
 import type {
 	AnimationTrack,
-	BlockFlow,
 	PresetTarget,
 	ReaderStyleConfig,
+	SceneFlow,
 	TimelineRange,
 } from "~/server/db/types/tale-reader/readerConfig";
 
@@ -14,7 +14,7 @@ export type AnimationPresetSeed = {
 
 export type TransitionPresetSeed = {
 	enteringAnimationPresetIndexes: number[];
-	flow: BlockFlow;
+	flow: SceneFlow;
 	leavingAnimationPresetIndexes: number[];
 	name: string;
 };
@@ -42,30 +42,212 @@ export const animationPresetSeeds: AnimationPresetSeed[] = [
 		tracks: [{ end: 1, from: 1, property: "opacity", start: 0, to: 0 }],
 	},
 	{
-		name: "Rise",
+		name: "Pulse",
+		target: "both",
+		tracks: [
+			{
+				end: 1,
+				from: 1,
+				loopDurationSeconds: 1.2,
+				loopPlayback: "alternate",
+				property: "scale",
+				start: 0,
+				to: 1.08,
+			},
+		],
+	},
+	{
+		name: "Rotate",
+		target: "both",
+		tracks: [
+			{
+				end: 1,
+				from: 0,
+				loopDurationSeconds: 3,
+				loopPlayback: "restart",
+				property: "rotate",
+				start: 0,
+				to: 360,
+			},
+		],
+	},
+	{
+		name: "Slide in from right",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
+			{
+				axis: "x",
+				easing: "power3.out",
+				end: 1,
+				from: 120,
+				property: "translate",
+				start: 0,
+				to: 0,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Slide out to right",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 1, property: "opacity", start: 0, to: 0 },
+			{
+				axis: "x",
+				easing: "power2.in",
+				end: 1,
+				from: 0,
+				property: "translate",
+				start: 0,
+				to: 120,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Slide in from left",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
+			{
+				axis: "x",
+				easing: "power3.out",
+				end: 1,
+				from: -120,
+				property: "translate",
+				start: 0,
+				to: 0,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Slide out to left",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 1, property: "opacity", start: 0, to: 0 },
+			{
+				axis: "x",
+				easing: "power2.in",
+				end: 1,
+				from: 0,
+				property: "translate",
+				start: 0,
+				to: -120,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Rise in",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
+			{
+				axis: "y",
+				easing: "power3.out",
+				end: 1,
+				from: 72,
+				property: "translate",
+				start: 0,
+				to: 0,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Drop out",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 1, property: "opacity", start: 0, to: 0 },
+			{
+				axis: "y",
+				easing: "power2.in",
+				end: 1,
+				from: 0,
+				property: "translate",
+				start: 0,
+				to: 72,
+				unit: "px",
+			},
+		],
+	},
+	{
+		name: "Rotate in",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 0, property: "opacity", start: 0, to: 1 },
+			{
+				easing: "back.out",
+				end: 1,
+				from: -12,
+				property: "rotate",
+				start: 0,
+				to: 0,
+			},
+			{
+				easing: "back.out",
+				end: 1,
+				from: 0.94,
+				property: "scale",
+				start: 0,
+				to: 1,
+			},
+		],
+	},
+	{
+		name: "Rotate out",
+		target: "both",
+		tracks: [
+			{ end: 1, from: 1, property: "opacity", start: 0, to: 0 },
+			{
+				easing: "power2.in",
+				end: 1,
+				from: 0,
+				property: "rotate",
+				start: 0,
+				to: 14,
+			},
+			{
+				easing: "power2.in",
+				end: 1,
+				from: 1,
+				property: "scale",
+				start: 0,
+				to: 0.92,
+			},
+		],
+	},
+	{
+		name: "Gentle float",
 		target: "both",
 		tracks: [
 			{
 				axis: "y",
 				end: 1,
-				from: 48,
+				from: -8,
+				loopDurationSeconds: 2.6,
+				loopPlayback: "alternate",
 				property: "translate",
 				start: 0,
-				to: 0,
+				to: 8,
+				unit: "px",
 			},
 		],
 	},
 	{
-		name: "Drift left",
+		name: "Slow tilt",
 		target: "both",
 		tracks: [
 			{
-				axis: "x",
 				end: 1,
-				from: 64,
-				property: "translate",
+				from: -2,
+				loopDurationSeconds: 3.4,
+				loopPlayback: "alternate",
+				property: "rotate",
 				start: 0,
-				to: 0,
+				to: 2,
 			},
 		],
 	},

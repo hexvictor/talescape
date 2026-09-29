@@ -1,8 +1,5 @@
-import { getLibraryBlocks } from "~/server/db/data/library/queries";
-import { BlocksPanel } from "../../_shared/components/LibraryNodePanels";
+import { redirect } from "next/navigation";
 
-export default async function LibraryBlocksPage() {
-	const blocks = await getLibraryBlocks();
-
-	return <BlocksPanel blocks={blocks} />;
+export default function LegacyBlocksPage() {
+	redirect("/library/scenes");
 }

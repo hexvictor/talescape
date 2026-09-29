@@ -10,9 +10,9 @@ import type { TaleReaderState } from "../createTaleReaderStore";
  * @returns Whether both lists contain the same ids in the same order.
  *
  * @example
- * const unchanged = blockIdListsMatch(previousIds, nextIds);
+ * const unchanged = sceneIdListsMatch(previousIds, nextIds);
  */
-function blockIdListsMatch(left: string[], right: string[]): boolean {
+function sceneIdListsMatch(left: string[], right: string[]): boolean {
 	if (left.length !== right.length) return false;
 	return left.every((id, index) => id === right[index]);
 }
@@ -20,9 +20,9 @@ function blockIdListsMatch(left: string[], right: string[]): boolean {
 export type ReaderSlice = {
 	reader: {
 		compiled: CompiledReader | null;
-		measurementBlockIds: string[];
+		measurementSceneIds: string[];
 		setCompiled: (compiled: CompiledReader | null) => void;
-		setMeasurementBlockIds: (blockIds: string[]) => void;
+		setMeasurementSceneIds: (sceneIds: string[]) => void;
 	};
 };
 
@@ -43,20 +43,20 @@ export const createReaderSlice: StateCreator<
 > = (set) => ({
 	reader: {
 		compiled: null,
-		measurementBlockIds: [],
+		measurementSceneIds: [],
 		setCompiled: (compiled) =>
 			set((state) => ({ reader: { ...state.reader, compiled } })),
-		setMeasurementBlockIds: (measurementBlockIds) =>
+		setMeasurementSceneIds: (measurementSceneIds) =>
 			set((state) => {
 				if (
-					blockIdListsMatch(
-						state.reader.measurementBlockIds,
-						measurementBlockIds,
+					sceneIdListsMatch(
+						state.reader.measurementSceneIds,
+						measurementSceneIds,
 					)
 				) {
 					return state;
 				}
-				return { reader: { ...state.reader, measurementBlockIds } };
+				return { reader: { ...state.reader, measurementSceneIds } };
 			}),
 	},
 });

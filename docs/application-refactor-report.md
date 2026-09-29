@@ -64,7 +64,7 @@ the architecture map in `docs/application-architecture.md`.
 ### Library
 
 - `taleDetailViews.ts`: owns supported detail views and URL normalization.
-- `createTaleNodeRows.tsx`: owns pure projection from authorized detail data to
+- `createTaleFrameRows.tsx`: owns pure projection from authorized detail data to
   generic list rows.
 - `TaleDetailContent.tsx`: now composes metadata, navigation, and overview
   panels without containing every row-building branch.
@@ -75,7 +75,7 @@ the architecture map in `docs/application-architecture.md`.
 - `counts.ts`, `lists.ts`, and `taleDetail.ts` no longer return zero counts,
   synthetic section records, or fake block/fragment section relationships.
 - `userLibrary.ts` and `counts.ts` no longer export unused inferred aliases.
-- The add-tale copy now names the actual created structure: branches, blocks,
+- The add-tale copy now names the actual created structure: branches, scenes,
   and fragments.
 - Legacy author/book access modules were removed after Fallow proved they were
   unreachable from current routes and queries.
@@ -196,7 +196,7 @@ Public contracts improved in:
 - `ReaderOverlayRuntime.tsx`
 - `TaleEditorLivePreview.tsx`
 - `AnimationTrackFields.tsx`
-- `createTaleNodeRows.tsx`
+- `createTaleFrameRows.tsx`
 - `taleDetailViews.ts`
 - `scrollSlice.ts`
 - `taleSlice.ts`

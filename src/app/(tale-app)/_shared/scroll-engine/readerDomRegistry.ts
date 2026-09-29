@@ -1,14 +1,14 @@
 type ReaderDomRegistry = {
-	blockElementById: Map<string, HTMLElement>;
-	fixedElementsByBlockId: Map<string, Set<HTMLElement>>;
-	fragmentElementById: Map<string, HTMLElement>;
-	nodeElementById: Map<string, HTMLElement>;
+	sceneElementById: Map<string, HTMLElement>;
+	fixedElementsBySceneId: Map<string, Set<HTMLElement>>;
+	elementById: Map<string, HTMLElement>;
+	frameElementById: Map<string, HTMLElement>;
 	getRevision: () => number;
 	disconnect: () => void;
 };
 
 const readerDomSelector =
-	"[data-reader-block-id], [data-reader-fragment-id], [data-reader-fixed-block-id], [data-reader-node-id]";
+	"[data-reader-scene-id], [data-reader-element-id], [data-reader-fixed-scene-id], [data-reader-frame-id]";
 
 /**
  * Indexes mounted reader elements and keeps the indexes synchronized as React
@@ -19,13 +19,13 @@ const readerDomSelector =
  *
  * @example
  * const registry = createReaderDomRegistry(viewport);
- * const block = registry.blockElementById.get(blockId);
+ * const block = registry.sceneElementById.get(sceneId);
  */
 export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
-	const blockElementById = new Map<string, HTMLElement>();
-	const fixedElementsByBlockId = new Map<string, Set<HTMLElement>>();
-	const fragmentElementById = new Map<string, HTMLElement>();
-	const nodeElementById = new Map<string, HTMLElement>();
+	const sceneElementById = new Map<string, HTMLElement>();
+	const fixedElementsBySceneId = new Map<string, Set<HTMLElement>>();
+	const elementById = new Map<string, HTMLElement>();
+	const frameElementById = new Map<string, HTMLElement>();
 	let revision = 0;
 
 	const visitElements = (
@@ -48,43 +48,48 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 	};
 
 	const registerElement = (element: HTMLElement): void => {
-		const blockId = element.dataset.readerBlockId;
-		if (blockId) blockElementById.set(blockId, element);
+		const sceneId = element.dataset.readerSceneId;
+		if (sceneId) sceneElementById.set(sceneId, element);
 
-		const fragmentId = element.dataset.readerFragmentId;
-		if (fragmentId) fragmentElementById.set(fragmentId, element);
-		const nodeId = element.dataset.readerNodeId;
-		if (nodeId) nodeElementById.set(nodeId, element);
+		const elementId = element.dataset.readerElementId;
+		// An Element has an outer layout wrapper and an inner semantic renderer.
+		// Keep the first registered wrapper so animation writes can override its
+		// default-before-intro opacity instead of styling only the inner child.
+		if (elementId && !elementById.has(elementId)) {
+			elementById.set(elementId, element);
+		}
+		const frameId = element.dataset.readerFrameId;
+		if (frameId) frameElementById.set(frameId, element);
 
-		const fixedBlockId = element.dataset.readerFixedBlockId;
-		if (fixedBlockId) {
+		const fixedSceneId = element.dataset.readerFixedSceneId;
+		if (fixedSceneId) {
 			const elements =
-				fixedElementsByBlockId.get(fixedBlockId) ?? new Set<HTMLElement>();
+				fixedElementsBySceneId.get(fixedSceneId) ?? new Set<HTMLElement>();
 			elements.add(element);
-			fixedElementsByBlockId.set(fixedBlockId, elements);
+			fixedElementsBySceneId.set(fixedSceneId, elements);
 		}
 	};
 
 	const unregisterElement = (element: HTMLElement): void => {
-		const blockId = element.dataset.readerBlockId;
-		if (blockId && blockElementById.get(blockId) === element) {
-			blockElementById.delete(blockId);
+		const sceneId = element.dataset.readerSceneId;
+		if (sceneId && sceneElementById.get(sceneId) === element) {
+			sceneElementById.delete(sceneId);
 		}
 
-		const fragmentId = element.dataset.readerFragmentId;
-		if (fragmentId && fragmentElementById.get(fragmentId) === element) {
-			fragmentElementById.delete(fragmentId);
+		const elementId = element.dataset.readerElementId;
+		if (elementId && elementById.get(elementId) === element) {
+			elementById.delete(elementId);
 		}
-		const nodeId = element.dataset.readerNodeId;
-		if (nodeId && nodeElementById.get(nodeId) === element) {
-			nodeElementById.delete(nodeId);
+		const frameId = element.dataset.readerFrameId;
+		if (frameId && frameElementById.get(frameId) === element) {
+			frameElementById.delete(frameId);
 		}
 
-		const fixedBlockId = element.dataset.readerFixedBlockId;
-		if (fixedBlockId) {
-			const elements = fixedElementsByBlockId.get(fixedBlockId);
+		const fixedSceneId = element.dataset.readerFixedSceneId;
+		if (fixedSceneId) {
+			const elements = fixedElementsBySceneId.get(fixedSceneId);
 			elements?.delete(element);
-			if (elements?.size === 0) fixedElementsByBlockId.delete(fixedBlockId);
+			if (elements?.size === 0) fixedElementsBySceneId.delete(fixedSceneId);
 		}
 	};
 
@@ -105,11 +110,11 @@ export function createReaderDomRegistry(root: HTMLElement): ReaderDomRegistry {
 	observer.observe(root, { childList: true, subtree: true });
 
 	return {
-		blockElementById,
+		sceneElementById,
 		disconnect: () => observer.disconnect(),
-		fixedElementsByBlockId,
-		fragmentElementById,
-		nodeElementById,
+		fixedElementsBySceneId,
+		elementById,
+		frameElementById,
 		getRevision: () => revision,
 	};
 }

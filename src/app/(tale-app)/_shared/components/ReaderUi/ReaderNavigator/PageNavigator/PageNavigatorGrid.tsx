@@ -190,8 +190,7 @@ export function PageNavigatorGrid({
 									</span>
 									<span className="block text-[9px] text-foreground/46 uppercase">
 										{getEntryTypeLabel(entry.type)} · {entry.pageCount}{" "}
-										{entry.pageCount === 1 ? "page" : "pages"} ·{" "}
-										{entry.blockCount} blocks
+										{entry.pageCount === 1 ? "page" : "pages"}
 									</span>
 								</span>
 								<motion.span
@@ -234,7 +233,7 @@ export function PageNavigatorGrid({
 															"relative flex aspect-square min-w-0 flex-col items-start justify-between rounded-lg border p-2 text-left",
 															active
 																? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
-																: page.hasChoiceBlock
+																: page.hasChoiceScene
 																	? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 																	: "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-foreground hover:bg-[color:var(--reader-part-soft-strong)]",
 														)}
@@ -265,7 +264,7 @@ export function PageNavigatorGrid({
 															<span className="truncate">
 																{page.type.replaceAll("_", " ")}
 															</span>
-															{page.hasChoiceBlock ? <span>Choice</span> : null}
+															{page.hasChoiceScene ? <span>Choice</span> : null}
 														</div>
 													</motion.button>
 												);

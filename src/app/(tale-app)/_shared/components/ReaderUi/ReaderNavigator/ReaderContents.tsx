@@ -40,7 +40,8 @@ export function ReaderContents(): React.JSX.Element {
 	const [mobileHeightVh, setMobileHeightVh] = useState(70);
 	const {
 		compiled,
-		currentBlockId,
+		currentSceneId,
+		currentPageId,
 		currentBranchId,
 		currentEntryId,
 		hubOpen,
@@ -53,7 +54,8 @@ export function ReaderContents(): React.JSX.Element {
 		toggleOpen,
 	} = useTaleReaderStoreShallow((state) => ({
 		compiled: state.reader.compiled,
-		currentBlockId: state.navigation.current?.blockId ?? null,
+		currentSceneId: state.navigation.current?.sceneId ?? null,
+		currentPageId: state.navigation.current?.pageId ?? null,
 		currentBranchId: state.navigation.current?.branchId ?? null,
 		currentEntryId: state.navigation.current?.entryId ?? null,
 		hubOpen: state.hub.open,
@@ -71,6 +73,10 @@ export function ReaderContents(): React.JSX.Element {
 			compiled?.contents
 				? createReaderNavigationView(compiled, tale).contents
 				: emptyContents,
+		[compiled, tale],
+	);
+	const navigationPages = useMemo(
+		() => (compiled ? createReaderNavigationView(compiled, tale).pages : []),
 		[compiled, tale],
 	);
 	const branches = useMemo(() => getTaleBranches(tale), [tale]);
@@ -143,8 +149,8 @@ export function ReaderContents(): React.JSX.Element {
 		const rawWidth = clientX - bounds.left;
 		return Math.max(minimumWidth, Math.min(maximumWidth, rawWidth));
 	};
-	const reachableBlockIds = useMemo(
-		() => new Set(compiled?.anchors.map((anchor) => anchor.blockId) ?? []),
+	const reachableSceneIds = useMemo(
+		() => new Set(compiled?.anchors.map((anchor) => anchor.sceneId) ?? []),
 		[compiled],
 	);
 	const reachableBranchIds = useMemo(
@@ -155,29 +161,33 @@ export function ReaderContents(): React.JSX.Element {
 	/**
 	 * Jumps to the selected contents block using the reader navigation API.
 	 *
-	 * @param blockId - Destination block identifier.
+	 * @param sceneId - Destination block identifier.
 	 * @returns Nothing.
 	 *
 	 * @example
 	 * navigateToContentsBlock("block-42");
 	 */
-	const navigateToContentsBlock = (blockId: string): void => {
+	const navigateToContentsPage = (keyframeId: string): void => {
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToBlock(blockId, { motion: "instant" });
+		scrollApi?.scrollToKeyframe(keyframeId, { motion: "instant" });
 	};
 
 	/**
 	 * Travels to the source block for one route choice.
 	 *
-	 * @param blockId - Choice source block identifier.
+	 * @param sceneId - Choice source block identifier.
 	 * @returns Nothing.
 	 *
 	 * @example
 	 * travelToRouteBlock("block-9");
 	 */
-	const travelToRouteBlock = (blockId: string): void => {
+	const travelToRouteBlock = (sceneId: string): void => {
+		const destination = navigationPages.find((page) =>
+			page.sceneIds.includes(sceneId),
+		);
+		if (!destination) return;
 		scrollApi?.capturePosition();
-		scrollApi?.scrollToBlock(blockId, { motion: "travel" });
+		scrollApi?.scrollToKeyframe(destination.firstKeyframeId, { motion: "travel" });
 	};
 
 	return (
@@ -283,9 +293,9 @@ export function ReaderContents(): React.JSX.Element {
 							{activeTab === "contents" ? (
 								<ContentsTree
 									contents={contents}
-									currentBlockId={currentBlockId}
+									currentPageId={currentPageId}
 									currentEntryId={currentEntryId}
-									onNavigate={navigateToContentsBlock}
+									onNavigate={navigateToContentsPage}
 								/>
 							) : (
 								<RoutesPanel
@@ -294,7 +304,7 @@ export function ReaderContents(): React.JSX.Element {
 									onChoosePath={choosePath}
 									onTravelToBlock={travelToRouteBlock}
 									paths={paths}
-									reachableBlockIds={reachableBlockIds}
+									reachableSceneIds={reachableSceneIds}
 									reachableBranchIds={reachableBranchIds}
 									selectedBranchIds={selectedBranchIds}
 								/>

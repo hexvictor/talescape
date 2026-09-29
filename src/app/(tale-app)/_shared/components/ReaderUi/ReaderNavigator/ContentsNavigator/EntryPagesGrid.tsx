@@ -12,16 +12,16 @@ import { getReaderPartTheme } from "../readerPartTheme";
  * @returns A compact page button grid or nothing for single-page entries.
  *
  * @example
- * <EntryPagesGrid entry={entry} currentBlockId={blockId} onNavigate={jump} />
+ * <EntryPagesGrid entry={entry} currentSceneId={sceneId} onNavigate={jump} />
  */
 export function EntryPagesGrid({
-	currentBlockId,
+	currentPageId,
 	entry,
 	onNavigate,
 }: {
-	currentBlockId: string | null;
+	currentPageId: string | null;
 	entry: ReaderNavigationEntry;
-	onNavigate: (blockId: string) => void;
+	onNavigate: (keyframeId: string) => void;
 }): React.JSX.Element | null {
 	if (entry.pages.length <= 1) return null;
 
@@ -43,13 +43,13 @@ export function EntryPagesGrid({
 					style={getReaderPartTheme(page.partNumber)}
 					className={cn(
 						"group/page grid h-9 w-9 place-items-center rounded-full border font-bold text-[10px] transition",
-						page.blockIds.includes(currentBlockId ?? "")
+						page.id === currentPageId
 							? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
-							: page.hasChoiceBlock
+							: page.hasChoiceScene
 								? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 								: "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-[color:var(--reader-part-solid)] hover:bg-[color:var(--reader-part-soft-strong)] hover:text-foreground",
 					)}
-					onClick={() => onNavigate(page.firstBlockId)}
+					onClick={() => onNavigate(page.firstKeyframeId)}
 				>
 					{page.number ?? <ReaderTypeIcon type={page.type} size={12} />}
 				</button>

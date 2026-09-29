@@ -30,9 +30,9 @@ export function useSmoothedLoadingProgress(target: number): number {
 				return;
 			}
 
-			const easedStep = Math.max(Math.abs(distance) * 0.055, MINIMUM_STEP);
+			const easedKeyframe = Math.max(Math.abs(distance) * 0.055, MINIMUM_STEP);
 			displayedRef.current +=
-				Math.sign(distance) * Math.min(Math.abs(distance), easedStep);
+				Math.sign(distance) * Math.min(Math.abs(distance), easedKeyframe);
 			setDisplayed(displayedRef.current);
 			frameRef.current = window.requestAnimationFrame(tick);
 		};

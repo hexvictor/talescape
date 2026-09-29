@@ -2,9 +2,9 @@ import { type InferSelectModel, sql } from "drizzle-orm";
 import { createTable } from "~/server/db/schema-helpers";
 import type {
 	AnimationTrack,
-	BlockFlow,
 	PresetTarget,
 	ReaderStyleConfig,
+	SceneFlow,
 	TimelineRange,
 } from "~/server/db/types/tale-reader/readerConfig";
 
@@ -46,7 +46,7 @@ export const officialTransitionPresets = createTable(
 	(d) => ({
 		id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
 		name: d.text().notNull(),
-		flowConfig: d.json().notNull().$type<BlockFlow>(),
+		flowConfig: d.json().notNull().$type<SceneFlow>(),
 		enteringAnimationPresetIds: d.integer().array().notNull().default([]),
 		leavingAnimationPresetIds: d.integer().array().notNull().default([]),
 		isActive: d.boolean().notNull().default(true),

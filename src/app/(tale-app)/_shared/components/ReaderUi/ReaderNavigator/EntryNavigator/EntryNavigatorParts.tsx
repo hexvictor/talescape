@@ -18,7 +18,7 @@ type PartSelectorProps = {
 	onSelect: (part: ReaderNavigationPart) => void;
 	open: boolean;
 	parts: ReaderNavigationPart[];
-	showStepButtons?: boolean;
+	showKeyframeButtons?: boolean;
 };
 
 /**
@@ -34,7 +34,7 @@ export function PartSelector({
 	onSelect,
 	open,
 	parts,
-	showStepButtons = true,
+	showKeyframeButtons = true,
 }: PartSelectorProps): React.JSX.Element {
 	const currentIndex = Math.max(
 		parts.findIndex((part) => part.id === currentPart?.id),
@@ -47,20 +47,20 @@ export function PartSelector({
 			data-reader-role="part-selection"
 			className={cn("relative mb-3 flex items-center gap-0.5", className)}
 		>
-			{showStepButtons ? (
+			{showKeyframeButtons ? (
 				<button
 					data-reader-component="PartSelector"
 					data-reader-role="previous-part-control"
 					type="button"
 					aria-label="Previous part"
 					disabled={currentIndex === 0}
-					className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
+					className="grid h-7 w-6 place-items-center border border-transparent text-foreground/55 transition hover:border-foreground hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:hover:border-transparent disabled:hover:bg-transparent disabled:hover:text-foreground/55"
 					onClick={() => {
 						const previous = parts[currentIndex - 1];
 						if (previous) onSelect(previous);
 					}}
 				>
-					<ChevronLeft size={10} />
+					<ChevronLeft size={12} strokeWidth={2.5} />
 				</button>
 			) : null}
 			<button
@@ -79,20 +79,20 @@ export function PartSelector({
 			>
 				<span className="-rotate-45 text-[11px]">{currentIndex + 1}</span>
 			</button>
-			{showStepButtons ? (
+			{showKeyframeButtons ? (
 				<button
 					data-reader-component="PartSelector"
 					data-reader-role="next-part-control"
 					type="button"
 					aria-label="Next part"
 					disabled={currentIndex >= parts.length - 1}
-					className="grid h-6 w-4 place-items-center rounded-full text-foreground/45 transition hover:bg-foreground/8 hover:text-foreground disabled:opacity-20"
+					className="grid h-7 w-6 place-items-center border border-transparent text-foreground/55 transition hover:border-foreground hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:hover:border-transparent disabled:hover:bg-transparent disabled:hover:text-foreground/55"
 					onClick={() => {
 						const next = parts[currentIndex + 1];
 						if (next) onSelect(next);
 					}}
 				>
-					<ChevronRight size={11} />
+					<ChevronRight size={12} strokeWidth={2.5} />
 				</button>
 			) : null}
 			<AnimatePresence>
@@ -146,8 +146,7 @@ export function PartSelector({
 										<span className="block text-[10px] text-foreground/42">
 											{part.entries.length}{" "}
 											{part.entries.length === 1 ? "entry" : "entries"} ·{" "}
-											{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}{" "}
-											· {part.blockCount} blocks
+											{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
 										</span>
 									</span>
 								</button>
@@ -163,7 +162,7 @@ export function PartSelector({
 type EntryPageFlyoutProps = {
 	currentPageId: string | null;
 	entry: ReaderNavigationEntry;
-	onNavigate: (blockId: string) => void;
+	onNavigate: (keyframeId: string) => void;
 };
 
 /**
@@ -191,8 +190,7 @@ export function EntryPageFlyout({
 					{entry.title}
 				</p>
 				<p className="text-[10px] text-foreground/42">
-					{entry.pageCount} {entry.pageCount === 1 ? "page" : "pages"} ·{" "}
-					{entry.blockCount} blocks
+					{entry.pageCount} {entry.pageCount === 1 ? "page" : "pages"}
 				</p>
 			</div>
 			<div
@@ -240,11 +238,11 @@ export function EntryPageFlyout({
 									"relative flex aspect-square min-w-0 flex-col items-start justify-between rounded-lg border p-2 text-left transition",
 									page.id === currentPageId
 										? "border-primary bg-primary text-background shadow-[0_0_0_3px_rgba(217,181,111,0.12)]"
-										: page.hasChoiceBlock
+										: page.hasChoiceScene
 											? "border-emerald-600/45 bg-emerald-500/12 text-emerald-900 hover:border-emerald-600/75 hover:bg-emerald-500/18 hover:text-foreground dark:border-[#8bcf90]/50 dark:bg-[#8bcf90]/12 dark:text-[#d8f5da] dark:hover:border-[#8bcf90]/75"
 											: "border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] text-foreground hover:bg-[color:var(--reader-part-soft-strong)]",
 								)}
-								onClick={() => onNavigate(page.firstBlockId)}
+								onClick={() => onNavigate(page.firstKeyframeId)}
 							>
 								<div className="flex w-full items-start justify-between gap-2">
 									<span className="font-semibold text-[11px] leading-none">

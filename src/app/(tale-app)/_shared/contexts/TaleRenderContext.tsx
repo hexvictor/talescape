@@ -1,29 +1,29 @@
 "use client";
 
 import { type ComponentType, createContext, useContext } from "react";
-import type { Anchor, ResolvedTaleFragment } from "../types";
+import type { Anchor, ResolvedTaleElement } from "../types";
 
 export type TaleRenderSlots = {
-	Block: ComponentType<{ anchor: Anchor }> | null;
-	DebugHeaderActions: ComponentType<{ blockId: string | null }> | null;
-	Fragment: ComponentType<{
+	Scene: ComponentType<{ anchor: Anchor }> | null;
+	DebugHeaderActions: ComponentType<{ sceneId: string | null }> | null;
+	Element: ComponentType<{
 		contentSized?: boolean;
-		fragment: ResolvedTaleFragment;
+		element: ResolvedTaleElement;
 		index: number;
 	}> | null;
-	NodeOverlay: ComponentType<{ blockId: string; nodeId: string }> | null;
-	TextFragmentContent: ComponentType<{
-		fragment: ResolvedTaleFragment;
+	FrameOverlay: ComponentType<{ sceneId: string; frameId: string }> | null;
+	TextElementContent: ComponentType<{
+		element: ResolvedTaleElement;
 		index: number;
 	}> | null;
 };
 
 const readerRenderSlots: TaleRenderSlots = {
-	Block: null,
+	Scene: null,
 	DebugHeaderActions: null,
-	Fragment: null,
-	NodeOverlay: null,
-	TextFragmentContent: null,
+	Element: null,
+	FrameOverlay: null,
+	TextElementContent: null,
 };
 
 /**

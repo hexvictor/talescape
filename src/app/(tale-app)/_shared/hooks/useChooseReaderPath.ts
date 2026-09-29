@@ -28,7 +28,8 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 		scrollApi: readerState.scroll.api,
 		selectedBranchIds: readerState.navigation.selectedBranchIds,
 		setScrollCue: readerState.scroll.setCue,
-		setPendingRestoreBlockId: readerState.scroll.setPendingRestoreBlockId,
+		setPendingRestoreSceneId: readerState.scroll.setPendingRestoreSceneId,
+		setPendingRestoreKeyframeId: readerState.scroll.setPendingRestoreKeyframeId,
 		setSelectedBranchIds: readerState.navigation.setSelectedBranchIds,
 	}));
 
@@ -41,7 +42,11 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 		(path: TalePath): void => {
 			state.scrollApi?.capturePosition();
 			if (path.type === "teleport") {
-				state.scrollApi?.scrollToBlock(path.toBlockId, { motion: "travel" });
+				if (path.toKeyframeId) {
+					state.scrollApi?.scrollToKeyframe(path.toKeyframeId, { motion: "travel" });
+				} else {
+					state.scrollApi?.scrollToScene(path.toSceneId, { motion: "travel" });
+				}
 				return;
 			}
 			const nextBranchIds = getNextSelectedBranchIds(
@@ -49,8 +54,8 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 				state.selectedBranchIds,
 				path,
 			);
-			const source = tale.indexMap.blocksById[path.fromBlockId];
-			const destination = tale.indexMap.blocksById[path.toBlockId];
+			const source = tale.indexMap.scenesById[path.fromSceneId];
+			const destination = tale.indexMap.scenesById[path.toSceneId];
 			const direction =
 				flowDirection(
 					destination?.transition.flow ??
@@ -64,18 +69,29 @@ export function useChooseReaderPath(): (path: TalePath) => void {
 				1500,
 			);
 			if (path.type === "return") {
-				state.scrollApi?.scrollToBlock(path.toBlockId, {
+				const travel = path.toKeyframeId
+					? state.scrollApi?.scrollToKeyframe
+					: state.scrollApi?.scrollToScene;
+				travel?.(path.toKeyframeId ?? path.toSceneId, {
 					motion: "travel",
 					onComplete: () => {
 						const current = store.getState();
-						current.scroll.setPendingRestoreBlockId(path.toBlockId);
-						current.progress.savePosition(path.toBlockId, 0);
+						const destinationKeyframeId =
+							path.toKeyframeId ??
+							destination?.keyframeIds[0] ??
+							`${path.toSceneId}:default-keyframe`;
+						current.scroll.setPendingRestoreSceneId(path.toSceneId);
+						current.progress.savePosition(path.toSceneId, destinationKeyframeId, 0);
 						current.navigation.setSelectedBranchIds(nextBranchIds);
 						current.progress.setSelectedBranchIds(nextBranchIds);
 					},
 				});
 				return;
 			}
+			// The selected route can remove the currently visible destination scene.
+			// Restore from the choice source so recompilation replaces only its future.
+			state.setPendingRestoreSceneId(path.fromSceneId);
+			state.setPendingRestoreKeyframeId(path.fromKeyframeId);
 			state.setSelectedBranchIds(nextBranchIds);
 			state.saveSelectedBranchIds(nextBranchIds);
 		},

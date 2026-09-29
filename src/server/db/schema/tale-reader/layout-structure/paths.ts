@@ -5,8 +5,9 @@ import type { PathType } from "~/server/db/types/tale-reader/path";
 import { users } from "../../users";
 import { pathPermissions } from "../permissions/pathPermissions";
 import { tales } from "../tales";
-import { blocks } from "./blocks";
 import { branches } from "./branches";
+import { scenes } from "./scenes";
+import { keyframes } from "./keyframes";
 
 export const paths = createTable("path", (d) => ({
 	id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -18,12 +19,14 @@ export const paths = createTable("path", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => branches.id),
-	fromBlockId: d.integer().references(() => blocks.id),
+	fromSceneId: d.integer().references(() => scenes.id),
+	fromKeyframeId: d.integer().references(() => keyframes.id),
 	toBranchId: d
 		.integer()
 		.notNull()
 		.references(() => branches.id),
-	toBlockId: d.integer().references(() => blocks.id),
+	toSceneId: d.integer().references(() => scenes.id),
+	toKeyframeId: d.integer().references(() => keyframes.id),
 	creatorId: d
 		.text()
 		.notNull()
@@ -58,13 +61,23 @@ export const pathsRelations = relations(paths, ({ one, many }) => ({
 		references: [branches.id],
 		relationName: "branch_incoming_paths",
 	}),
-	fromBlock: one(blocks, {
-		fields: [paths.fromBlockId],
-		references: [blocks.id],
+	fromScene: one(scenes, {
+		fields: [paths.fromSceneId],
+		references: [scenes.id],
 	}),
-	toBlock: one(blocks, {
-		fields: [paths.toBlockId],
-		references: [blocks.id],
+	toScene: one(scenes, {
+		fields: [paths.toSceneId],
+		references: [scenes.id],
+	}),
+	fromKeyframe: one(keyframes, {
+		fields: [paths.fromKeyframeId],
+		references: [keyframes.id],
+		relationName: "path_from_step",
+	}),
+	toKeyframe: one(keyframes, {
+		fields: [paths.toKeyframeId],
+		references: [keyframes.id],
+		relationName: "path_to_step",
 	}),
 	creator: one(users, {
 		fields: [paths.creatorId],

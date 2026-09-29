@@ -1,17 +1,17 @@
 import {
-	resolveEditedBlock,
 	resolveEditedFragment,
+	resolveEditedScene,
 } from "~/app/(tale-app)/_shared/services/formatTale";
 import type {
 	Tale,
-	TaleBlock,
-	TaleBlockResponsiveOverride,
 	TaleBreakpoint,
-	TaleFragment,
-	TaleFragmentResponsiveOverride,
+	TaleElement,
+	TaleElementResponsiveOverride,
+	TaleScene,
+	TaleSceneResponsiveOverride,
 	ViewportSize,
 } from "../types";
-import { getTaleBlocks, getTaleFragments } from "./taleLookups";
+import { getTaleElements, getTaleScenes } from "./taleLookups";
 
 /**
  * Resolves the first authored breakpoint that matches the active viewport.
@@ -49,7 +49,7 @@ export function resolveTaleBreakpoint(
 ): Tale {
 	if (!breakpointId) return tale;
 
-	const fragments = getTaleFragments(tale).map((fragment) =>
+	const fragments = getTaleElements(tale).map((fragment) =>
 		resolveEditedFragment(
 			tale,
 			applyFragmentOverride(
@@ -58,31 +58,37 @@ export function resolveTaleBreakpoint(
 			),
 		),
 	);
-	const fragmentsById = Object.fromEntries(
+	const elementsById = Object.fromEntries(
 		fragments.map((fragment) => [fragment.id, fragment]),
-	) as Tale["indexMap"]["fragmentsById"];
+	) as Tale["indexMap"]["elementsById"];
 	const fragmentSource = {
 		...tale,
 		indexMap: {
 			...tale.indexMap,
-			fragmentsById,
+			keyframesById: Object.fromEntries(
+				Object.entries(tale.indexMap.keyframesById).map(([id, keyframe]) => [
+					id,
+					{ ...keyframe, ...keyframe.responsiveOverrides?.[breakpointId] },
+				]),
+			),
+			elementsById,
 		},
 	};
-	const blocks = getTaleBlocks(tale).map((block) =>
-		resolveEditedBlock(
+	const scenes = getTaleScenes(tale).map((block) =>
+		resolveEditedScene(
 			fragmentSource,
 			applyBlockOverride(block, block.responsiveOverrides?.[breakpointId]),
 		),
 	);
-	const blocksById = Object.fromEntries(
-		blocks.map((block) => [block.id, block]),
-	) as Tale["indexMap"]["blocksById"];
+	const scenesById = Object.fromEntries(
+		scenes.map((block) => [block.id, block]),
+	) as Tale["indexMap"]["scenesById"];
 
 	return {
 		...fragmentSource,
 		indexMap: {
 			...fragmentSource.indexMap,
-			blocksById,
+			scenesById,
 		},
 	};
 }
@@ -99,10 +105,10 @@ export function resolveTaleBreakpoint(
  * const updated = writeBlockBreakpointOverride(block, nextBlock, "mobile");
  */
 export function writeBlockBreakpointOverride(
-	block: TaleBlock,
-	next: TaleBlock,
+	block: TaleScene,
+	next: TaleScene,
 	breakpointId: string | null,
-): TaleBlock {
+): TaleScene {
 	if (!breakpointId) return next;
 	return {
 		...block,
@@ -125,10 +131,10 @@ export function writeBlockBreakpointOverride(
  * const updated = writeFragmentBreakpointOverride(fragment, nextFragment, "mobile");
  */
 export function writeFragmentBreakpointOverride(
-	fragment: TaleFragment,
-	next: TaleFragment,
+	fragment: TaleElement,
+	next: TaleElement,
 	breakpointId: string | null,
-): TaleFragment {
+): TaleElement {
 	if (!breakpointId) return next;
 	return {
 		...fragment,
@@ -200,9 +206,9 @@ function getOrderedBreakpoints(tale: Tale): TaleBreakpoint[] {
  * @returns Effective fragment fields for the active breakpoint.
  */
 function applyFragmentOverride(
-	fragment: TaleFragment,
-	override: TaleFragmentResponsiveOverride | undefined,
-): TaleFragment {
+	fragment: TaleElement,
+	override: TaleElementResponsiveOverride | undefined,
+): TaleElement {
 	return override ? { ...fragment, ...override } : fragment;
 }
 
@@ -214,9 +220,9 @@ function applyFragmentOverride(
  * @returns Effective block fields for the active breakpoint.
  */
 function applyBlockOverride(
-	block: TaleBlock,
-	override: TaleBlockResponsiveOverride | undefined,
-): TaleBlock {
+	block: TaleScene,
+	override: TaleSceneResponsiveOverride | undefined,
+): TaleScene {
 	return override ? { ...block, ...override } : block;
 }
 
@@ -226,11 +232,13 @@ function applyBlockOverride(
  * @param block - Display block after editing.
  * @returns Serializable breakpoint override fields.
  */
-function pickBlockOverride(block: TaleBlock): TaleBlockResponsiveOverride {
+function pickBlockOverride(block: TaleScene): TaleSceneResponsiveOverride {
 	return {
+		articleStyle: block.articleStyle,
+		container: block.container,
 		description: block.description,
 		reading: block.reading,
-		rootNodeId: block.rootNodeId,
+		rootFrameId: block.rootFrameId,
 		size: block.size,
 		style: block.style,
 		title: block.title,
@@ -245,14 +253,15 @@ function pickBlockOverride(block: TaleBlock): TaleBlockResponsiveOverride {
  * @returns Serializable breakpoint override fields.
  */
 function pickFragmentOverride(
-	fragment: TaleFragment,
-): TaleFragmentResponsiveOverride {
+	fragment: TaleElement,
+): TaleElementResponsiveOverride {
 	return {
 		alt: fragment.alt,
 		animations: fragment.animations,
 		attribution: fragment.attribution,
 		caption: fragment.caption,
 		fallbackSrc: fragment.fallbackSrc,
+		imageStyle: fragment.imageStyle,
 		label: fragment.label,
 		mood: fragment.mood,
 		pathId: fragment.pathId,

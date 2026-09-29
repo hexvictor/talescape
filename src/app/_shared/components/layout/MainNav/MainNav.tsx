@@ -51,6 +51,7 @@ export default function MainNav({ mobile = false }: { mobile?: boolean }) {
 						<li key={href}>
 							<Button
 								asChild
+								hoverShape="slant-both"
 								className={cn(mobile && "w-full min-w-44")}
 								motion={isActive ? "lift-on-hover" : "flat"}
 								shape={isActive ? "slant-both" : "rectangle"}

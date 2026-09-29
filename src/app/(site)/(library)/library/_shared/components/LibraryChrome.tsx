@@ -45,7 +45,7 @@ export function LibraryChrome({
 							<BookMarked aria-hidden="true" className="size-4" /> Library
 						</ComicRail>
 						<h1 className="mt-4 text-balance font-display text-3xl uppercase sm:text-4xl">
-							Browse tales, books, authors, and story nodes.
+							Browse tales, books, authors, and story frames.
 						</h1>
 						<div className="mt-5 flex flex-wrap gap-2">
 							{currentUser ? (
@@ -76,39 +76,40 @@ export function LibraryChrome({
 						<div className="absolute inset-0 bg-gradient-to-r from-card/40 to-transparent" />
 					</div>
 				</div>
-				<nav aria-label="Library sections" className="mt-4">
-					<div className="flex flex-wrap gap-2">
-						{libraryViews.map((view) => {
-							const isActive =
-								view.href === "/library"
-									? pathname === "/library"
-									: pathname === view.href;
+				<nav
+					aria-label="Library sections"
+					className="mt-4 flex flex-wrap gap-2"
+				>
+					{libraryViews.map((view) => {
+						const isActive =
+							view.href === "/library"
+								? pathname === "/library"
+								: pathname === view.href;
 
-							return (
-								<Link
-									key={view.key}
-									href={view.href}
-									aria-current={isActive ? "page" : undefined}
+						return (
+							<Link
+								key={view.key}
+								href={view.href}
+								aria-current={isActive ? "page" : undefined}
+								className={cn(
+									"inline-flex min-h-11 items-center gap-2 border-2 border-transparent px-4 font-black text-xs uppercase transition-colors",
+									isActive
+										? "border-foreground bg-[var(--comic-ink)] text-[var(--comic-cream)] [clip-path:polygon(10px_0,100%_0,calc(100%_-_10px)_100%,0_100%)]"
+										: "text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-secondary-foreground",
+								)}
+							>
+								{view.label}
+								<span
 									className={cn(
-										"inline-flex min-h-11 items-center gap-2 border-2 border-transparent px-4 font-black text-xs uppercase transition-colors",
-										isActive
-											? "border-foreground bg-[var(--comic-ink)] text-[var(--comic-cream)] [clip-path:polygon(10px_0,100%_0,calc(100%_-_10px)_100%,0_100%)]"
-											: "text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-secondary-foreground",
+										"border border-current px-1.5 py-0.5 text-xs",
+										isActive ? "bg-primary-foreground/15" : "bg-muted",
 									)}
 								>
-									{view.label}
-									<span
-										className={cn(
-											"border border-current px-1.5 py-0.5 text-xs",
-											isActive ? "bg-primary-foreground/15" : "bg-muted",
-										)}
-									>
-										{counts[view.key]}
-									</span>
-								</Link>
-							);
-						})}
-					</div>
+									{counts[view.key]}
+								</span>
+							</Link>
+						);
+					})}
 				</nav>
 			</ComicPanel>
 			{children}

@@ -25,9 +25,9 @@ import { RouteGraphSection } from "./RouteGraphSection";
 
 type ContentsTreeProps = {
 	contents: ReaderNavigationPart[];
-	currentBlockId: string | null;
+	currentPageId: string | null;
 	currentEntryId: string | null;
-	onNavigate: (blockId: string) => void;
+	onNavigate: (keyframeId: string) => void;
 };
 
 /**
@@ -38,7 +38,7 @@ type ContentsTreeProps = {
  */
 export function ContentsTree({
 	contents,
-	currentBlockId,
+	currentPageId,
 	currentEntryId,
 	onNavigate,
 }: ContentsTreeProps): React.JSX.Element {
@@ -56,7 +56,7 @@ export function ContentsTree({
 	 * @returns Nothing.
 	 */
 	const selectEntry = (entry: ReaderNavigationEntry): void => {
-		onNavigate(entry.firstBlockId);
+		onNavigate(entry.firstKeyframeId);
 	};
 
 	/**
@@ -124,7 +124,7 @@ export function ContentsTree({
 							<button
 								type="button"
 								className="flex min-w-0 flex-1 items-center gap-3 py-2 pr-2 text-left"
-								onClick={() => onNavigate(part.firstBlockId)}
+								onClick={() => onNavigate(part.firstKeyframeId)}
 							>
 								<span className="grid h-8 w-8 shrink-0 place-items-center rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft-strong)] text-[color:var(--reader-part-solid)]">
 									<Layers3 size={15} />
@@ -138,8 +138,7 @@ export function ContentsTree({
 									</span>
 								</span>
 								<span className="text-foreground/38 text-xs">
-									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"} ·{" "}
-									{part.blockCount} blocks
+									{part.pageCount} {part.pageCount === 1 ? "page" : "pages"}
 								</span>
 							</button>
 						</div>
@@ -162,7 +161,7 @@ export function ContentsTree({
 													"flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs",
 													active
 														? "bg-[color:var(--reader-part-soft-strong)] text-foreground"
-														: entry.hasChoiceBlock
+														: entry.hasChoiceScene
 															? "text-emerald-900 hover:bg-emerald-500/12 hover:text-foreground dark:text-[#d8f5da] dark:hover:bg-[#8bcf90]/10"
 															: "text-foreground/64 hover:bg-[color:var(--reader-part-soft-strong)] hover:text-foreground",
 												)}
@@ -206,21 +205,20 @@ export function ContentsTree({
 													<span className="rounded border border-[color:var(--reader-part-border)] bg-[color:var(--reader-part-soft)] px-1.5 py-0.5 text-[9px] text-[color:var(--reader-part-solid)] uppercase">
 														{getEntryTypeLabel(entry.type)}
 													</span>
-													{entry.hasChoiceBlock ? (
+													{entry.hasChoiceScene ? (
 														<span className="rounded border border-emerald-600/35 bg-emerald-500/12 px-1.5 py-0.5 text-[9px] text-emerald-900 uppercase dark:border-[#8bcf90]/35 dark:bg-[#8bcf90]/10 dark:text-[#d8f5da]">
 															Choice
 														</span>
 													) : null}
 													<span className="text-foreground/35">
-														{entry.blockCount > 1
-															? `${entry.pageCount}p / ${entry.blockCount}b`
-															: null}
+														{entry.pageCount}{" "}
+														{entry.pageCount === 1 ? "page" : "pages"}
 													</span>
 												</button>
 											</div>
 											{expanded ? (
 												<EntryPagesGrid
-													currentBlockId={currentBlockId}
+													currentPageId={currentPageId}
 													entry={entry}
 													onNavigate={onNavigate}
 												/>
@@ -241,9 +239,9 @@ type RoutesPanelProps = {
 	branches: ResolvedTaleBranch[];
 	currentBranchId: string | null;
 	onChoosePath: (path: ResolvedTalePath) => void;
-	onTravelToBlock: (blockId: string) => void;
+	onTravelToBlock: (sceneId: string) => void;
 	paths: ResolvedTalePath[];
-	reachableBlockIds: Set<string>;
+	reachableSceneIds: Set<string>;
 	reachableBranchIds: Set<string>;
 	selectedBranchIds: string[];
 };
@@ -260,7 +258,7 @@ export function RoutesPanel({
 	onChoosePath,
 	onTravelToBlock,
 	paths,
-	reachableBlockIds,
+	reachableSceneIds,
 	reachableBranchIds,
 	selectedBranchIds,
 }: RoutesPanelProps): React.JSX.Element {
@@ -276,7 +274,7 @@ export function RoutesPanel({
 				onChoosePath={onChoosePath}
 				onTravelToBlock={onTravelToBlock}
 				paths={paths}
-				reachableBlockIds={reachableBlockIds}
+				reachableSceneIds={reachableSceneIds}
 				reachableBranchIds={reachableBranchIds}
 				selectedBranchIds={selectedBranchIds}
 			/>
@@ -310,15 +308,14 @@ export function RoutesPanel({
 									{branch.title}
 								</p>
 								<p className="text-foreground/38 text-xs">
-									{branch.counts.blocks} blocks ·{" "}
-									{selected ? "active route" : "available route"}
+									{selected ? "Active route" : "Available route"}
 								</p>
 							</div>
 						</div>
 						{branchPaths.length > 0 ? (
 							<div className="mt-2 space-y-1 border-foreground/8 border-l pl-3">
 								{branchPaths.map((path) => {
-									const pathReachable = reachableBlockIds.has(path.fromBlockId);
+									const pathReachable = reachableSceneIds.has(path.fromSceneId);
 									const currentOption =
 										path.fromBranchId === currentBranchId && pathReachable;
 									return (
@@ -351,7 +348,7 @@ export function RoutesPanel({
 												aria-label={`Travel to ${path.label} choice`}
 												disabled={!pathReachable}
 												className="grid h-7 w-7 shrink-0 place-items-center rounded text-foreground/48 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
-												onClick={() => onTravelToBlock(path.fromBlockId)}
+												onClick={() => onTravelToBlock(path.fromSceneId)}
 											>
 												<LocateFixed size={12} />
 											</button>

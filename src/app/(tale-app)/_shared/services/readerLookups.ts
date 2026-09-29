@@ -1,28 +1,28 @@
 import type {
 	Anchor,
 	CompiledReader,
-	ResolvedTaleBlock,
 	ResolvedTaleBranch,
 	ResolvedTaleEntry,
 	ResolvedTalePage,
 	ResolvedTalePart,
+	ResolvedTaleScene,
 	Tale,
 	TimelineSegment,
 } from "../types";
 
-export function getAnchorByBlockId(
+export function getAnchorBySceneId(
 	compiled: CompiledReader,
-	blockId: string,
+	sceneId: string,
 ): Anchor | undefined {
-	const index = compiled.anchorIndexByBlockId[blockId];
+	const index = compiled.anchorIndexBySceneId[sceneId];
 	return index === undefined ? undefined : compiled.anchors[index];
 }
 
 export function getAnchorBlock(
 	tale: Tale,
 	anchor: Anchor,
-): ResolvedTaleBlock | undefined {
-	return tale.indexMap.blocksById[anchor.blockId];
+): ResolvedTaleScene | undefined {
+	return tale.indexMap.scenesById[anchor.sceneId];
 }
 
 export function getAnchorBranch(
@@ -59,9 +59,9 @@ export function getTransitionAnchors(
 ): { from: Anchor | undefined; to: Anchor | undefined } {
 	return {
 		from:
-			segment.fromBlockId === null
+			segment.fromSceneId === null
 				? (compiled.openingTransitionAnchor ?? undefined)
-				: getAnchorByBlockId(compiled, segment.fromBlockId),
-		to: getAnchorByBlockId(compiled, segment.toBlockId),
+				: getAnchorBySceneId(compiled, segment.fromSceneId),
+		to: getAnchorBySceneId(compiled, segment.toSceneId),
 	};
 }

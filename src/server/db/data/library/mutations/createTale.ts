@@ -3,11 +3,12 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
-	blocks,
+	scenes,
 	branches,
 	entries,
-	fragments,
-	nodes,
+	elements,
+	frames,
+	keyframes,
 	pages,
 	parts,
 	talePermissions,
@@ -167,7 +168,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 		if (!createdBranch) throw new Error("Unable to create root branch");
 
 		const [createdBlock] = await tx
-			.insert(blocks)
+			.insert(scenes)
 			.values({
 				taleId: createdTale.id,
 				branchId: createdBranch.id,
@@ -175,9 +176,6 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				isOfficial,
 				isVerified,
 				editable,
-				entryId: createdEntry.id,
-				pageId: createdPage.id,
-				partId: createdPart.id,
 				title,
 				order: 0,
 				sizeMode: "fixed",
@@ -190,10 +188,10 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				readingConfig: {
 					animationConfig: {
 						ambient: { tracks: [] },
-						scrolling: { tracks: [] },
+						active: { tracks: [] },
 					},
-					readingLength: 800,
-					readingLengthMode: "manual",
+					activeLength: 800,
+					activeLengthMode: "manual",
 				},
 				styleConfig: {
 					backgroundCss: "linear-gradient(145deg, #15131f, #07070a)",
@@ -202,19 +200,19 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				visibility,
 				cloneable,
 			})
-			.returning({ id: blocks.id });
+			.returning({ id: scenes.id });
 
 		if (!createdBlock) throw new Error("Unable to create starter block");
 
 		const [createdRootNode] = await tx
-			.insert(nodes)
+			.insert(frames)
 			.values({
 				taleId: createdTale.id,
-				blockId: createdBlock.id,
+				sceneId: createdBlock.id,
 				creatorId: userId,
-				stableId: "root",
-				name: "Root",
-				isRoot: true,
+				stableId: "frame-1",
+				name: "Frame 1",
+				isRoot: false,
 				order: 0,
 				config: {
 					children: [],
@@ -222,7 +220,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					id: "root",
 					mode: "flex",
 					overflow: "visible",
-					parentNodeId: null,
+					parentFrameId: null,
 				},
 				styleConfig: {
 					alignItems: "center",
@@ -239,16 +237,16 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				visibility,
 				cloneable,
 			})
-			.returning({ id: nodes.id });
+			.returning({ id: frames.id });
 
 		if (!createdRootNode) throw new Error("Unable to create root node");
 
 		const [createdFragment] = await tx
-			.insert(fragments)
+			.insert(elements)
 			.values({
 				taleId: createdTale.id,
-				blockId: createdBlock.id,
-				nodeId: createdRootNode.id,
+				sceneId: createdBlock.id,
+				frameId: createdRootNode.id,
 				creatorId: userId,
 				type: "text" as const,
 				isOfficial,
@@ -267,26 +265,27 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					textAlign: "center",
 				},
 			})
-			.returning({ id: fragments.id });
+			.returning({ id: elements.id });
 
 		if (!createdFragment) throw new Error("Unable to create starter fragment");
 
 		await tx
-			.update(nodes)
+			.update(frames)
 			.set({
 				config: {
 					children: [
-						{ fragmentId: String(createdFragment.id), type: "fragment" },
+						{ elementId: String(createdFragment.id), type: "element" },
 					],
 					gap: 0,
 					id: String(createdRootNode.id),
 					mode: "flex",
 					overflow: "visible",
-					parentNodeId: null,
+					parentFrameId: null,
 				},
 			})
-			.where(eq(nodes.id, createdRootNode.id));
+			.where(eq(frames.id, createdRootNode.id));
 
+		await tx.insert(keyframes).values({ taleId: createdTale.id, sceneId: createdBlock.id, frameId: createdRootNode.id, creatorId: userId, branchId: createdBranch.id, pageId: createdPage.id, title: "Opening keyframe", order: 0, actions: [{ id: "opening-title", targetId: String(createdFragment.id), targetType: "element", type: "active" }] });
 		return createdTale.id;
 	});
 

@@ -5,7 +5,7 @@ import { useTaleAppStore } from "../../../../contexts/TaleAppStoreContext";
 import { useTaleReaderStore } from "../../../../contexts/TaleReaderStoreContext";
 import type {
 	Anchor,
-	ResolvedTaleBlock,
+	ResolvedTaleScene,
 	Tale,
 	TaleBranch,
 	TaleEntry,
@@ -50,16 +50,16 @@ export function SummaryPanel({
 		>
 			<DebugCard title="Now reading">
 				<DebugField label="Phase" value={phase} />
-				<DebugField label="Block" value={blockTitle} />
-				<DebugField label="Block type" value={blockType} />
+				<DebugField label="Scene" value={blockTitle} />
+				<DebugField label="Scene type" value={blockType} />
 				<DebugField label="Branch" value={branchTitle} />
 				<DebugField label="Page" value={pageLabel} />
 				<DebugField label="Entry" value={entryTitle} />
 				<DebugField label="Part" value={partTitle} />
 			</DebugCard>
 			<DebugCard title="Route">
-				<DebugField label="Compiled blocks" value={String(anchors.length)} />
-				<DebugField label="Reached blocks" value={String(seenBlocks)} />
+				<DebugField label="Compiled scenes" value={String(anchors.length)} />
+				<DebugField label="Reached scenes" value={String(seenBlocks)} />
 			</DebugCard>
 		</div>
 	);
@@ -79,7 +79,7 @@ export function NavigationPanel({
 	pageLabel,
 	part,
 }: {
-	block: ResolvedTaleBlock | null;
+	block: ResolvedTaleScene | null;
 	branch: TaleBranch | null;
 	entry: TaleEntry | null;
 	page: TalePage | null;
@@ -92,8 +92,8 @@ export function NavigationPanel({
 			data-reader-role="debug-panel"
 			className="space-y-3"
 		>
-			<DebugCard title="Block and branch">
-				<DebugField label="Block id" value={block?.id} />
+			<DebugCard title="Scene and branch">
+				<DebugField label="Scene id" value={block?.id} />
 				<DebugField label="Title" value={block?.title} />
 				<DebugField label="Branch id" value={branch?.id} />
 				<DebugField label="Path" value={branch?.path} />
@@ -119,7 +119,7 @@ export function NavigationPanel({
  * Renders live saved-progress diagnostics.
  *
  * @param props - Progress panel props.
- * @param props.compiledCount - Number of compiled blocks.
+ * @param props.compiledCount - Number of compiled scenes.
  * @returns Progress diagnostic cards.
  */
 export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
@@ -137,14 +137,19 @@ export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 			className="space-y-3"
 		>
 			<DebugCard title="Saved position">
-				<DebugField label="Block" value={progress.blockId} />
+				<DebugField label="Scene" value={progress.sceneId} />
+				<DebugField label="Keyframe" value={progress.keyframeId} />
 				<DebugField
 					label="Inner progress"
 					value={`${Math.round(progress.innerProgress * 100)}%`}
 				/>
 				<DebugField
-					label="Seen blocks"
-					value={`${progress.seenBlockIds.length}/${compiledCount}`}
+					label="Seen scenes"
+					value={`${progress.seenSceneIds.length}/${compiledCount}`}
+				/>
+				<DebugField
+					label="Seen keyframes"
+					value={String(progress.seenKeyframeIds.length)}
 				/>
 				<DebugField
 					label="Seen numbered pages"
@@ -163,7 +168,7 @@ export function ProgressPanel({ compiledCount }: { compiledCount: number }) {
 					value={String(progress.seenPartIds.length)}
 				/>
 				<DebugField
-					label="Committed fragments"
+					label="Committed elements"
 					value={String(progress.committedAnimationIds.length)}
 				/>
 			</DebugCard>
@@ -228,10 +233,10 @@ export function SegmentsPanel({
  * @returns Anchor diagnostic rows.
  */
 export function AnchorsPanel({
-	activeBlockId,
+	activeSceneId,
 	anchors,
 }: {
-	activeBlockId?: string;
+	activeSceneId?: string;
 	anchors: Anchor[];
 }) {
 	const tale = useTaleAppStore((state) => state.document.tale);
@@ -246,13 +251,13 @@ export function AnchorsPanel({
 					key={anchor.id}
 					className={cn(
 						"rounded border px-3 py-2 text-xs",
-						anchor.blockId === activeBlockId
+						anchor.sceneId === activeSceneId
 							? "border-primary/50 bg-primary/10"
 							: "border-foreground/8 bg-foreground/[0.035]",
 					)}
 				>
 					<p className="font-semibold text-foreground/78">
-						{tale.indexMap.blocksById[anchor.blockId]?.title ?? anchor.blockId}
+						{tale.indexMap.scenesById[anchor.sceneId]?.title ?? anchor.sceneId}
 					</p>
 					<p className="mt-1 text-foreground/43">
 						{Math.round(anchor.point.x)}, {Math.round(anchor.point.y)} /{" "}
@@ -272,11 +277,11 @@ export function AnchorsPanel({
  * @returns Human-readable segment label.
  */
 function getSegmentLabel(segment: TimelineSegment, tale: Tale): string {
-	const blockTitle = (blockId: string | null): string =>
-		(blockId && tale.indexMap.blocksById[blockId]?.title) ?? "Entrance";
-	if (segment.type === "reading") return blockTitle(segment.blockId);
+	const blockTitle = (sceneId: string | null): string =>
+		(sceneId && tale.indexMap.scenesById[sceneId]?.title) ?? "Entrance";
+	if (segment.type === "reading") return blockTitle(segment.sceneId);
 	if (segment.type === "pause") {
-		return `${blockTitle(segment.blockId)} (${segment.pauseType} pause)`;
+		return `${blockTitle(segment.sceneId)} (${segment.pauseType} pause)`;
 	}
-	return `${blockTitle(segment.fromBlockId)} -> ${blockTitle(segment.toBlockId)}`;
+	return `${blockTitle(segment.fromSceneId)} -> ${blockTitle(segment.toSceneId)}`;
 }

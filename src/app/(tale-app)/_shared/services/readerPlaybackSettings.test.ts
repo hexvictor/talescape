@@ -57,32 +57,35 @@ describe("reader playback settings", () => {
 	it("uses destination entry timing and block boundary pauses", () => {
 		const tale = {
 			indexMap: {
-				blocksById: {
+				scenesById: {
 					first: {
 						autoplay: {
 							enabled: true,
-							enteringSpeed: null,
-							leavingSpeed: 40,
-							pauseAfterEnteringSeconds: null,
-							pauseBeforeLeavingSeconds: 1.5,
-							readingSpeed: 20,
+							introSpeed: null,
+							outroSpeed: 40,
+							pauseAfterIntroSeconds: null,
+							pauseBeforeOutroSeconds: 1.5,
+							activeSpeed: 20,
 						},
 					},
 					second: {
 						autoplay: {
 							enabled: true,
-							enteringSpeed: 70,
-							leavingSpeed: null,
-							pauseAfterEnteringSeconds: 2,
-							pauseBeforeLeavingSeconds: null,
-							readingSpeed: 30,
+							introSpeed: 70,
+							outroSpeed: null,
+							pauseAfterIntroSeconds: 2,
+							pauseBeforeOutroSeconds: null,
+							activeSpeed: 30,
 						},
 					},
 				},
 			},
 		} as unknown as Tale;
 		const reading: TimelineSegment = {
-			blockId: "first",
+			sceneId: "first",
+			keyframeId: "first-step",
+			cameraProgressStart: 0,
+			cameraProgressEnd: 1,
 			end: 100,
 			index: 0,
 			length: 100,
@@ -91,15 +94,18 @@ describe("reader playback settings", () => {
 		};
 		const transition: TimelineSegment = {
 			end: 200,
-			fromBlockId: "first",
+			fromSceneId: "first",
 			index: 1,
 			length: 100,
 			start: 100,
-			toBlockId: "second",
+			toSceneId: "second",
 			type: "transition",
 		};
 		const secondReading: TimelineSegment = {
-			blockId: "second",
+			sceneId: "second",
+			keyframeId: "second-step",
+			cameraProgressStart: 0,
+			cameraProgressEnd: 1,
 			end: 300,
 			index: 2,
 			length: 100,

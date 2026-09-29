@@ -1,22 +1,69 @@
 "use client";
 
 import {
+	BookOpen,
+	FileText,
 	Image as ImageIcon,
 	Keyboard,
+	Layers3,
 	MousePointer2,
 	Play,
+	Plus,
 	ScrollText,
 } from "lucide-react";
 import { useTaleAppStoreShallow } from "~/app/(tale-app)/_shared/contexts/TaleAppStoreContext";
 import { normalizeTalePlaybackConfig } from "~/app/(tale-app)/_shared/services/readerPlaybackSettings";
 import { normalizeTaleBackgroundConfig } from "~/app/(tale-app)/_shared/services/taleBackgroundSettings";
 import type {
+	ResolvedTaleEntry,
+	ResolvedTalePage,
+	ResolvedTalePart,
 	Tale,
-	TaleBlockSnapSettings,
+	TaleEntry,
+	TalePage,
+	TalePart,
+	TaleSceneSnapSettings,
 	TaleSnapConfig,
 } from "~/app/(tale-app)/_shared/types";
+import { Button } from "~/components/ui/button";
 
 type SnapGroup = keyof TaleSnapConfig;
+
+let narrativeDraftSequence = 0;
+
+function createNarrativeDraftId(): string {
+	narrativeDraftSequence += 1;
+	return String(-(Date.now() + narrativeDraftSequence));
+}
+
+const ENTRY_TYPES = [
+	"cover",
+	"chapter",
+	"prologue",
+	"epilogue",
+	"interlude",
+	"map",
+	"quote",
+	"ending",
+	"codex",
+	"appendix",
+	"unknown",
+] as const;
+
+const PAGE_TYPES = [
+	"cover",
+	"chapter",
+	"prologue",
+	"epilogue",
+	"interlude",
+	"map",
+	"quote",
+	"ending",
+	"illustration",
+	"codex",
+	"custom",
+	"unknown",
+] as const;
 
 /**
  * Renders tale-level metadata and default reader behavior settings.
@@ -64,6 +111,7 @@ export function TaleSettingsPanel(): React.JSX.Element {
 					}
 				/>
 			</section>
+			<NarrativeManager tale={tale} onChange={updateTale} />
 			<section className="tale-ui-panel p-3">
 				<div className="mb-3 flex items-center gap-2">
 					<ImageIcon className="text-primary" size={15} />
@@ -236,7 +284,7 @@ export function TaleSettingsPanel(): React.JSX.Element {
 				}
 			/>
 			<SnapSettingsGroup
-				description="Used by scroll-snap mode after free scrolling finishes near a snap point."
+				description="Used by scroll-snap mode after free active finishes near a snap point."
 				showCaptureControls
 				settings={tale.snapConfig.scrollSnap}
 				title="Scroll Snap"
@@ -251,6 +299,404 @@ export function TaleSettingsPanel(): React.JSX.Element {
 				}
 			/>
 		</div>
+	);
+}
+
+function NarrativeManager({
+	onChange,
+	tale,
+}: {
+	onChange: (next: Tale) => void;
+	tale: Tale;
+}): React.JSX.Element {
+	const parts = tale.order.partIds.flatMap((id) => {
+		const item = tale.indexMap.partsById[id];
+		return item ? [item] : [];
+	});
+	const entries = tale.order.entryIds.flatMap((id) => {
+		const item = tale.indexMap.entriesById[id];
+		return item ? [item] : [];
+	});
+	const pages = tale.order.pageIds.flatMap((id) => {
+		const item = tale.indexMap.pagesById[id];
+		return item ? [item] : [];
+	});
+	const updatePart = (id: string, patch: Partial<TalePart>): void => {
+		const current = tale.indexMap.partsById[id];
+		if (!current) return;
+		onChange({
+			...tale,
+			indexMap: {
+				...tale.indexMap,
+				partsById: {
+					...tale.indexMap.partsById,
+					[id]: { ...current, ...patch },
+				},
+			},
+		});
+	};
+	const updateEntry = (id: string, patch: Partial<TaleEntry>): void => {
+		const current = tale.indexMap.entriesById[id];
+		if (!current) return;
+		onChange({
+			...tale,
+			indexMap: {
+				...tale.indexMap,
+				entriesById: {
+					...tale.indexMap.entriesById,
+					[id]: { ...current, ...patch },
+				},
+			},
+		});
+	};
+	const updatePage = (id: string, patch: Partial<TalePage>): void => {
+		const current = tale.indexMap.pagesById[id];
+		if (!current) return;
+		onChange({
+			...tale,
+			indexMap: {
+				...tale.indexMap,
+				pagesById: {
+					...tale.indexMap.pagesById,
+					[id]: { ...current, ...patch },
+				},
+			},
+		});
+	};
+	const addPart = (): void => {
+		const id = createNarrativeDraftId();
+		const part: ResolvedTalePart = {
+			bounds: {
+				firstEntryId: null,
+				firstPageId: null,
+				firstSceneId: null,
+				lastEntryId: null,
+				lastPageId: null,
+				lastSceneId: null,
+			},
+			counts: { entries: 0, pages: 0, scenes: 0 },
+			description: "",
+			entryIds: [],
+			id,
+			links: { nextPartId: null, previousPartId: parts.at(-1)?.id ?? null },
+			order: parts.length,
+			pageIds: [],
+			position: {
+				index: parts.length,
+				isFirst: parts.length === 0,
+				isLast: true,
+			},
+			sceneIds: [],
+			title: `Part ${parts.length + 1}`,
+		};
+		onChange({
+			...tale,
+			counts: { ...tale.counts, parts: tale.counts.parts + 1 },
+			indexMap: {
+				...tale.indexMap,
+				partsById: {
+					...tale.indexMap.partsById,
+					[id]: part,
+				},
+			},
+			order: { ...tale.order, partIds: [...tale.order.partIds, id] },
+		});
+	};
+	const addEntry = (): void => {
+		const part = parts[0];
+		if (!part) return;
+		const id = createNarrativeDraftId();
+		const entry: ResolvedTaleEntry = {
+			bounds: {
+				firstPageId: null,
+				firstSceneId: null,
+				lastPageId: null,
+				lastSceneId: null,
+			},
+			chapter: {
+				isChapter: true,
+				localNumber:
+					entries.filter((item) => item.partId === part.id).length + 1,
+				number: entries.length + 1,
+			},
+			counts: { pages: 0, scenes: 0 },
+			description: "",
+			id,
+			isNumbered: true,
+			links: {
+				nextEntryId: null,
+				nextEntryIdInPart: null,
+				previousEntryId: entries.at(-1)?.id ?? null,
+				previousEntryIdInPart:
+					entries.filter((item) => item.partId === part.id).at(-1)?.id ?? null,
+			},
+			order: entries.length,
+			pageIds: [],
+			partId: part.id,
+			position: {
+				entryNumber: entries.length + 1,
+				index: entries.length,
+				isFirst: entries.length === 0,
+				isFirstInPart: !entries.some((item) => item.partId === part.id),
+				isLast: true,
+				isLastInPart: true,
+			},
+			sceneIds: [],
+			title: `Entry ${entries.length + 1}`,
+			type: "chapter",
+		};
+		onChange({
+			...tale,
+			counts: { ...tale.counts, entries: tale.counts.entries + 1 },
+			indexMap: {
+				...tale.indexMap,
+				entriesById: {
+					...tale.indexMap.entriesById,
+					[id]: entry,
+				},
+			},
+			order: { ...tale.order, entryIds: [...tale.order.entryIds, id] },
+		});
+	};
+	const addPage = (): void => {
+		const entry = entries[0];
+		if (!entry) return;
+		const id = createNarrativeDraftId();
+		const page: ResolvedTalePage = {
+			bounds: { firstSceneId: null, lastSceneId: null },
+			counts: { scenes: 0 },
+			description: "",
+			entryId: entry.id,
+			id,
+			isPaginated: true,
+			links: {
+				nextPageId: null,
+				nextPageIdInEntry: null,
+				nextPageIdInPart: null,
+				previousPageId: pages.at(-1)?.id ?? null,
+				previousPageIdInEntry:
+					pages.filter((item) => item.entryId === entry.id).at(-1)?.id ?? null,
+				previousPageIdInPart:
+					pages.filter((item) => item.partId === entry.partId).at(-1)?.id ??
+					null,
+			},
+			order: pages.length,
+			partId: entry.partId,
+			position: {
+				globalPageNumber: pages.length + 1,
+				index: pages.length,
+				isFirst: pages.length === 0,
+				isFirstInEntry: !pages.some((item) => item.entryId === entry.id),
+				isFirstInPart: !pages.some((item) => item.partId === entry.partId),
+				isLast: true,
+				isLastInEntry: true,
+				isLastInPart: true,
+				pageNumber: pages.length + 1,
+			},
+			sceneIds: [],
+			title: `Page ${pages.length + 1}`,
+			type: "chapter",
+		};
+		onChange({
+			...tale,
+			counts: { ...tale.counts, pages: tale.counts.pages + 1 },
+			indexMap: {
+				...tale.indexMap,
+				pagesById: {
+					...tale.indexMap.pagesById,
+					[id]: page,
+				},
+			},
+			order: {
+				...tale.order,
+				numberedPageIds: [...tale.order.numberedPageIds, id],
+				pageIds: [...tale.order.pageIds, id],
+			},
+		});
+	};
+
+	return (
+		<section className="tale-ui-panel grid gap-3 p-3">
+			<div className="flex items-center gap-2">
+				<BookOpen className="text-primary" size={15} />
+				<p className="font-semibold text-xs uppercase">Narrative map</p>
+			</div>
+			<NarrativeList
+				icon={<Layers3 size={14} />}
+				items={parts}
+				title="Parts"
+				onAdd={addPart}
+				render={(part) => (
+					<>
+						<SettingsText
+							label="Title"
+							value={part.title}
+							onChange={(title) => updatePart(part.id, { title })}
+						/>
+						<SettingsTextarea
+							label="Description"
+							value={part.description ?? ""}
+							onChange={(description) => updatePart(part.id, { description })}
+						/>
+						<SettingsNumber
+							label="Order"
+							value={part.order}
+							onChange={(order) =>
+								updatePart(part.id, { order: order ?? part.order })
+							}
+						/>
+					</>
+				)}
+			/>
+			<NarrativeList
+				icon={<BookOpen size={14} />}
+				items={entries}
+				title="Entries"
+				onAdd={addEntry}
+				render={(entry) => (
+					<>
+						<SettingsText
+							label="Title"
+							value={entry.title}
+							onChange={(title) => updateEntry(entry.id, { title })}
+						/>
+						<div className="grid grid-cols-2 gap-2">
+							<SettingsSelect
+								label="Part"
+								value={entry.partId}
+								onChange={(partId) => updateEntry(entry.id, { partId })}
+							>
+								{parts.map((part) => (
+									<option key={part.id} value={part.id}>
+										{part.title}
+									</option>
+								))}
+							</SettingsSelect>
+							<SettingsSelect
+								label="Type"
+								value={entry.type}
+								onChange={(type) =>
+									updateEntry(entry.id, {
+										type: type as TaleEntry["type"],
+									})
+								}
+							>
+								{ENTRY_TYPES.map((type) => (
+									<option key={type} value={type}>
+										{type}
+									</option>
+								))}
+							</SettingsSelect>
+						</div>
+						<SettingsToggle
+							checked={entry.isNumbered}
+							label="Number this entry"
+							onChange={(isNumbered) => updateEntry(entry.id, { isNumbered })}
+						/>
+					</>
+				)}
+			/>
+			<NarrativeList
+				icon={<FileText size={14} />}
+				items={pages}
+				title="Pages"
+				onAdd={addPage}
+				render={(page) => (
+					<>
+						<SettingsText
+							label="Title"
+							value={page.title ?? ""}
+							onChange={(title) => updatePage(page.id, { title })}
+						/>
+						<div className="grid grid-cols-2 gap-2">
+							<SettingsSelect
+								label="Entry"
+								value={page.entryId}
+								onChange={(entryId) => {
+									const entry = tale.indexMap.entriesById[entryId];
+									updatePage(page.id, {
+										entryId,
+										partId: entry?.partId ?? page.partId,
+									});
+								}}
+							>
+								{entries.map((entry) => (
+									<option key={entry.id} value={entry.id}>
+										{entry.title}
+									</option>
+								))}
+							</SettingsSelect>
+							<SettingsSelect
+								label="Type"
+								value={page.type}
+								onChange={(type) => updatePage(page.id, { type })}
+							>
+								{PAGE_TYPES.map((type) => (
+									<option key={type} value={type}>
+										{type}
+									</option>
+								))}
+							</SettingsSelect>
+						</div>
+						<SettingsToggle
+							checked={page.isPaginated}
+							label="Counts as numbered page"
+							onChange={(isPaginated) => updatePage(page.id, { isPaginated })}
+						/>
+					</>
+				)}
+			/>
+		</section>
+	);
+}
+
+function NarrativeList<Item extends { id: string; title?: string }>({
+	icon,
+	items,
+	onAdd,
+	render,
+	title,
+}: {
+	icon: React.ReactNode;
+	items: Item[];
+	onAdd: () => void;
+	render: (item: Item) => React.ReactNode;
+	title: string;
+}): React.JSX.Element {
+	return (
+		<details className="border-foreground/12 border-t pt-3" open>
+			<summary className="flex cursor-pointer items-center justify-between gap-3 font-black text-xs uppercase">
+				<span className="flex items-center gap-2">
+					{icon}
+					{title}
+				</span>
+				<Button
+					aria-label={`Add ${title}`}
+					size="icon"
+					type="button"
+					variant="ghost"
+					onClick={(event) => {
+						event.preventDefault();
+						onAdd();
+					}}
+				>
+					<Plus size={14} />
+				</Button>
+			</summary>
+			<div className="mt-3 grid gap-3">
+				{items.map((item, index) => (
+					<details
+						className="border border-foreground/12 bg-background p-2"
+						key={item.id}
+					>
+						<summary className="cursor-pointer truncate font-bold text-xs">
+							{item.title || `${title.slice(0, -1)} ${index + 1}`}
+						</summary>
+						<div className="mt-2 grid gap-2">{render(item)}</div>
+					</details>
+				))}
+			</div>
+		</details>
 	);
 }
 
@@ -331,8 +777,8 @@ function SnapSettingsGroup({
 	title,
 }: {
 	description: string;
-	onChange: (settings: TaleBlockSnapSettings) => void;
-	settings: TaleBlockSnapSettings;
+	onChange: (settings: TaleSceneSnapSettings) => void;
+	settings: TaleSceneSnapSettings;
 	showCaptureControls: boolean;
 	title: string;
 }): React.JSX.Element {
@@ -435,6 +881,31 @@ function SettingsColor({
 				/>
 				<code className="text-xs">{value}</code>
 			</span>
+		</label>
+	);
+}
+
+function SettingsSelect({
+	children,
+	label,
+	onChange,
+	value,
+}: {
+	children: React.ReactNode;
+	label: string;
+	onChange: (value: string) => void;
+	value: string;
+}): React.JSX.Element {
+	return (
+		<label className="grid gap-1 text-foreground/52 text-xs">
+			<span className="font-medium uppercase">{label}</span>
+			<select
+				className="min-w-0 rounded border border-foreground/12 bg-background px-2 py-2 text-foreground text-xs"
+				value={value}
+				onChange={(event) => onChange(event.target.value)}
+			>
+				{children}
+			</select>
 		</label>
 	);
 }

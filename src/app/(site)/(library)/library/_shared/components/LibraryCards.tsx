@@ -282,8 +282,8 @@ export function EmptyState({
 function NodeCountGrid({ tale }: { tale: TaleItem }) {
 	const counts = [
 		["Branches", tale.nodeCounts.branches],
-		["Blocks", tale.nodeCounts.blocks],
-		["Fragments", tale.nodeCounts.fragments],
+		["Scenes", tale.nodeCounts.scenes],
+		["Elements", tale.nodeCounts.elements],
 		["Parts", tale.nodeCounts.parts],
 		["Entries", tale.nodeCounts.entries],
 		["Pages", tale.nodeCounts.pages],

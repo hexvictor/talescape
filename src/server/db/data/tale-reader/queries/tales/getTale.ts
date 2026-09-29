@@ -13,7 +13,7 @@ type GetTaleArgs = {
 
 type AscHelper = (column: SQLWrapper | AnyColumn) => SQL<unknown>;
 type IdOrderModel = { id: AnyColumn; order: AnyColumn };
-type BlockOrderModel = IdOrderModel & { pageOrder: AnyColumn };
+type SceneOrderModel = IdOrderModel & { pageOrder: AnyColumn };
 type OrderContext = { asc: AscHelper };
 
 const idOnlyColumns = {
@@ -50,21 +50,25 @@ function orderByOrderAndId(
  * orderBy: orderBlocksByReaderOrder
  */
 function orderBlocksByReaderOrder(
-	model: BlockOrderModel,
+	model: SceneOrderModel,
 	{ asc }: OrderContext,
 ): SQL<unknown>[] {
 	return [asc(model.order), asc(model.pageOrder)];
 }
 
 const taleStructureQuery = {
-	blocks: {
+	scenes: {
 		orderBy: (model, { asc }) => [asc(model.order), asc(model.pageOrder)],
 		with: {
-			fragments: {
+			elements: {
 				...idOnlyColumns,
 				orderBy: (model, { asc }) => [asc(model.order)],
 			},
-			nodes: {
+			frames: {
+				...idOnlyColumns,
+				orderBy: orderByOrderAndId,
+			},
+			keyframes: {
 				...idOnlyColumns,
 				orderBy: orderByOrderAndId,
 			},
@@ -74,7 +78,7 @@ const taleStructureQuery = {
 	branches: {
 		orderBy: (model, { asc }) => [asc(model.order)],
 		with: {
-			blocks: {
+			scenes: {
 				...idOnlyColumns,
 				orderBy: orderBlocksByReaderOrder,
 			},
@@ -92,38 +96,24 @@ const taleStructureQuery = {
 	entries: {
 		orderBy: (model, { asc }) => [asc(model.order)],
 		with: {
-			blocks: {
-				...idOnlyColumns,
-				orderBy: orderBlocksByReaderOrder,
-			},
 			pages: {
 				...idOnlyColumns,
 				orderBy: orderByOrderAndId,
 			},
 		},
 	},
-	fragments: {
+	elements: {
 		orderBy: (model, { asc }) => [asc(model.order)],
 	},
-	nodes: {
+	frames: {
 		orderBy: (model, { asc }) => [asc(model.order), asc(model.id)],
 	},
 	pages: {
 		orderBy: (model, { asc }) => [asc(model.order)],
-		with: {
-			blocks: {
-				...idOnlyColumns,
-				orderBy: orderBlocksByReaderOrder,
-			},
-		},
 	},
 	parts: {
 		orderBy: (model, { asc }) => [asc(model.order)],
 		with: {
-			blocks: {
-				...idOnlyColumns,
-				orderBy: orderBlocksByReaderOrder,
-			},
 			entries: {
 				...idOnlyColumns,
 				orderBy: orderByOrderAndId,
@@ -136,6 +126,9 @@ const taleStructureQuery = {
 	},
 	paths: {
 		orderBy: (model, { asc }) => [asc(model.order)],
+	},
+	keyframes: {
+		orderBy: orderByOrderAndId,
 	},
 } satisfies NonNullable<FindFirstTaleArgs>["with"];
 
@@ -167,7 +160,7 @@ function getTaleRecord({ where }: GetTaleArgs) {
 async function getOfficialReaderPresets() {
 	const [
 		animationPresets,
-		blockStylePresets,
+		sceneStylePresets,
 		transitionPresets,
 		visibilityPresets,
 	] = await Promise.all([
@@ -191,7 +184,7 @@ async function getOfficialReaderPresets() {
 
 	return {
 		animationPresets,
-		blockStylePresets,
+		sceneStylePresets,
 		transitionPresets,
 		visibilityPresets,
 	};

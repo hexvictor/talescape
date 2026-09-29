@@ -34,7 +34,7 @@ export function createReaderViewportVisibilityResolver(
 ): ReaderViewportVisibilityResolver {
 	const cellWidth = Math.max(viewport.width, 1);
 	const cellHeight = Math.max(viewport.height, 1);
-	const boundsByBlockId = new Map<string, AnchorBounds>();
+	const boundsBySceneId = new Map<string, AnchorBounds>();
 	const anchorIndicesByCell = new Map<string, number[]>();
 	const candidateMarks = new Uint32Array(compiled.anchors.length);
 	const visibleMarks = new Uint32Array(compiled.anchors.length);
@@ -52,7 +52,7 @@ export function createReaderViewportVisibilityResolver(
 			right: centerX + anchor.width / 2,
 			top: centerY - anchor.height / 2,
 		};
-		boundsByBlockId.set(anchor.blockId, bounds);
+		boundsBySceneId.set(anchor.sceneId, bounds);
 		for (
 			let cellX = Math.floor(bounds.left / cellWidth);
 			cellX <= Math.floor(bounds.right / cellWidth);
@@ -81,7 +81,7 @@ export function createReaderViewportVisibilityResolver(
 	};
 
 	/**
-	 * Resolves blocks intersecting the camera rectangle plus an optional viewport margin.
+	 * Resolves scenes intersecting the camera rectangle plus an optional viewport margin.
 	 *
 	 * @param camera - Current world-space camera center.
 	 * @param requiredAnchors - Anchors that must remain available for the active segment.
@@ -131,7 +131,7 @@ export function createReaderViewportVisibilityResolver(
 		for (const index of candidateIndices) {
 			const anchor = compiled.anchors[index];
 			if (!anchor) continue;
-			const bounds = boundsByBlockId.get(anchor.blockId);
+			const bounds = boundsBySceneId.get(anchor.sceneId);
 			if (
 				!bounds ||
 				bounds.right <= left ||
@@ -145,7 +145,7 @@ export function createReaderViewportVisibilityResolver(
 			visibleAnchors.push(anchor);
 		}
 		for (const anchor of requiredAnchors) {
-			const index = compiled.anchorIndexByBlockId[anchor.blockId];
+			const index = compiled.anchorIndexBySceneId[anchor.sceneId];
 			if (index === undefined || visibleMarks[index] === lookupRevision)
 				continue;
 			visibleMarks[index] = lookupRevision;

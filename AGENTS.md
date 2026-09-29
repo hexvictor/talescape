@@ -25,6 +25,20 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 
 ## Repository workflow
 
+## DOM instrumentation
+
+- Important rendered component roots, layout/animation/measurement wrappers,
+  toolbars, panels, and interaction surfaces must have stable descriptive
+  `data-reader-component` and `data-reader-role` attributes.
+- Studio-owned surfaces must additionally have `data-studio-component` and
+  `data-studio-role`. Shared Reader content retains Reader identity in Studio.
+- Preserve identifiers used by selectors, measurements, events and animation
+  registries. Do not introduce wrappers solely to attach instrumentation.
+- Use component names for component attributes and stable kebab-case roles.
+  Native leaf text, decorative icons and every individual span do not need
+  redundant component labels. Add identifiers when creating or changing an
+  important surface and review them with the DOM hierarchy.
+
 Use three-number Semantic Versioning: `major.minor.patch`.
 
 Branch model:

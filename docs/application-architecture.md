@@ -141,9 +141,9 @@ flowchart TD
     Viewport --> Compile[Layout Compiler]
     Viewport --> ScrollEngine[Scroll Engine]
     Viewport --> Stage[ReaderStage]
-    Stage --> Blocks[ReaderBlock]
-    Blocks --> Nodes[NodeRenderer]
-    Nodes --> Fragments[ReaderFragment]
+    Stage --> Scenes[ReaderScene]
+    Scenes --> Nodes[FrameRenderer]
+    Nodes --> Fragments[ReaderElement]
     Viewport --> Overlay[ReaderOverlay]
     Overlay --> ProgressRuntime[Progress Runtime]
     Overlay --> NavigationRuntime[Navigation Overlay]
@@ -183,7 +183,7 @@ flowchart TD
     Preview --> PreviewViewport[Full TaleReaderViewport]
     Preview --> PreviewInspector[Preview Inspector]
     LivePreview --> TaleReaderViewport[Embedded TaleReaderViewport]
-    Graph --> DnD[Sortable Block Lists]
+    Graph --> DnD[Sortable Scene Lists]
     Graph --> Flow[React Flow and ELK Layout]
 
     EditorInspector --> Draft[Studio Draft Actions]
@@ -231,7 +231,7 @@ flowchart TD
     ProgressMutation --> Schema
 ```
 
-Library data uses current schema concepts directly: branches, blocks,
+Library data uses current schema concepts directly: branches, scenes,
 fragments, paths, parts, entries, and pages. It does not fabricate legacy
 sections. Library cards, lists, and detail panels are server-fed presentation
 components and intentionally remain prop-driven.

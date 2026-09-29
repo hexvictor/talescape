@@ -65,7 +65,7 @@ export function attachKeyboardInput({
 			const decay = () => {
 				multiplier = Math.max(
 					1,
-					multiplier - getInputSettings().keyboardDecayStep,
+					multiplier - getInputSettings().keyboardDecayKeyframe,
 				);
 				if (multiplier > 1) {
 					decayTimer = window.setTimeout(
@@ -89,7 +89,7 @@ export function attachKeyboardInput({
 		if (resetTarget) target = null;
 	};
 
-	const getTapStep = (direction: ScrollDirection, now: number) => {
+	const getTapKeyframe = (direction: ScrollDirection, now: number) => {
 		const settings = getInputSettings();
 		const continuesBurst =
 			tapDirection === direction &&
@@ -102,8 +102,8 @@ export function attachKeyboardInput({
 		tapCount += 1;
 		tapLastAt = now;
 		const accelerationCount = Math.max(0, tapCount - 1);
-		const baseStep =
-			settings.keyboardBaseStepPx +
+		const baseKeyframe =
+			settings.keyboardBaseKeyframePx +
 			accelerationCount * settings.keyboardTapAccelerationPx;
 		const repeatMultiplier =
 			settings.keyboardTapRepeatMultiplier ** Math.max(0, tapCount - 2);
@@ -112,7 +112,7 @@ export function attachKeyboardInput({
 			() => resetTapBurst(),
 			settings.keyboardTapBurstWindowMs,
 		);
-		return Math.min(settings.keyboardTapMaxStepPx, baseStep * repeatMultiplier);
+		return Math.min(settings.keyboardTapMaxKeyframePx, baseKeyframe * repeatMultiplier);
 	};
 
 	const onKeyDown = (event: KeyboardEvent) => {
@@ -136,9 +136,9 @@ export function attachKeyboardInput({
 		onUserInput("keyboard");
 		registerSnapInput(event.repeat ? 1.2 : 0.8);
 
-		const pageStep = Math.max(
+		const pageKeyframe = Math.max(
 			120,
-			window.innerHeight * getInputSettings().pageStepRatio,
+			window.innerHeight * getInputSettings().pageKeyframeRatio,
 		);
 		const direction =
 			event.key === "ArrowDown" || event.key === "ArrowRight"
@@ -158,7 +158,7 @@ export function attachKeyboardInput({
 			event.key === " "
 		) {
 			event.preventDefault();
-			animateBy((event.key === "PageUp" || event.shiftKey ? -1 : 1) * pageStep);
+			animateBy((event.key === "PageUp" || event.shiftKey ? -1 : 1) * pageKeyframe);
 			return;
 		}
 		if (direction === null) return;
@@ -172,8 +172,8 @@ export function attachKeyboardInput({
 			resetTapBurst(false);
 		}
 		const step = event.repeat
-			? getHeldStep()
-			: getTapStep(direction, performance.now());
+			? getHeldKeyframe()
+			: getTapKeyframe(direction, performance.now());
 		setDirection(direction);
 		const from = target ?? driver.getTargetScroll();
 		target = clamp(from + direction * step, 0, totalScroll);
@@ -210,7 +210,7 @@ export function attachKeyboardInput({
 		}
 	};
 
-	const getHeldStep = () => {
+	const getHeldKeyframe = () => {
 		const settings = getInputSettings();
 		resetTapBurst(false);
 		multiplier = Math.min(
@@ -218,7 +218,7 @@ export function attachKeyboardInput({
 			multiplier + settings.keyboardHoldBoost,
 		);
 		startDecay();
-		return settings.keyboardBaseStepPx * multiplier;
+		return settings.keyboardBaseKeyframePx * multiplier;
 	};
 
 	inputTarget.addEventListener("keydown", onKeyDown as EventListener);

@@ -36,11 +36,11 @@ describe("createProgressPainter", () => {
 		const compiled = { totalScroll: 100 } as CompiledReader;
 		const transition: TimelineSegment = {
 			end: 50,
-			fromBlockId: "block-1",
+			fromSceneId: "block-1",
 			index: 1,
 			length: 20,
 			start: 30,
-			toBlockId: "block-2",
+			toSceneId: "block-2",
 			type: "transition",
 		};
 
@@ -55,7 +55,10 @@ describe("createProgressPainter", () => {
 		paint(
 			75,
 			{
-				blockId: "block-2",
+				sceneId: "block-2",
+				keyframeId: "step-2",
+				cameraProgressStart: 0,
+				cameraProgressEnd: 1,
 				end: 100,
 				index: 2,
 				length: 50,
@@ -82,7 +85,9 @@ describe("createProgressPainter", () => {
 		paint(
 			10,
 			{
-				blockId: "block-1",
+				sceneId: "block-1",
+				keyframeId: "step-1",
+				cameraProgress: 0,
 				end: 20,
 				index: 0,
 				length: 20,
@@ -97,7 +102,9 @@ describe("createProgressPainter", () => {
 		paint(
 			90,
 			{
-				blockId: "block-1",
+				sceneId: "block-1",
+				keyframeId: "step-1",
+				cameraProgress: 1,
 				end: 100,
 				index: 2,
 				length: 20,

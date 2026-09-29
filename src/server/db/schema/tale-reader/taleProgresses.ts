@@ -13,21 +13,23 @@ export const taleProgresses = createTable("tale_progress", (d) => ({
 		.integer()
 		.notNull()
 		.references(() => tales.id),
-	seenBlockIds: d.integer().array().notNull().default([]),
+	seenSceneIds: d.integer().array().notNull().default([]),
+	seenKeyframeIds: d.integer().array().notNull().default([]),
 	seenPageIds: d.integer().array().notNull().default([]),
 	seenEntryIds: d.integer().array().notNull().default([]),
 	seenPartIds: d.integer().array().notNull().default([]),
-	lastBlockId: d.integer(),
-	lastBlockInnerProgress: d
+	lastSceneId: d.integer(),
+	lastKeyframeId: d.integer(),
+	lastKeyframeInnerProgress: d
 		.numeric({ precision: 5, scale: 4 })
 		.notNull()
 		.default("0"),
-	maxBlockIdReached: d.integer(),
+	maxSceneIdReached: d.integer(),
 	activePathIds: d.integer().array().notNull().default([]),
 	selectedBranchIds: d.integer().array().notNull().default([]),
 	seenPathIds: d.integer().array().notNull().default([]),
 	committedAnimationIds: d.text().array().notNull().default([]),
-	seenBlockProgress: d
+	seenKeyframeProgress: d
 		.numeric({ precision: 5, scale: 4 })
 		.notNull()
 		.default("0"),

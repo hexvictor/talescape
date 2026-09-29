@@ -24,10 +24,11 @@ export function DebugLocationDetails({
 }: DebugLocationDetailsProps): React.JSX.Element | null {
 	if (!location) return null;
 
-	const snapMode =
-		tale.indexMap.blocksById[location.blockId]?.snap.mode ?? "snap-off";
+	const currentKeyframe = tale.indexMap.keyframesById[location.keyframeId];
+	const currentScene = tale.indexMap.scenesById[location.sceneId];
+	const snapMode = currentKeyframe?.snap.mode ?? currentScene?.snap.mode ?? "snap-off";
 	const blockNumber =
-		(compiled?.anchorIndexByBlockId[location.blockId] ?? -1) + 1;
+		(compiled?.anchorIndexBySceneId[location.sceneId] ?? -1) + 1;
 	const pageNumber = (compiled?.pageIndexById[location.pageId] ?? -1) + 1;
 	const entryNumber = (compiled?.entryIndexById[location.entryId] ?? -1) + 1;
 	const partNumber =
@@ -37,9 +38,25 @@ export function DebugLocationDetails({
 		getTaleBranches(tale).findIndex(
 			(branch) => branch.id === location.branchId,
 		) + 1;
+	const frameKeyframeIds =
+		currentScene?.keyframeIds.filter(
+			(keyframeId) => tale.indexMap.keyframesById[keyframeId]?.frameId !== null,
+		) ?? [];
+	const frameNumber = currentKeyframe?.frameId
+		? frameKeyframeIds.indexOf(currentKeyframe.id) + 1
+		: 0;
+	const stepNumber = currentKeyframe
+		? (currentScene?.keyframeIds.indexOf(currentKeyframe.id) ?? -1) + 1
+		: 0;
 
 	const items = [
-		["Block", blockNumber, location.blockId],
+		["Scene", blockNumber, location.sceneId],
+		...(currentKeyframe?.frameId
+			? ([
+					["Frame", frameNumber, currentKeyframe.frameId],
+					["Keyframe", stepNumber, currentKeyframe.id],
+				] as const)
+			: []),
 		["Page", pageNumber, location.pageId],
 		["Entry", entryNumber, location.entryId],
 		["Part", partNumber, location.partId],

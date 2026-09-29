@@ -20,7 +20,7 @@ export function formatPages(rows: unknown[]) {
 			type: string;
 		};
 		return {
-			blockIds: [],
+			sceneIds: [],
 			description: item.description ?? undefined,
 			entryId: String(item.entryId),
 			id: String(item.id),

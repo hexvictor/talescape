@@ -1,7 +1,7 @@
 import type {
 	Tale,
-	TaleBlockAutoplayConfig,
 	TalePlaybackConfig,
+	TaleSceneAutoplayConfig,
 	TimelineSegment,
 } from "../types";
 
@@ -22,31 +22,31 @@ export const DEFAULT_TALE_PLAYBACK_CONFIG: TalePlaybackConfig = {
 	},
 };
 
-export const DEFAULT_BLOCK_AUTOPLAY_CONFIG: TaleBlockAutoplayConfig = {
+export const DEFAULT_BLOCK_AUTOPLAY_CONFIG: TaleSceneAutoplayConfig = {
 	enabled: false,
-	enteringSpeed: null,
-	leavingSpeed: null,
-	pauseAfterEnteringSeconds: null,
-	pauseBeforeLeavingSeconds: null,
-	readingSpeed: null,
+	introSpeed: null,
+	outroSpeed: null,
+	pauseAfterIntroSeconds: null,
+	pauseBeforeOutroSeconds: null,
+	activeSpeed: null,
 };
 
 /** Normalizes optional block-specific autoplay timing. */
-export function normalizeBlockAutoplayConfig(
+export function normalizeSceneAutoplayConfig(
 	value: unknown,
-): TaleBlockAutoplayConfig {
+): TaleSceneAutoplayConfig {
 	const config = isRecord(value) ? value : {};
 	return {
 		enabled: booleanOrDefault(config.enabled, false),
-		enteringSpeed: positiveNumberOrNull(config.enteringSpeed),
-		leavingSpeed: positiveNumberOrNull(config.leavingSpeed),
-		pauseAfterEnteringSeconds: nonNegativeNumberOrNull(
-			config.pauseAfterEnteringSeconds,
+		introSpeed: positiveNumberOrNull(config.introSpeed),
+		outroSpeed: positiveNumberOrNull(config.outroSpeed),
+		pauseAfterIntroSeconds: nonNegativeNumberOrNull(
+			config.pauseAfterIntroSeconds,
 		),
-		pauseBeforeLeavingSeconds: nonNegativeNumberOrNull(
-			config.pauseBeforeLeavingSeconds,
+		pauseBeforeOutroSeconds: nonNegativeNumberOrNull(
+			config.pauseBeforeOutroSeconds,
 		),
-		readingSpeed: positiveNumberOrNull(config.readingSpeed),
+		activeSpeed: positiveNumberOrNull(config.activeSpeed),
 	};
 }
 
@@ -57,14 +57,14 @@ export function resolveAutoplaySegmentSpeed(
 	fallback: number,
 ): number {
 	if (segment.type === "transition") {
-		const entering = getEnabledBlockConfig(tale, segment.toBlockId);
-		if (entering?.enteringSpeed) return entering.enteringSpeed;
-		const leaving = segment.fromBlockId
-			? getEnabledBlockConfig(tale, segment.fromBlockId)
+		const intro = getEnabledBlockConfig(tale, segment.toSceneId);
+		if (intro?.introSpeed) return intro.introSpeed;
+		const outro = segment.fromSceneId
+			? getEnabledBlockConfig(tale, segment.fromSceneId)
 			: null;
-		return leaving?.leavingSpeed ?? fallback;
+		return outro?.outroSpeed ?? fallback;
 	}
-	return getEnabledBlockConfig(tale, segment.blockId)?.readingSpeed ?? fallback;
+	return getEnabledBlockConfig(tale, segment.sceneId)?.activeSpeed ?? fallback;
 }
 
 /** Resolves an autoplay-only pause at a boundary between timeline segments. */
@@ -73,16 +73,16 @@ export function resolveAutoplayBoundaryPauseSeconds(
 	segment: TimelineSegment,
 	nextSegment: TimelineSegment,
 ): number {
-	if (nextSegment.type === "transition" && nextSegment.fromBlockId) {
+	if (nextSegment.type === "transition" && nextSegment.fromSceneId) {
 		return (
-			getEnabledBlockConfig(tale, nextSegment.fromBlockId)
-				?.pauseBeforeLeavingSeconds ?? 0
+			getEnabledBlockConfig(tale, nextSegment.fromSceneId)
+				?.pauseBeforeOutroSeconds ?? 0
 		);
 	}
 	if (segment.type === "transition") {
 		return (
-			getEnabledBlockConfig(tale, segment.toBlockId)
-				?.pauseAfterEnteringSeconds ?? 0
+			getEnabledBlockConfig(tale, segment.toSceneId)
+				?.pauseAfterIntroSeconds ?? 0
 		);
 	}
 	return 0;
@@ -90,9 +90,9 @@ export function resolveAutoplayBoundaryPauseSeconds(
 
 function getEnabledBlockConfig(
 	tale: Tale,
-	blockId: string,
-): TaleBlockAutoplayConfig | null {
-	const config = tale.indexMap.blocksById[blockId]?.autoplay;
+	sceneId: string,
+): TaleSceneAutoplayConfig | null {
+	const config = tale.indexMap.scenesById[sceneId]?.autoplay;
 	return config?.enabled ? config : null;
 }
 

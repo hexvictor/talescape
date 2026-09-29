@@ -29,8 +29,8 @@ export function BranchesPanel({
 				preview: (
 					<LibraryReaderPreview
 						title={`Preview branch: ${branch.name}`}
-						description={`Rendered from the first readable fragment in ${branch.tale.title}.`}
-						fragment={branch.previewFragment}
+						description={`Rendered from the first readable element in ${branch.tale.title}.`}
+						element={branch.previewFragment}
 					/>
 				),
 				links: [
@@ -42,32 +42,36 @@ export function BranchesPanel({
 	);
 }
 
-export function BlocksPanel({ blocks }: { blocks: LibraryBlockList }) {
+export function BlocksPanel({ scenes }: { scenes: LibraryBlockList }) {
 	return (
 		<LibraryNodeList
-			emptyTitle="No blocks visible"
-			rows={blocks.map((block) => ({
+			emptyTitle="No scenes visible"
+			rows={scenes.map((block) => ({
 				id: block.id,
 				icon: <Box aria-hidden="true" className="size-4" />,
-				title: `Block ${block.index + 1}`,
+				title: `Scene ${block.index + 1}`,
 				meta: block.tale.title,
-				detail: `${block.entry.title} - ${
+				detail: `${block.entry?.title ?? "Unassigned entry"} - ${
 					block.page ? `Page ${block.page.index + 1}` : "Unpaged beat"
 				}`,
-				badges: [block.visibility, block.part.title],
+				badges: compactLabels([block.visibility, block.part?.title ?? null]),
 				preview: (
 					<LibraryReaderPreview
 						title={`Preview block ${block.index + 1}`}
-						description={`Rendered as a reader fragment from ${block.entry.title}.`}
-						fragment={block.previewFragment}
+						description={`Rendered as a reader element from ${block.entry?.title ?? "an unassigned entry"}.`}
+						element={block.previewFragment}
 					/>
 				),
 				links: compactLinks([
 					taleLink(block.taleId),
 					structureLink("Branch", block.taleId, "branches", block.branch.id),
-					structureLink("Block", block.taleId, "blocks", block.id),
-					structureLink("Part", block.taleId, "parts", block.part.id),
-					structureLink("Entry", block.taleId, "entries", block.entry.id),
+					structureLink("Scene", block.taleId, "scenes", block.id),
+					block.part?.id != null
+						? structureLink("Part", block.taleId, "parts", block.part.id)
+						: null,
+					block.entry?.id != null
+						? structureLink("Entry", block.taleId, "entries", block.entry.id)
+						: null,
 					block.page
 						? structureLink("Page", block.taleId, "pages", block.page.id)
 						: null,
@@ -78,45 +82,54 @@ export function BlocksPanel({ blocks }: { blocks: LibraryBlockList }) {
 }
 
 export function FragmentsPanel({
-	fragments,
+	elements,
 }: {
-	fragments: LibraryFragmentList;
+	elements: LibraryFragmentList;
 }) {
 	return (
 		<LibraryNodeList
-			emptyTitle="No fragments visible"
-			rows={fragments.map((fragment) => ({
-				id: fragment.id,
+			emptyTitle="No elements visible"
+			rows={elements.map((element) => ({
+				id: element.id,
 				icon: <FileText aria-hidden="true" className="size-4" />,
-				title: `${capitalize(fragment.type)} fragment`,
-				meta: fragment.tale.title,
-				detail: getFragmentPreview(fragment.data),
+				title: `${capitalize(element.type)} element`,
+				meta: element.tale.title,
+				detail: getFragmentPreview(element.data),
 				badges: [
-					fragment.visibility,
-					`Block ${fragment.block.index + 1}`,
-					`Fragment ${fragment.index + 1}`,
+					element.visibility,
+					`Scene ${element.scene.index + 1}`,
+					`Element ${element.index + 1}`,
 				],
 				preview: (
 					<LibraryReaderPreview
-						title={`Preview ${fragment.type} fragment`}
-						description={`Rendered as it appears inside ${fragment.tale.title}.`}
-						fragment={fragment.previewFragment}
+						title={`Preview ${element.type} element`}
+						description={`Rendered as it appears inside ${element.tale.title}.`}
+						element={element.previewElement}
 					/>
 				),
 				links: compactLinks([
-					taleLink(fragment.taleId),
+					taleLink(element.taleId),
 					structureLink(
 						"Branch",
-						fragment.taleId,
+						element.taleId,
 						"branches",
-						fragment.branch.id,
+						element.branch.id,
 					),
-					structureLink("Block", fragment.taleId, "blocks", fragment.block.id),
-					structureLink("Fragment", fragment.taleId, "fragments", fragment.id),
-					structureLink("Part", fragment.taleId, "parts", fragment.part.id),
-					structureLink("Entry", fragment.taleId, "entries", fragment.entry.id),
-					fragment.page
-						? structureLink("Page", fragment.taleId, "pages", fragment.page.id)
+					structureLink("Scene", element.taleId, "scenes", element.scene.id),
+					structureLink("Element", element.taleId, "elements", element.id),
+					element.part?.id != null
+						? structureLink("Part", element.taleId, "parts", element.part.id)
+						: null,
+					element.entry?.id != null
+						? structureLink(
+								"Entry",
+								element.taleId,
+								"entries",
+								element.entry.id,
+							)
+						: null,
+					element.page
+						? structureLink("Page", element.taleId, "pages", element.page.id)
 						: null,
 				]),
 			}))}
@@ -237,7 +250,7 @@ export function getFragmentPreview(data: unknown) {
 		return data.url;
 	}
 
-	return "Structured fragment data";
+	return "Structured element data";
 }
 
 export function capitalize(value: string) {
@@ -262,6 +275,10 @@ function structureLink(
 
 function compactLinks(links: Array<NodeLink | null>) {
 	return links.filter((link): link is NodeLink => link !== null);
+}
+
+function compactLabels(labels: Array<string | null | undefined>) {
+	return labels.filter((label): label is string => Boolean(label));
 }
 
 function singularize(view: string) {

@@ -1,4 +1,4 @@
-import type { BlockSize } from "~/app/(tale-app)/_shared/types";
+import type { SceneSize } from "~/app/(tale-app)/_shared/types";
 import type {
 	ReaderSizeConfig,
 	ReaderSizeMode,
@@ -17,7 +17,7 @@ import type {
 export function formatSize(
 	mode: ReaderSizeMode | undefined,
 	config?: ReaderSizeConfig,
-): BlockSize {
+): SceneSize {
 	if (mode === "fixed") {
 		return {
 			height: config?.height?.value ?? 1,

@@ -55,7 +55,7 @@ export default function AuthPageLinkHandler({
 				<div className="relative z-10 max-w-xl pb-8">
 					<ComicRail accent="secondary">Your story continues</ComicRail>
 					<p className="mt-6 font-display text-6xl uppercase leading-[0.88]">
-						Step back inside the frame.
+						Keyframe back inside the frame.
 					</p>
 					<p className="mt-6 max-w-md font-serif text-[var(--comic-cream)]/75 text-lg leading-8">
 						Keep your reading paths, worlds, and works in progress together.

@@ -53,7 +53,7 @@ async function getPublicTaleData(tale: Tale): Promise<TaleData> {
 	const userId = await getSignedInUserId();
 
 	if (userId === null) {
-		return { tale, progress: null };
+		return { tale: { ...tale, canEdit: false }, progress: null };
 	}
 
 	return getTaleDataWithProgress(tale, userId);

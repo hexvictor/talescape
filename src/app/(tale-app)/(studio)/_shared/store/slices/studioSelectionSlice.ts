@@ -5,10 +5,11 @@ import type { TaleStudioState } from "../taleStudioStore";
 export type StudioSelectionSlice = {
 	studioSelection: {
 		highlightedBranchId: string | null;
-		hoveredBlockId: string | null;
+		hoveredSceneId: string | null;
 		inspector: TaleInspectorTarget | null;
 		inspectorControlsOpen: boolean;
-		selectedBlockId: string | null;
+		inspectorTabMemory: Partial<Record<TaleInspectorTarget["type"], string>>;
+		selectedSceneId: string | null;
 		selectedBranchId: string | null;
 		secondaryInspector: TaleInspectorTarget | null;
 		closeInspector: () => void;
@@ -16,13 +17,17 @@ export type StudioSelectionSlice = {
 		clearGraphSelection: () => void;
 		openInspector: (target: TaleInspectorTarget) => void;
 		openSecondaryInspector: (target: TaleInspectorTarget) => void;
-		selectBlockForEditing: (blockId: string) => void;
+		rememberInspectorTab: (
+			type: TaleInspectorTarget["type"],
+			tab: string,
+		) => void;
+		selectSceneForEditing: (sceneId: string) => void;
 		selectBranchForEditing: (branchId: string) => void;
 		selectPathForEditing: (pathId: string) => void;
-		setSelectedBlockId: (blockId: string | null) => void;
+		setSelectedSceneId: (sceneId: string | null) => void;
 		setSelectedBranchId: (branchId: string | null) => void;
 		setHighlightedBranchId: (branchId: string | null) => void;
-		setHoveredBlockId: (blockId: string | null) => void;
+		setHoveredSceneId: (sceneId: string | null) => void;
 		toggleInspectorControls: () => void;
 	};
 };
@@ -43,10 +48,11 @@ export const createStudioSelectionSlice: StateCreator<
 > = (set) => ({
 	studioSelection: {
 		highlightedBranchId: null,
-		hoveredBlockId: null,
+		hoveredSceneId: null,
 		inspector: null,
 		inspectorControlsOpen: false,
-		selectedBlockId: null,
+		inspectorTabMemory: {},
+		selectedSceneId: null,
 		selectedBranchId: null,
 		secondaryInspector: null,
 		closeInspector: () =>
@@ -63,27 +69,35 @@ export const createStudioSelectionSlice: StateCreator<
 					...state.studioSelection,
 					inspector: null,
 					secondaryInspector: null,
-					selectedBlockId: null,
+					selectedSceneId: null,
 					selectedBranchId: null,
 				},
 				editorGraph: { ...state.editorGraph, selectedPathId: null },
 			})),
-		openInspector: (inspector) =>
-			set((state) => ({
-				studioSelection: {
-					...state.studioSelection,
-					inspector,
-					selectedBlockId:
-						inspector.type === "block"
-							? inspector.id
-							: state.studioSelection.selectedBlockId,
-					selectedBranchId:
-						inspector.type === "block"
-							? null
-							: state.studioSelection.selectedBranchId,
-					secondaryInspector: null,
-				},
-			})),
+		openInspector: (target) =>
+			set((state) => {
+				const rememberedTab =
+					state.studioSelection.inspectorTabMemory[target.type];
+				const inspector =
+					"initialTab" in target || !rememberedTab
+						? target
+						: ({ ...target, initialTab: rememberedTab } as TaleInspectorTarget);
+				return {
+					studioSelection: {
+						...state.studioSelection,
+						inspector,
+						selectedSceneId:
+							inspector.type === "scene"
+								? inspector.id
+								: state.studioSelection.selectedSceneId,
+						selectedBranchId:
+							inspector.type === "scene"
+								? null
+								: state.studioSelection.selectedBranchId,
+						secondaryInspector: null,
+					},
+				};
+			}),
 		closeSecondaryInspector: () =>
 			set((state) => ({
 				studioSelection: {
@@ -95,13 +109,23 @@ export const createStudioSelectionSlice: StateCreator<
 			set((state) => ({
 				studioSelection: { ...state.studioSelection, secondaryInspector },
 			})),
-		selectBlockForEditing: (blockId) =>
+		rememberInspectorTab: (type, tab) =>
 			set((state) => ({
 				studioSelection: {
 					...state.studioSelection,
-					inspector: { id: blockId, type: "block" },
+					inspectorTabMemory: {
+						...state.studioSelection.inspectorTabMemory,
+						[type]: tab,
+					},
+				},
+			})),
+		selectSceneForEditing: (sceneId) =>
+			set((state) => ({
+				studioSelection: {
+					...state.studioSelection,
+					inspector: { id: sceneId, type: "scene" },
 					secondaryInspector: null,
-					selectedBlockId: blockId,
+					selectedSceneId: sceneId,
 					selectedBranchId: null,
 				},
 				editorGraph: { ...state.editorGraph, selectedPathId: null },
@@ -112,7 +136,7 @@ export const createStudioSelectionSlice: StateCreator<
 					...state.studioSelection,
 					inspector: null,
 					secondaryInspector: null,
-					selectedBlockId: null,
+					selectedSceneId: null,
 					selectedBranchId,
 				},
 				editorGraph: { ...state.editorGraph, selectedPathId: null },
@@ -123,7 +147,7 @@ export const createStudioSelectionSlice: StateCreator<
 					...state.studioSelection,
 					inspector: null,
 					secondaryInspector: null,
-					selectedBlockId: null,
+					selectedSceneId: null,
 					selectedBranchId: null,
 				},
 				editorGraph: { ...state.editorGraph, selectedPathId },
@@ -132,13 +156,13 @@ export const createStudioSelectionSlice: StateCreator<
 			set((state) => ({
 				studioSelection: { ...state.studioSelection, highlightedBranchId },
 			})),
-		setHoveredBlockId: (hoveredBlockId) =>
+		setHoveredSceneId: (hoveredSceneId) =>
 			set((state) => ({
-				studioSelection: { ...state.studioSelection, hoveredBlockId },
+				studioSelection: { ...state.studioSelection, hoveredSceneId },
 			})),
-		setSelectedBlockId: (selectedBlockId) =>
+		setSelectedSceneId: (selectedSceneId) =>
 			set((state) => ({
-				studioSelection: { ...state.studioSelection, selectedBlockId },
+				studioSelection: { ...state.studioSelection, selectedSceneId },
 			})),
 		setSelectedBranchId: (selectedBranchId) =>
 			set((state) => ({

@@ -9,19 +9,21 @@ import cn from "~/lib/utils/cn";
  * @param props - Inspection button props.
  * @param props.label - Accessible action label.
  * @param props.onClick - Studio-owned selection action.
- * @param props.position - Block or fragment placement.
+ * @param props.position - Scene or fragment placement.
  * @param props.revealOnHover - Whether fragment hover reveals the control.
  * @returns Inspection control.
  */
 export function InspectorButton({
+	icon,
 	label,
 	onClick,
-	position = "fragment",
+	position = "element",
 	revealOnHover = false,
 }: {
+	icon?: React.ReactNode;
 	label: string;
 	onClick: () => void;
-	position?: "block" | "fragment";
+	position?: "scene" | "element";
 	revealOnHover?: boolean;
 }): React.JSX.Element {
 	return (
@@ -33,15 +35,15 @@ export function InspectorButton({
 			aria-label={label}
 			title={label}
 			className={cn(
-				"pointer-events-auto absolute top-3 z-30 grid h-8 w-8 place-items-center rounded-full border border-foreground/16 bg-background/56 text-foreground/78 shadow-lg backdrop-blur-sm transition-opacity hover:opacity-100 focus:opacity-100",
-				position === "block" ? "-translate-x-1/2 left-1/2" : "right-3",
+				"pointer-events-auto absolute top-3 z-30 grid h-8 w-8 place-items-center border-2 border-foreground bg-background text-foreground/78 shadow-[2px_2px_0_hsl(var(--secondary))] transition hover:bg-primary hover:text-primary-foreground hover:opacity-100 focus:opacity-100",
+				position === "scene" ? "-translate-x-1/2 left-1/2" : "right-3",
 				revealOnHover
-					? "opacity-0 group-hover/fragment:opacity-50"
+					? "opacity-0 group-hover/element:opacity-50"
 					: "opacity-50",
 			)}
 			onClick={onClick}
 		>
-			<Settings2 size={15} />
+			{icon ?? <Settings2 size={15} />}
 		</button>
 	);
 }

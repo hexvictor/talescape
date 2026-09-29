@@ -107,10 +107,10 @@ export function usePersistReaderProgress(): void {
  */
 function createProgressFingerprint(progress: SavedReaderProgress): string {
 	return JSON.stringify({
-		blockId: progress.blockId,
+		sceneId: progress.sceneId,
 		committedAnimationIds: progress.committedAnimationIds,
 		innerProgress: progress.innerProgress,
-		seenBlockIds: progress.seenBlockIds,
+		seenSceneIds: progress.seenSceneIds,
 		seenEntryIds: progress.seenEntryIds,
 		seenPageIds: progress.seenPageIds,
 		seenPartIds: progress.seenPartIds,

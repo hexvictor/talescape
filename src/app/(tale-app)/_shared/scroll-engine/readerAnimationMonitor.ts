@@ -31,16 +31,16 @@ export function createReaderAnimationMonitor(
 ): ReaderAnimationMonitor {
 	let previousKey = "";
 	let previousRevision = -1;
-	const allAnimatedFragmentIds = new Set(
-		[...plan.animatedFragmentIdsByBlockId.values()].flat(),
+	const allAnimatedElementIds = new Set(
+		[...plan.animatedElementIdsBySceneId.values()].flat(),
 	);
-	const animatedOwnerBlockIds = new Set(
-		[...plan.animatedBlockIds].concat(
-			...[...plan.animatedFragmentIdsByBlockId.entries()].flatMap(
-				([blockId, fragmentIds]) => (fragmentIds.length > 0 ? [blockId] : []),
+	const animatedOwnerSceneIds = new Set(
+		[...plan.animatedSceneIds].concat(
+			...[...plan.animatedElementIdsBySceneId.entries()].flatMap(
+				([sceneId, elementIds]) => (elementIds.length > 0 ? [sceneId] : []),
 			),
-			...[...plan.animatedNodeIdsByBlockId.entries()].flatMap(
-				([blockId, nodeIds]) => (nodeIds.length > 0 ? [blockId] : []),
+			...[...plan.animatedFrameIdsBySceneId.entries()].flatMap(
+				([sceneId, frameIds]) => (frameIds.length > 0 ? [sceneId] : []),
 			),
 		),
 	);
@@ -49,27 +49,26 @@ export function createReaderAnimationMonitor(
 		update(activeAnchors, reduced, reason): void {
 			const revision = registry.getRevision();
 			const key = `${reduced}:${activeAnchors
-				.map((anchor) => anchor.blockId)
+				.map((anchor) => anchor.sceneId)
 				.join(",")}`;
 			if (key === previousKey && revision === previousRevision) return;
 			previousKey = key;
 			previousRevision = revision;
 
-			const activeBlockIds = new Set(
-				activeAnchors.map((anchor) => anchor.blockId),
+			const activeSceneIds = new Set(
+				activeAnchors.map((anchor) => anchor.sceneId),
 			);
-			const animatedBlockIds = activeAnchors.flatMap((anchor) =>
-				animatedOwnerBlockIds.has(anchor.blockId) ? [anchor.blockId] : [],
+			const animatedSceneIds = activeAnchors.flatMap((anchor) =>
+				animatedOwnerSceneIds.has(anchor.sceneId) ? [anchor.sceneId] : [],
 			);
-			const animatedFragmentIds = activeAnchors.flatMap(
-				(anchor) =>
-					plan.animatedFragmentIdsByBlockId.get(anchor.blockId) ?? [],
+			const animatedElementIds = activeAnchors.flatMap(
+				(anchor) => plan.animatedElementIdsBySceneId.get(anchor.sceneId) ?? [],
 			);
-			const activeFragmentIds = new Set(animatedFragmentIds);
+			const activeElementIds = new Set(animatedElementIds);
 
-			for (const [blockId, element] of registry.blockElementById) {
-				const isActive = activeBlockIds.has(blockId);
-				const hasAnimation = animatedOwnerBlockIds.has(blockId);
+			for (const [sceneId, element] of registry.sceneElementById) {
+				const isActive = activeSceneIds.has(sceneId);
+				const hasAnimation = animatedOwnerSceneIds.has(sceneId);
 				element.dataset.readerAnimationState = !isActive
 					? "offscreen"
 					: !hasAnimation
@@ -78,14 +77,12 @@ export function createReaderAnimationMonitor(
 							? "reduced"
 							: "playing";
 			}
-			for (const [fragmentId, element] of registry.fragmentElementById) {
-				if (!allAnimatedFragmentIds.has(fragmentId)) {
+			for (const [elementId, element] of registry.elementById) {
+				if (!allAnimatedElementIds.has(elementId)) {
 					element.dataset.readerAnimationState = "none";
 					continue;
 				}
-				element.dataset.readerAnimationState = !activeFragmentIds.has(
-					fragmentId,
-				)
+				element.dataset.readerAnimationState = !activeElementIds.has(elementId)
 					? "offscreen"
 					: reduced
 						? "blocked-fast-scroll"
@@ -98,15 +95,15 @@ export function createReaderAnimationMonitor(
 					? "animations reduced during fast scroll"
 					: "active animations changed",
 				{
-					blocks: animatedBlockIds,
+					scenes: animatedSceneIds,
 					blockAnimationsPlaying: reduced
 						? []
-						: animatedBlockIds.filter((blockId) =>
-								plan.animatedBlockIds.has(blockId),
+						: animatedSceneIds.filter((sceneId) =>
+								plan.animatedSceneIds.has(sceneId),
 							),
-					blockAnimationsReduced: reduced ? animatedBlockIds : [],
-					fragments: animatedFragmentIds,
-					fragmentsBlocked: reduced ? animatedFragmentIds : [],
+					blockAnimationsReduced: reduced ? animatedSceneIds : [],
+					fragments: animatedElementIds,
+					fragmentsBlocked: reduced ? animatedElementIds : [],
 					reason,
 				},
 			);

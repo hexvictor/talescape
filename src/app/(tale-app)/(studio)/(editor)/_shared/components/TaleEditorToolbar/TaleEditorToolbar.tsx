@@ -2,6 +2,7 @@
 
 import { Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { TaleStudioDraftHistoryControls } from "~/app/(tale-app)/(studio)/_shared/components/TaleStudioToolbar/TaleStudioDraftHistoryControls";
 import { TaleStudioSaveButton } from "~/app/(tale-app)/(studio)/_shared/components/TaleStudioToolbar/TaleStudioSaveButton";
 import {
 	TaleStudioToolbarInlineSettingsControls,
@@ -97,6 +98,8 @@ export function TaleEditorToolbar(): React.JSX.Element {
 function TaleEditorDesktopActions(): React.JSX.Element {
 	return (
 		<>
+			<TaleStudioDraftHistoryControls />
+			<TaleStudioSaveButton />
 			<TaleStudioToolbarSettingsMenu />
 			<Separator className="h-8" />
 			<ThemeToggle />
@@ -178,6 +181,7 @@ function TaleEditorMobilePanel({
 			<div className="flex flex-col gap-2">
 				<TaleStudioToolbarInlineSettingsControls />
 			</div>
+			<TaleStudioDraftHistoryControls />
 			<TaleStudioSaveButton />
 		</div>
 	);

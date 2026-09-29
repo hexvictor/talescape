@@ -1,8 +1,5 @@
-import { getLibraryFragments } from "~/server/db/data/library/queries";
-import { FragmentsPanel } from "../../_shared/components/LibraryNodePanels";
+import { redirect } from "next/navigation";
 
-export default async function LibraryFragmentsPage() {
-	const fragments = await getLibraryFragments();
-
-	return <FragmentsPanel fragments={fragments} />;
+export default function LegacyFragmentsPage() {
+	redirect("/library/elements");
 }

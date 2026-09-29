@@ -1,27 +1,27 @@
 "use client";
 
 import type { CSSProperties, RefObject } from "react";
-import type { Anchor, BlockSize, Tale, ViewportSize } from "../../../types";
-import { ReaderBlockContent } from "../ReaderBlock/ReaderBlockContent";
+import type { Anchor, SceneSize, Tale, ViewportSize } from "../../../types";
+import { ReaderSceneContent } from "../ReaderScene/ReaderSceneContent";
 
 /**
- * Renders content-sized blocks offscreen using the same content structure as
+ * Renders content-sized scenes offscreen using the same content structure as
  * the live reader.
  *
  * @param props - Measurement layer properties.
- * @param props.blockIds - Block ids requiring intrinsic measurement.
+ * @param props.sceneIds - Scene ids requiring intrinsic measurement.
  * @param props.rootRef - Ref consumed by the measurement service.
  * @param props.tale - Formatted tale data.
  * @param props.viewport - Effective reader viewport dimensions.
  * @returns Offscreen measurement layer.
  */
 export function ReaderMeasurementLayer({
-	blockIds,
+	sceneIds,
 	rootRef,
 	tale,
 	viewport,
 }: {
-	blockIds: string[];
+	sceneIds: string[];
 	rootRef: RefObject<HTMLDivElement | null>;
 	tale: Tale;
 	viewport: ViewportSize;
@@ -33,18 +33,24 @@ export function ReaderMeasurementLayer({
 			data-reader-component="ReaderMeasurementLayer"
 			data-reader-role="measurement-layer"
 			className="pointer-events-none fixed top-0 left-[-100000px] opacity-0"
+			style={
+				{
+					"--reader-viewport-height": `${viewport.height}px`,
+					"--reader-viewport-width": `${viewport.width}px`,
+				} as CSSProperties
+			}
 		>
-			{blockIds.flatMap((blockId) => {
-				const anchor = getMeasurementAnchor(tale, blockId);
-				const block = tale.indexMap.blocksById[blockId];
-				if (!anchor || !block || block.size.mode !== "content") return [];
+			{sceneIds.flatMap((sceneId) => {
+				const anchor = getMeasurementAnchor(tale, sceneId);
+				const block = tale.indexMap.scenesById[sceneId];
+				if (!anchor || !block) return [];
 				return [
 					<article
-						key={anchor.blockId}
-						data-reader-measure-block={anchor.blockId}
+						key={anchor.sceneId}
+						data-reader-measure-block={anchor.sceneId}
 						data-reader-component="ReaderMeasurementLayer"
 						data-reader-role="measurement-block"
-						className="relative flex items-center justify-center overflow-visible"
+						className="relative inline-block overflow-visible"
 						style={{
 							background: block.resolved.background,
 							border: block.style?.border,
@@ -55,7 +61,7 @@ export function ReaderMeasurementLayer({
 							...getMeasurementBlockStyle(block.size, viewport),
 						}}
 					>
-						<ReaderBlockContent anchor={anchor} mode="measure" />
+						<ReaderSceneContent anchor={anchor} mode="measure" />
 					</article>,
 				];
 			})}
@@ -67,26 +73,26 @@ export function ReaderMeasurementLayer({
  * Creates a minimal anchor for offscreen content rendering.
  *
  * @param tale - Formatted tale.
- * @param blockId - Block being measured.
+ * @param sceneId - Scene being measured.
  * @returns Measurement anchor or null when relationships are incomplete.
  */
-function getMeasurementAnchor(tale: Tale, blockId: string): Anchor | null {
-	const block = tale.indexMap.blocksById[blockId];
-	const branch = block && tale.indexMap.branchesById[block.branchId];
-	const entry = block && tale.indexMap.entriesById[block.entryId];
-	const page = block && tale.indexMap.pagesById[block.pageId];
-	const part = block && tale.indexMap.partsById[block.partId];
-	if (!block || !branch || !entry || !page || !part) return null;
+function getMeasurementAnchor(tale: Tale, sceneId: string): Anchor | null {
+	const block = tale.indexMap.scenesById[sceneId];
+	if (!block) return null;
+
+	// Measurement is structural, not narrative. A Scene can now obtain its
+	// page/entry/part through a Keyframe, so requiring those old direct links
+	// silently omitted content-responsive Scenes from the measurement pass.
 	return {
-		blockId: block.id,
-		branchId: branch.id,
+		sceneId: block.id,
+		branchId: block.branchId,
 		cameraFramingOffset: { x: 0, y: 0 },
 		cameraPoint: { x: 0, y: 0 },
-		entryId: entry.id,
+		entryId: "",
 		height: 0,
 		id: block.id,
-		pageId: page.id,
-		partId: part.id,
+		pageId: "",
+		partId: "",
 		point: { x: 0, y: 0 },
 		readingPathPoints: [],
 		scroll: 0,
@@ -105,9 +111,15 @@ function getMeasurementAnchor(tale: Tale, blockId: string): Anchor | null {
  * @returns CSS constraints for the measurement article.
  */
 function getMeasurementBlockStyle(
-	size: Extract<BlockSize, { mode: "content" }>,
+	size: SceneSize,
 	viewport: ViewportSize,
 ): CSSProperties {
+	if (size.mode === "manual") {
+		return {
+			height: resolveSizeValue(size.height, size.heightUnit, viewport.height),
+			width: resolveSizeValue(size.width, size.widthUnit, viewport.width),
+		};
+	}
 	const minWidth = resolveSizeValue(
 		size.minWidth,
 		size.minWidthUnit,

@@ -10,10 +10,12 @@ import type {
 import { getReaderPageLabel } from "./readerPageLabels";
 
 export type ReaderNavigationPage = {
-	blockIds: string[];
+	sceneIds: string[];
+	keyframeIds: string[];
 	entryId: string;
-	firstBlockId: string;
-	hasChoiceBlock: boolean;
+	firstSceneId: string;
+	firstKeyframeId: string;
+	hasChoiceScene: boolean;
 	id: string;
 	isFirstInPart: boolean;
 	isLastInPart: boolean;
@@ -39,10 +41,12 @@ export type ReaderNavigationPartSpan = {
 };
 
 export type ReaderNavigationEntry = {
-	blockCount: number;
+	sceneCount: number;
+	stepCount: number;
 	chapterNumber: number | null;
-	firstBlockId: string;
-	hasChoiceBlock: boolean;
+	firstSceneId: string;
+	firstKeyframeId: string;
+	hasChoiceScene: boolean;
 	id: string;
 	pages: ReaderNavigationPage[];
 	pageCount: number;
@@ -52,9 +56,11 @@ export type ReaderNavigationEntry = {
 };
 
 export type ReaderNavigationPart = {
-	blockCount: number;
+	sceneCount: number;
+	stepCount: number;
 	entries: ReaderNavigationEntry[];
-	firstBlockId: string;
+	firstSceneId: string;
+	firstKeyframeId: string;
 	id: string;
 	pageCount: number;
 	title: string;
@@ -115,14 +121,17 @@ function createPageView(
 	const talePage = tale.indexMap.pagesById[page.id];
 	if (!talePage) return null;
 	const part = tale.indexMap.partsById[talePage.partId];
-	const firstBlockId = page.blockIds[0];
-	if (!part || !firstBlockId) return null;
+	const firstSceneId = page.sceneIds[0];
+	const firstKeyframeId = page.keyframeIds[0];
+	if (!part || !firstSceneId || !firstKeyframeId) return null;
 
 	return {
-		blockIds: page.blockIds,
+		sceneIds: page.sceneIds,
+		keyframeIds: page.keyframeIds,
 		entryId: talePage.entryId,
-		firstBlockId,
-		hasChoiceBlock: page.hasChoiceBlock,
+		firstSceneId,
+		firstKeyframeId,
+		hasChoiceScene: page.hasChoiceScene,
 		id: page.id,
 		isFirstInPart: talePage.position.isFirstInPart,
 		isLastInPart: talePage.position.isLastInPart,
@@ -144,14 +153,17 @@ function createEntryView(
 	partNumberById: Record<string, number>,
 ): ReaderNavigationEntry | null {
 	const taleEntry = tale.indexMap.entriesById[entry.id];
-	const firstBlockId = entry.blockIds[0];
-	if (!taleEntry || !firstBlockId) return null;
+	const firstSceneId = entry.sceneIds[0];
+	const firstKeyframeId = entry.keyframeIds[0];
+	if (!taleEntry || !firstSceneId || !firstKeyframeId) return null;
 
 	return {
-		blockCount: entry.blockIds.length,
+		sceneCount: entry.sceneIds.length,
+		stepCount: entry.keyframeIds.length,
 		chapterNumber: entry.chapterNumber,
-		firstBlockId,
-		hasChoiceBlock: entry.hasChoiceBlock,
+		firstSceneId,
+		firstKeyframeId,
+		hasChoiceScene: entry.hasChoiceScene,
 		id: entry.id,
 		pages: entry.pageIds.flatMap((id) => {
 			const page = pagesById[id];
@@ -192,13 +204,16 @@ function createPartView(
 		const entry = entriesById[id];
 		return entry ? [entry] : [];
 	});
-	const firstBlockId = entries[0]?.firstBlockId;
-	if (!talePart || !firstBlockId) return null;
+	const firstSceneId = entries[0]?.firstSceneId;
+	const firstKeyframeId = entries[0]?.firstKeyframeId;
+	if (!talePart || !firstSceneId || !firstKeyframeId) return null;
 
 	return {
-		blockCount: entries.reduce((count, entry) => count + entry.blockCount, 0),
+		sceneCount: entries.reduce((count, entry) => count + entry.sceneCount, 0),
+		stepCount: entries.reduce((count, entry) => count + entry.stepCount, 0),
 		entries,
-		firstBlockId,
+		firstSceneId,
+		firstKeyframeId,
 		id: part.id,
 		pageCount: entries.reduce((count, entry) => count + entry.pageCount, 0),
 		title: talePart.title,

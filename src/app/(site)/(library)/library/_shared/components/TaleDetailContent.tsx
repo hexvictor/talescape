@@ -15,7 +15,7 @@ import type { LibraryTaleDetail } from "~/server/db/data/library/queries";
 import { LibraryBreadcrumbs } from "./LibraryBreadcrumbs";
 import { LibraryNodeList } from "./LibraryNodeList";
 import { getFragmentPreview } from "./LibraryNodePanels";
-import { createTaleNodeRows } from "./createTaleNodeRows";
+import { createTaleFrameRows } from "./createTaleFrameRows";
 import { type TaleDetailView, taleDetailViews } from "./taleDetailViews";
 import { getTaleReaderHref, getTaleStudioHref } from "./taleHref";
 
@@ -49,7 +49,7 @@ export function TaleDetailContent({
 			{activeView === "overview" ? (
 				<TaleOverviewPanels detail={detail} />
 			) : (
-				<TaleNodePanel detail={detail} view={activeView} />
+				<TaleFramePanel detail={detail} view={activeView} />
 			)}
 		</div>
 	);
@@ -112,8 +112,8 @@ function TaleHeader({ detail }: { detail: LibraryTaleDetail }) {
 function TaleMetrics({ detail }: { detail: LibraryTaleDetail }) {
 	const metrics = [
 		["Branches", detail.tale.nodeCounts.branches],
-		["Blocks", detail.tale.nodeCounts.blocks],
-		["Fragments", detail.tale.nodeCounts.fragments],
+		["Scenes", detail.tale.nodeCounts.scenes],
+		["Elements", detail.tale.nodeCounts.elements],
 		["Paths", detail.tale.nodeCounts.paths],
 		["Parts", detail.tale.nodeCounts.parts],
 		["Entries", detail.tale.nodeCounts.entries],
@@ -149,8 +149,8 @@ function TaleStructureNav({
 	const counts: Record<TaleDetailView, number | null> = {
 		overview: null,
 		branches: detail.tale.nodeCounts.branches,
-		blocks: detail.tale.nodeCounts.blocks,
-		fragments: detail.tale.nodeCounts.fragments,
+		scenes: detail.tale.nodeCounts.scenes,
+		elements: detail.tale.nodeCounts.elements,
 		paths: detail.tale.nodeCounts.paths,
 		parts: detail.tale.nodeCounts.parts,
 		entries: detail.tale.nodeCounts.entries,
@@ -222,7 +222,7 @@ function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 			</div>
 			<div className="mt-4 grid gap-4">
 				{detail.branches.map((branch) => {
-					const branchBlocks = detail.blocks.filter(
+					const branchBlocks = detail.scenes.filter(
 						(block) => block.branchId === branch.id,
 					);
 
@@ -241,8 +241,8 @@ function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 									<BlockRow
 										key={block.id}
 										block={block}
-										fragments={detail.fragments.filter(
-											(fragment) => fragment.blockId === block.id,
+										elements={detail.elements.filter(
+											(element) => element.sceneId === block.id,
 										)}
 									/>
 								))}
@@ -319,10 +319,10 @@ function NarrativeSpine({ detail }: { detail: LibraryTaleDetail }) {
 
 function BlockRow({
 	block,
-	fragments,
+	elements,
 }: {
-	block: LibraryTaleDetail["blocks"][number];
-	fragments: LibraryTaleDetail["fragments"];
+	block: LibraryTaleDetail["scenes"][number];
+	elements: LibraryTaleDetail["elements"];
 }) {
 	return (
 		<div
@@ -332,7 +332,7 @@ function BlockRow({
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<div className="flex items-center gap-2">
 					<Box aria-hidden="true" className="size-4 text-primary" />
-					<p className="font-medium text-sm">Block {block.index + 1}</p>
+					<p className="font-medium text-sm">Scene {block.index + 1}</p>
 				</div>
 				<div className="flex flex-wrap gap-2">
 					{block.page ? (
@@ -340,17 +340,17 @@ function BlockRow({
 					) : (
 						<Badge variant="outline">Unpaged</Badge>
 					)}
-					<Badge variant="secondary">{fragments.length} fragments</Badge>
+					<Badge variant="secondary">{elements.length} elements</Badge>
 				</div>
 			</div>
 			<div className="mt-2 grid gap-2">
-				{fragments.map((fragment) => (
+				{elements.map((element) => (
 					<p
-						key={fragment.id}
-						id={`fragment-${fragment.id}`}
+						key={element.id}
+						id={`element-${element.id}`}
 						className="line-clamp-2 border-foreground/20 border-l-2 bg-muted px-3 py-2 text-muted-foreground text-sm"
 					>
-						{getFragmentPreview(fragment.data)}
+						{getFragmentPreview(element.data)}
 					</p>
 				))}
 			</div>
@@ -396,14 +396,14 @@ function PathsOverview({ detail }: { detail: LibraryTaleDetail }) {
 	);
 }
 
-function TaleNodePanel({
+function TaleFramePanel({
 	detail,
 	view,
 }: {
 	detail: LibraryTaleDetail;
 	view: Exclude<TaleDetailView, "overview">;
 }) {
-	const rows = createTaleNodeRows(detail, view);
+	const rows = createTaleFrameRows(detail, view);
 	const emptyTitle = `No ${view} visible`;
 
 	return <LibraryNodeList emptyTitle={emptyTitle} rows={rows} />;
