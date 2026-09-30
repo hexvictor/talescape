@@ -51,7 +51,19 @@ const meta = {
 	argTypes: {
 		children: { control: "text" },
 		className: { control: "text" },
-		comicDecorations: { control: "object" },
+		comicDecorations: {
+			control: "object",
+			description:
+				'Array of { element, position, color?, className? }. element: "strikes" | "bubbles". position: top-left | top-center | top-right | center-left | center | center-right | bottom-left | bottom-center | bottom-right. Built-in colors: muted | foreground | primary | secondary | accent. Custom CSS color strings are also supported.',
+			table: {
+				defaultValue: { summary: "[]" },
+				type: {
+					summary: "ComicDecoration[]",
+					detail:
+						'{ element: "strikes" | "bubbles"; position: ComicDecorationPosition; color?: "muted" | "foreground" | "primary" | "secondary" | "accent" | string; className?: string }[]',
+				},
+			},
+		},
 		disabled: { control: "boolean" },
 		hoverShape: {
 			control: "select",
@@ -78,7 +90,7 @@ const meta = {
 		docs: {
 			description: {
 				component:
-					"The production Talescape Button baseline. Its visual layers, geometry, motion, decorations and link composition are compatibility contracts during the React Aria migration.",
+					'The production Talescape Button baseline. `comicDecorations` accepts an array of objects. Allowed `element` values: `strikes`, `bubbles`. Allowed `position` values: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center`, `bottom-right`. Built-in `color` values: `muted`, `foreground`, `primary`, `secondary`, `accent`; custom CSS color strings are also supported. Example: `[{ element: "strikes", position: "top-right", color: "primary" }]`.',
 			},
 		},
 	},
@@ -133,6 +145,16 @@ export const ComicBubbles: Story = {
 			{ color: "accent", element: "bubbles", position: "bottom-left" },
 		],
 		shape: "corner-right",
+	},
+};
+
+export const MultipleComicDecorations: Story = {
+	args: {
+		comicDecorations: [
+			{ color: "primary", element: "strikes", position: "top-right" },
+			{ color: "muted", element: "bubbles", position: "bottom-left" },
+		],
+		shape: "slant-both",
 	},
 };
 

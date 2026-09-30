@@ -9,12 +9,11 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 
 ## Current phase
 
-Implementation complete: the centralized application design system now covers
-shared primitives, public discovery routes, Studio workspace chrome and Reader
-navigation and diagnostics. Release integration and final runtime smoke testing
-remain operational checks rather than implementation phases.
-Branch: `refactor/app-design-system`; starting commit `08a444b`.
-Current package version: `1.12.0`.
+The centralized application design system is complete. The active follow-up adds
+a typed decorative graphic system built from token-driven SVG/CSS primitives,
+composition presets and opt-in page, panel, card, media and thumbnail hosts.
+Branch: `feature/decorative-graphic-system`; starting commit `aefb0f7`.
+Current package version: `1.12.1`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -215,6 +214,25 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   behavior.
 - Added an isolated responsive Reader workspace composition to Storybook so the
   surrounding navigation can be reviewed independently from Tale rendering.
+- Added typed Halftone, SpeedLines, AccentStreak, ScratchLines,
+  CircularLinework, GeometricShapes and PaperTexture SVG primitives with shared
+  positioning, token colors, viewport targeting and decorative accessibility.
+- Added a discriminated `Decoration` union, `Decorations` composer and reusable
+  preset catalog. Custom items append after preset items and paint above them.
+- Added independently composed desktop/mobile page presets for Discover,
+  Library, Codex, detail, form, auth and Reader surfaces.
+- Added opt-in decoration hosts for PageShell, Panel, Card, ComicPanel,
+  DecoratedMedia and Thumbnail without changing the existing Button or singular
+  ComicPanel decoration APIs.
+- Replaced the public shell's direct background image stack with the centralized
+  page composition and applied route-specific presets to Discover, Library,
+  Codex, tale detail, Library forms and authentication surfaces.
+- Added the canonical Storybook Decorations section with primitive examples,
+  interactive composer controls, preset/media/panel/button galleries and typed
+  usage documentation. Expanded Button controls with the exact supported object
+  shape, values and multi-decoration examples.
+- Added preset-order regression tests and visually checked desktop/mobile static
+  Storybook output for clipping, overlay layering and compact story canvases.
 
 ## Files changed / components / stories
 
@@ -236,6 +254,9 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
 - Component-first and same-change Storybook coverage become repository guidance.
 - Use Conventional Commits for stable phases. Bump the patch version once for
   each user-requested continuation; do not edit the changelog without approval.
+- Decorative custom items append to preset items. Page presets compose desktop
+  and mobile entries independently; editor surfaces remain undecorated by
+  default, and media decorations use an explicit overlay layer.
 - Never run `npm run dev` (standing user instruction).
 
 ## Remaining exceptions

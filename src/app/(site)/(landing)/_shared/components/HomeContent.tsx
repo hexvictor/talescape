@@ -20,6 +20,7 @@ import {
 } from "~/app/(site)/_shared/components/landingCodexData";
 import { CardGridSkeleton } from "~/app/(site)/_shared/components/skeletons";
 import { ProgressBar } from "~/components/data-display/progress-bar";
+import { PageShell } from "~/components/layout/page-shell";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 import { TaleCard } from "./TaleCard";
@@ -246,13 +247,13 @@ function DiscoveryBands() {
 
 function HomeExperience({ signedIn = false }: { signedIn?: boolean }) {
 	return (
-		<div className="overflow-hidden">
+		<PageShell decorationPreset="discover">
 			<LandingHero signedIn={signedIn} />
 			<Suspense fallback={<CardGridSkeleton count={3} />}>
 				<TrendingTales />
 			</Suspense>
 			<DiscoveryBands />
-		</div>
+		</PageShell>
 	);
 }
 

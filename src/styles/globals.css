@@ -7,6 +7,7 @@
 @import "./tokens.css";
 @import "./theme.css";
 @import "./geometry.css";
+@import "./decorations.css";
 
 /* @import "locomotive-scroll/dist/locomotive-scroll.css"; */
 
@@ -198,19 +199,6 @@
 
 .site-paper {
 	background-color: var(--background);
-	background-image: url("/assets/brand/paper-noise.svg"),
-		url("/assets/brand/comic-bubbles.svg"),
-		url("/assets/brand/comic-strikes.svg");
-	background-position: 0 0, left 1rem bottom 7rem, right 1rem top 7rem;
-	background-repeat: repeat, no-repeat, no-repeat;
-	background-size: 180px, 150px, 130px;
-}
-
-.dark .site-paper,
-:root[data-theme="dark"] .site-paper {
-	background-image: url("/assets/brand/paper-noise.svg"),
-		url("/assets/brand/comic-bubbles.svg"),
-		url("/assets/brand/comic-strikes.svg");
 }
 
 .site-hero-scrim {

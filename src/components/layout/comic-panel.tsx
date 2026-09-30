@@ -4,6 +4,11 @@ import type {
 	ElementType,
 	ReactNode,
 } from "react";
+import { Decorations } from "~/components/decorations";
+import type {
+	Decoration,
+	DecorationPreset,
+} from "~/components/decorations/types";
 import cn from "~/lib/utils/cn";
 
 export type ComicPanelShape =
@@ -36,8 +41,10 @@ const accentColors = {
 export function ComicPanel({
 	accent,
 	as: Component = "section",
+	children,
 	className,
 	decoration = "none",
+	decorations,
 	shape = "cut-opposite",
 	shadow = true,
 	slant,
@@ -47,6 +54,7 @@ export function ComicPanel({
 	accent?: keyof typeof accentColors | string;
 	as?: ElementType;
 	decoration?: "dots" | "none" | "strikes";
+	decorations?: Decoration[] | DecorationPreset;
 	shape?: ComicPanelShape;
 	shadow?: boolean;
 	slant?: `${number}px`;
@@ -62,13 +70,25 @@ export function ComicPanel({
 
 	return (
 		<Component
-			className={cn("comic-panel", className)}
+			className={cn(
+				"comic-panel",
+				decorations && "ts-decoration-host overflow-hidden",
+				className,
+			)}
 			data-comic-decoration={decoration}
 			data-comic-shadow={shadow ? "true" : "false"}
 			data-comic-shape={shape}
 			style={panelStyle}
 			{...props}
-		/>
+		>
+			{decorations ? (
+				<Decorations
+					items={Array.isArray(decorations) ? decorations : undefined}
+					preset={typeof decorations === "string" ? decorations : undefined}
+				/>
+			) : null}
+			{children}
+		</Component>
 	);
 }
 

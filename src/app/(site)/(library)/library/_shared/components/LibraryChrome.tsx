@@ -19,6 +19,7 @@ import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
 import { ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import { type LibraryView, libraryViews } from "./libraryViews";
@@ -57,7 +58,10 @@ export function LibraryChrome({
 	const isLanding = pathname === "/library";
 
 	return (
-		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col px-[var(--ts-page-gutter)] py-6 lg:py-5">
+		<PageShell
+			className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col px-[var(--ts-page-gutter)] py-6 lg:py-5"
+			decorationPreset="library"
+		>
 			{isLanding ? (
 				<>
 					<section className="relative grid min-h-[25rem] overflow-hidden border-foreground border-b-2 lg:grid-cols-[0.42fr_0.58fr] lg:border-2">
@@ -194,6 +198,6 @@ export function LibraryChrome({
 				) : null}
 			</nav>
 			<div className="mt-6">{children}</div>
-		</div>
+		</PageShell>
 	);
 }

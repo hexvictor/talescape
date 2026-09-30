@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { DetailPageSkeleton } from "~/app/(site)/_shared/components/skeletons";
+import { PageShell } from "~/components/layout/page-shell";
 
 /**
  * Provides the shared suspense boundary for full-page library forms.
@@ -13,5 +14,9 @@ import { DetailPageSkeleton } from "~/app/(site)/_shared/components/skeletons";
  * <LibraryFormPageShell><BookFormPanel mode="create" /></LibraryFormPageShell>
  */
 export function LibraryFormPageShell({ children }: { children: ReactNode }) {
-	return <Suspense fallback={<DetailPageSkeleton />}>{children}</Suspense>;
+	return (
+		<PageShell decorationPreset="form">
+			<Suspense fallback={<DetailPageSkeleton />}>{children}</Suspense>
+		</PageShell>
+	);
 }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { PropsWithChildren } from "react";
 import Footer from "~/app/_shared/components/layout/Footer";
 import { Header } from "~/app/_shared/components/layout/Header";
+import { PageShell } from "~/components/layout/page-shell";
 
 export const metadata: Metadata = {
 	title: "Home | Talescape",
@@ -13,10 +14,13 @@ export type SiteLayoutProps = Readonly<PropsWithChildren>;
 
 export default function SiteLayout({ children }: SiteLayoutProps) {
 	return (
-		<div className="site-paper flex min-h-dvh flex-col">
+		<PageShell
+			className="site-paper flex min-h-dvh flex-col"
+			decorationPreset="page-subtle"
+		>
 			<Header />
 			<main className="flex-1">{children}</main>
 			<Footer />
-		</div>
+		</PageShell>
 	);
 }

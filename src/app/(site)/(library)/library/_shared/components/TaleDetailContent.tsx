@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { Badge, StatusBadge, Tag } from "~/components/data-display/badge";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
 import cn from "~/lib/utils/cn";
 import type { LibraryTaleDetail } from "~/server/db/data/library/queries";
@@ -36,7 +37,10 @@ export function TaleDetailContent({
 	activeView: TaleDetailView;
 }) {
 	return (
-		<div className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-5 py-2">
+		<PageShell
+			className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-5 py-2"
+			decorationPreset="detail"
+		>
 			<LibraryBreadcrumbs
 				items={[
 					{ label: "Library", href: "/library" },
@@ -51,7 +55,7 @@ export function TaleDetailContent({
 			) : (
 				<TaleFramePanel detail={detail} view={activeView} />
 			)}
-		</div>
+		</PageShell>
 	);
 }
 

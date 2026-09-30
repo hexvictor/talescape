@@ -5,6 +5,7 @@ import type { MouseEvent, ReactNode } from "react";
 import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
 import { TalescapeLogo } from "~/app/_shared/components/brand/TalescapeLogo";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
 
 const authPagePaths = new Set(["/sign-in", "/sign-up"]);
 
@@ -41,7 +42,8 @@ export default function AuthPageLinkHandler({
 	};
 
 	return (
-		<div
+		<PageShell
+			decorationPreset="auth"
 			data-site-component="AuthPageLinkHandler"
 			data-site-role="auth-page"
 			className="mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-[var(--ts-content-max)] flex-1 bg-background lg:grid-cols-[minmax(20rem,0.9fr)_minmax(28rem,1.1fr)]"
@@ -86,6 +88,6 @@ export default function AuthPageLinkHandler({
 					{children}
 				</ComicPanel>
 			</section>
-		</div>
+		</PageShell>
 	);
 }

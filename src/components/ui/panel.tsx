@@ -1,5 +1,16 @@
 import { type VariantProps, cva } from "class-variance-authority";
 import type { ComponentProps, ElementType, ReactNode } from "react";
+import { Decorations } from "~/components/decorations";
+import {
+	cardDecorationPresets,
+	panelDecorationPresets,
+} from "~/components/decorations/presets";
+import type {
+	CardDecorationPreset,
+	Decoration,
+	DecorationPreset,
+	PanelDecorationPreset,
+} from "~/components/decorations/types";
 import cn from "~/lib/utils/cn";
 
 const panelVariants = cva("min-w-0 bg-card text-card-foreground", {
@@ -17,21 +28,55 @@ const panelVariants = cva("min-w-0 bg-card text-card-foreground", {
 export type PanelProps = ComponentProps<"section"> &
 	VariantProps<typeof panelVariants> & {
 		as?: ElementType;
+		decorations?: Decoration[] | DecorationPreset | PanelDecorationPreset;
 	};
 
 export function Panel({
 	appearance,
 	as: Component = "section",
+	children,
 	className,
+	decorations,
 	...props
 }: PanelProps): React.JSX.Element {
+	const preset =
+		typeof decorations === "string"
+			? (panelDecorationPresets[decorations as PanelDecorationPreset] ??
+				decorations)
+			: undefined;
 	return (
 		<Component
 			{...props}
 			data-slot="panel"
-			className={cn(panelVariants({ appearance }), className)}
-		/>
+			className={cn(
+				panelVariants({ appearance }),
+				decorations && "ts-decoration-host relative isolate overflow-hidden",
+				className,
+			)}
+		>
+			{decorations ? (
+				<Decorations
+					items={Array.isArray(decorations) ? decorations : undefined}
+					preset={preset}
+				/>
+			) : null}
+			{children}
+		</Component>
 	);
+}
+
+export type CardProps = Omit<PanelProps, "as" | "decorations"> & {
+	decorations?: CardDecorationPreset | Decoration[] | DecorationPreset;
+};
+
+/** Semantic article surface. Decoration presets are opt-in. */
+export function Card({ decorations, ...props }: CardProps): React.JSX.Element {
+	const resolvedDecorations =
+		typeof decorations === "string"
+			? (cardDecorationPresets[decorations as CardDecorationPreset] ??
+				decorations)
+			: decorations;
+	return <Panel {...props} as="article" decorations={resolvedDecorations} />;
 }
 
 export function PanelHeader({

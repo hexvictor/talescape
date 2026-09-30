@@ -18,6 +18,8 @@ import {
 	siteImages,
 } from "~/app/(site)/_shared/components/landingCodexData";
 import { CardGridSkeleton } from "~/app/(site)/_shared/components/skeletons";
+import { DecoratedMedia } from "~/components/decorations";
+import { PageShell } from "~/components/layout/page-shell";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 
@@ -102,7 +104,10 @@ function CodexHero() {
 				slant="48px"
 				shadow={false}
 			>
-				<div className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[20rem]">
+				<DecoratedMedia
+					className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[20rem]"
+					preset="cyan-corner"
+				>
 					<Image
 						src={siteImages.emberCity}
 						alt="The city held inside the Ember Archive"
@@ -110,8 +115,7 @@ function CodexHero() {
 						priority
 						className="object-cover"
 					/>
-					<div className="comic-halftone absolute right-0 bottom-0 size-36 bg-secondary opacity-80 [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
-				</div>
+				</DecoratedMedia>
 			</ComicPanel>
 		</section>
 	);
@@ -306,7 +310,10 @@ async function RecentEntries() {
 
 export function CodexContent() {
 	return (
-		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-8 px-[var(--ts-page-gutter)] py-8 lg:grid-cols-[1fr_20rem] lg:gap-6 lg:py-5">
+		<PageShell
+			className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-8 px-[var(--ts-page-gutter)] py-8 lg:grid-cols-[1fr_20rem] lg:gap-6 lg:py-5"
+			decorationPreset="codex"
+		>
 			<div className="flex min-w-0 flex-col gap-8">
 				<CodexHero />
 				<CodexCategories />
@@ -318,6 +325,6 @@ export function CodexContent() {
 				</Suspense>
 			</div>
 			<FactionWatch />
-		</div>
+		</PageShell>
 	);
 }
