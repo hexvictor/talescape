@@ -14,8 +14,8 @@ describe("resolveDecorationItems", () => {
 		const custom: Decoration = {
 			color: "magenta",
 			position: "bottom-left",
-			type: "geometric-shape",
-			variant: "corner-cut",
+			type: "accent-streak",
+			variant: "dry-brush",
 		};
 		const resolved = resolveDecorationItems("page-subtle", [custom]);
 		expect(resolved).toHaveLength(
@@ -27,7 +27,7 @@ describe("resolveDecorationItems", () => {
 	it("does not mutate the preset definition", () => {
 		const length = decorationPresetItems.panel.length;
 		resolveDecorationItems("panel", [
-			{ position: "center", type: "paper-texture" },
+			{ position: "center", type: "speed-lines", variant: "velocity" },
 		]);
 		expect(decorationPresetItems.panel).toHaveLength(length);
 	});

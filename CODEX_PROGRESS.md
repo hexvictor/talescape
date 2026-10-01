@@ -13,7 +13,7 @@ The centralized application design system is complete. The active follow-up adds
 a typed decorative graphic system built from token-driven SVG/CSS primitives,
 composition presets and opt-in page, panel, card, media and thumbnail hosts.
 Branch: `feature/decorative-graphic-system`; starting commit `aefb0f7`.
-Current package version: `1.12.1`.
+Current package version: `1.12.7`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
 
 ## Completed
@@ -214,9 +214,23 @@ User explicitly requested seeing the audit/plan before large-scale refactoring.
   behavior.
 - Added an isolated responsive Reader workspace composition to Storybook so the
   surrounding navigation can be reviewed independently from Tale rendering.
-- Added typed Halftone, SpeedLines, AccentStreak, ScratchLines,
-  CircularLinework, GeometricShapes and PaperTexture SVG primitives with shared
+- Added typed Halftone, SpeedLines and AccentStreak SVG primitives with shared
   positioning, token colors, viewport targeting and decorative accessibility.
+- Refined the decoration vocabulary against the final visual references: staged
+  corner-dot falloff, irregular tapered grey line fields, and rough layered
+  cyan/magenta/yellow paint strokes with satellite marks and splatter. Removed
+  the broader scratch, circular, geometric and paper motifs from the public API.
+- Reduced the decoration system to restrained comic accents: a single clean
+  variable-size halftone field, sparse edge speed lines and compact broken paint
+  swipes. Page presets now place these at corners and edges instead of covering
+  the interface with centered full-field compositions.
+- Made decoration sizing relative to its host and added direct child composition
+  through `Decorations`. Halftone position now controls growth direction, with
+  seven shapes and six density levels; speed lines and accent streaks expose
+  independent geometry, quantity, length, thickness and density controls.
+- Made halftone geometry respond to its rendered parent bounds without scaling
+  its coordinate units, so different parent ratios add rows or columns while dot
+  radii and spacing remain circular and uniform.
 - Added a discriminated `Decoration` union, `Decorations` composer and reusable
   preset catalog. Custom items append after preset items and paint above them.
 - Added independently composed desktop/mobile page presets for Discover,
@@ -370,6 +384,29 @@ because their platform event, styling or DOM contracts are behaviorally relevant
 - The clean production build removed the stale generated Clerk-chunk failure.
   Production-configured data still uses the pre-migration schema, so populated
   Reader and Library data checks remain intentionally separate from this merge.
+- The `1.12.4` decoration correction passes full lint, typecheck, all 71 unit
+  tests, all 86 Storybook browser tests, the Storybook production build and the
+  Next production build. The three retained SVG primitives were checked in
+  rendered Storybook canvases at full-field and compact gallery sizes.
+- The `1.12.5` responsive-halftone correction passes typecheck, all 71 unit
+  tests, all 87 Storybook browser tests and the Storybook production build.
+  Wide, square and tall rendered canvases confirm invariant circular dots and
+  uniform spacing while the generated field expands with its parent.
+- Added intrinsic decoration canvases, expanded masked/radial/fan/laser speed
+  compositions, paint/splash/fracture accent variants, and a side-by-side
+  Storybook workbench with controls scoped to the selected decoration type.
+- The `1.12.6` decoration workbench and geometry expansion passes full lint,
+  typecheck, all 71 unit tests, all 92 Storybook browser tests, the Storybook
+  production build and the Next production build. Rendered galleries verify
+  stable halftone ratios and correct corner, center and radial speed origins.
+- The `1.12.7` anchor and expressive-controls checkpoint removes the decoration
+  size cap, centers primitives exactly on parent anchors, adds percentage/pixel
+  offsets, halftone size/opacity decay, feathered vignette masks, tapered line
+  endpoints and broad textured brush/lightning accents. Storybook interaction
+  screenshots verify oversized clipping, center-right halftones, radial fading
+  and fuller opt-in panel compositions. Full lint, typecheck, all 71 unit tests,
+  all 92 Storybook browser tests, the Storybook production build and the Next
+  production build pass.
 
 ## Exact next steps
 

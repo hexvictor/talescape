@@ -30,8 +30,6 @@
 	--ts-selection: var(--ts-yellow);
 	--ts-destructive: var(--ts-red);
 	--ts-decoration-neutral: #7f8a91;
-	--ts-decoration-paper: #ffffff;
-	--ts-decoration-ink: var(--ts-ink);
 
 	--ts-branch: var(--ts-pink);
 	--ts-scene: var(--ts-cyan);
@@ -117,8 +115,6 @@
 	--ts-selection: #ffd02a;
 	--ts-destructive: #ff326f;
 	--ts-decoration-neutral: #8b989f;
-	--ts-decoration-paper: #11171b;
-	--ts-decoration-ink: #f7f9fa;
 	--ts-shadow-subtle: 0 1px 0 rgb(247 249 250 / 0.18);
 	--ts-shadow-raised: 0 6px 18px rgb(0 0 0 / 0.4);
 	--ts-shadow-comic: 3px 3px 0 var(--ts-cyan);

@@ -1,13 +1,15 @@
-import { useId, type CSSProperties } from "react";
+import { type CSSProperties, useId } from "react";
 import cn from "~/lib/utils/cn";
 import type {
 	AccentStreakDecoration,
-	CircularLineworkDecoration,
 	DecorationBase,
-	GeometricShapeDecoration,
+	DecorationDensity,
+	DecorationDirection,
+	DecorationPosition,
 	HalftoneDecoration,
-	PaperTextureDecoration,
-	ScratchLinesDecoration,
+	HalftoneShape,
+	SpeedLineShape,
+	SpeedLineVariant,
 	SpeedLinesDecoration,
 } from "./types";
 
@@ -25,10 +27,26 @@ const decorationColors = {
 
 type DecorationStyle = CSSProperties & {
 	"--ts-decoration-color": string;
+	"--ts-decoration-coverage": string;
+	"--ts-decoration-offset-x": string;
+	"--ts-decoration-offset-y": string;
 	"--ts-decoration-opacity": number;
 	"--ts-decoration-rotation": string;
 	"--ts-decoration-scale": number;
 };
+
+const densityIndex: Record<DecorationDensity, number> = {
+	minimal: 0,
+	sparse: 1,
+	airy: 2,
+	medium: 3,
+	dense: 4,
+	packed: 5,
+};
+
+function clamp(value: number, minimum: number, maximum: number): number {
+	return Math.max(minimum, Math.min(maximum, value));
+}
 
 function resolveDecorationColor(color: DecorationBase["color"] = "neutral") {
 	return color in decorationColors
@@ -39,8 +57,13 @@ function resolveDecorationColor(color: DecorationBase["color"] = "neutral") {
 function primitiveProps(
 	type: string,
 	{
+		aspectRatio,
 		className,
 		color,
+		coverage = 0.5,
+		offsetX = 0,
+		offsetY = 0,
+		offsetUnit = "percent",
 		opacity = 1,
 		position = "center",
 		rotation = 0,
@@ -51,12 +74,16 @@ function primitiveProps(
 	return {
 		"aria-hidden": true,
 		className: cn("ts-decoration", className),
+		"data-decoration-aspect-ratio": aspectRatio,
 		"data-decoration-position": position,
 		"data-decoration-type": type,
 		"data-decoration-viewport": viewport,
 		focusable: false,
 		style: {
 			"--ts-decoration-color": resolveDecorationColor(color),
+			"--ts-decoration-coverage": `${Math.max(0.05, coverage) * 100}%`,
+			"--ts-decoration-offset-x": `${offsetX}${offsetUnit === "percent" ? "%" : "px"}`,
+			"--ts-decoration-offset-y": `${offsetY}${offsetUnit === "percent" ? "%" : "px"}`,
 			"--ts-decoration-opacity": opacity,
 			"--ts-decoration-rotation": `${rotation}deg`,
 			"--ts-decoration-scale": scale,
@@ -64,142 +91,636 @@ function primitiveProps(
 	};
 }
 
-function directionTransform(
-	direction: "down-left" | "down-right" | "up-left" | "up-right" = "down-right",
-): string | undefined {
-	if (direction === "down-left") return "translate(220 0) scale(-1 1)";
-	if (direction === "up-right") return "translate(0 180) scale(1 -1)";
-	if (direction === "up-left") return "translate(220 180) scale(-1 -1)";
-	return undefined;
+function positionOrigin(position: DecorationPosition): [number, number] {
+	switch (position) {
+		case "top-left":
+			return [0, 0];
+		case "top-center":
+		case "top":
+			return [0.5, 0];
+		case "top-right":
+			return [1, 0];
+		case "center-left":
+		case "left":
+			return [0, 0.5];
+		case "center-right":
+		case "right":
+			return [1, 0.5];
+		case "bottom-left":
+			return [0, 1];
+		case "bottom-center":
+		case "bottom":
+			return [0.5, 1];
+		case "bottom-right":
+			return [1, 1];
+		case "center":
+			return [0.5, 0.5];
+	}
 }
 
-export type HalftoneProps = Omit<HalftoneDecoration, "type">;
+function seededNoise(x: number, y: number, seed = 0): number {
+	const value = Math.sin(x * 12.9898 + y * 78.233 + seed * 37.719) * 43758.5453;
+	return value - Math.floor(value);
+}
 
-export function Halftone({
+function circlePath(cx: number, cy: number, radius: number): string {
+	const left = cx - radius;
+	const diameter = radius * 2;
+	return `M${left.toFixed(2)} ${cy.toFixed(2)}a${radius.toFixed(2)} ${radius.toFixed(2)} 0 1 0 ${diameter.toFixed(2)} 0a${radius.toFixed(2)} ${radius.toFixed(2)} 0 1 0 -${diameter.toFixed(2)} 0`;
+}
+
+function directionAngle(direction: DecorationDirection): number {
+	switch (direction) {
+		case "down-right":
+			return 28;
+		case "down-left":
+			return 152;
+		case "up-right":
+			return -28;
+		case "up-left":
+			return 208;
+	}
+}
+
+function intrinsicCanvas(aspectRatio: number | undefined, fallback: number) {
+	const height = 600;
+	return { height, width: height * clamp(aspectRatio ?? fallback, 0.5, 3) };
+}
+
+function halftoneInfluence(
+	shape: HalftoneShape,
+	x: number,
+	y: number,
+	originX: number,
+	originY: number,
+	falloff: number,
+	width: number,
+	height: number,
+): number {
+	if (shape === "field") return 1;
+	const centerDistance = Math.hypot(x - width / 2, y - height / 2);
+	const centerRadius = Math.max(1, Math.min(width, height) / 2);
+	if (shape === "vignette") {
+		return clamp((centerDistance / centerRadius - 0.28) / 0.72, 0, 1);
+	}
+
+	const originPxX = originX * width;
+	const originPxY = originY * height;
+	const dx = Math.abs(x - originPxX);
+	const dy = Math.abs(y - originPxY);
+	const maxDx = Math.max(originPxX, width - originPxX);
+	const maxDy = Math.max(originPxY, height - originPxY);
+	let distance: number;
+	let maxDistance: number;
+
+	if (shape === "triangle") {
+		distance = dx + dy;
+		maxDistance = maxDx + maxDy;
+	} else if (shape === "rectangle") {
+		distance = Math.max(dx, dy);
+		maxDistance = Math.max(maxDx, maxDy);
+	} else if (shape === "speed-lines") {
+		const diagonal = (dx + dy) / Math.max(1, maxDx + maxDy);
+		const stripe = seededNoise(Math.floor(x / 42), Math.floor(y / 20), 9);
+		return Math.max(0, 1 - diagonal / falloff) * (0.35 + stripe * 0.65);
+	} else {
+		distance = Math.hypot(dx, dy);
+		const centered = originX === 0.5 && originY === 0.5;
+		maxDistance = centered
+			? centerRadius
+			: Math.min(Math.hypot(maxDx, maxDy), Math.max(width, height));
+	}
+
+	const radial = Math.max(
+		0,
+		1 - distance / Math.max(1, maxDistance * Math.max(0.05, falloff)),
+	);
+	if (shape === "random") {
+		return radial * (0.25 + seededNoise(x, y, 3) * 0.75);
+	}
+	return radial;
+}
+
+export type HalftoneDotsProps = Omit<HalftoneDecoration, "type">;
+export type HalftoneProps = HalftoneDotsProps;
+
+export function HalftoneDots({
+	aspectRatio = 1,
+	coverage,
+	decayMode = "both",
 	density = "medium",
 	dotSize,
+	falloff = 0.82,
+	minimumOpacity = 0,
+	position = "bottom-left",
+	shape = "circle",
 	spacing,
-	variant = "fade",
+	variant = "classic",
 	...props
-}: HalftoneProps): React.JSX.Element {
-	const id = useId().replaceAll(":", "");
-	const resolvedSpacing =
-		spacing ?? { airy: 18, dense: 8, medium: 12 }[density];
-	const resolvedDotSize =
-		dotSize ?? { airy: 2.1, dense: 2.8, medium: 2.4 }[density];
-	const maskId = `halftone-mask-${id}`;
-	const patternId = `halftone-pattern-${id}`;
+}: HalftoneDotsProps): React.JSX.Element {
+	const { height, width } = intrinsicCanvas(aspectRatio, 1);
+	const gap =
+		spacing ??
+		{ minimal: 38, sparse: 31, airy: 26, medium: 21, dense: 17, packed: 13 }[
+			density
+		];
+	const dot =
+		dotSize ??
+		{ minimal: 2, sparse: 2.3, airy: 2.6, medium: 3, dense: 3.3, packed: 3.6 }[
+			density
+		];
+	const columns = Math.ceil(width / gap);
+	const rows = Math.ceil(height / gap);
+	const opacityBuckets = Array.from({ length: 9 }, () => [] as string[]);
+
+	for (let row = 0; row <= rows; row += 1) {
+		for (let column = 0; column <= columns; column += 1) {
+			const cx = column * gap;
+			const cy = row * gap;
+			const noise = seededNoise(column, row, 17);
+			let influence = halftoneInfluence(
+				shape,
+				cx,
+				cy,
+				0.5,
+				0.5,
+				falloff,
+				width,
+				height,
+			);
+			if (variant === "distressed" && noise < 0.22) continue;
+			if (variant === "soft") influence **= 1.35;
+			if (variant === "bold") influence = Math.sqrt(influence);
+			if (influence < 0.015) continue;
+
+			const irregularity = variant === "distressed" ? 0.7 + noise * 0.45 : 1;
+			const sizeInfluence = decayMode === "opacity" ? 1 : influence;
+			const opacityInfluence =
+				decayMode === "size"
+					? 1
+					: clamp(minimumOpacity + influence * (1 - minimumOpacity), 0, 1);
+			const radius = Math.max(
+				0.45,
+				dot * 2.05 * sizeInfluence ** 0.7 * irregularity,
+			);
+			const bucket = clamp(Math.round(opacityInfluence * 8), 0, 8);
+			opacityBuckets[bucket]?.push(circlePath(cx, cy, radius));
+		}
+	}
 
 	return (
 		<svg
-			{...primitiveProps("halftone", props)}
+			{...primitiveProps("halftone", {
+				...props,
+				aspectRatio,
+				coverage:
+					coverage ?? (shape === "field" || shape === "vignette" ? 1 : 0.56),
+				position,
+			})}
+			data-decoration-density={density}
+			data-decoration-shape={shape}
 			data-decoration-variant={variant}
-			viewBox="0 0 220 180"
+			preserveAspectRatio="xMidYMid meet"
+			viewBox={`0 0 ${width} ${height}`}
 		>
-			<title>Decorative halftone pattern</title>
-			<defs>
-				<pattern
-					height={resolvedSpacing}
-					id={patternId}
-					patternUnits="userSpaceOnUse"
-					width={resolvedSpacing}
-				>
-					<circle
-						cx={resolvedSpacing / 2}
-						cy={resolvedSpacing / 2}
+			<title>Halftone dot decoration</title>
+			{opacityBuckets.map((dots, bucket) =>
+				dots.length > 0 ? (
+					<path
+						d={dots.join("")}
 						fill="currentColor"
-						r={resolvedDotSize}
+						key={dots[0]}
+						opacity={Math.max(0.04, bucket / 8)}
 					/>
-				</pattern>
-				<radialGradient
-					cx={variant === "corner" ? "0" : "45%"}
-					cy={variant === "corner" ? "100%" : "50%"}
-					id={maskId}
-					r="76%"
-				>
-					<stop offset="0" stopColor="white" />
-					<stop
-						offset={variant === "field" ? "0.9" : "0.32"}
-						stopColor="white"
-					/>
-					<stop
-						offset="1"
-						stopColor={variant === "field" ? "white" : "black"}
-					/>
-				</radialGradient>
-				<mask id={`${maskId}-mask`}>
-					<rect fill={`url(#${maskId})`} height="180" width="220" />
-				</mask>
-			</defs>
-			<rect
-				fill={`url(#${patternId})`}
-				height="180"
-				mask={variant === "cluster" ? undefined : `url(#${maskId}-mask)`}
-				width="220"
-			/>
-			{variant === "cluster" ? (
-				<circle cx="188" cy="28" fill="currentColor" r="3.2" />
-			) : null}
+				) : null,
+			)}
 		</svg>
 	);
 }
 
-const speedPathSets = {
-	fine: [
-		"M-20 158 L92 46",
-		"M8 180 L130 58",
-		"M48 180 L180 48",
-		"M92 180 L226 46",
-		"M136 180 L240 76",
-		"M-10 116 L52 54",
-		"M150 98 L220 28",
-	],
-	rough: [
-		"M-24 166 L102 40",
-		"M-8 180 L132 40",
-		"M32 180 L170 42",
-		"M74 180 L205 49",
-		"M116 180 L238 58",
-		"M-20 126 L50 56",
-		"M142 100 L218 24",
-		"M18 126 L98 46",
-		"M88 130 L188 30",
-	],
-	sweeping: [
-		"M-28 154 C38 144 82 88 126 18",
-		"M-12 176 C62 156 114 104 170 18",
-		"M42 190 C112 164 164 102 220 26",
-		"M102 188 C158 152 194 108 238 54",
-	],
-} as const;
+/** @deprecated Use HalftoneDots. */
+export const Halftone = HalftoneDots;
+
+type SpeedMark = {
+	d: string;
+	endX: number;
+	endY: number;
+	fill: boolean;
+	opacity: number;
+	startX: number;
+	startY: number;
+	strokeWidth: number;
+};
+
+function lineMark(
+	startX: number,
+	startY: number,
+	endX: number,
+	endY: number,
+	thickness: number,
+	endWidth: number,
+	variant: SpeedLineVariant,
+	index: number,
+	startWidth: number,
+): SpeedMark {
+	const lineThickness = variant === "laser" ? thickness * 4 : thickness;
+	const dx = endX - startX;
+	const dy = endY - startY;
+	const magnitude = Math.max(1, Math.hypot(dx, dy));
+	const startHalf = (lineThickness * Math.max(0, startWidth)) / 2;
+	const endHalf = (lineThickness * Math.max(0, endWidth)) / 2;
+	const startPx = (-dy / magnitude) * startHalf;
+	const startPy = (dx / magnitude) * startHalf;
+	const endPx = (-dy / magnitude) * endHalf;
+	const endPy = (dx / magnitude) * endHalf;
+	const opacity = 0.55 + (index % 5) * 0.1;
+
+	if (variant === "electric") {
+		const points = Array.from({ length: 7 }, (_, point) => {
+			const progress = point / 6;
+			const offset =
+				(point === 0 || point === 6 ? 0 : seededNoise(index, point, 31) - 0.5) *
+				Math.max(1, thickness) *
+				8;
+			return `${startX + dx * progress + (-dy / magnitude) * offset} ${startY + dy * progress + (dx / magnitude) * offset}`;
+		});
+		return {
+			d: `M${points.join(" L")}`,
+			endX,
+			endY,
+			fill: false,
+			opacity,
+			startX,
+			startY,
+			strokeWidth: lineThickness,
+		};
+	}
+
+	return {
+		d: `M${startX + startPx} ${startY + startPy} L${endX + endPx} ${endY + endPy} L${endX - endPx} ${endY - endPy} L${startX - startPx} ${startY - startPy} Z`,
+		endX,
+		endY,
+		fill: true,
+		opacity,
+		startX,
+		startY,
+		strokeWidth: lineThickness,
+	};
+}
+
+function parallelSpeedMarks({
+	angle,
+	height,
+	jitter,
+	length,
+	quantity,
+	endWidth,
+	startWidth,
+	strokeWidth,
+	variant,
+	width,
+}: {
+	angle: number;
+	height: number;
+	jitter: number;
+	length: number;
+	quantity: number;
+	endWidth: number;
+	startWidth: number;
+	strokeWidth: number;
+	variant: SpeedLineVariant;
+	width: number;
+}): SpeedMark[] {
+	const radians = (angle * Math.PI) / 180;
+	const dx = Math.cos(radians);
+	const dy = Math.sin(radians);
+	const px = -dy;
+	const py = dx;
+	const diagonal = Math.hypot(width, height);
+	const laneSpan = Math.abs(px) * width + Math.abs(py) * height;
+
+	return Array.from({ length: quantity }, (_, index) => {
+		const noise = seededNoise(index, quantity, 29);
+		const lane = quantity === 1 ? 0 : index / (quantity - 1) - 0.5;
+		const offset = lane * laneSpan + (noise - 0.5) * 52 * jitter;
+		const run = diagonal * length * (0.58 + noise * 0.48);
+		const centerX = width / 2 + px * offset;
+		const centerY = height / 2 + py * offset;
+		return lineMark(
+			centerX - (dx * run) / 2,
+			centerY - (dy * run) / 2,
+			centerX + (dx * run) / 2,
+			centerY + (dy * run) / 2,
+			strokeWidth * (0.55 + noise * 1.3),
+			endWidth,
+			variant,
+			index,
+			startWidth,
+		);
+	});
+}
+
+function radialSpeedMarks({
+	height,
+	length,
+	originRadius,
+	position,
+	quantity,
+	spread,
+	endWidth,
+	startWidth,
+	strokeWidth,
+	variant,
+	width,
+}: {
+	height: number;
+	length: number;
+	originRadius: number;
+	position: DecorationPosition;
+	quantity: number;
+	spread: number;
+	endWidth: number;
+	startWidth: number;
+	strokeWidth: number;
+	variant: SpeedLineVariant;
+	width: number;
+}): SpeedMark[] {
+	const [normalizedX, normalizedY] = positionOrigin(position);
+	const originX = width / 2;
+	const originY = height / 2;
+	const centered = normalizedX === 0.5 && normalizedY === 0.5;
+	const baseAngle = centered
+		? 0
+		: Math.atan2(0.5 - normalizedY, 0.5 - normalizedX);
+	const totalSpread =
+		variant === "radial" && centered ? 360 : clamp(spread, 10, 360);
+	const radius = clamp(originRadius, 0, 0.8) * (Math.min(width, height) / 2);
+
+	return Array.from({ length: quantity }, (_, index) => {
+		const noise = seededNoise(index, quantity, 37);
+		const progress = quantity === 1 ? 0.5 : index / (quantity - 1);
+		const radians =
+			baseAngle + ((progress - 0.5) * totalSpread * Math.PI) / 180;
+		const startX = originX + Math.cos(radians) * radius;
+		const startY = originY + Math.sin(radians) * radius;
+		const rayX = Math.cos(radians);
+		const rayY = Math.sin(radians);
+		const horizontalDistance =
+			Math.abs(rayX) < 0.0001
+				? Number.POSITIVE_INFINITY
+				: rayX > 0
+					? (width - startX) / rayX
+					: -startX / rayX;
+		const verticalDistance =
+			Math.abs(rayY) < 0.0001
+				? Number.POSITIVE_INFINITY
+				: rayY > 0
+					? (height - startY) / rayY
+					: -startY / rayY;
+		const available = Math.max(
+			0,
+			Math.min(horizontalDistance, verticalDistance),
+		);
+		const run = available * clamp(length, 0.08, 1) * (0.72 + noise * 0.28);
+		return lineMark(
+			startX,
+			startY,
+			startX + rayX * run,
+			startY + rayY * run,
+			strokeWidth * (0.5 + noise * 1.5),
+			endWidth,
+			variant,
+			index,
+			startWidth,
+		);
+	});
+}
+
+function BoundaryShape({
+	fill,
+	height,
+	shape,
+	width,
+}: {
+	fill: string;
+	height: number;
+	shape: Exclude<SpeedLineShape, "field" | "vignette">;
+	width: number;
+}): React.JSX.Element {
+	const size = Math.min(width, height) * 0.78;
+	if (shape === "circle") {
+		return <circle cx={width / 2} cy={height / 2} fill={fill} r={size / 2} />;
+	}
+	if (shape === "triangle") {
+		return (
+			<polygon
+				fill={fill}
+				points={`${width / 2},${(height - size) / 2} ${(width + size) / 2},${(height + size) / 2} ${(width - size) / 2},${(height + size) / 2}`}
+			/>
+		);
+	}
+	const shapeWidth =
+		shape === "rectangle" ? Math.min(width * 0.82, size * 1.45) : size;
+	const shapeHeight = shape === "rectangle" ? size * 0.62 : size;
+	return (
+		<rect
+			fill={fill}
+			height={shapeHeight}
+			width={shapeWidth}
+			x={(width - shapeWidth) / 2}
+			y={(height - shapeHeight) / 2}
+		/>
+	);
+}
 
 export type SpeedLinesProps = Omit<SpeedLinesDecoration, "type">;
 
 export function SpeedLines({
+	angle,
+	aspectRatio = 1.8,
+	coverage = 0.72,
 	density = "medium",
 	direction = "down-right",
-	strokeWidth,
-	variant = "rough",
+	endOpacity = 1,
+	endWidth = 0.08,
+	jitter = 0.65,
+	length = 0.72,
+	originOpacity = 0,
+	originRadius = 0.2,
+	position = "center",
+	quantity,
+	shape = "field",
+	shapeMode = "inside",
+	spread = 90,
+	startOpacity = 1,
+	startWidth = 1,
+	strokeWidth = 2,
+	vignetteFeather = 0.18,
+	vignetteRadius = 0.28,
+	variant = "tapered",
 	...props
 }: SpeedLinesProps): React.JSX.Element {
-	const baseWidth =
-		strokeWidth ?? { airy: 1, dense: 2.5, medium: 1.6 }[density];
-	const shared = primitiveProps("speed-lines", props);
+	const id = useId().replaceAll(":", "");
+	const { height, width } = intrinsicCanvas(aspectRatio, 1.8);
+	const count = clamp(
+		quantity ?? [3, 5, 8, 12, 18, 26][densityIndex[density]] ?? 12,
+		1,
+		72,
+	);
+	const radial = ["fan", "laser", "radial"].includes(variant);
+	const marks = radial
+		? radialSpeedMarks({
+				height,
+				length,
+				originRadius,
+				position,
+				quantity: count,
+				spread,
+				endWidth,
+				startWidth,
+				strokeWidth,
+				variant,
+				width,
+			})
+		: parallelSpeedMarks({
+				angle: angle ?? directionAngle(direction),
+				height,
+				jitter,
+				length,
+				quantity: count,
+				endWidth,
+				startWidth,
+				strokeWidth,
+				variant,
+				width,
+			});
+	const boundaryShape = shape === "vignette" ? "circle" : shape;
+	const outside = shape === "vignette" || shapeMode === "outside";
+	const constrained = boundaryShape !== "field";
+	const clipId = `speed-clip-${id}`;
+	const maskId = `speed-mask-${id}`;
+	const fadeId = `speed-fade-${id}`;
+	const fadeRadius = shape === "vignette" ? vignetteRadius : originRadius;
+	const fadeEnd = clamp(fadeRadius + vignetteFeather, 0.01, 1);
+	const usesFade = shape === "vignette" || (radial && originOpacity < 1);
+	const usesMask = outside || usesFade;
+
 	return (
-		<svg {...shared} data-decoration-variant={variant} viewBox="0 0 220 180">
-			<title>Decorative speed lines</title>
+		<svg
+			{...primitiveProps("speed-lines", {
+				...props,
+				aspectRatio,
+				coverage,
+				position,
+			})}
+			data-decoration-density={density}
+			data-decoration-shape={shape}
+			data-decoration-variant={variant}
+			preserveAspectRatio="xMidYMid meet"
+			viewBox={`0 0 ${width} ${height}`}
+		>
+			<title>Comic speed line decoration</title>
+			<defs>
+				<radialGradient id={fadeId} r="50%">
+					<stop offset="0%" stopColor="white" stopOpacity={originOpacity} />
+					<stop
+						offset={`${clamp(fadeRadius, 0, 0.99) * 100}%`}
+						stopColor="white"
+						stopOpacity={originOpacity}
+					/>
+					<stop
+						offset={`${fadeEnd * 100}%`}
+						stopColor="white"
+						stopOpacity="1"
+					/>
+				</radialGradient>
+				{marks.map((mark, index) => (
+					<linearGradient
+						gradientUnits="userSpaceOnUse"
+						id={`speed-line-${id}-${index}`}
+						key={`gradient-${mark.d}-${index}`}
+						x1={mark.startX}
+						x2={mark.endX}
+						y1={mark.startY}
+						y2={mark.endY}
+					>
+						<stop
+							offset="0%"
+							stopColor="currentColor"
+							stopOpacity={startOpacity}
+						/>
+						<stop
+							offset="100%"
+							stopColor="currentColor"
+							stopOpacity={endOpacity}
+						/>
+					</linearGradient>
+				))}
+				<filter
+					id={`speed-rough-${id}`}
+					x="-8%"
+					y="-8%"
+					width="116%"
+					height="116%"
+				>
+					<feTurbulence
+						baseFrequency="0.012 0.065"
+						numOctaves="2"
+						seed="23"
+						type="fractalNoise"
+					/>
+					<feDisplacementMap
+						in="SourceGraphic"
+						scale={variant === "brush" ? 7 : 2}
+					/>
+				</filter>
+				{constrained && !outside ? (
+					<clipPath id={clipId}>
+						<BoundaryShape
+							fill="white"
+							height={height}
+							shape={
+								boundaryShape as Exclude<SpeedLineShape, "field" | "vignette">
+							}
+							width={width}
+						/>
+					</clipPath>
+				) : null}
+				{usesMask ? (
+					<mask id={maskId}>
+						<rect
+							fill={usesFade ? `url(#${fadeId})` : "white"}
+							height={height}
+							width={width}
+						/>
+						{outside && shape !== "vignette" ? (
+							<BoundaryShape
+								fill="black"
+								height={height}
+								shape={
+									boundaryShape as Exclude<SpeedLineShape, "field" | "vignette">
+								}
+								width={width}
+							/>
+						) : null}
+					</mask>
+				) : null}
+			</defs>
 			<g
-				fill="none"
-				stroke="currentColor"
-				strokeLinecap="square"
-				transform={directionTransform(direction)}
+				clipPath={constrained && !outside ? `url(#${clipId})` : undefined}
+				filter={variant === "brush" ? `url(#speed-rough-${id})` : undefined}
+				mask={usesMask ? `url(#${maskId})` : undefined}
 			>
-				{speedPathSets[variant].map((path, index) => (
+				{marks.map((mark, index) => (
 					<path
-						d={path}
-						key={path}
-						opacity={0.24 + (index % 3) * 0.26}
-						strokeWidth={baseWidth + (index % 4) * 0.75}
+						d={mark.d}
+						fill={mark.fill ? `url(#speed-line-${id}-${index})` : "none"}
+						key={`${mark.d}-${index}`}
+						opacity={mark.opacity}
+						stroke={mark.fill ? "none" : `url(#speed-line-${id}-${index})`}
+						strokeLinecap="square"
+						strokeLinejoin="miter"
+						strokeWidth={mark.fill ? undefined : mark.strokeWidth}
 					/>
 				))}
 			</g>
@@ -207,251 +728,333 @@ export function SpeedLines({
 	);
 }
 
-const streakPaths = {
-	brush: [
-		"M-12 139 L76 42 L112 27 L98 43 L131 30 L49 119 L74 108 L21 158 Z",
-		"M25 160 L137 34 L183 20 L166 40 L208 25 L82 151 L113 132 L65 170 Z",
-		"M91 174 L198 53 L230 39 L214 61 L239 52 L131 171 Z",
-		"M-14 170 L51 99 L72 94 L61 108 L87 99 L13 178 Z",
-	],
-	edge: [
-		"M0 180 L0 112 L98 14 L132 10 L28 126 Z",
-		"M18 180 L64 134 L142 58 L158 66 L48 180 Z",
-	],
-	slash: [
-		"M34 180 L142 0 L188 0 L80 180 Z",
-		"M98 180 L206 0 L224 0 L118 180 Z",
-	],
-	spray: [
-		"M-12 150 L106 22 L144 16 L22 154 Z",
-		"M38 170 L158 34 L214 22 L78 174 Z",
-		"M118 180 L222 62 L238 66 L144 180 Z",
-	],
-} as const;
+function brushStrokePath(
+	index: number,
+	quantity: number,
+	length: number,
+	thickness: number,
+	variant: AccentStreakDecoration["variant"],
+	width: number,
+	height: number,
+): string {
+	const random = seededNoise(index, quantity, 47);
+	const usableLength = width * clamp(length, 0.1, 1);
+	const startX = (width - usableLength) / 2 - usableLength * random * 0.04;
+	const endX = startX + usableLength * (0.9 + random * 0.12);
+	const centeredIndex = index - (quantity - 1) / 2;
+	const lane = centeredIndex * thickness * 0.22;
+	const centerY = height / 2 + lane + (random - 0.5) * thickness * 0.3;
+	const weight =
+		index === 0
+			? 1.35
+			: (0.28 + random * 0.54) * (variant === "slashes" ? 0.45 : 1);
+	const body = thickness * weight * (variant === "underline" ? 0.55 : 1);
+	const samples = 18;
+	const top = Array.from({ length: samples }, (_, point) => {
+		const progress = point / (samples - 1);
+		const taper = Math.sin(Math.PI * progress) ** 0.34;
+		const ragged = 0.72 + seededNoise(index, point, 211) * 0.42;
+		const drift = (seededNoise(index, point, 223) - 0.5) * body * 0.16;
+		return [
+			startX + (endX - startX) * progress,
+			centerY - body * 0.5 * taper * ragged + drift,
+		] as const;
+	});
+	const bottom = Array.from({ length: samples }, (_, reversePoint) => {
+		const point = samples - reversePoint - 1;
+		const progress = point / (samples - 1);
+		const taper = Math.sin(Math.PI * progress) ** 0.34;
+		const ragged = 0.7 + seededNoise(index, point, 239) * 0.48;
+		const drift = (seededNoise(index, point, 241) - 0.5) * body * 0.18;
+		return [
+			startX + (endX - startX) * progress,
+			centerY + body * 0.5 * taper * ragged + drift,
+		] as const;
+	});
+	return `${[...top, ...bottom]
+		.map(([x, y], point) => `${point === 0 ? "M" : "L"}${x} ${y}`)
+		.join(" ")} Z`;
+}
+
+function jaggedPath(
+	index: number,
+	quantity: number,
+	width: number,
+	height: number,
+	branches: number,
+): string {
+	const lane =
+		(index - (quantity - 1) / 2) * (height / Math.max(quantity, 3)) * 0.45;
+	const points = Array.from({ length: branches }, (_, point) => {
+		const progress = point / (branches - 1);
+		const noise = seededNoise(index, point, 107) - 0.5;
+		return `${width * (0.08 + progress * 0.84)} ${height / 2 + lane + noise * height * 0.18}`;
+	});
+	return `M${points.join(" L")}`;
+}
+
+function lightningPath(
+	index: number,
+	quantity: number,
+	width: number,
+	height: number,
+	thickness: number,
+): string {
+	const points = 9;
+	const lane =
+		(index - (quantity - 1) / 2) * thickness * 0.58 +
+		(seededNoise(index, quantity, 251) - 0.5) * thickness;
+	const centerLine = Array.from({ length: points }, (_, point) => {
+		const progress = point / (points - 1);
+		const stagger =
+			point === 0 || point === points - 1 ? 0 : point % 2 ? 1 : -1;
+		const noise = seededNoise(index, point, 257) - 0.5;
+		return [
+			width * (0.04 + progress * 0.92),
+			height / 2 + lane + (stagger * 0.34 + noise * 0.5) * thickness,
+		] as const;
+	});
+	const top = centerLine.map(([x, y], point) => {
+		const taper = Math.sin((point / (points - 1)) * Math.PI) ** 0.24;
+		return [x, y - thickness * (0.12 + taper * 0.42)] as const;
+	});
+	const bottom = [...centerLine].reverse().map(([x, y], reversePoint) => {
+		const point = points - reversePoint - 1;
+		const taper = Math.sin((point / (points - 1)) * Math.PI) ** 0.24;
+		return [x, y + thickness * (0.12 + taper * 0.42)] as const;
+	});
+	return `${[...top, ...bottom]
+		.map(([x, y], point) => `${point === 0 ? "M" : "L"}${x} ${y}`)
+		.join(" ")} Z`;
+}
+
+function lightningShardPath(
+	index: number,
+	width: number,
+	height: number,
+	thickness: number,
+): string {
+	const x = width * (0.08 + seededNoise(index, 1, 263) * 0.84);
+	const y = height * (0.22 + seededNoise(index, 2, 269) * 0.56);
+	const size = thickness * (0.18 + seededNoise(index, 3, 271) * 0.36);
+	const direction = seededNoise(index, 4, 277) > 0.5 ? 1 : -1;
+	return `M${x - size} ${y} L${x + size * 1.4} ${y - size * direction} L${x + size * 0.28} ${y + size * 1.3 * direction} Z`;
+}
+
+function burstPath(
+	index: number,
+	points: number,
+	radius: number,
+	centerX: number,
+	centerY: number,
+): string {
+	return `${Array.from({ length: points * 2 }, (_, point) => {
+		const angle = (point / (points * 2)) * Math.PI * 2;
+		const random = seededNoise(index, point, 131);
+		const pointRadius =
+			point % 2 === 0
+				? radius * (0.72 + random * 0.48)
+				: radius * (0.15 + random * 0.24);
+		return `${point === 0 ? "M" : "L"}${centerX + Math.cos(angle) * pointRadius} ${centerY + Math.sin(angle) * pointRadius}`;
+	}).join(" ")} Z`;
+}
+
+function splashPath(
+	index: number,
+	radius: number,
+	centerX: number,
+	centerY: number,
+): string {
+	const points = 30;
+	const shiftedX = centerX + (seededNoise(index, 2, 149) - 0.5) * radius * 0.32;
+	const shiftedY = centerY + (seededNoise(index, 4, 151) - 0.5) * radius * 0.32;
+	return `${Array.from({ length: points }, (_, point) => {
+		const angle = (point / points) * Math.PI * 2;
+		const random = seededNoise(index, point, 157);
+		const spike = point % 5 === 0 ? 1.65 + random * 0.8 : 0.48 + random * 0.72;
+		const pointRadius = radius * spike;
+		return `${point === 0 ? "M" : "L"}${shiftedX + Math.cos(angle) * pointRadius} ${shiftedY + Math.sin(angle) * pointRadius}`;
+	}).join(" ")} Z`;
+}
 
 export type AccentStreakProps = Omit<AccentStreakDecoration, "type">;
 
 export function AccentStreak({
+	angle,
+	aspectRatio = 2.1,
+	coverage = 0.58,
+	density = "medium",
 	direction = "down-right",
+	length = 0.72,
+	position = "center",
+	quantity,
+	splatter = 0.35,
+	thickness = 78,
 	variant = "brush",
 	...props
 }: AccentStreakProps): React.JSX.Element {
-	const shared = primitiveProps("accent-streak", props);
-	return (
-		<svg {...shared} data-decoration-variant={variant} viewBox="0 0 220 180">
-			<title>Decorative accent streak</title>
-			<g fill="currentColor" transform={directionTransform(direction)}>
-				{streakPaths[variant].map((path, index) => (
-					<path d={path} key={path} opacity={1 - index * 0.17} />
-				))}
-				{variant === "spray"
-					? [
-							[178, 122, 3],
-							[194, 105, 2],
-							[154, 145, 1.8],
-							[210, 86, 1.4],
-						].map(([cx, cy, r]) => (
-							<circle cx={cx} cy={cy} key={`${cx}-${cy}`} r={r} />
-						))
-					: null}
-			</g>
-		</svg>
-	);
-}
-
-export type ScratchLinesProps = Omit<ScratchLinesDecoration, "type">;
-
-const scratchLineIds = [
-	"scratch-a",
-	"scratch-b",
-	"scratch-c",
-	"scratch-d",
-	"scratch-e",
-	"scratch-f",
-	"scratch-g",
-	"scratch-h",
-	"scratch-i",
-	"scratch-j",
-	"scratch-k",
-	"scratch-l",
-] as const;
-
-const crosshatchLineIds = [
-	"crosshatch-a",
-	"crosshatch-b",
-	"crosshatch-c",
-	"crosshatch-d",
-	"crosshatch-e",
-] as const;
-
-export function ScratchLines({
-	density = "medium",
-	direction = "down-right",
-	strokeWidth = 1,
-	variant = "hairline",
-	...props
-}: ScratchLinesProps): React.JSX.Element {
-	const shared = primitiveProps("scratch-lines", props);
-	const count = { airy: 5, dense: 12, medium: 8 }[density];
-	return (
-		<svg {...shared} data-decoration-variant={variant} viewBox="0 0 220 180">
-			<title>Decorative scratch lines</title>
-			<g
-				fill="none"
-				stroke="currentColor"
-				strokeLinecap="round"
-				transform={directionTransform(direction)}
-			>
-				{scratchLineIds.slice(0, count).map((id, index) => (
-					<path
-						d={`M${-20 + index * 22} ${170 - (index % 3) * 13} L${92 + index * 18} ${40 - (index % 4) * 6}`}
-						key={id}
-						opacity={0.2 + (index % 4) * 0.16}
-						strokeDasharray={
-							variant === "grunge"
-								? `${20 + index * 2} ${5 + (index % 3) * 7}`
-								: variant === "crosshatch"
-									? "34 9"
-									: undefined
-						}
-						strokeWidth={strokeWidth + (variant === "grunge" ? index % 3 : 0)}
-					/>
-				))}
-				{variant === "crosshatch"
-					? crosshatchLineIds.map((id, index) => (
-							<path
-								d={`M${18 + index * 38} 24 L${92 + index * 30} 128`}
-								key={id}
-								opacity="0.34"
-								strokeWidth={strokeWidth}
-							/>
-						))
-					: null}
-			</g>
-		</svg>
-	);
-}
-
-export type CircularLineworkProps = Omit<CircularLineworkDecoration, "type">;
-
-export function CircularLinework({
-	strokeWidth = 1.2,
-	variant = "contour",
-	...props
-}: CircularLineworkProps): React.JSX.Element {
-	const radii =
-		variant === "rings" ? [24, 40, 57, 74, 91] : [42, 58, 74, 90, 106];
-	return (
-		<svg
-			{...primitiveProps("circular-linework", props)}
-			data-decoration-variant={variant}
-			viewBox="0 0 220 180"
-		>
-			<title>Decorative circular linework</title>
-			<g fill="none" stroke="currentColor" strokeLinecap="round">
-				{radii.map((radius, index) => (
-					<circle
-						cx={variant === "sweep" ? 30 : 188}
-						cy={variant === "sweep" ? 168 : 18}
-						key={radius}
-						r={radius}
-						strokeDasharray={
-							variant === "rings"
-								? undefined
-								: `${90 + index * 18} ${48 + index * 11}`
-						}
-						strokeWidth={strokeWidth}
-					/>
-				))}
-				{variant === "contour" ? (
-					<path
-						d="M-8 156 C48 118 76 126 116 82 C150 45 172 38 230 40"
-						strokeWidth={strokeWidth * 0.8}
-					/>
-				) : null}
-			</g>
-		</svg>
-	);
-}
-
-export type GeometricShapesProps = Omit<GeometricShapeDecoration, "type">;
-
-export function GeometricShapes({
-	strokeWidth = 2,
-	variant = "corner-cut",
-	...props
-}: GeometricShapesProps): React.JSX.Element {
-	return (
-		<svg
-			{...primitiveProps("geometric-shape", props)}
-			data-decoration-variant={variant}
-			viewBox="0 0 220 180"
-		>
-			<title>Decorative geometric shapes</title>
-			{variant === "corner-cut" ? (
-				<path d="M0 180 L0 100 L82 180 Z" fill="currentColor" />
-			) : null}
-			{variant === "angle" ? (
-				<path d="M18 152 L122 18 H202 L98 152 Z" fill="currentColor" />
-			) : null}
-			{variant === "block" ? (
-				<path d="M34 30 H202 V92 L118 176 H34 Z" fill="currentColor" />
-			) : null}
-			{variant === "slashes" ? (
-				<g fill="currentColor">
-					<path d="M22 156 L116 22 H150 L56 156 Z" />
-					<path d="M84 156 L178 22 H198 L104 156 Z" opacity="0.56" />
-				</g>
-			) : null}
-			{variant === "frame" ? (
-				<path
-					d="M20 150 V28 H196 M20 150 H152"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth={strokeWidth}
-				/>
-			) : null}
-		</svg>
-	);
-}
-
-export type PaperTextureProps = Omit<PaperTextureDecoration, "type">;
-
-export function PaperTexture({
-	density = "medium",
-	variant = "grain",
-	...props
-}: PaperTextureProps): React.JSX.Element {
 	const id = useId().replaceAll(":", "");
-	const frequency = { airy: 0.35, dense: 0.95, medium: 0.62 }[density];
+	const { height, width } = intrinsicCanvas(aspectRatio, 2.1);
+	const defaultCount = [1, 2, 3, 4, 6, 8][densityIndex[density]] ?? 4;
+	const count = clamp(quantity ?? defaultCount, 1, 18);
+	const angularVariant = ["burst", "splash"].includes(variant);
+	const crackedVariant = variant === "cracks";
+	const lightningVariant = variant === "lightning";
+	const paths = crackedVariant
+		? Array.from({ length: count }, (_, index) =>
+				jaggedPath(index, count, width, height, 9),
+			)
+		: lightningVariant
+			? [
+					...Array.from({ length: count }, (_, index) =>
+						lightningPath(index, count, width, height, Math.max(10, thickness)),
+					),
+					...Array.from({ length: count * 3 }, (_, index) =>
+						lightningShardPath(index, width, height, Math.max(10, thickness)),
+					),
+				]
+			: angularVariant
+				? Array.from({ length: count }, (_, index) =>
+						variant === "splash"
+							? splashPath(
+									index,
+									Math.min(width, height) * (0.1 + index * 0.014),
+									width / 2,
+									height / 2,
+								)
+							: burstPath(
+									index,
+									10,
+									Math.min(width, height) * (0.24 + index * 0.015),
+									width / 2,
+									height / 2,
+								),
+					)
+				: Array.from({ length: count }, (_, index) =>
+						brushStrokePath(
+							index,
+							count,
+							length,
+							Math.max(4, thickness),
+							variant,
+							width,
+							height,
+						),
+					);
+	const splatterCount = Math.round(
+		clamp(splatter, 0, 1) *
+			(variant === "splash"
+				? 72
+				: variant === "splatter"
+					? 46
+					: variant === "dry-brush"
+						? 34
+						: 36),
+	);
+	const rotation = angle ?? directionAngle(direction);
+	const texturedPaint =
+		!crackedVariant &&
+		!lightningVariant &&
+		!angularVariant &&
+		variant !== "slashes";
+	const paintMaskId = `paint-mask-${id}`;
+
 	return (
 		<svg
-			{...primitiveProps("paper-texture", props)}
+			{...primitiveProps("accent-streak", {
+				...props,
+				aspectRatio,
+				coverage,
+				position,
+			})}
+			data-decoration-density={density}
 			data-decoration-variant={variant}
-			preserveAspectRatio="none"
-			viewBox="0 0 220 180"
+			preserveAspectRatio="xMidYMid meet"
+			viewBox={`0 0 ${width} ${height}`}
 		>
-			<title>Decorative paper texture</title>
-			<filter id={`paper-${id}`} x="-10%" y="-10%" width="120%" height="120%">
-				<feTurbulence
-					baseFrequency={
-						variant === "fibers"
-							? `${frequency * 0.08} ${frequency}`
-							: frequency
-					}
-					numOctaves={variant === "print" ? 2 : 3}
-					seed={variant === "print" ? 17 : 8}
-					type="fractalNoise"
-				/>
-				<feColorMatrix type="saturate" values="0" />
-			</filter>
-			<rect
-				fill="currentColor"
-				filter={`url(#paper-${id})`}
-				height="180"
-				opacity={variant === "print" ? 0.28 : 0.2}
-				width="220"
-			/>
+			<title>Comic accent streak decoration</title>
+			<defs>
+				<filter
+					id={`paint-rough-${id}`}
+					x="-8%"
+					y="-12%"
+					width="116%"
+					height="124%"
+				>
+					<feTurbulence
+						baseFrequency={
+							variant === "dry-brush" ? "0.02 0.12" : "0.012 0.075"
+						}
+						numOctaves="2"
+						seed="41"
+						type="fractalNoise"
+					/>
+					<feDisplacementMap
+						in="SourceGraphic"
+						scale={variant === "slashes" ? 2 : variant === "dry-brush" ? 13 : 7}
+					/>
+				</filter>
+				{texturedPaint ? (
+					<mask id={paintMaskId}>
+						<rect fill="white" height={height} width={width} />
+						{Array.from({ length: 22 }, (_, cutout) => {
+							const x = width * (0.1 + seededNoise(cutout, 1, 283) * 0.72);
+							const y =
+								height / 2 +
+								(seededNoise(cutout, 2, 293) - 0.5) * thickness * 1.8;
+							const cutoutWidth =
+								width * (0.025 + seededNoise(cutout, 3, 307) * 0.15);
+							const cutoutHeight =
+								1 + seededNoise(cutout, 4, 311) * Math.max(2, thickness * 0.08);
+							return (
+								<rect
+									fill="black"
+									height={cutoutHeight}
+									key={`${x}-${y}`}
+									rx={cutoutHeight / 2}
+									width={cutoutWidth}
+									x={x}
+									y={y}
+								/>
+							);
+						})}
+					</mask>
+				) : null}
+			</defs>
+			<g
+				fill={crackedVariant ? "none" : "currentColor"}
+				filter={texturedPaint ? `url(#paint-rough-${id})` : undefined}
+				mask={texturedPaint ? `url(#${paintMaskId})` : undefined}
+				stroke={crackedVariant ? "currentColor" : "none"}
+				strokeLinecap="square"
+				strokeLinejoin="miter"
+				strokeWidth={crackedVariant ? thickness * 0.12 : undefined}
+				transform={`rotate(${rotation} ${width / 2} ${height / 2})`}
+			>
+				{paths.map((path, index) => (
+					<path
+						d={path}
+						key={path}
+						opacity={index === 0 ? 1 : 0.74 + (index % 3) * 0.1}
+					/>
+				))}
+				{Array.from({ length: splatterCount }, (_, index) => {
+					const cx = width * (0.08 + seededNoise(index, count, 61) * 0.84);
+					const cy = height * (0.25 + seededNoise(index, count, 73) * 0.5);
+					const radius =
+						1.5 +
+						seededNoise(index, count, 89) * (variant === "splash" ? 10 : 8);
+					return (
+						<circle
+							cx={cx}
+							cy={cy}
+							key={`${cx}-${cy}`}
+							opacity={0.5 + (index % 4) * 0.12}
+							r={radius}
+						/>
+					);
+				})}
+			</g>
 		</svg>
 	);
 }
