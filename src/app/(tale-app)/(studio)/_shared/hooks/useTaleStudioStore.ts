@@ -2,16 +2,12 @@
 
 import type { TaleInspectorTarget } from "~/app/(tale-app)/_shared/types";
 import { createDerivedStoreHooks } from "~/lib/zustand/createDerivedStoreHooks";
-import { useTaleStudio } from "../contexts/TaleStudioProvider";
+import { useTaleStudioStoreInstance } from "../contexts/TaleStudioStoreContext";
 import {
 	type TaleStudioDerivedState,
 	type TaleStudioState,
 	createTaleStudioDerivedState,
 } from "../store/taleStudioStore";
-
-function useTaleStudioStoreInstance() {
-	return useTaleStudio().store;
-}
 
 const taleStudioStoreHooks = createDerivedStoreHooks<
 	TaleStudioState,

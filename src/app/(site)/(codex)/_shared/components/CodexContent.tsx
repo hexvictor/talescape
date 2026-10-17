@@ -18,9 +18,9 @@ import {
 	siteImages,
 } from "~/app/(site)/_shared/components/landingCodexData";
 import { CardGridSkeleton } from "~/app/(site)/_shared/components/skeletons";
-import { DecoratedMedia } from "~/components/decorations";
-import { PageShell } from "~/components/layout/page-shell";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
+import { TaleImage } from "~/components/media/tale-image";
 import { Button } from "~/components/ui/button";
 
 const categories = [
@@ -88,7 +88,7 @@ function CodexHero() {
 				<Button
 					asChild
 					className="mt-7 self-start"
-					shape="slant-right"
+					shapes="slant-right"
 					size="lg"
 					variant="default"
 				>
@@ -98,24 +98,22 @@ function CodexHero() {
 				</Button>
 			</div>
 			<ComicPanel
+				decorations="halftone-corner"
 				className="min-h-72 overflow-hidden lg:min-h-[20rem]"
-				decoration="dots"
-				shape="cut-opposite"
+				shapes="cut-opposite"
 				slant="48px"
 				shadow={false}
 			>
-				<DecoratedMedia
-					className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[20rem]"
-					preset="cyan-corner"
-				>
-					<Image
+				<div className="comic-panel-bleed relative h-full min-h-72 lg:min-h-[20rem]">
+					<TaleImage
 						src={siteImages.emberCity}
 						alt="The city held inside the Ember Archive"
 						fill
 						priority
 						className="object-cover"
+						decorations="cyan-corner"
 					/>
-				</DecoratedMedia>
+				</div>
 			</ComicPanel>
 		</section>
 	);
@@ -139,9 +137,10 @@ function CodexCategories() {
 					<ComicPanel
 						accent={accent}
 						as="article"
-						className="comic-panel-content flex min-h-24 w-56 shrink-0 items-center gap-3 sm:w-auto"
+						className="flex min-h-24 w-56 shrink-0 items-center gap-3 sm:w-auto"
+						surfaceClassName="comic-panel-content"
 						key={label}
-						shape="corners-right"
+						shapes="corners-right"
 						shadow={false}
 						slant="18px"
 					>
@@ -186,7 +185,7 @@ async function CodexEntryGrid() {
 						className="grid min-h-40 grid-cols-[44%_1fr] overflow-hidden md:flex md:min-h-[20rem] md:flex-col"
 						decoration={index % 2 === 0 ? "dots" : "strikes"}
 						key={entry.title}
-						shape="corner-top-right"
+						shapes="corner-top-right"
 						shadow={false}
 						slant="20px"
 					>
@@ -251,7 +250,7 @@ function FactionWatch() {
 			<Button
 				asChild
 				className="mt-3 w-full"
-				shape="slant-both"
+				shapes="slant-both"
 				variant="outline"
 			>
 				<Link href="/library">
@@ -311,8 +310,8 @@ async function RecentEntries() {
 export function CodexContent() {
 	return (
 		<PageShell
+			decorations="codex"
 			className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-8 px-[var(--ts-page-gutter)] py-8 lg:grid-cols-[1fr_20rem] lg:gap-6 lg:py-5"
-			decorationPreset="codex"
 		>
 			<div className="flex min-w-0 flex-col gap-8">
 				<CodexHero />

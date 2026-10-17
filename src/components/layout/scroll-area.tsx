@@ -11,11 +11,15 @@ function ScrollArea({
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
 	return (
 		<ScrollAreaPrimitive.Root
+			data-reader-component="ScrollArea"
+			data-reader-role="scroll-area"
 			data-slot="scroll-area"
 			className={cn("relative", className)}
 			{...props}
 		>
 			<ScrollAreaPrimitive.Viewport
+				data-reader-component="ScrollArea"
+				data-reader-role="scroll-area-viewport"
 				data-slot="scroll-area-viewport"
 				className="size-full rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50"
 			>
@@ -34,6 +38,8 @@ function ScrollBar({
 }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
 	return (
 		<ScrollAreaPrimitive.ScrollAreaScrollbar
+			data-reader-component="ScrollBar"
+			data-reader-role="scroll-area-scrollbar"
 			data-slot="scroll-area-scrollbar"
 			orientation={orientation}
 			className={cn(

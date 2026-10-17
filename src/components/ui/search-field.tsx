@@ -27,6 +27,8 @@ export function SearchField({
 }: SearchFieldProps): React.JSX.Element {
 	return (
 		<AriaSearchField
+			data-reader-component="SearchField"
+			data-reader-role="search-field"
 			{...props}
 			aria-label={ariaLabel}
 			data-slot="search-field"

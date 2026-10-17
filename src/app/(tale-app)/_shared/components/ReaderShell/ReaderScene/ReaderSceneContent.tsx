@@ -10,9 +10,8 @@ import type {
 	SceneContainer,
 	TaleFrame,
 } from "../../../types";
-import { TaleElement } from "../TaleElement/TaleElement";
 import { FrameRenderer } from "./FrameRenderer";
-import { positionedStyle } from "./positionedStyle";
+import { PositionedElements } from "./PositionedElements";
 import { getSharedReaderStyle } from "./readerStyleProperties";
 
 /**
@@ -40,11 +39,16 @@ export function ReaderSceneContent({
 		}),
 	);
 	if (!scene) return null;
-	const clippedElements = resolveIds(scene.clippedElementIds, elementsById);
+	const sceneOwned = (element: ResolvedTaleElement) =>
+		!framesById[element.placement.frameId ?? element.frameId ?? ""];
+	const clippedElements = resolveIds(
+		scene.clippedElementIds,
+		elementsById,
+	).filter(sceneOwned);
 	const overflowingElements = resolveIds(
 		scene.overflowingElementIds,
 		elementsById,
-	);
+	).filter(sceneOwned);
 	if (mode === "measure") {
 		return (
 			<div
@@ -69,12 +73,12 @@ export function ReaderSceneContent({
 			<div
 				data-reader-component="ReaderSceneContent"
 				data-reader-role="clipped-content-layer"
-				className="absolute inset-0 overflow-hidden"
+				className="absolute inset-0 isolate overflow-hidden"
 			>
 				<div
 					data-reader-component="ReaderSceneContent"
 					data-reader-role="frame-content-layer"
-					className="relative h-full w-full overflow-hidden"
+					className="relative z-0 h-full w-full overflow-hidden"
 				>
 					<SceneFrames
 						scene={scene}
@@ -203,81 +207,4 @@ function getSceneContainerStyle(
 		style.rowGap = container.style?.rowGap;
 	}
 	return style;
-}
-
-/**
- * Renders absolute elements in either the clipped or overflowing scene layer.
- *
- * @param props - Positioned element properties.
- * @param props.anchor - Owning scene anchor.
- * @param props.elements - Positioned elements to render.
- * @param props.onChoosePath - Choice path callback.
- * @returns Positioned element elements.
- */
-function PositionedElements({
-	anchor,
-	contentSized,
-	elements,
-	framesById,
-}: {
-	anchor: Anchor;
-	contentSized: boolean;
-	elements: ResolvedTaleElement[];
-	framesById: Record<string, TaleFrame>;
-}): React.JSX.Element[] {
-	return elements.map((element, index) => {
-		const frame = element.frameId ? framesById[element.frameId] : undefined;
-		const defaultState =
-			frame?.defaultElementStates?.[element.id] ?? "inactive";
-		const defaultStateStyle =
-			frame?.visibleDuringSceneIntro === true ||
-			frame?.visibleBeforeIntro === true
-				? defaultState === "inactive"
-					? { opacity: 0 }
-					: {}
-				: {};
-		return (
-			<div
-				key={element.id}
-				data-reader-component="PositionedElements"
-				data-reader-element-id={element.id}
-				data-reader-role="positioned-element-frame"
-				className="absolute flex items-center justify-center"
-				style={{
-					fontSize: element.style?.fontSize,
-					fontWeight: element.style?.fontWeight,
-					height: element.style?.height,
-					lineHeight: element.style?.lineHeight,
-					maxHeight: element.style?.maxHeight,
-					maxWidth: element.style?.maxWidth,
-					minHeight: element.style?.minHeight,
-					minWidth: element.style?.minWidth,
-					textAlign: element.style?.textAlign,
-					...positionedStyle(element.placement),
-					// zIndex:
-					// 	element.placement.zIndex ??
-					// 	{
-					// 		"scene-underlay": -20,
-					// 		"frame-underlay": -10,
-					// 		content: 0,
-					// 		"frame-overlay": 10,
-					// 		"scene-overlay": 20,
-					// 	}[element.layer ?? "content"],
-					...defaultStateStyle,
-				}}
-			>
-				<div
-					data-reader-component="PositionedElements"
-					data-reader-role="positioned-element-content"
-					className="w-full"
-				>
-					<TaleElement
-						contentSized={contentSized}
-						element={element}
-						index={index}
-					/>
-				</div>
-			</div>
-		);
-	});
 }

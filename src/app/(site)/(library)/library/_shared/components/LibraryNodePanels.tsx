@@ -7,17 +7,18 @@ import {
 	Route,
 } from "lucide-react";
 import type {
-	LibraryBlockList,
 	LibraryBranchList,
+	LibraryElementList,
 	LibraryEntryList,
-	LibraryFragmentList,
 	LibraryFrameList,
 	LibraryPageList,
 	LibraryPartList,
 	LibraryPathList,
+	LibrarySceneList,
 } from "~/server/db/data/library/queries";
 import { LibraryNodeList, type NodeLink } from "./LibraryNodeList";
 import { LibraryReaderPreview } from "./LibraryReaderPreview";
+import { LibraryVisualPreview } from "./LibraryVisualPreview";
 
 export function BranchesPanel({
 	branches,
@@ -50,7 +51,7 @@ export function BranchesPanel({
 	);
 }
 
-export function BlocksPanel({ scenes }: { scenes: LibraryBlockList }) {
+export function ScenesPanel({ scenes }: { scenes: LibrarySceneList }) {
 	return (
 		<LibraryNodeList
 			emptyTitle="No scenes visible"
@@ -64,10 +65,16 @@ export function BlocksPanel({ scenes }: { scenes: LibraryBlockList }) {
 				}`,
 				badges: compactLabels([block.visibility, block.part?.title ?? null]),
 				preview: (
-					<LibraryReaderPreview
-						title={`Preview block ${block.index + 1}`}
-						description={`Rendered as a reader element from ${block.entry?.title ?? "an unassigned entry"}.`}
-						element={block.previewFragment}
+					<LibraryVisualPreview
+						title={block.title ?? `Scene ${block.index + 1}`}
+						snapshot={block.visualPreview}
+						sceneStyle={block.styleConfig}
+						taleHref={`${block.readerHref}?scene=${block.id}`}
+						studioHref={
+							block.canEdit
+								? `/studio/${block.taleId}?inspect=scene&inspectId=${block.id}`
+								: undefined
+						}
 					/>
 				),
 				links: compactLinks([
@@ -89,10 +96,10 @@ export function BlocksPanel({ scenes }: { scenes: LibraryBlockList }) {
 	);
 }
 
-export function FragmentsPanel({
+export function ElementsPanel({
 	elements,
 }: {
-	elements: LibraryFragmentList;
+	elements: LibraryElementList;
 }) {
 	return (
 		<LibraryNodeList
@@ -109,10 +116,16 @@ export function FragmentsPanel({
 					`Element ${element.index + 1}`,
 				],
 				preview: (
-					<LibraryReaderPreview
-						title={`Preview ${element.type} element`}
-						description={`Rendered as it appears inside ${element.tale.title}.`}
-						element={element.previewElement}
+					<LibraryVisualPreview
+						title={`${capitalize(element.type)} element`}
+						snapshot={{ frames: [], elements: [element] }}
+						elementId={element.id}
+						taleHref={`${element.readerHref}?scene=${element.sceneId}`}
+						studioHref={
+							element.canEdit
+								? `/studio/${element.taleId}?inspect=element&inspectId=${element.id}`
+								: undefined
+						}
 					/>
 				),
 				links: compactLinks([
@@ -151,6 +164,19 @@ export function FramesPanel({ frames }: { frames: LibraryFrameList }) {
 			emptyTitle="No frames visible"
 			rows={frames.map((frame) => ({
 				id: frame.id,
+				preview: (
+					<LibraryVisualPreview
+						title={frame.name ?? `Frame ${frame.index + 1}`}
+						snapshot={frame.visualPreview}
+						frameId={frame.id}
+						taleHref={`${frame.readerHref}?scene=${frame.sceneId}`}
+						studioHref={
+							frame.canEdit
+								? `/studio/${frame.taleId}?inspect=frame&inspectId=${frame.id}`
+								: undefined
+						}
+					/>
+				),
 				icon: <Layers3 aria-hidden="true" className="size-4" />,
 				title:
 					frame.name ??

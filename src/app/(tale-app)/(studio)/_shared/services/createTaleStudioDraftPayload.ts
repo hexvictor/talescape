@@ -196,16 +196,7 @@ export function createTaleStudioDraftPayload(tale: Tale) {
  * const config = serializeSizeConfig(block.size);
  */
 function serializeSizeConfig(size: SceneSize) {
-	if (size.mode === "manual") {
-		return {
-			height: { unit: size.heightUnit, value: size.height },
-			horizontalAlignment: size.horizontalAlignment,
-			verticalAlignment: size.verticalAlignment,
-			width: { unit: size.widthUnit, value: size.width },
-		};
-	}
-
-	return {
+	const limits = {
 		horizontalAlignment: size.horizontalAlignment,
 		maxHeight:
 			size.maxHeight === undefined
@@ -225,6 +216,13 @@ function serializeSizeConfig(size: SceneSize) {
 				: { unit: size.minWidthUnit ?? "px", value: size.minWidth },
 		verticalAlignment: size.verticalAlignment,
 	};
+	return size.mode === "manual"
+		? {
+				...limits,
+				height: { unit: size.heightUnit, value: size.height },
+				width: { unit: size.widthUnit, value: size.width },
+			}
+		: limits;
 }
 
 /**

@@ -337,6 +337,7 @@ export function compileReaderAnimationPlan(
 					))
 				: undefined;
 			const timelineFrameId = resolveTimelineFrameId(tale, fragment.frameId);
+			const sceneOwned = fragment.frameId === null;
 			const ownerFrame = timelineFrameId
 				? tale.indexMap.framesById[timelineFrameId]
 				: immediateOwnerFrame;
@@ -348,34 +349,43 @@ export function compileReaderAnimationPlan(
 				{
 					timelineFrameId,
 					showDuringSceneIntro:
-						(ownerFrame?.visibleDuringSceneIntro === true ||
+						sceneOwned ||
+						((ownerFrame?.visibleDuringSceneIntro === true ||
 							ownerFrame?.visibleBeforeIntro === true) &&
-						fragment.visibleDuringSceneIntro === true,
+							fragment.visibleDuringSceneIntro === true),
 					showDuringSceneOutro:
-						ownerFrame?.visibleDuringSceneOutro === true &&
-						fragment.visibleDuringSceneOutro === true,
+						sceneOwned ||
+						(ownerFrame?.visibleDuringSceneOutro === true &&
+							fragment.visibleDuringSceneOutro === true),
 					showDuringPreviousBridge:
-						ownerFrame?.visibleDuringPreviousBridge === true &&
-						fragment.visibleDuringPreviousBridge === true,
+						sceneOwned ||
+						(ownerFrame?.visibleDuringPreviousBridge === true &&
+							fragment.visibleDuringPreviousBridge === true),
 					showDuringNextBridge:
-						ownerFrame?.visibleDuringNextBridge === true &&
-						fragment.visibleDuringNextBridge === true,
+						sceneOwned ||
+						(ownerFrame?.visibleDuringNextBridge === true &&
+							fragment.visibleDuringNextBridge === true),
 					showDuringFrameIntro:
-						ownerFrame?.transition?.introEnabled === true &&
-						fragment.visibleDuringFrameIntro === true,
+						sceneOwned ||
+						(ownerFrame?.transition?.introEnabled === true &&
+							fragment.visibleDuringFrameIntro === true),
 					showDuringFrameOutro:
-						ownerFrame?.transition?.outroEnabled === true &&
-						fragment.visibleDuringFrameOutro === true,
+						sceneOwned ||
+						(ownerFrame?.transition?.outroEnabled === true &&
+							fragment.visibleDuringFrameOutro === true),
 					showDuringPreviousFrameBridge:
-						ownerFrame?.transition?.previousBridgeEnabled === true &&
-						fragment.visibleDuringPreviousFrameBridge === true,
+						sceneOwned ||
+						(ownerFrame?.transition?.previousBridgeEnabled === true &&
+							fragment.visibleDuringPreviousFrameBridge === true),
 					showDuringNextFrameBridge:
-						ownerFrame?.transition?.nextBridgeEnabled === true &&
-						fragment.visibleDuringNextFrameBridge === true,
+						sceneOwned ||
+						(ownerFrame?.transition?.nextBridgeEnabled === true &&
+							fragment.visibleDuringNextFrameBridge === true),
 				},
 			);
 			fragmentAnimationsById.set(fragment.id, fragmentPlan);
 			if (
+				sceneOwned ||
 				immediateOwnerFrame?.defaultElementStates?.[fragment.id] === "active"
 			) {
 				defaultActiveElementIds.add(fragment.id);

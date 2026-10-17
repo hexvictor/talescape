@@ -1,27 +1,56 @@
 import type { Preview } from "@storybook/nextjs-vite";
+import { useArgs } from "storybook/preview-api";
+import { StoryPropertiesEditor } from "../src/components/design-system/story-properties-editor";
 import "../src/styles/globals.css";
+import "../src/styles/storybook-editors.css";
 
 const preview: Preview = {
 	decorators: [
-		(Story, context) => (
-			<div
-				className={context.globals.theme === "dark" ? "dark" : undefined}
-				style={
-					{
-						"--font-bangers": '"DejaVu Sans Condensed"',
-						"--font-geist-sans":
-							'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-					} as React.CSSProperties
-				}
-			>
+		(Story, context) => {
+			const [args, updateArgs] = useArgs();
+			return (
 				<div
-					data-storybook-preview-surface="true"
-					className="bg-background p-6 text-foreground"
+					className={context.globals.theme === "dark" ? "dark" : undefined}
+					style={
+						{
+							"--font-bangers": '"DejaVu Sans Condensed"',
+							"--font-geist-sans":
+								'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+						} as React.CSSProperties
+					}
 				>
-					<Story />
+					<div
+						data-storybook-preview-surface="true"
+						className="bg-background p-6 text-foreground"
+					>
+						{context.parameters.componentEditor ? (
+							<StoryPropertiesEditor
+								name={
+									context.parameters.editorName ??
+									context.title.split("/").at(-1)
+								}
+								args={args}
+								componentName={
+									context.parameters.editorComponentName ??
+									(
+										context.component as
+											| { displayName?: string; name?: string }
+											| undefined
+									)?.displayName ??
+									(context.component as { name?: string } | undefined)?.name
+								}
+								argTypes={context.argTypes}
+								onChange={updateArgs}
+							>
+								<Story />
+							</StoryPropertiesEditor>
+						) : (
+							<Story />
+						)}
+					</div>
 				</div>
-			</div>
-		),
+			);
+		},
 	],
 	globalTypes: {
 		theme: {
@@ -40,6 +69,26 @@ const preview: Preview = {
 		theme: "light",
 	},
 	parameters: {
+		options: {
+			storySort: {
+				order: [
+					"Design System",
+					[
+						"Components",
+						"Forms",
+						"Decorations",
+						"Compositions",
+						"Layout",
+						"Data Display",
+						"Overlay",
+						"Feedback",
+						"Navigation",
+						"Foundations",
+					],
+					"Studio",
+				],
+			},
+		},
 		a11y: {
 			test: "todo",
 		},

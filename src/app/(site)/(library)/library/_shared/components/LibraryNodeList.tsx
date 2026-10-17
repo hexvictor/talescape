@@ -47,8 +47,9 @@ export function LibraryNodeList({
 					as="article"
 					key={row.id}
 					id={row.anchorId}
-					className="grid gap-4 p-4 md:grid-cols-[auto_1fr] md:p-5"
-					shape="corners-right"
+					className="grid gap-4 md:grid-cols-[auto_1fr]"
+					surfaceClassName="p-4 md:p-5"
+					shapes="corners-right"
 					shadow={false}
 					slant="18px"
 				>

@@ -27,6 +27,7 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import { AnimationSelectionEditor } from "../AnimationSelectionEditor";
+import { InspectorSelect } from "../InspectorValueFields";
 import {
 	CameraPathSettings,
 	FlowSettings,
@@ -451,29 +452,4 @@ function SnapOverrideNumber({
 	);
 }
 
-function SceneTransitionSelect({
-	label,
-	onChange,
-	options,
-	value,
-}: {
-	label: string;
-	onChange: (value: string) => void;
-	options: readonly { label: string; value: string }[];
-	value: string;
-}): React.JSX.Element {
-	return (
-		<Select aria-label={label} value={value} onValueChange={onChange}>
-			<SelectTrigger className="w-full" density="compact">
-				<SelectValue />
-			</SelectTrigger>
-			<SelectContent>
-				{options.map((option) => (
-					<SelectItem key={option.value} value={option.value}>
-						{option.label}
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	);
-}
+const SceneTransitionSelect = InspectorSelect;

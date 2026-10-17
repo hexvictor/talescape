@@ -1,0 +1,29 @@
+.ts-shape-shadow {
+	filter: drop-shadow(
+		var(--ts-shape-shadow-offset, 4px) var(--ts-shape-shadow-offset, 4px) 0
+			var(--ts-shape-shadow-color, var(--foreground))
+	);
+}
+.ts-shape-content {
+	min-height: inherit;
+	display: inherit;
+	flex-direction: inherit;
+	grid-template-columns: inherit;
+	gap: inherit;
+	align-items: inherit;
+}
+.ts-shaped-panel[data-composed-shape="true"]
+	> [data-reader-role="clipped-panel-surface"] {
+	min-height: inherit;
+	display: inherit;
+	grid-template-columns: inherit;
+	flex-direction: inherit;
+	gap: inherit;
+	align-items: inherit;
+	justify-content: inherit;
+	width: 100%;
+	grid-column: 1 / -1;
+}
+.ts-shaped-panel[data-composed-shape="true"]::before {
+	display: none;
+}

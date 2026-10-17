@@ -4,6 +4,7 @@ import { useTaleAppStore } from "../../../contexts/TaleAppStoreContext";
 import { resolveIds } from "../../../services/taleLookups";
 import type { Anchor, ResolvedTaleElement } from "../../../types";
 import { TaleElement } from "../TaleElement/TaleElement";
+import { ElementParallaxLayer } from "./ElementParallaxLayer";
 import { positionedStyle } from "./positionedStyle";
 
 /**
@@ -109,7 +110,9 @@ function FixedFragmentLayer({
 						data-reader-role="fixed-element-content"
 						className="w-full"
 					>
-						<TaleElement element={element} index={index} />
+						<ElementParallaxLayer config={element.placement.parallax}>
+							<TaleElement element={element} index={index} />
+						</ElementParallaxLayer>
 					</div>
 				</div>
 			))}

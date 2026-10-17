@@ -26,6 +26,8 @@ export function Checkbox({
 }: CheckboxProps): React.JSX.Element {
 	return (
 		<AriaCheckbox
+			data-reader-component="Checkbox"
+			data-reader-role="checkbox"
 			{...props}
 			data-slot="checkbox"
 			className={cn(

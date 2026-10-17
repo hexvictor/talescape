@@ -175,6 +175,10 @@ function getBaseFrameStyle(
 	return {
 		...getSharedReaderStyle(style),
 		...getReaderLayoutItemStyle(style),
+		position:
+			!style?.position || style.position === "static"
+				? "relative"
+				: style.position,
 		overflow:
 			frame.overflow === "clip" ? "hidden" : (style?.overflow ?? "visible"),
 	};

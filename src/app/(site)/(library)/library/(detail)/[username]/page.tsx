@@ -30,10 +30,10 @@ export default async function UserLibraryPage({
 				]}
 			/>
 			<ComicPanel
+				decorations="halftone-corner"
 				accent="primary"
 				className="p-6 sm:p-8"
-				decoration="dots"
-				shape="cut-opposite"
+				shapes="cut-opposite"
 			>
 				<ComicRail accent="primary">
 					{library.isCurrentUser ? "Your library" : "Member library"}

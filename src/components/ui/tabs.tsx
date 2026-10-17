@@ -24,7 +24,13 @@ export function Tabs({
 	...props
 }: TabsProps): React.JSX.Element {
 	return (
-		<AriaTabs {...props} data-slot="tabs" className={cn("min-w-0", className)}>
+		<AriaTabs
+			data-reader-component="Tabs"
+			data-reader-role="tabs"
+			{...props}
+			data-slot="tabs"
+			className={cn("min-w-0", className)}
+		>
 			{children}
 		</AriaTabs>
 	);
@@ -45,6 +51,8 @@ export function TabList<T extends object>({
 }: TabListProps<T>): React.JSX.Element {
 	return (
 		<AriaTabList
+			data-reader-component="TabList"
+			data-reader-role="tab-list"
 			{...props}
 			data-slot="tab-list"
 			className={cn(
@@ -70,6 +78,8 @@ export function Tab({
 }: TabProps): React.JSX.Element {
 	return (
 		<AriaTab
+			data-reader-component="Tab"
+			data-reader-role="tab"
 			{...props}
 			data-slot="tab"
 			className={cn(
@@ -95,6 +105,8 @@ export function TabPanel({
 }: TabPanelProps): React.JSX.Element {
 	return (
 		<AriaTabPanel
+			data-reader-component="TabPanel"
+			data-reader-role="tab-panel"
 			{...props}
 			data-slot="tab-panel"
 			className={cn(

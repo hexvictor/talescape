@@ -20,8 +20,9 @@ import {
 } from "~/app/(site)/_shared/components/landingCodexData";
 import { CardGridSkeleton } from "~/app/(site)/_shared/components/skeletons";
 import { ProgressBar } from "~/components/data-display/progress-bar";
-import { PageShell } from "~/components/layout/page-shell";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
+import { TaleImage } from "~/components/media/tale-image";
 import { Button } from "~/components/ui/button";
 import { TaleCard } from "./TaleCard";
 
@@ -58,33 +59,56 @@ const worlds = [
 
 function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 	return (
-		<section className="relative mx-auto grid min-h-[34rem] w-full max-w-[var(--ts-content-max)] overflow-hidden border-foreground border-b-2 bg-background lg:min-h-[25rem] lg:grid-cols-[0.44fr_0.56fr] lg:border-x-2">
-			<div className="absolute inset-0 lg:relative lg:order-2">
-				<Image
+		<section
+			data-reader-component="LandingHero"
+			data-reader-role="hero-section"
+			className="relative mx-auto grid min-h-[34rem] w-full max-w-[var(--ts-content-max)] overflow-hidden border-foreground border-b-2 bg-background lg:min-h-[25rem] lg:grid-cols-[0.44fr_0.56fr] lg:border-x-2"
+		>
+			<div
+				data-reader-component="LandingHero"
+				data-reader-role="featured-media"
+				className="absolute inset-0 lg:relative lg:order-2"
+			>
+				<TaleImage
+					shapes="slant-left-step-bottom-right"
+					stepPosition="45%"
+					stepDepth="88px"
+					slant="32px"
+					edgeSlant="14%"
+					frameClassName="absolute inset-0"
 					src={siteImages.emberCity}
 					alt="A luminous fantasy city featured on Talescape"
 					fill
 					priority
-					className="object-cover object-[68%_center] lg:[clip-path:polygon(14%_0,100%_0,100%_100%,0_100%)]"
+					className="object-cover object-[68%_center]"
 					sizes="(min-width: 1024px) 58vw, 100vw"
-				/>
-				<div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/15 lg:hidden" />
-				<div className="comic-hero-strikes absolute top-0 left-0 h-36 w-44 bg-secondary lg:left-4" />
-				<div className="comic-hero-bubbles absolute right-0 bottom-0 h-40 w-48 bg-accent" />
-				<Link
-					href="/official/branched"
-					className="absolute right-0 bottom-0 z-10 flex w-[min(90%,28rem)] items-center gap-3 bg-[var(--comic-ink)] px-7 py-4 text-[var(--comic-cream)] [clip-path:polygon(12%_0,100%_0,94%_100%,0_100%)]"
+					decorations="image-home"
 				>
-					<span className="pl-5">
-						<span className="block font-black text-secondary text-xs uppercase">
-							Featured tale
+					<div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/15 lg:hidden" />
+				</TaleImage>
+				<Button
+					asChild
+					variant="ink"
+					shapes="slant-both"
+					className="absolute right-3 bottom-3 z-10 w-[45%] lg:w-[min(90%,24rem)]"
+					data-reader-component="LandingHero"
+					data-reader-role="featured-tale-action"
+				>
+					<Link
+						href="/official/branched"
+						className="!h-auto !gap-2 !px-3 !py-3 !whitespace-normal lg:!gap-3 lg:!px-7"
+					>
+						<span className="min-w-0 lg:pl-5">
+							<span className="block font-black text-secondary text-xs uppercase">
+								Featured tale
+							</span>
+							<strong className="block font-display text-xl uppercase leading-none lg:text-2xl">
+								Forked Fates
+							</strong>
 						</span>
-						<strong className="block font-display text-2xl uppercase leading-none">
-							Forked Fates
-						</strong>
-					</span>
-					<ChevronRight className="ml-auto text-secondary" />
-				</Link>
+						<ChevronRight className="ml-auto size-4 shrink-0 text-secondary lg:size-6" />
+					</Link>
+				</Button>
 			</div>
 
 			<div className="relative z-10 flex flex-col justify-center px-[var(--ts-page-gutter)] py-10 lg:order-1 lg:py-12">
@@ -100,12 +124,12 @@ function LandingHero({ signedIn = false }: { signedIn?: boolean }) {
 					that remember you.
 				</p>
 				<div className="mt-7 flex flex-wrap gap-3">
-					<Button asChild shape="slant-both" size="lg" variant="default">
+					<Button asChild shapes="slant-both" size="lg" variant="default">
 						<Link href="/library">
 							{signedIn ? "Open library" : "Explore tales"} <ChevronRight />
 						</Link>
 					</Button>
-					<Button asChild shape="corners-right" size="lg" variant="outline">
+					<Button asChild shapes="corners-right" size="lg" variant="outline">
 						<Link href="/library/tale/add">
 							Start creating <ChevronRight />
 						</Link>
@@ -193,7 +217,7 @@ function DiscoveryBands() {
 				</ComicRail>
 				<ComicPanel
 					className="mt-3 overflow-hidden"
-					shape="corners-right"
+					shapes="corners-right"
 					shadow={false}
 				>
 					<div className="comic-panel-content grid min-h-28 grid-cols-[7rem_1fr] gap-4">
@@ -247,7 +271,7 @@ function DiscoveryBands() {
 
 function HomeExperience({ signedIn = false }: { signedIn?: boolean }) {
 	return (
-		<PageShell decorationPreset="discover">
+		<PageShell>
 			<LandingHero signedIn={signedIn} />
 			<Suspense fallback={<CardGridSkeleton count={3} />}>
 				<TrendingTales />

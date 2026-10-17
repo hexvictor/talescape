@@ -43,9 +43,27 @@ export function TaleReaderProvider({
 	const storeRef = useRef<StoreApi<TaleReaderState> | null>(null);
 	if (!storeRef.current) {
 		const { application } = taleAppStore.getState().runtime;
-		storeRef.current = createTaleReaderStore(tale, progress, {
+		const sceneId =
+			application === "reader" && typeof window !== "undefined"
+				? new URLSearchParams(window.location.search).get("scene")
+				: null;
+		const scene = sceneId ? tale.indexMap.scenesById[sceneId] : undefined;
+		const initialProgress = scene
+			? {
+					...progress,
+					sceneId: scene.id,
+					keyframeId: scene.keyframeIds[0] ?? null,
+					innerProgress: 0,
+					selectedBranchIds: [
+						...new Set([...progress.selectedBranchIds, scene.branchId]),
+					],
+				}
+			: progress;
+		storeRef.current = createTaleReaderStore(tale, initialProgress, {
 			application,
 		});
+		if (scene)
+			storeRef.current.getState().scroll.setPendingRestoreSceneId(scene.id);
 	}
 
 	return (

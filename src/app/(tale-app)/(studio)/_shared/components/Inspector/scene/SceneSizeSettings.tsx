@@ -11,6 +11,7 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import {
+	InspectorSelect,
 	OptionalUnitNumberSetting,
 	UnitNumberSetting,
 } from "../InspectorValueFields";
@@ -73,42 +74,43 @@ export function SceneSizeSettings({
 							}
 						/>
 					</>
-				) : (
-					<>
-						<OptionalUnitNumberSetting
-							label="Minimum width"
-							unit={size.minWidthUnit}
-							value={size.minWidth}
-							onChange={(minWidth, minWidthUnit) =>
-								onChange({ ...size, minWidth, minWidthUnit })
-							}
-						/>
-						<OptionalUnitNumberSetting
-							label="Minimum height"
-							unit={size.minHeightUnit}
-							value={size.minHeight}
-							onChange={(minHeight, minHeightUnit) =>
-								onChange({ ...size, minHeight, minHeightUnit })
-							}
-						/>
-						<OptionalUnitNumberSetting
-							label="Maximum width"
-							unit={size.maxWidthUnit}
-							value={size.maxWidth}
-							onChange={(maxWidth, maxWidthUnit) =>
-								onChange({ ...size, maxWidth, maxWidthUnit })
-							}
-						/>
-						<OptionalUnitNumberSetting
-							label="Maximum height"
-							unit={size.maxHeightUnit}
-							value={size.maxHeight}
-							onChange={(maxHeight, maxHeightUnit) =>
-								onChange({ ...size, maxHeight, maxHeightUnit })
-							}
-						/>
-					</>
-				)}
+				) : null}
+			</SizeSettingsSection>
+			<SizeSettingsSection title="Size limits">
+				<>
+					<OptionalUnitNumberSetting
+						label="Minimum width"
+						unit={size.minWidthUnit}
+						value={size.minWidth}
+						onChange={(minWidth, minWidthUnit) =>
+							onChange({ ...size, minWidth, minWidthUnit })
+						}
+					/>
+					<OptionalUnitNumberSetting
+						label="Minimum height"
+						unit={size.minHeightUnit}
+						value={size.minHeight}
+						onChange={(minHeight, minHeightUnit) =>
+							onChange({ ...size, minHeight, minHeightUnit })
+						}
+					/>
+					<OptionalUnitNumberSetting
+						label="Maximum width"
+						unit={size.maxWidthUnit}
+						value={size.maxWidth}
+						onChange={(maxWidth, maxWidthUnit) =>
+							onChange({ ...size, maxWidth, maxWidthUnit })
+						}
+					/>
+					<OptionalUnitNumberSetting
+						label="Maximum height"
+						unit={size.maxHeightUnit}
+						value={size.maxHeight}
+						onChange={(maxHeight, maxHeightUnit) =>
+							onChange({ ...size, maxHeight, maxHeightUnit })
+						}
+					/>
+				</>
 			</SizeSettingsSection>
 			<SizeSettingsSection title="Camera framing">
 				<AlignmentSetting
@@ -148,6 +150,7 @@ function createSizeForMode(
 ): SceneSize {
 	if (mode === "manual") {
 		return {
+			...previous,
 			height: "height" in previous ? previous.height : 1,
 			heightUnit: "heightUnit" in previous ? previous.heightUnit : "viewport",
 			horizontalAlignment: previous.horizontalAlignment,
@@ -158,6 +161,7 @@ function createSizeForMode(
 		};
 	}
 	return {
+		...previous,
 		horizontalAlignment: previous.horizontalAlignment,
 		mode,
 		verticalAlignment: previous.verticalAlignment,
@@ -228,29 +232,4 @@ function AlignmentSetting<Value extends string>({
 	);
 }
 
-function SceneSizeSelect({
-	label,
-	onChange,
-	options,
-	value,
-}: {
-	label: string;
-	onChange: (value: string) => void;
-	options: readonly { label: string; value: string }[];
-	value: string;
-}): React.JSX.Element {
-	return (
-		<Select aria-label={label} value={value} onValueChange={onChange}>
-			<SelectTrigger className="w-full" density="compact">
-				<SelectValue />
-			</SelectTrigger>
-			<SelectContent>
-				{options.map((option) => (
-					<SelectItem key={option.value} value={option.value}>
-						{option.label}
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	);
-}
+const SceneSizeSelect = InspectorSelect;

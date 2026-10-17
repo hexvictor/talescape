@@ -15,6 +15,21 @@ const config: StorybookConfig = {
 	},
 	staticDirs: ["../public"],
 	stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+	viteFinal: async (viteConfig) => ({
+		...viteConfig,
+		server: {
+			...viteConfig.server,
+			proxy: {
+				...viteConfig.server?.proxy,
+				"/api/uploadthing": {
+					target:
+						process.env.TALESCAPE_STORYBOOK_APP_ORIGIN ??
+						"http://localhost:3000",
+					changeOrigin: true,
+				},
+			},
+		},
+	}),
 };
 
 export default config;

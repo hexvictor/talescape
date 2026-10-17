@@ -7,7 +7,9 @@
 @import "./tokens.css";
 @import "./theme.css";
 @import "./geometry.css";
+@import "./shapes.css";
 @import "./decorations.css";
+@import "./controls.css";
 
 /* @import "locomotive-scroll/dist/locomotive-scroll.css"; */
 
@@ -232,250 +234,6 @@
 	text-transform: uppercase;
 }
 
-.comic-panel {
-	--comic-panel-border: var(--comic-frame-border-width);
-	--comic-panel-inner-slant-decrease: var(--comic-frame-inner-slant-decrease);
-	--comic-panel-slant: var(--comic-frame-slant);
-	--comic-panel-inner-slant: calc(
-		var(--comic-panel-slant) -
-		var(--comic-panel-inner-slant-decrease)
-	);
-	--comic-panel-accent: transparent;
-	--comic-panel-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-slant)) 0,
-		100% var(--comic-panel-slant),
-		100% 100%,
-		var(--comic-panel-slant) 100%,
-		0 calc(100% - var(--comic-panel-slant))
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-inner-slant)) 0,
-		100% var(--comic-panel-inner-slant),
-		100% 100%,
-		var(--comic-panel-inner-slant) 100%,
-		0 calc(100% - var(--comic-panel-inner-slant))
-	);
-	position: relative;
-	isolation: isolate;
-	background: transparent;
-	filter: drop-shadow(
-		var(--comic-frame-shadow-offset) var(--comic-frame-shadow-offset) 0
-			var(--comic-frame-shadow-color)
-	);
-}
-
-.comic-panel[data-comic-shadow="false"] {
-	filter: none;
-}
-
-.comic-panel[data-comic-shape="rectangle"] {
-	--comic-panel-clip: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-	--comic-panel-inner-clip: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-}
-
-.comic-panel[data-comic-shape="slant-left"] {
-	--comic-panel-clip: polygon(
-		var(--comic-panel-slant) 0,
-		100% 0,
-		100% 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		var(--comic-panel-inner-slant) 0,
-		100% 0,
-		100% 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="slant-right"] {
-	--comic-panel-clip: polygon(
-		0 0,
-		100% 0,
-		calc(100% - var(--comic-panel-slant)) 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		100% 0,
-		calc(100% - var(--comic-panel-inner-slant)) 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="slant-both"] {
-	--comic-panel-clip: polygon(
-		var(--comic-panel-slant) 0,
-		100% 0,
-		calc(100% - var(--comic-panel-slant)) 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		var(--comic-panel-inner-slant) 0,
-		100% 0,
-		calc(100% - var(--comic-panel-inner-slant)) 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="corner-top-left"] {
-	--comic-panel-clip: polygon(
-		var(--comic-panel-slant) 0,
-		100% 0,
-		100% 100%,
-		0 100%,
-		0 var(--comic-panel-slant)
-	);
-	--comic-panel-inner-clip: polygon(
-		var(--comic-panel-inner-slant) 0,
-		100% 0,
-		100% 100%,
-		0 100%,
-		0 var(--comic-panel-inner-slant)
-	);
-}
-
-.comic-panel[data-comic-shape="corner-top-right"] {
-	--comic-panel-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-slant)) 0,
-		100% var(--comic-panel-slant),
-		100% 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-inner-slant)) 0,
-		100% var(--comic-panel-inner-slant),
-		100% 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="corner-bottom-left"] {
-	--comic-panel-clip: polygon(
-		0 0,
-		100% 0,
-		100% 100%,
-		var(--comic-panel-slant) 100%,
-		0 calc(100% - var(--comic-panel-slant))
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		100% 0,
-		100% 100%,
-		var(--comic-panel-inner-slant) 100%,
-		0 calc(100% - var(--comic-panel-inner-slant))
-	);
-}
-
-.comic-panel[data-comic-shape="corner-bottom-right"] {
-	--comic-panel-clip: polygon(
-		0 0,
-		100% 0,
-		100% calc(100% - var(--comic-panel-slant)),
-		calc(100% - var(--comic-panel-slant)) 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		100% 0,
-		100% calc(100% - var(--comic-panel-inner-slant)),
-		calc(100% - var(--comic-panel-inner-slant)) 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="corners-left"] {
-	--comic-panel-clip: polygon(
-		var(--comic-panel-slant) 0,
-		100% 0,
-		100% 100%,
-		var(--comic-panel-slant) 100%,
-		0 calc(100% - var(--comic-panel-slant)),
-		0 var(--comic-panel-slant)
-	);
-	--comic-panel-inner-clip: polygon(
-		var(--comic-panel-inner-slant) 0,
-		100% 0,
-		100% 100%,
-		var(--comic-panel-inner-slant) 100%,
-		0 calc(100% - var(--comic-panel-inner-slant)),
-		0 var(--comic-panel-inner-slant)
-	);
-}
-
-.comic-panel[data-comic-shape="corners-right"] {
-	--comic-panel-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-slant)) 0,
-		100% var(--comic-panel-slant),
-		100% calc(100% - var(--comic-panel-slant)),
-		calc(100% - var(--comic-panel-slant)) 100%,
-		0 100%
-	);
-	--comic-panel-inner-clip: polygon(
-		0 0,
-		calc(100% - var(--comic-panel-inner-slant)) 0,
-		100% var(--comic-panel-inner-slant),
-		100% calc(100% - var(--comic-panel-inner-slant)),
-		calc(100% - var(--comic-panel-inner-slant)) 100%,
-		0 100%
-	);
-}
-
-.comic-panel[data-comic-shape="cut-opposite-reverse"] {
-	--comic-panel-clip: polygon(
-		var(--comic-panel-slant) 0,
-		100% 0,
-		100% calc(100% - var(--comic-panel-slant)),
-		calc(100% - var(--comic-panel-slant)) 100%,
-		0 100%,
-		0 var(--comic-panel-slant)
-	);
-	--comic-panel-inner-clip: polygon(
-		var(--comic-panel-inner-slant) 0,
-		100% 0,
-		100% calc(100% - var(--comic-panel-inner-slant)),
-		calc(100% - var(--comic-panel-inner-slant)) 100%,
-		0 100%,
-		0 var(--comic-panel-inner-slant)
-	);
-}
-
-.comic-panel::before {
-	position: absolute;
-	inset: 0;
-	z-index: -2;
-	background: var(--comic-ink);
-	clip-path: var(--comic-panel-clip);
-	content: "";
-}
-
-.comic-panel::after {
-	position: absolute;
-	inset: var(--comic-panel-border);
-	z-index: -1;
-	background-color: var(--comic-panel-background, var(--card));
-	background-image: linear-gradient(
-			90deg,
-			var(--comic-panel-accent) 0 5px,
-			transparent 5px
-		), url("/assets/brand/comic-bubbles.svg");
-	background-position: left top, right -34px bottom -38px;
-	background-repeat: no-repeat, no-repeat;
-	background-size: 100% 100%, 112px;
-	clip-path: var(--comic-panel-inner-clip);
-	content: "";
-}
-
-.comic-panel > * {
-	position: relative;
-	z-index: 4;
-}
-
 .comic-panel-content {
 	padding: 1.25rem calc(var(--comic-frame-slant) + 1rem);
 }
@@ -488,25 +246,6 @@
 	margin: var(--comic-frame-border-width);
 	overflow: hidden;
 	clip-path: var(--comic-panel-inner-clip);
-}
-
-.comic-panel[data-comic-decoration="none"]::after {
-	background-image: linear-gradient(
-		90deg,
-		var(--comic-panel-accent) 0 5px,
-		transparent 5px
-	);
-	background-position: left top;
-	background-repeat: no-repeat;
-	background-size: 100% 100%;
-}
-
-.comic-panel[data-comic-decoration="strikes"]::after {
-	background-image: linear-gradient(
-			90deg,
-			var(--comic-panel-accent) 0 5px,
-			transparent 5px
-		), url("/assets/brand/comic-strikes.svg");
 }
 
 .comic-rail {
@@ -532,119 +271,8 @@
 	background: var(--comic-rail-accent);
 }
 
-.comic-button-decoration-layer {
-	position: absolute;
-	z-index: 1;
-	inset: var(--comic-frame-border-width);
-	overflow: hidden;
-	pointer-events: none;
-	clip-path: var(--ts-geometry-inner-clip-path);
-}
-
-.comic-button-decoration {
-	--comic-decoration-color: rgb(var(--foreground-rgb) / 0.72);
-	position: absolute;
-	width: clamp(1.75rem, 34%, 4rem);
-	height: 100%;
-	pointer-events: none;
-	background: var(--comic-decoration-color);
-}
-
-.comic-button-decoration-strikes {
-	-webkit-mask: url("/assets/brand/comic-strikes-mask.svg") center / 100% 100%
-		no-repeat;
-	mask: url("/assets/brand/comic-strikes-mask.svg") center / 100% 100% no-repeat;
-}
-
-.comic-button-decoration-bubbles {
-	-webkit-mask: url("/assets/brand/comic-bubbles-mask.svg") center / 100% 100%
-		no-repeat;
-	mask: url("/assets/brand/comic-bubbles-mask.svg") center / 100% 100% no-repeat;
-}
-
-.comic-button-decoration-top-left {
-	top: 0;
-	left: 0;
-	transform: scaleX(-1);
-	transform-origin: center;
-}
-
-.comic-button-decoration-top-center {
-	top: 0;
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.comic-button-decoration-top-right {
-	top: 0;
-	right: 0;
-}
-
-.comic-button-decoration-center-left {
-	top: 50%;
-	left: 0;
-	transform: translateY(-50%) scaleX(-1);
-	transform-origin: center;
-}
-
-.comic-button-decoration-center {
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-}
-
-.comic-button-decoration-center-right {
-	top: 50%;
-	right: 0;
-	transform: translateY(-50%);
-}
-
-.comic-button-decoration-bottom-left {
-	bottom: 0;
-	left: 0;
-	transform: scale(-1);
-	transform-origin: center;
-}
-
-.comic-button-decoration-bottom-center {
-	bottom: 0;
-	left: 50%;
-	transform: translateX(-50%) scaleY(-1);
-	transform-origin: center;
-}
-
-.comic-button-decoration-bottom-right {
-	right: 0;
-	bottom: 0;
-	transform: scaleY(-1);
-	transform-origin: center;
-}
-
 .dark .comic-panel::before {
 	background: var(--comic-cream);
-}
-
-.comic-halftone {
-	background-image: url("/assets/brand/comic-dots.svg");
-	background-size: 16px 16px;
-}
-
-.comic-hero-strikes,
-.comic-hero-bubbles {
-	pointer-events: none;
-	opacity: 0.72;
-}
-
-.comic-hero-strikes {
-	-webkit-mask: url("/assets/brand/comic-strikes-mask.svg") center / contain
-		no-repeat;
-	mask: url("/assets/brand/comic-strikes-mask.svg") center / contain no-repeat;
-}
-
-.comic-hero-bubbles {
-	-webkit-mask: url("/assets/brand/comic-bubbles-mask.svg") center / contain
-		no-repeat;
-	mask: url("/assets/brand/comic-bubbles-mask.svg") center / contain no-repeat;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1643,4 +1271,11 @@
 
 .studio-inspector [data-reader-role="debug-field"] {
 	background: var(--background);
+}
+@media (prefers-reduced-motion: reduce) {
+	.reader-parallax-layer {
+		translate: none !important;
+		scale: none !important;
+		will-change: auto !important;
+	}
 }

@@ -36,6 +36,8 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps): React.JSX.Element {
 	return (
 		<Disclosure
+			data-reader-component="CollapsibleSection"
+			data-reader-role="collapsible-section"
 			{...props}
 			data-slot="collapsible-section"
 			className={cn(
@@ -68,6 +70,8 @@ export function CollapsibleSection({
 						</AriaButton>
 					</h3>
 					<DisclosurePanel
+						data-reader-component="CollapsibleSection"
+						data-reader-role="collapsible-section-content"
 						data-slot="collapsible-section-content"
 						className={cn(
 							"grid @md:grid-cols-2 grid-cols-1 gap-2 border-foreground/12 border-t p-3",

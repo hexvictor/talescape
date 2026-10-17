@@ -28,7 +28,13 @@ export function Breadcrumbs({
 	items: BreadcrumbItem[];
 }): React.JSX.Element {
 	return (
-		<nav aria-label={ariaLabel} data-slot="breadcrumbs" className={className}>
+		<nav
+			data-reader-component="Breadcrumbs"
+			data-reader-role="breadcrumbs"
+			aria-label={ariaLabel}
+			data-slot="breadcrumbs"
+			className={className}
+		>
 			<AriaBreadcrumbs className="flex min-w-0 items-center gap-1 overflow-hidden text-[10px] text-muted-foreground uppercase">
 				{items.map((item, index) => {
 					const isCurrent = item.isCurrent ?? index === items.length - 1;

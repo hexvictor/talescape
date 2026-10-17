@@ -118,6 +118,26 @@ function getMeasurementBlockStyle(
 		return {
 			height: resolveSizeValue(size.height, size.heightUnit, viewport.height),
 			width: resolveSizeValue(size.width, size.widthUnit, viewport.width),
+			minWidth: resolveSizeValue(
+				size.minWidth,
+				size.minWidthUnit,
+				viewport.width,
+			),
+			maxWidth: resolveSizeValue(
+				size.maxWidth,
+				size.maxWidthUnit,
+				viewport.width,
+			),
+			minHeight: resolveSizeValue(
+				size.minHeight,
+				size.minHeightUnit,
+				viewport.height,
+			),
+			maxHeight: resolveSizeValue(
+				size.maxHeight,
+				size.maxHeightUnit,
+				viewport.height,
+			),
 		};
 	}
 	const minWidth = resolveSizeValue(

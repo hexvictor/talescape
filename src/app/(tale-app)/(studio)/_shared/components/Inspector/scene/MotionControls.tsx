@@ -15,6 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
+import { InspectorSelect } from "../InspectorValueFields";
 
 /**
  * Edits physical scene placement independently from camera framing.
@@ -456,32 +457,7 @@ export function MotionNumber({
 	);
 }
 
-function SceneSettingSelect({
-	label,
-	onChange,
-	options,
-	value,
-}: {
-	label: string;
-	onChange: (value: string) => void;
-	options: readonly { label: string; value: string }[];
-	value: string;
-}): React.JSX.Element {
-	return (
-		<Select aria-label={label} value={value} onValueChange={onChange}>
-			<SelectTrigger className="w-full" density="compact">
-				<SelectValue />
-			</SelectTrigger>
-			<SelectContent>
-				{options.map((option) => (
-					<SelectItem key={option.value} value={option.value}>
-						{option.label}
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	);
-}
+const SceneSettingSelect = InspectorSelect;
 
 const directions: Direction[] = [
 	"down",

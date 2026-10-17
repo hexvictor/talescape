@@ -1,4 +1,11 @@
-export { DecoratedMedia, type DecoratedMediaProps } from "./decorated-media";
+export {
+	BackgroundTexture,
+	CircularLinework,
+	GeometricShape,
+	type BackgroundTextureProps,
+	type CircularLineworkProps,
+	type GeometricShapeProps,
+} from "./surface-primitives";
 export {
 	Decorations,
 	type DecorationsProps,
@@ -20,6 +27,11 @@ export {
 	type SpeedLinesProps,
 } from "./primitives";
 export type {
+	ButtonDecorationPreset,
+	PageDecorationPreset,
+	BackgroundTextureDecoration,
+	CircularLineworkDecoration,
+	GeometricDecoration,
 	AccentStreakDecoration,
 	AccentStreakVariant,
 	CardDecorationPreset,

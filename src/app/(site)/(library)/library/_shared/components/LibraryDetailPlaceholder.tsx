@@ -22,13 +22,13 @@ export function LibraryDetailPlaceholder({
 					<ComicPanel
 						accent="secondary"
 						className="aspect-[3/4] bg-secondary"
-						shape="corner-top-left"
+						shapes="corner-top-left"
 					/>
 					<ComicPanel
+						decorations="brush-halftone"
 						accent="primary"
 						className="p-6"
-						decoration="strikes"
-						shape="corner-top-right"
+						shapes="corner-top-right"
 					>
 						<ComicRail accent="primary">{label}</ComicRail>
 						<h1 className="mt-5 text-balance font-display text-4xl uppercase">

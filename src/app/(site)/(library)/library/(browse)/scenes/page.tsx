@@ -1,8 +1,8 @@
-import { getLibraryBlocks } from "~/server/db/data/library/queries";
-import { BlocksPanel } from "../../_shared/components/LibraryNodePanels";
+import { getLibraryScenes } from "~/server/db/data/library/queries";
+import { ScenesPanel } from "../../_shared/components/LibraryNodePanels";
 
 export default async function LibraryBlocksPage() {
-	const scenes = await getLibraryBlocks();
+	const scenes = await getLibraryScenes();
 
-	return <BlocksPanel scenes={scenes} />;
+	return <ScenesPanel scenes={scenes} />;
 }

@@ -25,8 +25,10 @@ import {
 	InspectorHeader,
 	StyleSettings,
 } from "../InspectorFields";
+import { StyleTargetTabs } from "../StyleTargetTabs";
 import { ElementContentSettings } from "./ElementContentSettings";
 import { ElementMotionSettings } from "./ElementMotionSettings";
+import { ElementParallaxSettings } from "./ElementParallaxSettings";
 
 export type ElementInspectorTab =
 	| "content"
@@ -134,7 +136,7 @@ export function ElementInspectorPanel({
 									})
 								: openInspector({
 										id: scene.id,
-										initialTab: "layout",
+										initialTab: "elements",
 										type: "scene",
 									})
 					}
@@ -161,53 +163,86 @@ export function ElementInspectorPanel({
 						onChange={(placement) =>
 							commit((item) => ({
 								...item,
-								frameId: placement.frameId ?? item.frameId,
+								frameId: placement.frameId ?? null,
 								placement,
 							}))
 						}
 					/>
 				) : null}
 				{activeTab === "motion" ? (
-					<ElementMotionSettings
-						defaultState={
-							parentFrame?.defaultElementStates?.[element.id] ?? "inactive"
-						}
-						element={element}
-						parentFrame={parentFrame}
-						phaseFrame={phaseFrame}
-						onChange={commit}
-						onDefaultStateChange={(defaultState) => {
-							if (!parentFrame) return;
-							setTale(
-								setDraftFrameChildDefaultState(
-									tale,
-									{ elementId: element.id, type: "element" },
-									defaultState,
-								),
-								{ reason: "element-default-state" },
-							);
-						}}
-					/>
+					<>
+						{element.type === "image" &&
+							element.placement.mode !== "normal" && (
+								<ElementParallaxSettings
+									value={element.placement.parallax}
+									onChange={(parallax) =>
+										commit((item) => ({
+											...item,
+											placement: { ...item.placement, parallax },
+										}))
+									}
+								/>
+							)}
+						<ElementMotionSettings
+							defaultState={
+								parentFrame?.defaultElementStates?.[element.id] ?? "inactive"
+							}
+							element={element}
+							parentFrame={parentFrame}
+							phaseFrame={phaseFrame}
+							onChange={commit}
+							onDefaultStateChange={(defaultState) => {
+								if (!parentFrame) return;
+								setTale(
+									setDraftFrameChildDefaultState(
+										tale,
+										{ elementId: element.id, type: "element" },
+										defaultState,
+									),
+									{ reason: "element-default-state" },
+								);
+							}}
+						/>
+					</>
 				) : null}
 				{activeTab === "style" ? (
-					<div className="space-y-3">
-						<StyleSettings
-							style={element.style}
-							title="Element wrapper style"
-							onChange={(style) => commit((item) => ({ ...item, style }))}
-						/>
-						{element.type === "image" ? (
-							<StyleSettings
-								appearanceDefaultOpen
-								showTypographyControls={false}
-								style={element.imageStyle}
-								title="Image tag style"
-								onChange={(imageStyle) =>
-									commit((item) => ({ ...item, imageStyle }))
-								}
-							/>
-						) : null}
-					</div>
+					<StyleTargetTabs
+						targets={[
+							{
+								id: "element",
+								label: "Element box",
+								content: (
+									<StyleSettings
+										style={element.style}
+										title="Element box"
+										showPositionControls={element.placement.mode === "normal"}
+										showTypographyControls={element.type !== "image"}
+										onChange={(style) => commit((item) => ({ ...item, style }))}
+									/>
+								),
+							},
+							...(element.type === "image"
+								? [
+										{
+											id: "image",
+											label: "Image",
+											content: (
+												<StyleSettings
+													appearanceDefaultOpen
+													showTypographyControls={false}
+													showMediaControls
+													style={element.imageStyle}
+													title="Image"
+													onChange={(imageStyle) =>
+														commit((item) => ({ ...item, imageStyle }))
+													}
+												/>
+											),
+										},
+									]
+								: []),
+						]}
+					/>
 				) : null}
 			</div>
 		</div>

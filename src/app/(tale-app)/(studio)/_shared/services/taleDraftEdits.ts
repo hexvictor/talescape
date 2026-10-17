@@ -3,6 +3,7 @@ import {
 	resolveEditedScene,
 	resolveEditedSceneWithFrames,
 } from "~/app/(tale-app)/_shared/services/formatTale";
+import { resolveElement } from "~/app/(tale-app)/_shared/services/formatTale/resolveElement";
 import {
 	resolveTaleBreakpoint,
 	writeBlockBreakpointOverride,
@@ -830,6 +831,21 @@ export function editElement(
 			},
 		},
 	};
+	if (!breakpointId && fragment.frameId !== baseFragment.frameId) {
+		const framesById = { ...updatedTale.indexMap.framesById };
+		for (const id of tale.indexMap.scenesById[current.sceneId]?.frameIds ??
+			[]) {
+			const frame = framesById[id];
+			if (!frame) continue;
+			const children = frame.children.filter(
+				(child) => child.type !== "element" || child.elementId !== elementId,
+			);
+			if (id === fragment.frameId)
+				children.push({ type: "element", elementId });
+			framesById[id] = { ...frame, children };
+		}
+		updatedTale.indexMap.framesById = framesById;
+	}
 	const scenes = getTaleScenes(tale).map((block) =>
 		block.elementIds.includes(elementId)
 			? resolveEditedScene(updatedTale, block)
@@ -845,20 +861,22 @@ export function editElement(
 			...tale.indexMap,
 			scenesById,
 			elementsById: updatedTale.indexMap.elementsById,
+			framesById: updatedTale.indexMap.framesById,
 		},
 	};
 }
 
-/** Adds a normal-flow Element to a Frame in the local Studio draft. */
+/** Adds an Element to a Frame, or a positioned Element directly to a Scene. */
 export function addDraftElement(
 	tale: Tale,
 	sceneId: string,
-	frameId: string,
+	frameId: string | null,
 	input: DraftElementInput | string = "Text element",
 ): Tale {
 	const scene = tale.indexMap.scenesById[sceneId];
-	const frame = tale.indexMap.framesById[frameId];
-	if (!scene || !frame) return tale;
+	const frame = frameId ? tale.indexMap.framesById[frameId] : undefined;
+	if (!scene || (frameId && (!frame || !scene.frameIds.includes(frameId))))
+		return tale;
 	const id = createDraftId();
 	const draft =
 		typeof input === "string"
@@ -875,18 +893,53 @@ export function addDraftElement(
 		id,
 		label,
 		order: scene.elementIds.length,
-		placement: { frameId, mode: "normal" },
+		placement: frameId
+			? { frameId, mode: "normal" }
+			: {
+					mode: "absolute",
+					horizontal: "left",
+					vertical: "top",
+					unit: "px",
+					x: 0,
+					y: 0,
+					overflow: "clip",
+					zIndex: draft.type === "image" ? -1 : 10,
+				},
+		...(frameId === null && draft.type === "image"
+			? {
+					style: { width: "100%", height: "100%" },
+					imageStyle: {
+						width: "100%",
+						height: "100%",
+						objectFit: "cover" as const,
+					},
+				}
+			: {}),
 		...getDraftElementContent(draft, label),
 	};
 	const withOrder = {
 		...tale,
 		order: { ...tale.order, elementIds: [...tale.order.elementIds, id] },
 	};
-	const resolvedElement = resolveEditedFragment(withOrder, element);
-	const nextFrame = {
-		...frame,
-		children: [...frame.children, { elementId: id, type: "element" as const }],
-	};
+	const resolvedElement = resolveElement(element, {
+		sceneId,
+		branchId: scene.branchId,
+		entryId: scene.entryId,
+		pageId: scene.pageId,
+		partId: scene.partId,
+		globalIds: withOrder.order.elementIds,
+		globalIndex: withOrder.order.elementIds.length - 1,
+		siblingIds: [...scene.elementIds, id],
+	});
+	const nextFrame = frame
+		? {
+				...frame,
+				children: [
+					...frame.children,
+					{ elementId: id, type: "element" as const },
+				],
+			}
+		: undefined;
 	const withElement = {
 		...withOrder,
 		indexMap: {
@@ -895,7 +948,10 @@ export function addDraftElement(
 				...withOrder.indexMap.elementsById,
 				[id]: resolvedElement,
 			},
-			framesById: { ...withOrder.indexMap.framesById, [frameId]: nextFrame },
+			framesById:
+				nextFrame && frameId
+					? { ...withOrder.indexMap.framesById, [frameId]: nextFrame }
+					: withOrder.indexMap.framesById,
 		},
 	};
 	const nextScene = resolveEditedScene(withElement, {

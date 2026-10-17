@@ -37,7 +37,9 @@ import {
 	blockAccessCondition,
 	bookAccessCondition,
 	branchAccessCondition,
+	editableTaleExpression,
 	fragmentAccessCondition,
+	frameAccessCondition,
 	getAccessLabel,
 	getSignedInLibraryUser,
 	pathAccessCondition,
@@ -45,15 +47,14 @@ import {
 	visibleTaleByIdCondition,
 } from "./access";
 import { getCountsByTaleIds } from "./counts";
+import { getLibraryVisualPreviews } from "./visualPreviews";
 
 export type LibraryTaleList = Awaited<ReturnType<typeof getLibraryTales>>;
 export type LibraryBookList = Awaited<ReturnType<typeof getLibraryBooks>>;
 export type LibraryAuthorList = Awaited<ReturnType<typeof getLibraryAuthors>>;
 export type LibraryBranchList = Awaited<ReturnType<typeof getLibraryBranches>>;
-export type LibraryBlockList = Awaited<ReturnType<typeof getLibraryBlocks>>;
-export type LibraryFragmentList = Awaited<
-	ReturnType<typeof getLibraryFragments>
->;
+export type LibrarySceneList = Awaited<ReturnType<typeof getLibraryScenes>>;
+export type LibraryElementList = Awaited<ReturnType<typeof getLibraryElements>>;
 export type LibraryFrameList = Awaited<ReturnType<typeof getLibraryFrames>>;
 export type LibraryPathList = Awaited<ReturnType<typeof getLibraryPaths>>;
 export type LibraryPartList = Awaited<ReturnType<typeof getLibraryParts>>;
@@ -73,12 +74,16 @@ export async function getLibraryTales(options: LibraryTalesOptions = {}) {
 	const rows = await db
 		.select({
 			tale: tales,
+			canEdit: editableTaleExpression(userId),
 			book: books,
 			creatorById: users,
 			isShared: userId ? sharedTaleExpression(userId) : sql<boolean>`false`,
 		})
 		.from(tales)
-		.leftJoin(books, eq(books.id, tales.bookId))
+		.leftJoin(
+			books,
+			and(eq(books.id, tales.bookId), bookAccessCondition(userId)),
+		)
 		.leftJoin(users, eq(users.id, tales.creatorId))
 		.where(
 			and(
@@ -95,6 +100,7 @@ export async function getLibraryTales(options: LibraryTalesOptions = {}) {
 
 	return rows.map((row) => ({
 		...row.tale,
+		canEdit: Boolean(row.canEdit),
 		book: row.book,
 		creatorById: row.creatorById,
 		accessLabel: getAccessLabel(
@@ -123,7 +129,10 @@ export async function getLibraryBooks(options: LibraryBooksOptions = {}) {
 			creator: users,
 		})
 		.from(books)
-		.leftJoin(authors, eq(authors.id, books.authorId))
+		.leftJoin(
+			authors,
+			and(eq(authors.id, books.authorId), authorAccessCondition(userId)),
+		)
 		.leftJoin(images, eq(images.id, books.coverImageId))
 		.leftJoin(users, eq(users.id, books.creatorId))
 		.where(
@@ -136,6 +145,8 @@ export async function getLibraryBooks(options: LibraryBooksOptions = {}) {
 
 	return rows.map((row) => ({
 		...row.book,
+		canEdit:
+			row.book.editable && userId !== null && row.book.creatorId === userId,
 		author: row.author,
 		coverImage: row.coverImage,
 		creator: row.creator,
@@ -158,6 +169,8 @@ export async function getLibraryAuthors() {
 
 	return rows.map((row) => ({
 		...row.author,
+		canEdit:
+			row.author.editable && userId !== null && row.author.creatorId === userId,
 		image: row.image,
 		creator: row.creator,
 	}));
@@ -193,11 +206,15 @@ export async function getLibraryBranches() {
 	}));
 }
 
-export async function getLibraryBlocks() {
+export async function getLibraryScenes() {
 	const { userId } = await getSignedInLibraryUser();
 	const rows = await db
 		.select({
 			block: scenes,
+			readerSlug: tales.slug,
+			readerOfficial: tales.isOfficial,
+			readerUsername: users.username,
+			canEditTale: editableTaleExpression(userId),
 			taleId: tales.id,
 			taleTitle: tales.title,
 			branchId: branches.id,
@@ -214,6 +231,7 @@ export async function getLibraryBlocks() {
 		})
 		.from(scenes)
 		.innerJoin(tales, eq(tales.id, scenes.taleId))
+		.innerJoin(users, eq(users.id, tales.creatorId))
 		.innerJoin(branches, eq(branches.id, scenes.branchId))
 		.leftJoin(keyframes, eq(keyframes.sceneId, scenes.id))
 		.leftJoin(pages, eq(pages.id, keyframes.pageId))
@@ -230,35 +248,49 @@ export async function getLibraryBlocks() {
 		rows.map((row) => row.block.id),
 		userId,
 	);
+	const visual = await getLibraryVisualPreviews(
+		rows.map((row) => row.block.id),
+		userId,
+	);
 
-	return rows.map((row) => ({
-		...row.block,
-		index: row.block.order,
-		tale: { id: row.taleId, title: row.taleTitle },
-		branch: {
-			id: row.branchId,
-			name: row.branchName,
-			index: row.branchIndex,
-		},
-		entry: {
-			id: row.entryId,
-			title: row.entryTitle,
-			index: row.entryIndex,
-		},
-		part: {
-			id: row.partId,
-			title: row.partTitle,
-			index: row.partIndex,
-		},
-		page:
-			row.pageId === null
-				? null
-				: {
-						id: row.pageId,
-						index: row.pageIndex ?? 0,
-					},
-		previewFragment: previews.get(row.block.id) ?? null,
-	}));
+	return [...new Map(rows.map((row) => [row.block.id, row])).values()].map(
+		(row) => ({
+			...row.block,
+			readerHref: `/${row.readerOfficial ? "official" : row.readerUsername}/${row.readerSlug}`,
+			canEdit: Boolean(row.canEditTale) && row.block.editable,
+			visualPreview: {
+				frames: visual.frames.filter((frame) => frame.sceneId === row.block.id),
+				elements: visual.elements.filter(
+					(element) => element.sceneId === row.block.id,
+				),
+			},
+			index: row.block.order,
+			tale: { id: row.taleId, title: row.taleTitle },
+			branch: {
+				id: row.branchId,
+				name: row.branchName,
+				index: row.branchIndex,
+			},
+			entry: {
+				id: row.entryId,
+				title: row.entryTitle,
+				index: row.entryIndex,
+			},
+			part: {
+				id: row.partId,
+				title: row.partTitle,
+				index: row.partIndex,
+			},
+			page:
+				row.pageId === null
+					? null
+					: {
+							id: row.pageId,
+							index: row.pageIndex ?? 0,
+						},
+			previewFragment: previews.get(row.block.id) ?? null,
+		}),
+	);
 }
 
 export async function getLibraryFrames() {
@@ -266,6 +298,10 @@ export async function getLibraryFrames() {
 	const rows = await db
 		.select({
 			frame: frames,
+			readerSlug: tales.slug,
+			readerOfficial: tales.isOfficial,
+			readerUsername: users.username,
+			canEditTale: editableTaleExpression(userId),
 			taleId: tales.id,
 			taleTitle: tales.title,
 			sceneId: scenes.id,
@@ -274,17 +310,31 @@ export async function getLibraryFrames() {
 		})
 		.from(frames)
 		.innerJoin(tales, eq(tales.id, frames.taleId))
+		.innerJoin(users, eq(users.id, tales.creatorId))
 		.innerJoin(scenes, eq(scenes.id, frames.sceneId))
 		.where(
 			and(
 				taleAccessCondition(userId),
 				blockAccessCondition(scenes.id, scenes, userId),
+				frameAccessCondition(userId),
 			),
 		)
 		.orderBy(desc(frames.id));
+	const visual = await getLibraryVisualPreviews(
+		rows.map((row) => row.sceneId),
+		userId,
+	);
 
 	return rows.map((row) => ({
 		...row.frame,
+		readerHref: `/${row.readerOfficial ? "official" : row.readerUsername}/${row.readerSlug}`,
+		canEdit: Boolean(row.canEditTale) && row.frame.editable,
+		visualPreview: {
+			frames: visual.frames.filter((frame) => frame.sceneId === row.sceneId),
+			elements: visual.elements.filter(
+				(element) => element.sceneId === row.sceneId,
+			),
+		},
 		index: row.frame.order,
 		tale: { id: row.taleId, title: row.taleTitle },
 		scene: {
@@ -295,11 +345,15 @@ export async function getLibraryFrames() {
 	}));
 }
 
-export async function getLibraryFragments() {
+export async function getLibraryElements() {
 	const { userId } = await getSignedInLibraryUser();
 	const rows = await db
 		.select({
 			fragment: elements,
+			readerSlug: tales.slug,
+			readerOfficial: tales.isOfficial,
+			readerUsername: users.username,
+			canEditTale: editableTaleExpression(userId),
 			taleId: tales.id,
 			taleTitle: tales.title,
 			sceneId: scenes.id,
@@ -318,6 +372,7 @@ export async function getLibraryFragments() {
 		})
 		.from(elements)
 		.innerJoin(tales, eq(tales.id, elements.taleId))
+		.innerJoin(users, eq(users.id, tales.creatorId))
 		.innerJoin(scenes, eq(scenes.id, elements.sceneId))
 		.innerJoin(branches, eq(branches.id, scenes.branchId))
 		.leftJoin(keyframes, eq(keyframes.sceneId, scenes.id))
@@ -332,40 +387,44 @@ export async function getLibraryFragments() {
 		)
 		.orderBy(desc(elements.id));
 
-	return rows.map((row) => ({
-		...row.fragment,
-		index: row.fragment.order,
-		tale: { id: row.taleId, title: row.taleTitle },
-		scene: { id: row.sceneId, index: row.sceneIndex },
-		branch: {
-			id: row.branchId,
-			name: row.branchName,
-			index: row.branchIndex,
-		},
-		entry: {
-			id: row.entryId,
-			title: row.entryTitle,
-			index: row.entryIndex,
-		},
-		part: {
-			id: row.partId,
-			title: row.partTitle,
-			index: row.partIndex,
-		},
-		page:
-			row.pageId === null
-				? null
-				: {
-						id: row.pageId,
-						index: row.pageIndex ?? 0,
-					},
-		previewElement: {
-			id: row.fragment.id,
-			type: row.fragment.type,
-			data: row.fragment.data,
-			orientation: "vertical" as const,
-		},
-	}));
+	return [...new Map(rows.map((row) => [row.fragment.id, row])).values()].map(
+		(row) => ({
+			...row.fragment,
+			readerHref: `/${row.readerOfficial ? "official" : row.readerUsername}/${row.readerSlug}`,
+			canEdit: Boolean(row.canEditTale) && row.fragment.editable,
+			index: row.fragment.order,
+			tale: { id: row.taleId, title: row.taleTitle },
+			scene: { id: row.sceneId, index: row.sceneIndex },
+			branch: {
+				id: row.branchId,
+				name: row.branchName,
+				index: row.branchIndex,
+			},
+			entry: {
+				id: row.entryId,
+				title: row.entryTitle,
+				index: row.entryIndex,
+			},
+			part: {
+				id: row.partId,
+				title: row.partTitle,
+				index: row.partIndex,
+			},
+			page:
+				row.pageId === null
+					? null
+					: {
+							id: row.pageId,
+							index: row.pageIndex ?? 0,
+						},
+			previewElement: {
+				id: row.fragment.id,
+				type: row.fragment.type,
+				data: row.fragment.data,
+				orientation: "vertical" as const,
+			},
+		}),
+	);
 }
 
 export async function getLibraryPaths() {

@@ -27,6 +27,7 @@ import type {
 } from "~/app/(tale-app)/_shared/types";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
+import { ColorPicker } from "~/components/ui/color-picker";
 import { Field } from "~/components/ui/field";
 import Input from "~/components/ui/input";
 import {
@@ -873,19 +874,12 @@ function SettingsColor({
 	value: string;
 }): React.JSX.Element {
 	return (
-		<label className="grid gap-1 text-foreground/62 text-xs">
-			{label}
-			<span className="flex items-center gap-2 border border-foreground/15 bg-background p-2">
-				<input
-					aria-label={label}
-					className="h-7 w-10 cursor-pointer border-0 bg-transparent p-0"
-					type="color"
-					value={value}
-					onChange={(event) => onChange(event.target.value)}
-				/>
-				<code className="text-xs">{value}</code>
-			</span>
-		</label>
+		<ColorPicker
+			label={label}
+			value={value}
+			onChange={onChange}
+			density="compact"
+		/>
 	);
 }
 

@@ -97,7 +97,7 @@ const meta = {
 		},
 	},
 	tags: ["autodocs"],
-	title: "Design System/Primitives/Form Controls",
+	title: "Design System/Forms/Overview",
 } satisfies Meta<typeof ControlsShowcase>;
 
 export default meta;
@@ -154,6 +154,43 @@ export const Disabled: Story = {
 			<Slider isDisabled value={30} label="Locked value" />
 		</div>
 	),
+};
+
+export const SliderStyles: Story = {
+	render: () => (
+		<div className="grid max-w-md gap-5">
+			<Slider label="Intensity" defaultValue={40} />
+			<Slider density="compact" label="Compact intensity" defaultValue={65} />
+			<Slider
+				label="Vertical intensity"
+				defaultValue={50}
+				orientation="vertical"
+			/>
+			<Slider label="Disabled intensity" value={30} isDisabled />
+			<label
+				htmlFor="slider-style-native"
+				className="grid gap-1 font-bold text-xs uppercase"
+			>
+				Native intensity
+				<Input
+					id="slider-style-native"
+					type="range"
+					defaultValue={40}
+					aria-label="Native intensity"
+				/>
+			</label>
+		</div>
+	),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.tab();
+		await userEvent.keyboard("{ArrowRight}");
+		expect(canvas.getByRole("slider", { name: "Intensity" })).toHaveValue("41");
+		await userEvent.keyboard("{End}");
+		expect(canvas.getByRole("slider", { name: "Intensity" })).toHaveValue(
+			"100",
+		);
+	},
 };
 
 export const Invalid: Story = {

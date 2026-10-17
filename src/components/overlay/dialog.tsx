@@ -120,8 +120,10 @@ function DialogOverlay({
 			{...props}
 			isDismissable={isDismissable}
 			data-slot="dialog-overlay"
+			data-reader-component="Dialog"
+			data-reader-role="backdrop"
 			className={cn(
-				"data-[entering]:fade-in-0 data-[exiting]:fade-out-0 fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[var(--comic-ink)]/85 p-4 data-[entering]:animate-in data-[exiting]:animate-out",
+				"ts-dialog-overlay fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[var(--comic-ink)]/85 p-4",
 				typeof className === "string" ? className : undefined,
 			)}
 		>
@@ -151,8 +153,10 @@ function DialogContent({
 			<AriaModal
 				{...props}
 				data-slot="dialog-content"
+				data-reader-component="Dialog"
+				data-reader-role="dialog-surface"
 				className={cn(
-					"data-[entering]:fade-in-0 data-[entering]:zoom-in-95 data-[exiting]:fade-out-0 data-[exiting]:zoom-out-95 relative w-full max-w-[calc(100%-2rem)] border-[3px] border-foreground bg-card p-6 shadow-[10px_10px_0_var(--comic-teal)] outline-none duration-200 data-[entering]:animate-in data-[exiting]:animate-out sm:max-w-lg",
+					"ts-dialog-surface relative w-full max-w-[calc(100%-2rem)] border-[3px] border-foreground bg-card p-6 shadow-[10px_10px_0_var(--comic-teal)] outline-none sm:max-w-lg",
 					className,
 				)}
 			>

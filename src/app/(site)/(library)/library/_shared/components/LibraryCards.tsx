@@ -9,11 +9,10 @@ import {
 	Lock,
 	ShieldCheck,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { siteImages } from "~/app/(site)/_shared/components/landingCodexData";
 import { Badge, StatusBadge, Tag } from "~/components/data-display/badge";
 import { EmptyState } from "~/components/data-display/empty-state";
+import { Thumbnail } from "~/components/data-display/thumbnail";
 import { ComicPanel } from "~/components/layout/comic-panel";
 import { Button } from "~/components/ui/button";
 import type {
@@ -36,10 +35,14 @@ export function TalesGrid({ tales }: { tales: LibraryTaleList }) {
 	}
 
 	return (
-		<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+		<section
+			data-reader-component="TalesGrid"
+			data-reader-role="tale-results"
+			className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+		>
 			{tales.map((tale, index) => {
 				const readerHref = getTaleReaderHref(tale);
-				const studioHref = getTaleStudioHref(tale);
+				const studioHref = tale.canEdit ? getTaleStudioHref(tale) : null;
 
 				return (
 					<ComicPanel
@@ -52,26 +55,11 @@ export function TalesGrid({ tales }: { tales: LibraryTaleList }) {
 						}
 						as="article"
 						key={tale.id}
-						className="comic-panel flex min-h-72 flex-col overflow-hidden"
-						decoration={index % 2 === 0 ? "dots" : "strikes"}
-						shape={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}
+						className="flex min-h-72 flex-col overflow-hidden"
+						decorations="subtle"
+						shapes="cut-opposite"
 						slant="22px"
 					>
-						<div className="comic-panel-bleed relative aspect-[16/7] border-foreground border-b-2">
-							<Image
-								alt=""
-								className="object-cover"
-								fill
-								sizes="(min-width: 1280px) 30vw, (min-width: 768px) 48vw, 100vw"
-								src={
-									[
-										siteImages.moonlessHarbor,
-										siteImages.lastStarbound,
-										siteImages.crownOfAsh,
-									][index % 3] ?? siteImages.emberCity
-								}
-							/>
-						</div>
 						<div className="comic-panel-content flex flex-1 flex-col pt-4">
 							<div className="flex items-start justify-between gap-3">
 								<div className="flex size-11 items-center justify-center border-2 border-foreground bg-secondary text-secondary-foreground">
@@ -116,7 +104,7 @@ export function TalesGrid({ tales }: { tales: LibraryTaleList }) {
 									</Button>
 								) : null}
 								<Button asChild size="sm" variant="ghost" className="w-full">
-									<Link href={`/library/tale/${tale.id}`}>Open structure</Link>
+									<Link href={`/library/tale/${tale.id}`}>Details</Link>
 								</Button>
 								{studioHref ? (
 									<Button
@@ -155,12 +143,15 @@ export function BooksGrid({ books }: { books: LibraryBookList }) {
 					as="article"
 					key={book.id}
 					className="flex flex-col overflow-hidden"
-					shape="corner-top-right"
+					shapes="corner-top-right"
 					slant="22px"
 				>
-					<div className="comic-panel-bleed flex aspect-[3/4] items-center justify-center bg-secondary p-4 text-secondary-foreground">
-						<BookOpen aria-hidden="true" className="size-10" />
-					</div>
+					<Thumbnail
+						src={book.coverImage?.url}
+						alt={`${book.title} cover`}
+						className="aspect-[3/4] w-full"
+						fallback={<BookOpen aria-hidden="true" className="size-10" />}
+					/>
 					<div className="comic-panel-content pt-4">
 						<div className="flex flex-wrap gap-2">
 							<StatusBadge status={book.status} />
@@ -188,9 +179,11 @@ export function BooksGrid({ books }: { books: LibraryBookList }) {
 							<Button asChild size="sm" variant="outline">
 								<Link href={`/library/book/${book.id}`}>Book</Link>
 							</Button>
-							<Button asChild size="sm" variant="ghost">
-								<Link href={`/library/book/${book.id}/edit`}>Edit</Link>
-							</Button>
+							{book.canEdit && (
+								<Button asChild size="sm" variant="ghost">
+									<Link href={`/library/book/${book.id}/edit`}>Edit</Link>
+								</Button>
+							)}
 							{book.author ? (
 								<Button asChild size="sm" variant="ghost">
 									<Link href={`/library/author/${book.author.id}`}>Author</Link>
@@ -221,14 +214,17 @@ export function AuthorsGrid({ authors }: { authors: LibraryAuthorList }) {
 					accent={index % 2 === 0 ? "secondary" : "primary"}
 					as="article"
 					key={author.id}
-					className="comic-panel-content"
-					shape="corners-right"
+					surfaceClassName="comic-panel-content"
+					shapes="corners-right"
 					shadow={false}
 					slant="18px"
 				>
-					<div className="flex size-12 items-center justify-center border-2 border-foreground bg-secondary text-secondary-foreground">
-						<Feather aria-hidden="true" className="size-5" />
-					</div>
+					<Thumbnail
+						src={author.image?.url}
+						alt={author.fullName ?? "Author"}
+						className="size-12"
+						fallback={<Feather aria-hidden="true" className="size-5" />}
+					/>
 					<h2 className="mt-4 font-display text-2xl uppercase">
 						{author.fullName ?? "Unnamed author"}
 					</h2>
@@ -250,9 +246,11 @@ export function AuthorsGrid({ authors }: { authors: LibraryAuthorList }) {
 						<Button asChild size="sm" variant="outline">
 							<Link href={`/library/author/${author.id}`}>Author</Link>
 						</Button>
-						<Button asChild size="sm" variant="ghost">
-							<Link href={`/library/author/${author.id}/edit`}>Edit</Link>
-						</Button>
+						{author.canEdit && (
+							<Button asChild size="sm" variant="ghost">
+								<Link href={`/library/author/${author.id}/edit`}>Edit</Link>
+							</Button>
+						)}
 					</div>
 				</ComicPanel>
 			))}
@@ -262,13 +260,8 @@ export function AuthorsGrid({ authors }: { authors: LibraryAuthorList }) {
 
 function NodeCountGrid({ tale }: { tale: TaleItem }) {
 	const counts = [
-		["Branches", tale.nodeCounts.branches],
 		["Scenes", tale.nodeCounts.scenes],
 		["Elements", tale.nodeCounts.elements],
-		["Parts", tale.nodeCounts.parts],
-		["Entries", tale.nodeCounts.entries],
-		["Pages", tale.nodeCounts.pages],
-		["Paths", tale.nodeCounts.paths],
 	];
 
 	return (

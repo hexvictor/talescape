@@ -83,6 +83,207 @@ function heroAccent(color: "cyan" | "magenta" | "yellow"): Decoration[] {
 }
 
 export const decorationPresetItems: Record<DecorationPreset, Decoration[]> = {
+	"button-halftone": [
+		{
+			type: "halftone",
+			color: "cyan",
+			position: "center-right",
+			decayOrigin: "center-right",
+			shape: "rectangle",
+			coverage: 0.7,
+			dotSize: 2.2,
+			spacing: 8,
+			opacity: 0.55,
+		},
+	],
+	"button-halftone-light": [
+		{
+			type: "halftone",
+			color: "#ffffff",
+			position: "center-right",
+			decayOrigin: "center-right",
+			shape: "rectangle",
+			coverage: 0.7,
+			dotSize: 2.2,
+			spacing: 8,
+			opacity: 0.65,
+		},
+	],
+	"button-halftone-magenta": [
+		{
+			type: "halftone",
+			color: "magenta",
+			position: "center-right",
+			decayOrigin: "center-right",
+			shape: "rectangle",
+			coverage: 0.7,
+			dotSize: 2.2,
+			spacing: 8,
+			opacity: 0.55,
+		},
+	],
+	"button-halftone-yellow": [
+		{
+			type: "halftone",
+			color: "yellow",
+			position: "center-right",
+			decayOrigin: "center-right",
+			shape: "rectangle",
+			coverage: 0.7,
+			dotSize: 2.2,
+			spacing: 8,
+			opacity: 0.55,
+		},
+	],
+	"button-ink": [
+		{
+			type: "halftone",
+			color: "cyan",
+			position: "center-left",
+			decayOrigin: "center-left",
+			shape: "rectangle",
+			coverage: 0.8,
+			dotSize: 2.2,
+			spacing: 8,
+			opacity: 0.6,
+		},
+	],
+	"panel-cyan": cornerAccent("cyan"),
+	"panel-magenta": cornerAccent("magenta"),
+	"panel-yellow": cornerAccent("yellow"),
+	"image-home": [
+		{
+			type: "accent-streak",
+			color: "magenta",
+			variant: "brush",
+			direction: "up-right",
+			position: "top-right",
+			coverage: 0.65,
+			length: 1.6,
+			opacity: 0.85,
+		},
+		{
+			type: "halftone",
+			color: "yellow",
+			position: "bottom-left",
+			coverage: 0.7,
+			opacity: 0.75,
+		},
+	],
+	"image-library": [
+		{
+			type: "accent-streak",
+			color: "cyan",
+			direction: "down-right",
+			position: "top-left",
+			coverage: 0.8,
+			length: 1.5,
+		},
+	],
+	"image-auth": [
+		{
+			type: "accent-streak",
+			color: "cyan",
+			direction: "up-right",
+			position: "top-right",
+			coverage: 0.75,
+			length: 1.5,
+		},
+	],
+	"site-background": [
+		{ type: "background-texture", variant: "paper", opacity: 0.12 },
+		{ type: "background-texture", variant: "scratches", opacity: 0.035 },
+		{
+			type: "halftone",
+			color: "neutral",
+			position: "bottom-left",
+			coverage: 0.75,
+			opacity: 0.18,
+		},
+		{
+			type: "accent-streak",
+			variant: "dry-brush",
+			color: "neutral",
+			position: "top-right",
+			direction: "up-right",
+			coverage: 1.2,
+			length: 1.8,
+			opacity: 0.035,
+		},
+	],
+	"paper-subtle": [
+		{ type: "background-texture", variant: "paper", opacity: 0.12 },
+	],
+	"paper-grunge": [
+		{ type: "background-texture", variant: "paper", opacity: 0.12 },
+		{
+			type: "background-texture",
+			variant: "grunge",
+			opacity: 0.08,
+			roughness: 0.9,
+			density: "dense",
+		},
+	],
+	"graphic-corners": [
+		{
+			type: "geometric",
+			shape: "corner-cut",
+			color: "cyan",
+			coverage: 0.35,
+			position: "top-left",
+		},
+		{
+			type: "geometric",
+			shape: "corner-cut",
+			color: "magenta",
+			coverage: 0.35,
+			position: "bottom-right",
+			rotation: 180,
+		},
+	],
+	"editorial-texture": [
+		{ type: "background-texture", variant: "paper", opacity: 0.12 },
+		{
+			type: "background-texture",
+			variant: "scratches",
+			opacity: 0.05,
+			density: "sparse",
+		},
+		{ ...pageHalftone },
+		{
+			type: "circular-linework",
+			variant: "sweep",
+			position: "top-right",
+			coverage: 0.5,
+			opacity: 0.1,
+			quantity: 6,
+		},
+	],
+	"brush-halftone": [
+		{ type: "background-texture", variant: "paper", opacity: 0.1 },
+		...cornerAccent("cyan"),
+	],
+	"technical-linework": [
+		{ type: "background-texture", variant: "grain", opacity: 0.1 },
+		{
+			type: "circular-linework",
+			variant: "broken-ring",
+			position: "bottom-right",
+			coverage: 0.65,
+			opacity: 0.2,
+			quantity: 8,
+		},
+		{
+			type: "geometric",
+			shape: "cross-grid",
+			position: "top-left",
+			offsetX: 15,
+			offsetY: 20,
+			coverage: 0.25,
+			quantity: 25,
+			opacity: 0.15,
+		},
+	],
 	"page-subtle": [pageSpeedLines, pageHalftone],
 	"page-editorial": [
 		{ ...pageSpeedLines, opacity: 0.11 },
@@ -123,6 +324,7 @@ export const decorationPresetItems: Record<DecorationPreset, Decoration[]> = {
 		},
 		{
 			angle: 154,
+			direction: "right",
 			aspectRatio: 2.4,
 			color: "neutral",
 			coverage: 1.05,
@@ -283,6 +485,12 @@ export const panelDecorationPresets: Record<
 > = {
 	selected: "panel-selected",
 	subtle: "panel",
+	"panel-cyan": "panel-cyan",
+	"panel-magenta": "panel-magenta",
+	"panel-yellow": "panel-yellow",
+	"paper-subtle": "paper-subtle",
+	"halftone-corner": "halftone-corner",
+	"brush-halftone": "brush-halftone",
 };
 
 export const cardDecorationPresets: Record<

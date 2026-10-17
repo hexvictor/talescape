@@ -3,19 +3,23 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
-	scenes,
+	authors,
+	books,
 	branches,
-	entries,
 	elements,
+	entries,
 	frames,
 	keyframes,
 	pages,
 	parts,
+	scenes,
 	talePermissions,
 	tales,
 } from "~/server/db/schema";
+import { authorAccessCondition, bookAccessCondition } from "../queries/access";
 
 const taleTypes = ["story", "codex", "timeline"] as const;
+export class UnavailableTaleSelectionError extends Error {}
 const visibilityTypes = ["public", "private", "restricted"] as const;
 const cloneableTypes = ["private", "public", "shared"] as const;
 const statusTypes = [
@@ -60,7 +64,10 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 		"private",
 	);
 	const status = readOption(formData, "status", statusTypes, "draft");
-	const bookId = readNullableNumber(formData, "bookId");
+	const selectedBookId = readNullableNumber(formData, "bookId");
+	const selectedAuthorId = readNullableNumber(formData, "authorId");
+	const newBookTitle = readText(formData, "newBookTitle", "");
+	const newAuthorName = readText(formData, "newAuthorName", "");
 	const requestedSlug = readText(formData, "slug", slugify(title));
 	const cloneable = readOption(
 		formData,
@@ -83,6 +90,48 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 	});
 
 	const taleId = await db.transaction(async (tx) => {
+		let bookId = selectedBookId;
+		if (bookId !== null && !newBookTitle) {
+			const readableBook = await tx.query.books.findFirst({
+				where: and(eq(books.id, bookId), bookAccessCondition(userId)),
+				columns: { id: true },
+			});
+			if (!readableBook)
+				throw new UnavailableTaleSelectionError("Book unavailable");
+		}
+		if (newBookTitle) {
+			let authorId = selectedAuthorId;
+			if (newAuthorName) {
+				const [author] = await tx
+					.insert(authors)
+					.values({
+						creatorId: userId,
+						fullName: newAuthorName,
+						visibility: "private",
+					})
+					.returning({ id: authors.id });
+				if (!author) throw new Error("Unable to create author");
+				authorId = author.id;
+			} else if (authorId !== null) {
+				const readableAuthor = await tx.query.authors.findFirst({
+					where: and(eq(authors.id, authorId), authorAccessCondition(userId)),
+					columns: { id: true },
+				});
+				if (!readableAuthor)
+					throw new UnavailableTaleSelectionError("Author unavailable");
+			}
+			const [book] = await tx
+				.insert(books)
+				.values({
+					title: newBookTitle,
+					authorId,
+					creatorId: userId,
+					visibility: "private",
+				})
+				.returning({ id: books.id });
+			if (!book) throw new Error("Unable to create book");
+			bookId = book.id;
+		}
 		const [createdTale] = await tx
 			.insert(tales)
 			.values({
@@ -167,7 +216,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 
 		if (!createdBranch) throw new Error("Unable to create root branch");
 
-		const [createdBlock] = await tx
+		const [createdScene] = await tx
 			.insert(scenes)
 			.values({
 				taleId: createdTale.id,
@@ -194,21 +243,21 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 					activeLengthMode: "manual",
 				},
 				styleConfig: {
-					backgroundCss: "linear-gradient(145deg, #15131f, #07070a)",
-					color: "#fff8e8",
+					backgroundCss: "var(--background)",
+					color: "var(--foreground)",
 				},
 				visibility,
 				cloneable,
 			})
 			.returning({ id: scenes.id });
 
-		if (!createdBlock) throw new Error("Unable to create starter block");
+		if (!createdScene) throw new Error("Unable to create starter block");
 
-		const [createdRootNode] = await tx
+		const [createdFrame] = await tx
 			.insert(frames)
 			.values({
 				taleId: createdTale.id,
-				sceneId: createdBlock.id,
+				sceneId: createdScene.id,
 				creatorId: userId,
 				stableId: "frame-1",
 				name: "Frame 1",
@@ -224,6 +273,7 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 				},
 				styleConfig: {
 					alignItems: "center",
+					flexDirection: "column",
 					display: "flex",
 					height: "100%",
 					justifyContent: "center",
@@ -239,14 +289,14 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			})
 			.returning({ id: frames.id });
 
-		if (!createdRootNode) throw new Error("Unable to create root node");
+		if (!createdFrame) throw new Error("Unable to create root node");
 
-		const [createdFragment] = await tx
+		const [createdTitle] = await tx
 			.insert(elements)
 			.values({
 				taleId: createdTale.id,
-				sceneId: createdBlock.id,
-				frameId: createdRootNode.id,
+				sceneId: createdScene.id,
+				frameId: createdFrame.id,
 				creatorId: userId,
 				type: "text" as const,
 				isOfficial,
@@ -267,25 +317,76 @@ export async function createTaleFromForm(userId: string, formData: FormData) {
 			})
 			.returning({ id: elements.id });
 
-		if (!createdFragment) throw new Error("Unable to create starter fragment");
+		if (!createdTitle) throw new Error("Unable to create starter fragment");
+		const [introduction] = await tx
+			.insert(elements)
+			.values({
+				taleId: createdTale.id,
+				sceneId: createdScene.id,
+				frameId: createdFrame.id,
+				creatorId: userId,
+				type: "text",
+				isOfficial,
+				isVerified,
+				editable,
+				order: 1,
+				visibility,
+				cloneable,
+				data: {
+					content:
+						"Your new tale begins here. Open the Studio to write your first moment and bring your story to life.",
+				},
+				styleConfig: {
+					fontSize: "1.125rem",
+					lineHeight: 1.6,
+					maxWidth: "42rem",
+					textAlign: "center",
+				},
+			})
+			.returning({ id: elements.id });
+		if (!introduction) throw new Error("Unable to create introduction");
 
 		await tx
 			.update(frames)
 			.set({
 				config: {
 					children: [
-						{ elementId: String(createdFragment.id), type: "element" },
+						{ elementId: String(createdTitle.id), type: "element" },
+						{ elementId: String(introduction.id), type: "element" },
 					],
-					gap: 0,
-					id: String(createdRootNode.id),
+					gap: 24,
+					id: String(createdFrame.id),
 					mode: "flex",
 					overflow: "visible",
 					parentFrameId: null,
 				},
 			})
-			.where(eq(frames.id, createdRootNode.id));
+			.where(eq(frames.id, createdFrame.id));
 
-		await tx.insert(keyframes).values({ taleId: createdTale.id, sceneId: createdBlock.id, frameId: createdRootNode.id, creatorId: userId, branchId: createdBranch.id, pageId: createdPage.id, title: "Opening keyframe", order: 0, actions: [{ id: "opening-title", targetId: String(createdFragment.id), targetType: "element", type: "active" }] });
+		await tx.insert(keyframes).values({
+			taleId: createdTale.id,
+			sceneId: createdScene.id,
+			frameId: createdFrame.id,
+			creatorId: userId,
+			branchId: createdBranch.id,
+			pageId: createdPage.id,
+			title: "Opening keyframe",
+			order: 0,
+			actions: [
+				{
+					id: "opening-title",
+					targetId: String(createdTitle.id),
+					targetType: "element",
+					type: "active",
+				},
+				{
+					id: "opening-introduction",
+					targetId: String(introduction.id),
+					targetType: "element",
+					type: "active",
+				},
+			],
+		});
 		return createdTale.id;
 	});
 

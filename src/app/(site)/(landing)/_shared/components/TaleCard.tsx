@@ -35,11 +35,11 @@ export function TaleCard({
 			className="block min-w-[15rem] snap-start md:min-w-0"
 		>
 			<ComicPanel
+				decorations="halftone-corner"
 				accent={accent}
 				as="article"
 				className="group grid h-full min-h-[25rem] overflow-hidden sm:min-h-72 lg:grid-cols-[0.54fr_0.46fr]"
-				decoration="dots"
-				shape="corner-top-right"
+				shapes="corner-top-right"
 				shadow={false}
 			>
 				<div className="relative min-h-48 overflow-hidden border-foreground border-b-2 lg:min-h-0 lg:border-r-2 lg:border-b-0">

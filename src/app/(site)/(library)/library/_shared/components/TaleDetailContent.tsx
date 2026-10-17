@@ -38,8 +38,8 @@ export function TaleDetailContent({
 }) {
 	return (
 		<PageShell
+			decorations="detail"
 			className="mx-auto flex w-full max-w-[var(--ts-content-max)] flex-col gap-5 py-2"
-			decorationPreset="detail"
 		>
 			<LibraryBreadcrumbs
 				items={[
@@ -61,14 +61,17 @@ export function TaleDetailContent({
 
 function TaleHeader({ detail }: { detail: LibraryTaleDetail }) {
 	const readerHref = getTaleReaderHref(detail.tale);
-	const studioHref = getTaleStudioHref(detail.tale);
+	const studioHref = detail.tale.canEdit
+		? getTaleStudioHref(detail.tale)
+		: null;
 
 	return (
 		<ComicPanel
+			decorations="brush-halftone"
 			accent="primary"
-			className="flex flex-col justify-between gap-5 p-6 sm:p-8 lg:flex-row lg:items-end"
-			decoration="strikes"
-			shape="cut-opposite"
+			className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
+			surfaceClassName="p-6 sm:p-8"
+			shapes="cut-opposite"
 		>
 			<div>
 				<ComicRail accent="primary">{detail.tale.accessLabel} tale</ComicRail>
@@ -130,9 +133,9 @@ function TaleMetrics({ detail }: { detail: LibraryTaleDetail }) {
 				<ComicPanel
 					accent={index % 2 === 0 ? "secondary" : "accent"}
 					as="div"
-					className="p-5"
+					surfaceClassName="p-5"
 					key={label}
-					shape={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}
+					shapes={index % 2 === 0 ? "corner-top-right" : "corner-bottom-left"}
 					slant="12px"
 				>
 					<p className="text-muted-foreground text-sm">{label}</p>
@@ -219,7 +222,11 @@ function TaleOverviewPanels({ detail }: { detail: LibraryTaleDetail }) {
 
 function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 	return (
-		<ComicPanel accent="secondary" className="p-6" shape="corner-top-right">
+		<ComicPanel
+			accent="secondary"
+			surfaceClassName="p-6"
+			shapes="corner-top-right"
+		>
 			<div className="flex items-center gap-2">
 				<GitBranch aria-hidden="true" className="size-4 text-primary" />
 				<h2 className="font-semibold text-xl">Reader path</h2>
@@ -261,7 +268,11 @@ function ReaderPath({ detail }: { detail: LibraryTaleDetail }) {
 
 function NarrativeSpine({ detail }: { detail: LibraryTaleDetail }) {
 	return (
-		<ComicPanel accent="primary" className="p-6" shape="corner-bottom-left">
+		<ComicPanel
+			accent="primary"
+			surfaceClassName="p-6"
+			shapes="corner-bottom-left"
+		>
 			<div className="flex items-center gap-2">
 				<BookOpen aria-hidden="true" className="size-4 text-primary" />
 				<h2 className="font-semibold text-xl">Narrative spine</h2>
@@ -364,7 +375,7 @@ function BlockRow({
 
 function PathsOverview({ detail }: { detail: LibraryTaleDetail }) {
 	return (
-		<ComicPanel accent="accent" className="p-6" shape="corners-right">
+		<ComicPanel accent="accent" surfaceClassName="p-6" shapes="corners-right">
 			<div className="flex items-center gap-2">
 				<Route aria-hidden="true" className="size-4 text-primary" />
 				<h2 className="font-semibold text-xl">Paths</h2>

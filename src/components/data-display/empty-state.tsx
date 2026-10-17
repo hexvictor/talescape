@@ -17,8 +17,11 @@ export function EmptyState({
 }): React.JSX.Element {
 	return (
 		<ComicPanel
-			className={cn("comic-panel-content-lg text-center", className)}
-			shape="cut-opposite"
+			data-reader-component="EmptyState"
+			data-reader-role="empty-state"
+			className={cn("text-center", className)}
+			surfaceClassName="comic-panel-content-lg"
+			shapes="cut-opposite"
 		>
 			{icon ? (
 				<div className="mx-auto mb-3 flex size-11 items-center justify-center border-2 border-foreground bg-secondary text-secondary-foreground">

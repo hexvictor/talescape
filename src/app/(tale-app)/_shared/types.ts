@@ -2,6 +2,7 @@ import type { PublicUserInfo } from "~/server/db/data/users/queries";
 import type { TaleSchema } from "~/server/db/schema";
 import type { Book } from "~/server/db/schema/library/books";
 import type { EntryType } from "~/server/db/types/tale-reader/entry";
+import type { ElementParallaxConfig } from "~/server/db/types/tale-reader/readerConfig";
 
 export type Direction =
 	| "down"
@@ -189,6 +190,14 @@ export type SceneSize =
 			height: number;
 			heightUnit: "px" | "viewport";
 			mode: "manual";
+			maxHeight?: number;
+			maxHeightUnit?: "px" | "viewport";
+			maxWidth?: number;
+			maxWidthUnit?: "px" | "viewport";
+			minHeight?: number;
+			minHeightUnit?: "px" | "viewport";
+			minWidth?: number;
+			minWidthUnit?: "px" | "viewport";
 			width: number;
 			widthUnit: "px" | "viewport";
 			verticalAlignment: VerticalCameraFraming;
@@ -382,7 +391,9 @@ export type TaleFrame = {
 	  }
 );
 
-export type ElementPlacement =
+export type ElementParallax = ElementParallaxConfig;
+
+export type ElementPlacement = { parallax?: ElementParallax } & (
 	| { mode: "normal"; frameId?: string; overflow?: "clip" | "visible" }
 	| {
 			horizontal: "center" | "left" | "right";
@@ -395,7 +406,8 @@ export type ElementPlacement =
 			x: number;
 			y: number;
 			zIndex?: number;
-	  };
+	  }
+);
 
 export type AnimationPreset = {
 	id: string;
@@ -1213,6 +1225,7 @@ export type TaleInspectorTarget =
 			id: string;
 			initialTab?:
 				| "layout"
+				| "elements"
 				| "motion"
 				| "size"
 				| "style"

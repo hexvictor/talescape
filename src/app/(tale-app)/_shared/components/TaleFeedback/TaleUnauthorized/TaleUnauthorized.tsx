@@ -2,7 +2,9 @@
 
 import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
 import type { TaleAccessAction } from "../../../types";
 
 type TaleUnauthorizedProps = {
@@ -89,12 +91,20 @@ export default function TaleUnauthorized({
 	const signInHref = buildSignInHref(resolvedReturnTo);
 
 	return (
-		<div
+		<PageShell
+			fullscreen
+			decorations="site-background"
 			data-reader-component="TaleUnauthorized"
 			data-reader-role="feedback-screen"
-			className="comic-halftone fixed inset-0 z-50 flex items-center justify-center bg-[var(--comic-teal)] p-5 text-foreground"
+			className="ts-decoration-host fixed inset-0 isolate z-50 flex items-center justify-center bg-[var(--comic-teal)] p-5 text-foreground"
 		>
-			<section className="w-full max-w-lg border-[4px] border-foreground bg-card p-6 text-center shadow-[9px_9px_0_var(--comic-ink)] sm:p-9">
+			<Panel
+				shapes="cut-opposite"
+				className="w-full max-w-lg text-center"
+				surfaceClassName="p-6 sm:p-9"
+				data-reader-component="TaleUnauthorized"
+				data-reader-role="feedback-panel"
+			>
 				<LockKeyhole
 					size={38}
 					strokeWidth={2.5}
@@ -150,7 +160,7 @@ export default function TaleUnauthorized({
 					{type && <p>Type: {type}</p>}
 					<p>Status: {status}</p>
 				</div>
-			</section>
-		</div>
+			</Panel>
+		</PageShell>
 	);
 }

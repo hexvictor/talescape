@@ -5,6 +5,7 @@ import { BookOpenText, Home, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
 
 type LibraryErrorProps = {
@@ -22,11 +23,18 @@ export default function LibraryError({
 	}, [error]);
 
 	return (
-		<main className="comic-halftone grid min-h-[calc(100dvh-4.75rem)] place-items-center bg-[var(--comic-ink)] p-5 text-foreground">
+		<PageShell
+			as="section"
+			decorations="site-background"
+			data-reader-component="LibraryError"
+			data-reader-role="error-page"
+			className="grid place-items-center bg-background p-5 text-foreground"
+		>
 			<ComicPanel
+				decorations="halftone-corner"
 				accent="primary"
-				className="w-full max-w-lg p-7 text-center sm:p-10"
-				decoration="dots"
+				className="w-full max-w-lg text-center"
+				surfaceClassName="p-7 sm:p-10"
 			>
 				<BookOpenText
 					size={44}
@@ -47,7 +55,7 @@ export default function LibraryError({
 					<Button type="button" onClick={reset} variant="comic">
 						<RefreshCw size={17} /> Try again
 					</Button>
-					<Button asChild shape="slant-both" variant="outline">
+					<Button asChild shapes="slant-both" variant="outline">
 						<Link href="/">
 							<Home size={17} /> Go home
 						</Link>
@@ -59,6 +67,6 @@ export default function LibraryError({
 					</p>
 				) : null}
 			</ComicPanel>
-		</main>
+		</PageShell>
 	);
 }

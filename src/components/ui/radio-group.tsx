@@ -16,6 +16,8 @@ export function RadioGroup({
 }: AriaRadioGroupProps): React.JSX.Element {
 	return (
 		<AriaRadioGroup
+			data-reader-component="RadioGroup"
+			data-reader-role="radio-group"
 			{...props}
 			data-slot="radio-group"
 			className={cn("grid gap-2", className)}
@@ -37,6 +39,8 @@ export function Radio({
 }: RadioProps): React.JSX.Element {
 	return (
 		<AriaRadio
+			data-reader-component="Radio"
+			data-reader-role="radio"
 			{...props}
 			data-slot="radio"
 			className={cn(

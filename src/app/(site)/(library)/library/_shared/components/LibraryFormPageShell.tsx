@@ -15,7 +15,7 @@ import { PageShell } from "~/components/layout/page-shell";
  */
 export function LibraryFormPageShell({ children }: { children: ReactNode }) {
 	return (
-		<PageShell decorationPreset="form">
+		<PageShell decorations="form">
 			<Suspense fallback={<DetailPageSkeleton />}>{children}</Suspense>
 		</PageShell>
 	);

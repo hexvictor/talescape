@@ -19,6 +19,8 @@ export function Field({
 }: FieldProps): React.JSX.Element {
 	return (
 		<fieldset
+			data-reader-component="Field"
+			data-reader-role="field"
 			{...props}
 			data-slot="field"
 			className={cn("m-0 grid min-w-0 gap-1 border-0 p-0", className)}

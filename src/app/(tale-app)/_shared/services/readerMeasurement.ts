@@ -10,7 +10,7 @@ import {
 } from "./readerDiagnostics";
 
 function clampSize(value: number, min?: number, max?: number) {
-	return Math.min(max ?? Number.POSITIVE_INFINITY, Math.max(min ?? 0, value));
+	return Math.max(min ?? 0, Math.min(max ?? Number.POSITIVE_INFINITY, value));
 }
 
 function contentLimit(
@@ -95,8 +95,16 @@ export function measureBlocks(
 		const size = block.size;
 		if (size.mode === "manual") {
 			result[id] = {
-				height: manualSize(size.height, size.heightUnit, "height", viewport),
-				width: manualSize(size.width, size.widthUnit, "width", viewport),
+				height: clampSize(
+					manualSize(size.height, size.heightUnit, "height", viewport),
+					contentLimit(size.minHeight, size.minHeightUnit, "height", viewport),
+					contentLimit(size.maxHeight, size.maxHeightUnit, "height", viewport),
+				),
+				width: clampSize(
+					manualSize(size.width, size.widthUnit, "width", viewport),
+					contentLimit(size.minWidth, size.minWidthUnit, "width", viewport),
+					contentLimit(size.maxWidth, size.maxWidthUnit, "width", viewport),
+				),
 			};
 			continue;
 		}

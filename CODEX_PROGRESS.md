@@ -10,8 +10,8 @@ Storybook. Full scope/plan: `docs/design-system-refactor.md`.
 ## Current phase
 
 The centralized application design system is complete. The active follow-up adds
-a typed decorative graphic system built from token-driven SVG/CSS primitives,
-composition presets and opt-in page, panel, card, media and thumbnail hosts.
+typed decorative graphics, composable surface geometry, component-owned editors,
+and scene-owned image layers with scroll/mouse parallax.
 Branch: `feature/decorative-graphic-system`; starting commit `aefb0f7`.
 Current package version: `1.12.7`.
 User explicitly requested seeing the audit/plan before large-scale refactoring.
@@ -408,12 +408,265 @@ because their platform event, styling or DOM contracts are behaviorally relevant
   all 92 Storybook browser tests, the Storybook production build and the Next
   production build pass.
 
+### Decoration Composition Checkpoint
+
+- Added independent halftone growth origins, including one-axis rectangular
+  decay from each edge. Density now scales explicit spacing and quantity.
+- Numeric inputs complement wider sliders. Radial/fan/laser lines honor angle,
+  direction, seed, jitter, spread and extended length. Optional seeded modulation
+  changes width and opacity along each ray; electric rays have branching bolts.
+- Rebuilt accents as pressure-shaped brush strokes, paint splashes, fragmented
+  lightning and connected branching fractures. Every style supports length and
+  stretch; added ink, comet and radial-fracture variations.
+- Added the Storybook Composition Editor with independent button, panel, image
+  and page layers, target highlighting, visibility/reordering, preset insertion,
+  button styling and JSX/JSON clipboard export. Defaults are not overwritten.
+- Canonical integration is now a nested Decorations child on any parent. The
+  wrapper owns framing and layering; application pages and examples use it.
+  Older host props remain deprecated compatibility adapters. Fixed Button's SVG
+  icon selector so decorations retain their intended dimensions.
+- Verification: full lint (620 files), typecheck, 91 unit tests, 93 Storybook
+  browser tests and production Storybook/Next builds pass. Desktop (1400px) and
+  mobile (390px) visual checks found no document overflow or browser exceptions;
+  inspected brush/bolt/crack geometry, directional halftone, radial modulation,
+  target highlighting and button framing. Static preview runs on port 6008.
+
+### Surface Decoration Checkpoint
+
+- Added BackgroundTexture with seeded paper fibers, fine grain, irregular grunge,
+  scratches, scuffs and vertical wear. Pixel-sized tiles wrap edge marks so the
+  texture fills any parent without aspect distortion or clipped tile seams.
+- Added GeometricShape with ten angular shapes/patterns and CircularLinework
+  with open arcs, broken rings, concentric circles and partial sweeps. They share
+  the existing Decorations anchoring, clipping, color and viewport contracts.
+- Added six mixed/surface presets, dedicated editors, galleries, reference-style
+  panel compositions and decorated button states. All families can be added to
+  button, panel, image or page layers and exported as JSX/JSON without changing
+  application defaults.
+- Fixed editable numeric fields so clearing/replacing a value works. Separated
+  texture positioning from anchored SVG positioning after production screenshots
+  exposed a CSS compilation issue that displaced textures by half their size.
+- Verification: full lint (622 files), typecheck, 101 unit tests, 101 Storybook
+  browser tests, focused decoration rechecks and production Storybook/Next builds
+  pass. Inspected 1400px/390px screenshots of textures, geometry, rings, panels
+  and the composer; verified full texture alignment, no document overflow or
+  browser exceptions, and JSX export of all new families. Static preview: 6008.
+
+### Color And Slider Checkpoint
+
+- Added a Talescape-owned ColorPicker backed by the already-installed React Aria
+  color primitives. Supports arbitrary CSS colors, hue/saturation/brightness,
+  alpha, semantic swatches, manual entry, inherited values and validation. Its
+  wrapper, popover, area and palette are customizable; default styling uses
+  semantic tokens, sharp frames and restrained ink shadows.
+- Decoration editors now accept custom colors rather than only token menus.
+  Studio text/background/border editing and light/dark tale backgrounds use the
+  same picker. Background gradients remain editable; border changes preserve
+  authored width/style, and background edits clear conflicting legacy values.
+  Freeform shadow/custom-CSS expressions remain text-based advanced controls.
+- Reworked shared Slider and native Input ranges with slim tracks, small angular
+  handles, visible focus/disabled states and comfortable interaction hit areas.
+  Existing Studio and Reader slider consumers inherit the shared styling.
+- Added picker state/styling stories, horizontal/vertical/native slider examples,
+  Studio style-color interactions and arbitrary decoration-color regression.
+- Verification: lint (627 files), typecheck, 101 unit tests, 112 Storybook browser
+  tests and production Storybook/Next builds pass. Static 1400px/390px checks
+  verified custom alpha colors, slider pointer values, mobile popover bounds and
+  no document overflow/browser exceptions. Authenticated Studio session behavior
+  was not exercised; Studio color bindings were tested through shared stories.
+
+### Forms, Media And Geometry Checkpoint
+
+- Rounded the shared Switch rail/thumb, with conventional pointer/keyboard
+  behavior, compact density, disabled states and Talescape ink borders.
+- Added individual Forms entries for Slider, Toggle, Radio Buttons, Select,
+  Combobox, Calendar, Checkbox and Text Input; kept the combined Overview and
+  moved Color Picker into the same Forms group. New combobox/calendar APIs wrap
+  the installed React Aria primitives.
+- Added generic FileUpload and searchable/filterable AssetLibrary components,
+  with image/video/audio previews and empty/loading/error/disabled states. The
+  Studio image field uses the same upload UI and library, with the existing
+  authenticated UploadThing route and image queries. Local-preview stories do
+  not persist files. The live upload story uses the real endpoint; Storybook's
+  API proxy defaults to localhost:3000 and accepts
+  TALESCAPE_STORYBOOK_APP_ORIGIN. Authenticated persistence was not exercised.
+- Removed comicDecorations from Button. Decorations now compose as children
+  inside the actual action. ButtonPart provides left/right slanted icon segments
+  within one accessible action; link/onClick/onPress compatibility is preserved.
+- Shared shape geometry now supports stepped lower edges and a central notch,
+  with adjustable step position/depth. Panels and DecoratedMedia retain shaped
+  shadows; buttons retain lift behavior. The homepage featured-tale action fits
+  beneath the stepped image with breathing room on mobile and desktop.
+- Migrated remaining old hero/halftone classes and panel decoration callers to
+  Decorations children. Site page backgrounds use a fixed viewport frame with
+  subtle paper texture, lower-left dots and large diagonal upper-right strokes.
+  Corrected ComicPanel background/decorations stacking and polygon clipping.
+- Direct parent elements with a `<Decorations />` child now receive the same
+  host positioning, isolation and content layering as explicit
+  `ts-decoration-host` surfaces, so ordinary composition does not require a
+  host class.
+- Expanded the composition editor with card targets, surface colors, shared
+  geometry, button variants/motion/icons/segments, image URL/ratio/fit and page
+  padding, including JSX/JSON exports. Caller DOM instrumentation is preserved.
+- Replaced modal animation utilities with coordinated, fill-preserving exit
+  animations. A browser regression samples opacity across exit and checks focus
+  restoration; frame-by-frame production checks show no rebound/flash.
+- Verification: lint, typecheck and 101 unit tests pass; 167 full-suite Storybook
+  tests plus five focused upload-state tests pass. Production Storybook and Next
+  builds pass (one transient Next prerender bundle failure cleared after moving
+  generated webpack cache aside). Static component screenshots, media playback,
+  and actual production /, /library and /codex were checked at 1400px/390px:
+  no horizontal overflow, viewport-sized background frames and correctly fitted
+  featured action. Authenticated Studio/upload flows remain unverified.
+
+## Story Composition And Combined Media Clipping Checkpoint
+
+- Added a global Storybook Composition Editor toolbar mode for every story,
+  with selectable rendered targets, component args, surface colors and geometry,
+  independent decoration layers, presets, visibility/order/duplication controls,
+  reset and JSX/JSON export. Buttons, panels, layout surfaces and shaped images
+  also have direct Composition Editor entries. Native leaf controls use their
+  preview surface as the decoration frame.
+- Added combined left-slant/lower-step shapes to shared geometry, with an
+  independent edge slant. DecoratedMedia clips image and decoration children
+  together while preserving its shadow. The existing sample-page composer
+  exposes independent edge-slant editing and exports the same geometry.
+- Moved HomeContent's image-only desktop polygon to the DecoratedMedia frame:
+  a responsive left slant plus bottom-right step. Its top-right brush points
+  inward. Desktop and mobile production screenshots confirm shared clipping,
+  space around the featured action and no horizontal overflow.
+- Verification: lint, typecheck, Storybook production build and Next production
+  build pass. All 175 Storybook tests pass, including target persistence/reset,
+  layer insertion and combined media clipping. Static Storybook screenshots at
+  1400px/390px show no horizontal overflow or browser errors. Added react-dom
+  prebundling to prevent the browser test runner reloading during portal setup.
+
+## Composable Shapes, Editors And Scene Layers Checkpoint
+
+- Supersedes the earlier global DOM-based composition editor and DecoratedMedia
+  checkpoints. Component editors now edit React configuration directly, with
+  separate Component, Decorations and Shapes tabs. The independent composition
+  canvas supports insertion, removal, ordering, nesting and per-element editing.
+  Settings scroll independently while previews remain visible on desktop/mobile.
+- Added shared composable shape treatments for corners, horizontal/vertical
+  corner slots, center notches/steps and full sides. Outward-step baselines and
+  side overrides share one geometry implementation across shaped surfaces.
+  The same outline drives clipping, borders and shaped shadows.
+- Button hover/focus shapes morph from the current outline, including the legacy
+  named hoverShape API. Interrupted transitions reverse smoothly. Resizes and
+  reduced-motion preferences bypass morphing; disconnected outlines snap safely.
+- Replaced DecoratedMedia with TaleImage, preserving Next Image props while
+  clipping image and decorations together. Production decoration usage now uses
+  component-appropriate presets; explicit Decorations children remain supported.
+- Scene Inspector now has an Elements tab for direct scene-owned image, text and
+  audio creation. Ownership edits synchronize frame child lists. Scene image
+  defaults cover the scene behind frames without inflating camera measurements.
+- Positioned images have source, depth, scroll-basis, mouse-travel and overscan
+  controls in Motion. Reader camera/timeline variables and normalized pointer
+  movement drive a separate parallax layer without replacing animation transforms.
+  Overscan bounds movement; Edit Mode and reduced motion disable the effect.
+  Existing placement JSON persists these settings without a database migration.
+- Verification: 119 unit tests and 216 Storybook browser tests pass. Typecheck,
+  focused Biome checks, diff whitespace checks, static Storybook build and Next
+  production build pass. Desktop/mobile browser checks cover sidebar containment,
+  shape morphing/reversal/focus, actual parallax image rendering, scroll/mouse
+  movement, overscan and reduced motion. Production /, /library and /codex
+  screenshots at 1400px/390px confirm no horizontal overflow and shared media
+  clipping. Authenticated Studio creation/save/reload
+  and the complete reader camera/parallax workflow remain live-validation gaps.
+
+## Page Surfaces, Library And Shared Configuration Checkpoint
+
+- PageShell now supplies viewport-height layout; fullscreen feedback surfaces
+  escape transformed Reader ancestors. Missing, forbidden, unauthorized and
+  library error pages use shared shells and shaped panels.
+- Standardized application shape usage on `shapes`, accepting preset names or
+  treatment arrays. Legacy `shape` remains compatible. ComicPanel now uses the
+  shared outline renderer, including cut-opposite corners, borders and shadows.
+  Panel padding belongs to the clipped surface, not the outline wrapper.
+- Button, Panel, Card, TaleImage, Thumbnail and PageShell accept component-scoped
+  decoration presets or item arrays. Buttons also accept hover/pressed shape and
+  decoration configurations. Geometry morphs; supported decoration dimensions,
+  color and opacity transition with reduced-motion handling. Different path
+  topologies can still snap rather than morph. Storybook can insert preset layers.
+- Reworked library navigation, searchable tale browsing, real book/author media
+  and a focused creation form with optional inline book/author creation. New tales
+  initialize one branch, one solid-background scene, one frame and title/intro
+  text, retaining internal compatibility scaffolding without exposing it in forms.
+- Added authorized scene/frame/element visual snapshots, reader scene links and
+  permission-gated Studio inspection links. Removed official-private access
+  bypasses and restricted grant checks to the current user; added permission tests.
+- Added stable component/role instrumentation to shared interaction surfaces
+  while preserving caller identity overrides. Consolidated InspectorSelect and
+  separated Studio store context to remove dependency cycles.
+- Fallow: removed four traced-unused files; zero unused files, dependencies,
+  unresolved imports or dependency cycles remain. Retained 50 export, 60 type and
+  seven duplicate-export candidates pending ownership review. Duplication is
+  2.84 percent; complex Reader/navigation code remains a separate audit concern.
+- Verification: 123 unit tests and 225 Storybook browser tests pass. Next
+  production build, typecheck, focused Biome and diff whitespace checks pass.
+  Production pages using the development database were checked at 1440px/390px:
+  homepage, codex, library, books, scenes, frames, elements and missing pages have
+  no horizontal overflow or browser errors; scene dialogs render actual content.
+  Fullscreen feedback and shared homepage image/action clipping were inspected.
+- Live authenticated create/save/reload and Studio inspection remain unverified.
+  The production database lacks scene/element tables; no production migration or
+  reset was performed. Production schema rollout is a separate release operation.
+
+## PageShell Remaining-Space Sizing Correction
+
+- PageShell grows within its parent's flex layout instead of imposing a viewport
+  minimum on every nested page. Only the outer site layout owns `min-h-dvh`, so
+  header, page content and footer share the viewport and long content still grows.
+- SiteLayout's main surface is a column flex container. Explicit fullscreen
+  feedback retains its fixed inset sizing without a redundant viewport minimum.
+- Added a Storybook regression case checking the space remaining between header
+  and footer, with no unnecessary container overflow.
+- Verification: all four PageShell stories, typecheck, focused Biome and diff
+  whitespace checks pass. A broader Storybook run was interrupted by a browser
+  connection closing; it is not counted as a successful full-suite verification.
+
+## Scene Parallax And Inspector Style Targets Correction
+
+- Removed the Edit Mode parallax suppression from scene pointer tracking and
+  absolute element rendering. Fixed scene elements now share the parallax layer
+  too. Ambient/keyframe animation targets remain separate from this transform.
+- Unscaled graphics can translate; overscan greater than one still bounds scaled
+  background motion. Reduced-motion CSS continues to disable the effect.
+- Image figures and captions no longer impose unauthored background, borders,
+  rounding or shadows, including the Firefox alpha-background fallback.
+- Style controls now select Element box/Image and Scene content/Scene outer box
+  separately. Every group names its target; layout is collapsed by default and
+  image fitting is shown only for the image target. Positioned element offsets
+  remain in Placement instead of competing with wrapper CSS position controls.
+- Verification: 124 unit tests, three focused Storybook browser regressions,
+  typecheck and focused Biome/diff checks pass. The absolute-image regression
+  renders the actual positioned/image chain, verifies a transparent figure,
+  scroll movement and pointer movement with scale one. Authenticated Studio
+  save/reload and the full compiled tale scroll workflow remain unverified.
+
+## Explicit Size Limits And Frame-Owned Absolute Placement
+
+- Explicit scene sizing now exposes minimum/maximum width and height alongside
+  authored dimensions. Constraints survive sizing-mode changes and draft/database
+  formatting; measurement applies them to both scene sizes and measurement DOM.
+  Minimum bounds win contradictory maximum bounds, matching CSS sizing behavior.
+- Absolute elements owned by a valid frame now render inside that frame rather
+  than the scene-wide layer. Parent proportions resolve against the frame, while
+  scene-owned viewport positioning and fixed-scene placement remain unchanged.
+  Frame roots retain a positioning context and shared positioned rendering keeps
+  parallax and animation identities intact.
+- Verification: 127 unit tests, four focused Storybook browser regressions and
+  typecheck pass. A rendered 320x240 frame positions its 25-percent child at
+  80x60 pixels and clamps child width to 160 pixels without duplicate rendering.
+  Authenticated Studio save/reload remains a live-validation gap.
+
 ## Exact next steps
 
-1. Merge and push the stacked Scene/Frame model and application design-system
-   branches into `development` in dependency order.
-2. Verify authenticated Studio interactions when a signed-in browser session is
-   available.
+1. Verify authenticated Studio scene-element creation, ownership changes and
+   save/reload when a signed-in browser session is available.
+2. Review component decoration presets and validate parallax in complete tales.
+   Branch integration remains a separate user-approved operation.
 3. Treat production database migration as a separate release operation, not as
    part of this development refactor.
 

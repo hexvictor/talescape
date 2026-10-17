@@ -22,6 +22,8 @@ export function Switch({
 }: SwitchProps): React.JSX.Element {
 	return (
 		<AriaSwitch
+			data-reader-component="Switch"
+			data-reader-role="toggle-control"
 			{...props}
 			data-slot="switch"
 			className={cn(
@@ -33,13 +35,16 @@ export function Switch({
 			<span
 				aria-hidden="true"
 				className={cn(
-					"flex shrink-0 items-center border-2 border-foreground bg-muted px-0.5 shadow-[2px_2px_0_rgb(var(--foreground-rgb))] transition-colors group-data-[selected]:bg-primary group-data-[focus-visible]:ring-4 group-data-[focus-visible]:ring-ring/40",
-					density === "compact" ? "h-4 w-8" : "h-5 w-10",
+					"relative shrink-0 rounded-full border-2 border-foreground bg-muted shadow-[1px_1px_0_rgb(var(--foreground-rgb))] transition-colors group-data-[selected]:bg-primary group-data-[focus-visible]:ring-4 group-data-[focus-visible]:ring-ring/40",
+					density === "compact" ? "h-5 w-9" : "h-6 w-11",
 				)}
 			>
 				<span
 					className={cn(
-						"aspect-square h-[70%] bg-foreground transition-transform group-data-[selected]:translate-x-full group-data-[selected]:bg-primary-foreground",
+						"absolute top-0.5 left-0.5 rounded-full border border-foreground bg-background transition-transform duration-150 group-data-[selected]:translate-x-5 motion-reduce:transition-none",
+						density === "compact"
+							? "size-3 group-data-[selected]:translate-x-4"
+							: "size-4",
 					)}
 				/>
 			</span>

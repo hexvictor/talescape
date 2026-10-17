@@ -41,7 +41,8 @@ export function ElementPlacementSettings({
 	);
 	const frames = resolveIds(scene.frameIds, framesById);
 	const placement = element.placement;
-	const frameId = placement.frameId ?? element.frameId ?? scene.rootFrameId;
+	const frameId = placement.frameId ?? element.frameId ?? "scene";
+	const owner = frameId === "scene" ? undefined : frameId;
 	return (
 		<DebugCard
 			componentName="ElementPlacementSettings"
@@ -53,18 +54,22 @@ export function ElementPlacementSettings({
 				value={placement.mode}
 				options={[
 					{ label: "Normal flow", value: "normal" },
-					{ label: "Absolute in frame", value: "absolute" },
+					{ label: "Absolute in parent", value: "absolute" },
 					{ label: "Fixed within scene viewport", value: "fixed" },
 				]}
 				onChange={(value) => {
-					const mode = value as ElementPlacement["mode"];
+					const mode =
+						value === "normal" && !owner
+							? "absolute"
+							: (value as ElementPlacement["mode"]);
 					onChange(
 						mode === "normal"
-							? { mode, frameId, overflow: placement.overflow }
+							? { mode, frameId: owner, overflow: placement.overflow }
 							: {
 									horizontal: "left",
 									mode,
-									frameId,
+									frameId: owner,
+									parallax: placement.parallax,
 									overflow: "visible",
 									unit: "viewport",
 									vertical: "top",
@@ -75,14 +80,31 @@ export function ElementPlacementSettings({
 				}}
 			/>
 			<PlacementSelect
-				label="Parent frame"
+				label="Parent"
 				value={frameId}
-				options={frames.map((frame) => ({
-					label: frame.name?.trim() || `Frame ${frame.id}`,
-					value: frame.id,
-				}))}
+				options={[
+					{ label: "Scene", value: "scene" },
+					...frames.map((frame) => ({
+						label: frame.name?.trim() || `Frame ${frame.id}`,
+						value: frame.id,
+					})),
+				]}
 				onChange={(nextFrameId) =>
-					onChange({ ...placement, frameId: nextFrameId })
+					onChange(
+						nextFrameId === "scene"
+							? placement.mode === "normal"
+								? {
+										mode: "absolute",
+										horizontal: "left",
+										vertical: "top",
+										unit: "px",
+										x: 0,
+										y: 0,
+										overflow: "clip",
+									}
+								: { ...placement, frameId: undefined }
+							: { ...placement, frameId: nextFrameId },
+					)
 				}
 			/>
 			<PlacementSelect
@@ -135,7 +157,13 @@ export function ElementPlacementSettings({
 						label="Unit"
 						value={placement.unit}
 						options={[
-							{ label: "Viewport", value: "viewport" },
+							{
+								label:
+									owner && placement.mode === "absolute"
+										? "Parent proportion"
+										: "Viewport",
+								value: "viewport",
+							},
 							{ label: "Pixels", value: "px" },
 						]}
 						onChange={(value) =>

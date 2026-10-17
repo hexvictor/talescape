@@ -2,7 +2,9 @@
 
 import { Home, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
 
 type TaleForbiddenProps = {
 	action?: "edit" | "view";
@@ -26,12 +28,20 @@ export default function TaleForbidden({
 	taleId,
 }: TaleForbiddenProps): React.JSX.Element {
 	return (
-		<div
+		<PageShell
+			fullscreen
+			decorations="site-background"
 			data-reader-component="TaleForbidden"
 			data-reader-role="feedback-screen"
-			className="comic-halftone fixed inset-0 z-50 flex items-center justify-center bg-[var(--comic-red)] p-5 text-center text-foreground"
+			className="ts-decoration-host fixed inset-0 isolate z-50 flex items-center justify-center bg-[var(--comic-red)] p-5 text-center text-foreground"
 		>
-			<section className="w-full max-w-lg border-[4px] border-foreground bg-card p-6 shadow-[9px_9px_0_var(--comic-ink)] sm:p-9">
+			<Panel
+				shapes="cut-opposite"
+				className="w-full max-w-lg text-center"
+				surfaceClassName="p-6 sm:p-9"
+				data-reader-component="TaleForbidden"
+				data-reader-role="feedback-panel"
+			>
 				<ShieldAlert
 					size={42}
 					strokeWidth={2.5}
@@ -71,7 +81,7 @@ export default function TaleForbidden({
 					{creator && <p>Owner: {creator}</p>}
 					{type && <p>Type: {type}</p>}
 				</div>
-			</section>
-		</div>
+			</Panel>
+		</PageShell>
 	);
 }

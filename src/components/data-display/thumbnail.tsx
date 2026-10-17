@@ -8,18 +8,20 @@ import type {
 	Decoration,
 	MediaDecorationPreset,
 } from "~/components/decorations/types";
+import { Shape, type ShapeOptions } from "~/components/ui/shape";
 import cn from "~/lib/utils/cn";
 
-export type ThumbnailProps = Omit<ComponentProps<"div">, "children"> & {
-	alt?: string;
-	disabled?: boolean;
-	decorations?: Decoration[];
-	fallback?: ReactNode;
-	fit?: "contain" | "cover";
-	preset?: MediaDecorationPreset;
-	selected?: boolean;
-	src?: string | null;
-};
+export type ThumbnailProps = ComponentProps<"div"> &
+	ShapeOptions & {
+		alt?: string;
+		disabled?: boolean;
+		decorations?: MediaDecorationPreset | Decoration[];
+		fallback?: ReactNode;
+		fit?: "contain" | "cover";
+		preset?: MediaDecorationPreset;
+		selected?: boolean;
+		src?: string | null;
+	};
 
 export function Thumbnail({
 	alt = "",
@@ -31,12 +33,20 @@ export function Thumbnail({
 	preset,
 	selected = false,
 	src,
+	children,
+	shapes,
+	borderWidth,
+	borderColor,
+	shadow,
+	shadowColor,
+	shadowOffset,
 	...props
 }: ThumbnailProps): React.JSX.Element {
 	const [failedSrc, setFailedSrc] = useState<string | null>(null);
-
-	return (
+	const content = (
 		<div
+			data-reader-component="Thumbnail"
+			data-reader-role="thumbnail-surface"
 			{...props}
 			aria-disabled={disabled || undefined}
 			data-disabled={disabled || undefined}
@@ -50,7 +60,11 @@ export function Thumbnail({
 			)}
 		>
 			{decorations || preset ? (
-				<Decorations items={decorations} preset={preset} />
+				<Decorations
+					layer="overlay"
+					items={Array.isArray(decorations) ? decorations : undefined}
+					preset={typeof decorations === "string" ? decorations : preset}
+				/>
 			) : null}
 			{src && failedSrc !== src ? (
 				<img
@@ -66,6 +80,22 @@ export function Thumbnail({
 			) : (
 				(fallback ?? <ImageIcon aria-hidden="true" className="size-4" />)
 			)}
+			{children}
 		</div>
+	);
+	return shapes !== undefined ? (
+		<Shape
+			shapes={shapes}
+			borderWidth={borderWidth ?? 1}
+			borderColor={borderColor}
+			shadow={shadow}
+			shadowColor={shadowColor}
+			shadowOffset={shadowOffset}
+			style={{ width: "fit-content", maxWidth: "100%" }}
+		>
+			{content}
+		</Shape>
+	) : (
+		content
 	);
 }

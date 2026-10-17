@@ -1,5 +1,7 @@
 .ts-geometry {
 	--ts-geometry-slant: 10px;
+	--ts-geometry-step-position: 55%;
+	--ts-geometry-step-depth: 24px;
 	--ts-geometry-inner-decrease: 1px;
 	--ts-geometry-inner-slant: calc(
 		var(--ts-geometry-slant) -
@@ -9,8 +11,95 @@
 	--ts-geometry-inner-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
+.ts-geometry[data-ts-shape="step-bottom-right"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--ts-geometry-step-depth)),
+		calc(var(--ts-geometry-step-position) + var(--ts-geometry-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		var(--ts-geometry-step-position) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--ts-geometry-step-depth)),
+		calc(var(--ts-geometry-step-position) + var(--ts-geometry-inner-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		var(--ts-geometry-step-position) 100%,
+		0 100%
+	);
+}
+.ts-geometry[data-ts-shape="step-bottom-left"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-step-position) 100%,
+		calc(var(--ts-geometry-step-position) - var(--ts-geometry-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		0 calc(100% - var(--ts-geometry-step-depth))
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-step-position) 100%,
+		calc(var(--ts-geometry-step-position) - var(--ts-geometry-inner-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		0 calc(100% - var(--ts-geometry-step-depth))
+	);
+}
+.ts-geometry[data-ts-shape="notch-bottom"] {
+	--ts-geometry-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		calc(var(--ts-geometry-step-position) + var(--ts-geometry-slant)) 100%,
+		var(--ts-geometry-step-position) calc(100% - var(--ts-geometry-step-depth)),
+		calc(var(--ts-geometry-step-position) - var(--ts-geometry-slant)) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: polygon(
+		0 0,
+		100% 0,
+		100% 100%,
+		calc(var(--ts-geometry-step-position) + var(--ts-geometry-inner-slant)) 100%,
+		var(--ts-geometry-step-position) calc(100% - var(--ts-geometry-step-depth)),
+		calc(var(--ts-geometry-step-position) - var(--ts-geometry-inner-slant)) 100%,
+		0 100%
+	);
+}
+
 .ts-geometry-clip {
 	clip-path: var(--ts-geometry-clip-path);
+}
+
+.ts-geometry[data-ts-shape="slant-left-step-bottom-right"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-edge-slant, var(--ts-geometry-slant)) 0,
+		100% 0,
+		100% calc(100% - var(--ts-geometry-step-depth)),
+		calc(var(--ts-geometry-step-position) + var(--ts-geometry-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		var(--ts-geometry-step-position) 100%,
+		0 100%
+	);
+	--ts-geometry-inner-clip-path: var(--ts-geometry-clip-path);
+}
+
+.ts-geometry[data-ts-shape="slant-left-step-bottom-left"] {
+	--ts-geometry-clip-path: polygon(
+		var(--ts-geometry-edge-slant, var(--ts-geometry-slant)) 0,
+		100% 0,
+		100% 100%,
+		var(--ts-geometry-step-position) 100%,
+		calc(var(--ts-geometry-step-position) - var(--ts-geometry-slant))
+			calc(100% - var(--ts-geometry-step-depth)),
+		0 calc(100% - var(--ts-geometry-step-depth))
+	);
+	--ts-geometry-inner-clip-path: var(--ts-geometry-clip-path);
 }
 
 .ts-geometry-inner-clip {
@@ -182,4 +271,11 @@
 		calc(100% - var(--ts-geometry-inner-slant)) 100%,
 		0 100%
 	);
+}
+.ts-shaped-panel::before {
+	position: absolute;
+	inset: 0;
+	background: var(--foreground);
+	clip-path: var(--ts-geometry-clip-path);
+	content: "";
 }

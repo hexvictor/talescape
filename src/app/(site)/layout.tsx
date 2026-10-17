@@ -15,11 +15,17 @@ export type SiteLayoutProps = Readonly<PropsWithChildren>;
 export default function SiteLayout({ children }: SiteLayoutProps) {
 	return (
 		<PageShell
-			className="site-paper flex min-h-dvh flex-col"
-			decorationPreset="page-subtle"
+			decorations="site-background"
+			className="flex min-h-dvh flex-col"
 		>
 			<Header />
-			<main className="flex-1">{children}</main>
+			<main
+				className="flex flex-1 flex-col"
+				data-reader-component="SiteLayout"
+				data-reader-role="page-content"
+			>
+				{children}
+			</main>
 			<Footer />
 		</PageShell>
 	);

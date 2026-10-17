@@ -1,16 +1,24 @@
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { ComicPanel, ComicRail } from "~/components/layout/comic-panel";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
 
 function NotFound(): React.JSX.Element {
 	return (
-		<main className="comic-halftone grid min-h-[calc(100svh-5rem)] place-items-center bg-[var(--comic-ink)] p-5">
+		<PageShell
+			as="section"
+			decorations="site-background"
+			className="grid place-items-center p-5"
+			data-reader-component="NotFound"
+			data-reader-role="feedback-screen"
+		>
 			<ComicPanel
+				decorations="brush-halftone"
 				accent="primary"
-				className="w-full max-w-2xl p-8 sm:p-12"
-				decoration="strikes"
-				shape="cut-opposite"
+				className="w-full max-w-2xl"
+				surfaceClassName="p-8 sm:p-12"
+				shapes="cut-opposite"
 				slant="28px"
 			>
 				<ComicRail accent="primary">
@@ -26,13 +34,13 @@ function NotFound(): React.JSX.Element {
 					The route may have moved, changed title, or slipped into another
 					branch.
 				</p>
-				<Button asChild className="mt-7" shape="slant-right" variant="comic">
+				<Button asChild className="mt-7" shapes="slant-right" variant="comic">
 					<Link href="/">
 						<ArrowLeft /> Return home
 					</Link>
 				</Button>
 			</ComicPanel>
-		</main>
+		</PageShell>
 	);
 }
 

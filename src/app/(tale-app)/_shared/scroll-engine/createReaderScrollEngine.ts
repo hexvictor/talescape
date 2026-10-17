@@ -409,6 +409,14 @@ export function createReaderScrollEngine({
 		stage.parentElement;
 	const paintProgress = createProgressPainter(progressRoot, compiled, tale);
 	const domRegistry = createReaderDomRegistry(progressRoot ?? stage);
+	const parallaxSceneIds = new Set(
+		tale.order.sceneIds.filter((id) =>
+			tale.indexMap.scenesById[id]?.elementIds.some(
+				(elementId) =>
+					tale.indexMap.elementsById[elementId]?.placement.parallax?.enabled,
+			),
+		),
+	);
 	const paintFixedElements = createReaderFixedFragmentPainter(
 		domRegistry,
 		viewport,
@@ -929,6 +937,21 @@ export function createReaderScrollEngine({
 			paintFixedElements(anchor, activeAnchor, segment, segmentProgress);
 		}
 		for (const anchor of styledAnchors) {
+			const sceneElement = domRegistry.sceneElementById.get(anchor.sceneId);
+			if (sceneElement && parallaxSceneIds.has(anchor.sceneId)) {
+				sceneElement.style.setProperty(
+					"--reader-camera-offset-x",
+					`${camera.x - anchor.cameraPoint.x}px`,
+				);
+				sceneElement.style.setProperty(
+					"--reader-camera-offset-y",
+					`${camera.y - anchor.cameraPoint.y}px`,
+				);
+				sceneElement.style.setProperty(
+					"--reader-scroll-offset",
+					`${scroll - anchor.scroll}px`,
+				);
+			}
 			if (framePlan.paintedSceneIds.has(anchor.sceneId)) {
 				paintAnchorFrame(
 					anchor,

@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { getSceneProgressionFrameIds } from "~/app/(tale-app)/_shared/services/taleLookups";
 import type { Tale } from "~/app/(tale-app)/_shared/types";
 import {
+	addDraftElement,
 	addDraftFrame,
 	addDraftGroup,
 	addDraftScene,
+	editElement,
 	removeDraftBranch,
+	removeDraftElement,
 } from "./taleDraftEdits";
 
 describe("unsaved scene structure", () => {
@@ -87,6 +90,64 @@ describe("branch removal", () => {
 		expect(next.indexMap.scenesById["grandchild-scene"]).toBeUndefined();
 		expect(next.indexMap.framesById["child-frame"]).toBeUndefined();
 		expect(next.indexMap.elementsById["grandchild-element"]).toBeUndefined();
+	});
+});
+
+describe("scene-owned elements", () => {
+	it("creates a clipped background without changing frame contents, and removes it", () => {
+		const tale = createBranchRemovalFixture();
+		for (const element of Object.values(tale.indexMap.elementsById))
+			element.placement = { mode: "normal" };
+		for (const frame of Object.values(tale.indexMap.framesById))
+			frame.children = [];
+		for (const keyframe of Object.values(tale.indexMap.keyframesById))
+			keyframe.actions = [];
+		const next = addDraftElement(tale, "root-scene", null, {
+			type: "image",
+			label: "Background",
+			src: "/background.png",
+		});
+		const id = next.order.elementIds.at(-1);
+		if (!id) throw new Error("Missing scene element");
+		const element = next.indexMap.elementsById[id];
+		if (!element) throw new Error("Missing scene element");
+		expect(element.frameId).toBeNull();
+		expect(element.sceneId).toBe("root-scene");
+		expect(element.placement).toMatchObject({
+			mode: "absolute",
+			overflow: "clip",
+			zIndex: -1,
+		});
+		expect(element.style).toMatchObject({ width: "100%", height: "100%" });
+		expect(next.indexMap.scenesById["root-scene"]?.clippedElementIds).toContain(
+			id,
+		);
+		expect(next.indexMap.framesById["root-frame"]).toBe(
+			tale.indexMap.framesById["root-frame"],
+		);
+		const edited = editElement(next, id, (item) => ({
+			...item,
+			placement: {
+				...item.placement,
+				parallax: {
+					enabled: true,
+					source: "both",
+					scrollX: 0.2,
+					scrollY: 0.3,
+					mouseX: 10,
+					mouseY: 15,
+					scale: 1.2,
+				},
+			},
+		}));
+		expect(edited.indexMap.elementsById[id]?.placement.parallax?.scrollY).toBe(
+			0.3,
+		);
+		const removed = removeDraftElement(edited, id);
+		expect(removed.indexMap.elementsById[id]).toBeUndefined();
+		expect(removed.indexMap.scenesById["root-scene"]?.elementIds).not.toContain(
+			id,
+		);
 	});
 });
 

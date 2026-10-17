@@ -3,6 +3,7 @@
 import { useTaleRenderSlots } from "../../../contexts/TaleRenderContext";
 import type { Anchor, ResolvedTaleElement, TaleFrame } from "../../../types";
 import { TaleElement } from "../TaleElement/TaleElement";
+import { PositionedElements } from "./PositionedElements";
 import { getFrameElementStyle, getFrameStyle } from "./frameStyles";
 
 /**
@@ -38,6 +39,11 @@ export function FrameRenderer({
 	if (!frame) return null;
 	const defaultState =
 		parentFrame?.defaultElementStates?.[frame.id] ?? "active";
+	const positionedElements = Object.values(elementsById).filter(
+		(element) =>
+			element.placement.mode === "absolute" &&
+			(element.placement.frameId ?? element.frameId) === frame.id,
+	);
 
 	return (
 		<div
@@ -82,6 +88,13 @@ export function FrameRenderer({
 					/>
 				);
 			})}
+			<PositionedElements
+				anchor={anchor}
+				contentSized={contentSized}
+				elements={positionedElements}
+				framesById={framesById}
+				parentRelative
+			/>
 		</div>
 	);
 }

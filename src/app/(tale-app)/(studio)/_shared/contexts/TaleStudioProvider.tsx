@@ -46,6 +46,7 @@ import {
 	type TaleStudioState,
 	createTaleStudioStore,
 } from "../store/taleStudioStore";
+import { TaleStudioStoreContext } from "./TaleStudioStoreContext";
 
 type TaleStudioDocument = {
 	exportTale: () => void;
@@ -120,6 +121,7 @@ export function TaleStudioProvider({
 	children,
 }: PropsWithChildren): React.JSX.Element {
 	const inputRef = useRef<HTMLInputElement | null>(null);
+	const inspectedLink = useRef<string | null>(null);
 	const savedNoticeTimerRef = useRef<number | null>(null);
 	const storeRef = useRef<StoreApi<TaleStudioState> | null>(null);
 	if (!storeRef.current) storeRef.current = createTaleStudioStore();
@@ -135,6 +137,31 @@ export function TaleStudioProvider({
 	);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	useStudioWorkspacePersistence(store, tale.id);
+	useEffect(() => {
+		const query = new URLSearchParams(window.location.search);
+		const id = query.get("inspectId");
+		const type = query.get("inspect");
+		if (!id) return;
+		const linkKey = `${tale.id}:${type}:${id}`;
+		if (inspectedLink.current === linkKey) return;
+		let target: TaleInspectorTarget | null = null;
+		if (type === "scene") target = { type, id };
+		if (type === "frame") {
+			const frame = tale.indexMap.framesById[id];
+			const scene = Object.values(tale.indexMap.scenesById).find((scene) =>
+				scene.frameIds.includes(id),
+			);
+			if (frame && scene) target = { type, id, sceneId: scene.id };
+		}
+		if (type === "element") {
+			const element = tale.indexMap.elementsById[id];
+			if (element) target = { type, id, sceneId: element.sceneId };
+		}
+		if (target && isInspectorTargetAvailable(target, tale)) {
+			inspectedLink.current = linkKey;
+			store.getState().studioSelection.openInspector(target);
+		}
+	}, [store, tale]);
 	const recovery = useStudioDraftRecovery();
 	const [savedNoticeVisible, setSavedNoticeVisible] = useState(false);
 	const [dialog, setDialog] = useState<StudioDialog | null>(null);
@@ -266,22 +293,24 @@ export function TaleStudioProvider({
 
 	return (
 		<TaleStudioContext.Provider value={value}>
-			<TaleRenderContext.Provider value={studioRenderers}>
-				<input
-					ref={inputRef}
-					aria-label="Import tale JSON"
-					className="hidden"
-					accept="application/json,.json"
-					type="file"
-					onChange={(event) => {
-						const file = event.currentTarget.files?.[0];
-						event.currentTarget.value = "";
-						if (file) void importTale(file);
-					}}
-				/>
-				{children}
-				<StudioDialog dialog={dialog} onClose={() => setDialog(null)} />
-			</TaleRenderContext.Provider>
+			<TaleStudioStoreContext.Provider value={store}>
+				<TaleRenderContext.Provider value={studioRenderers}>
+					<input
+						ref={inputRef}
+						aria-label="Import tale JSON"
+						className="hidden"
+						accept="application/json,.json"
+						type="file"
+						onChange={(event) => {
+							const file = event.currentTarget.files?.[0];
+							event.currentTarget.value = "";
+							if (file) void importTale(file);
+						}}
+					/>
+					{children}
+					<StudioDialog dialog={dialog} onClose={() => setDialog(null)} />
+				</TaleRenderContext.Provider>
+			</TaleStudioStoreContext.Provider>
 		</TaleStudioContext.Provider>
 	);
 }

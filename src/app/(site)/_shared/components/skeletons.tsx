@@ -39,7 +39,7 @@ export function CardGridSkeleton({
 				<ComicPanel
 					key={item.id}
 					className="overflow-hidden"
-					shape="corner-top-right"
+					shapes="corner-top-right"
 				>
 					<Skeleton className={aspect} />
 					<div className="space-y-3 p-4">
@@ -65,7 +65,10 @@ export function PanelSkeleton() {
 
 export function LibraryHeaderSkeleton() {
 	return (
-		<ComicPanel className="flex flex-col justify-between gap-5 p-5 sm:p-6 lg:flex-row lg:items-end">
+		<ComicPanel
+			className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
+			surfaceClassName="p-5 sm:p-6"
+		>
 			<div className="w-full max-w-2xl space-y-3">
 				<Skeleton className="h-4 w-28" />
 				<Skeleton className="h-9 w-80 max-w-full" />
@@ -84,7 +87,7 @@ export function DetailPageSkeleton() {
 	return (
 		<div className="mx-auto grid w-full max-w-[var(--ts-content-max)] gap-5 py-2 md:grid-cols-[14rem_1fr]">
 			<Skeleton className="aspect-[3/4] w-full" />
-			<ComicPanel className="p-5" shape="corner-top-right">
+			<ComicPanel surfaceClassName="p-5" shapes="corner-top-right">
 				<div className="space-y-3">
 					<Skeleton className="h-4 w-32" />
 					<Skeleton className="h-9 w-72 max-w-full" />

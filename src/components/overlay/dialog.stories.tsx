@@ -58,6 +58,7 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+export const Editor: Story = { parameters: { componentEditor: true } };
 
 export const Default: Story = {};
 
@@ -94,6 +95,35 @@ export const ExplicitClose: Story = {
 			expect(page.queryByRole("dialog")).not.toBeInTheDocument(),
 		);
 		await expect(trigger).toHaveFocus();
+	},
+};
+
+export const BackdropExitRegression: Story = {
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const page = within(canvasElement.ownerDocument.body);
+		await userEvent.click(canvas.getByRole("button", { name: "Edit scene" }));
+		await new Promise((resolve) => setTimeout(resolve, 250));
+		const overlay = canvasElement.ownerDocument.querySelector(
+			'[data-slot="dialog-overlay"]',
+		) as HTMLElement;
+		const samples: number[] = [];
+		let sampling = true;
+		const sample = () => {
+			if (!sampling) return;
+			if (overlay.isConnected)
+				samples.push(Number(getComputedStyle(overlay).opacity));
+			requestAnimationFrame(sample);
+		};
+		requestAnimationFrame(sample);
+		await userEvent.click(page.getByRole("button", { name: "Cancel" }));
+		await waitFor(() => expect(overlay).not.toBeInTheDocument());
+		sampling = false;
+		for (let i = 1; i < samples.length; i++)
+			expect(samples[i]).toBeLessThanOrEqual((samples[i - 1] ?? 1) + 0.02);
+		await expect(
+			canvas.getByRole("button", { name: "Edit scene" }),
+		).toHaveFocus();
 	},
 };
 

@@ -1,9 +1,18 @@
 "use client";
 
-import { FileText, Maximize2, Network, Paintbrush, Waves } from "lucide-react";
+import {
+	Boxes,
+	FileText,
+	Maximize2,
+	Network,
+	Paintbrush,
+	Waves,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import {
+	addDraftElement,
 	editScene,
+	removeDraftElement,
 	removeDraftScene,
 } from "~/app/(tale-app)/(studio)/_shared/services/taleDraftEdits";
 import { DebugTabs } from "~/app/(tale-app)/_shared/components/ReaderUi/TaleDebug/DebugPrimitives";
@@ -29,12 +38,15 @@ import {
 	StyleSettings,
 } from "../InspectorFields";
 import { NarrativePanel } from "../NarrativePanel";
+import { StyleTargetTabs } from "../StyleTargetTabs";
 import { SceneContainerSettings } from "./SceneContainerSettings";
 import { SceneDetailsSettings } from "./SceneDetailsSettings";
+import { SceneElementsSettings } from "./SceneElementsSettings";
 import { SceneMotionSettings } from "./SceneMotionSettings";
 import { SceneTransitionSettings } from "./SceneTransitionSettings";
 
 type SceneInspectorTab =
+	| "elements"
 	| "layout"
 	| "motion"
 	| "size"
@@ -51,6 +63,7 @@ const tabs: {
 	{ icon: <FileText size={15} />, id: "narrative", label: "Narrative" },
 	{ icon: <Maximize2 size={15} />, id: "size", label: "Size & placement" },
 	{ icon: <Network size={15} />, id: "layout", label: "Frames" },
+	{ icon: <Boxes size={15} />, id: "elements", label: "Elements" },
 	{ icon: <Waves size={15} />, id: "motion", label: "Motion" },
 	{ icon: <Paintbrush size={15} />, id: "style", label: "Style" },
 ];
@@ -87,6 +100,9 @@ export function SceneInspectorPanel({
 	);
 	const rememberInspectorTab = useTaleStudioStore(
 		(state) => state.studioSelection.rememberInspectorTab,
+	);
+	const openInspector = useTaleStudioStore(
+		(state) => state.studioSelection.openInspector,
 	);
 	const [activeTab, setActiveTab] = useState<SceneInspectorTab>(initialTab);
 	const resolvedTale = useMemo(
@@ -130,6 +146,39 @@ export function SceneInspectorPanel({
 				/>
 			</div>
 			<div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+				{activeTab === "elements" && (
+					<SceneElementsSettings
+						elements={scene.elementIds.flatMap((id) => {
+							const element = resolvedTale.indexMap.elementsById[id];
+							return element && !element.frameId ? [element] : [];
+						})}
+						onCreate={(input) => {
+							scrollApi?.capturePosition();
+							setTale(addDraftElement(tale, scene.id, null, input), {
+								reason: "scene-element-add",
+							});
+						}}
+						onOpen={(id) =>
+							openInspector({
+								type: "element",
+								id,
+								sceneId: scene.id,
+								initialTab: "content",
+							})
+						}
+						onRemove={(id) =>
+							dialogs.confirm({
+								title: "Remove Element",
+								description: "Remove this scene element?",
+								confirmLabel: "Remove",
+								onConfirm: () =>
+									setTale(removeDraftElement(tale, id), {
+										reason: "scene-element-remove",
+									}),
+							})
+						}
+					/>
+				)}
 				{activeTab === "narrative" ? (
 					<NarrativePanel sceneId={sceneId} />
 				) : null}
@@ -195,38 +244,51 @@ export function SceneInspectorPanel({
 					<SceneMotionSettings scene={scene} onChange={commit} />
 				) : null}
 				{activeTab === "style" ? (
-					<div className="space-y-4">
-						<StyleSettings
-							showDisplayControls={false}
-							showPositionControls={false}
-							style={scene.style}
-							title="Scene container style"
-							onChange={(style) => commit((item) => ({ ...item, style }))}
-						/>
-						<SceneContainerSettings
-							scene={scene}
-							variant="style"
-							onChange={(container) =>
-								commit((item) => ({ ...item, container }))
-							}
-						/>
-						<details className="border-2 border-foreground bg-card p-3 shadow-[3px_3px_0_var(--comic-teal)]">
-							<summary className="cursor-pointer font-black text-[10px] text-primary uppercase tracking-[0.17em]">
-								Advanced article wrapper style
-							</summary>
-							<StyleSettings
-								className="mt-3"
-								showBoxControls={false}
-								showDisplayControls={false}
-								showPositionControls={false}
-								style={scene.articleStyle}
-								title="Article wrapper style"
-								onChange={(articleStyle) =>
-									commit((item) => ({ ...item, articleStyle }))
-								}
-							/>
-						</details>
-					</div>
+					<StyleTargetTabs
+						targets={[
+							{
+								id: "scene",
+								label: "Scene content",
+								content: (
+									<div className="space-y-4">
+										<StyleSettings
+											showDisplayControls={false}
+											showPositionControls={false}
+											style={scene.style}
+											title="Scene content"
+											onChange={(style) =>
+												commit((item) => ({ ...item, style }))
+											}
+										/>
+										<SceneContainerSettings
+											scene={scene}
+											variant="style"
+											onChange={(container) =>
+												commit((item) => ({ ...item, container }))
+											}
+										/>
+									</div>
+								),
+							},
+							{
+								id: "article",
+								label: "Scene outer box",
+								content: (
+									<StyleSettings
+										className="mt-3"
+										showBoxControls={false}
+										showDisplayControls={false}
+										showPositionControls={false}
+										style={scene.articleStyle}
+										title="Scene outer box"
+										onChange={(articleStyle) =>
+											commit((item) => ({ ...item, articleStyle }))
+										}
+									/>
+								),
+							},
+						]}
+					/>
 				) : null}
 			</div>
 		</div>

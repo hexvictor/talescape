@@ -28,9 +28,7 @@ export function ImageElement({
 			data-reader-role="image-content"
 			data-reader-element-id={element.id}
 			className={
-				fillsAuthoredFrame
-					? "h-full w-full overflow-hidden"
-					: "overflow-hidden rounded-lg border border-foreground/14 bg-background/35 shadow-2xl"
+				fillsAuthoredFrame ? "h-full w-full overflow-hidden" : "overflow-hidden"
 			}
 		>
 			<img
@@ -60,9 +58,7 @@ export function ImageElement({
 				}}
 			/>
 			{element.caption ? (
-				<figcaption className="border-foreground/10 border-t bg-background/54 px-4 py-3 text-foreground/62 text-xs">
-					{element.caption}
-				</figcaption>
+				<figcaption className="px-4 py-3 text-xs">{element.caption}</figcaption>
 			) : null}
 		</figure>
 	);

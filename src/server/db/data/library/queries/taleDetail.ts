@@ -2,12 +2,10 @@ import "server-only";
 
 import { db } from "~/server/db";
 import { getAccessLabel, getSignedInLibraryUser } from "./access";
-
-const readablePermissions = ["viewer", "collaborator", "cloner"] as const;
-
-type PermissionRecord = {
-	permissionTypes: readonly string[];
-};
+import {
+	canEditLibraryResource,
+	canReadLibraryResource as canViewResource,
+} from "./permissions";
 
 export async function getLibraryTaleDetail(taleId: number) {
 	const { userId } = await getSignedInLibraryUser();
@@ -16,11 +14,13 @@ export async function getLibraryTaleDetail(taleId: number) {
 		with: {
 			book: true,
 			creatorById: true,
-			permissions: true,
+			permissions: { where: (model, { eq }) => eq(model.userId, userId ?? "") },
 			branches: {
 				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
-					permissions: true,
+					permissions: {
+						where: (model, { eq }) => eq(model.userId, userId ?? ""),
+					},
 				},
 			},
 			scenes: {
@@ -38,14 +38,18 @@ export async function getLibraryTaleDetail(taleId: number) {
 							},
 						},
 					},
-					permissions: true,
+					permissions: {
+						where: (model, { eq }) => eq(model.userId, userId ?? ""),
+					},
 				},
 			},
 			elements: {
 				orderBy: (model, { asc }) => [asc(model.order)],
 				with: {
 					scene: true,
-					permissions: true,
+					permissions: {
+						where: (model, { eq }) => eq(model.userId, userId ?? ""),
+					},
 				},
 			},
 			paths: {
@@ -53,7 +57,9 @@ export async function getLibraryTaleDetail(taleId: number) {
 				with: {
 					fromBranch: true,
 					toBranch: true,
-					permissions: true,
+					permissions: {
+						where: (model, { eq }) => eq(model.userId, userId ?? ""),
+					},
 				},
 			},
 			parts: {
@@ -89,12 +95,16 @@ export async function getLibraryTaleDetail(taleId: number) {
 		pages,
 		...taleRecord
 	} = tale;
+	const canViewContents = canViewResource(
+		{ ...tale, visibility: "private" },
+		userId,
+	);
 
 	const branches = branchRecords
-		.filter((branch) => canViewResource(branch, userId))
+		.filter((branch) => canViewContents || canViewResource(branch, userId))
 		.map((branch) => ({ ...branch, index: branch.order }));
 	const scenes = sceneRecords
-		.filter((scene) => canViewResource(scene, userId))
+		.filter((scene) => canViewContents || canViewResource(scene, userId))
 		.map((scene) => {
 			const page = scene.keyframes.find((keyframe) => keyframe.page)?.page;
 			return {
@@ -108,7 +118,7 @@ export async function getLibraryTaleDetail(taleId: number) {
 			};
 		});
 	const elements = elementRecords
-		.filter((element) => canViewResource(element, userId))
+		.filter((element) => canViewContents || canViewResource(element, userId))
 		.map((element) => ({
 			...element,
 			scene: element.scene
@@ -116,11 +126,14 @@ export async function getLibraryTaleDetail(taleId: number) {
 				: element.scene,
 			index: element.order,
 		}));
-	const paths = pathRecords.filter((path) => canViewResource(path, userId));
+	const paths = pathRecords.filter(
+		(path) => canViewContents || canViewResource(path, userId),
+	);
 
 	return {
 		tale: {
 			...taleRecord,
+			canEdit: canEditLibraryResource(tale, userId),
 			accessLabel: getAccessLabel(tale, userId),
 			nodeCounts: {
 				branches: branches.length,
@@ -145,37 +158,3 @@ export async function getLibraryTaleDetail(taleId: number) {
 export type LibraryTaleDetail = NonNullable<
 	Awaited<ReturnType<typeof getLibraryTaleDetail>>
 >;
-
-/**
- * Checks shared visibility and permission rules for a library resource.
- *
- * @param resource - Tale or reader asset with access metadata.
- * @param userId - Signed-in user id, when available.
- * @returns Whether the resource can be shown.
- */
-function canViewResource(
-	resource: {
-		isOfficial: boolean;
-		visibility: string;
-		creatorId: string;
-		permissions: PermissionRecord[];
-	},
-	userId: string | null,
-) {
-	return (
-		resource.isOfficial ||
-		resource.visibility === "public" ||
-		(userId !== null && resource.creatorId === userId) ||
-		(userId !== null && hasReadablePermission(resource.permissions))
-	);
-}
-
-function hasReadablePermission(permissions: PermissionRecord[]) {
-	return permissions.some((permission) =>
-		permission.permissionTypes.some((type) =>
-			readablePermissions.includes(
-				type as (typeof readablePermissions)[number],
-			),
-		),
-	);
-}

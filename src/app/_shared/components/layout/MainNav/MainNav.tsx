@@ -55,10 +55,10 @@ export default function MainNav({ mobile = false }: { mobile?: boolean }) {
 						<li key={href}>
 							<Button
 								asChild
-								hoverShape="slant-both"
+								hoverShapes="slant-both"
 								className={cn(mobile && "w-full min-w-44")}
 								motion={isActive ? "lift-on-hover" : "flat"}
-								shape={isActive ? "slant-both" : "rectangle"}
+								shapes={isActive ? "slant-both" : "rectangle"}
 								variant={isActive ? "navActive" : "nav"}
 							>
 								<Link href={href} aria-current={isActive ? "page" : undefined}>

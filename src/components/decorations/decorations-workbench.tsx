@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ColorPicker } from "~/components/ui/color-picker";
+import Input from "~/components/ui/input";
 import { Decorations } from "./decorations";
-import { AccentStreak, HalftoneDots, SpeedLines } from "./primitives";
+import { resolveDecorationColor } from "./primitives";
 import {
 	type AccentStreakDecoration,
-	type DecorationColorToken,
+	type Decoration,
+	type DecorationColor,
 	type DecorationDensity,
 	type DecorationDirection,
 	type DecorationPosition,
 	type HalftoneDecoration,
 	type SpeedLinesDecoration,
 	decorationColorTokens,
+	decorationKinds,
 	decorationPositions,
 } from "./types";
 
@@ -24,17 +28,21 @@ const densities: DecorationDensity[] = [
 	"packed",
 ];
 const directions: DecorationDirection[] = [
+	"right",
+	"left",
+	"up",
+	"down",
 	"down-right",
 	"down-left",
 	"up-right",
 	"up-left",
 ];
 
-type DecorationKind = "accent-streak" | "halftone" | "speed-lines";
+type DecorationKind = Decoration["type"];
 
 type CommonSettings = {
 	aspectRatio: number;
-	color: DecorationColorToken;
+	color: DecorationColor;
 	coverage: number;
 	offsetUnit: "percent" | "px";
 	offsetX: number;
@@ -58,6 +66,12 @@ const initialCommon: CommonSettings = {
 	scale: 1,
 };
 
+const colorSwatches = decorationColorTokens.map((value) => ({
+	value,
+	label: value,
+	color: resolveDecorationColor(value),
+}));
+
 const initialHalftone: Omit<HalftoneDecoration, "type"> = {
 	decayMode: "both",
 	density: "medium",
@@ -70,9 +84,8 @@ const initialHalftone: Omit<HalftoneDecoration, "type"> = {
 };
 
 const initialSpeedLines: Omit<SpeedLinesDecoration, "type"> = {
-	angle: 28,
+	angle: 0,
 	density: "medium",
-	direction: "down-right",
 	endOpacity: 1,
 	endWidth: 0.08,
 	jitter: 0.65,
@@ -92,7 +105,7 @@ const initialSpeedLines: Omit<SpeedLinesDecoration, "type"> = {
 };
 
 const initialAccent: Omit<AccentStreakDecoration, "type"> = {
-	angle: 28,
+	angle: 0,
 	density: "medium",
 	direction: "down-right",
 	length: 0.72,
@@ -102,7 +115,7 @@ const initialAccent: Omit<AccentStreakDecoration, "type"> = {
 	variant: "brush",
 };
 
-function SelectControl<T extends string>({
+export function SelectControl<T extends string>({
 	label,
 	onChange,
 	options,
@@ -114,16 +127,17 @@ function SelectControl<T extends string>({
 	value: T;
 }) {
 	return (
-		<label className="grid gap-1 font-bold text-xs uppercase">
+		<label className="grid gap-1.5 font-bold text-sm">
 			{label}
 			<select
+				aria-label={label}
 				className="h-9 border border-border bg-background px-2 font-normal normal-case"
 				onChange={(event) => onChange(event.target.value as T)}
 				value={value}
 			>
 				{options.map((option) => (
 					<option key={option} value={option}>
-						{option}
+						{option.replaceAll("-", " ")}
 					</option>
 				))}
 			</select>
@@ -146,21 +160,53 @@ function RangeControl({
 	step: number;
 	value: number;
 }) {
+	const [draft, setDraft] = useState(String(value));
+	useEffect(() => setDraft(String(value)), [value]);
+	const bounded =
+		label.toLowerCase().includes("opacity") || label === "Modulation";
+	const commit = (n: number) =>
+		onChange(Math.max(min, bounded ? Math.min(1, n) : n));
 	return (
-		<label className="grid gap-1 font-bold text-xs uppercase">
+		<div className="grid gap-1 font-bold text-xs uppercase">
 			<span className="flex justify-between gap-3">
 				{label}
-				<output className="font-mono font-normal">{value}</output>
+				<Input
+					aria-label={`${label} value`}
+					className="h-7 w-24 font-mono font-normal"
+					type="number"
+					value={draft}
+					step={step}
+					min={min}
+					max={
+						label.toLowerCase().includes("opacity") || label === "Modulation"
+							? 1
+							: undefined
+					}
+					onChange={(event) => {
+						setDraft(event.target.value);
+						const n = event.target.valueAsNumber;
+						if (Number.isFinite(n) && n >= min) commit(n);
+					}}
+					onBlur={() => {
+						const n = Number.parseFloat(draft);
+						if (Number.isFinite(n)) {
+							const next = Math.max(min, bounded ? Math.min(1, n) : n);
+							setDraft(String(next));
+							commit(next);
+						} else setDraft(String(value));
+					}}
+				/>
 			</span>
-			<input
-				max={max}
+			<Input
+				aria-label={label}
+				max={Math.max(max, value)}
 				min={min}
 				onChange={(event) => onChange(event.target.valueAsNumber)}
 				step={step}
 				type="range"
 				value={value}
 			/>
-		</label>
+		</div>
 	);
 }
 
@@ -178,10 +224,11 @@ function CommonControls({
 
 	return (
 		<>
-			<SelectControl
+			<ColorPicker
 				label="Color"
 				onChange={(value) => update("color", value)}
-				options={decorationColorTokens}
+				swatches={colorSwatches}
+				density="compact"
 				value={settings.color}
 			/>
 			<SelectControl
@@ -304,26 +351,32 @@ function HalftoneControls({
 				options={["both", "size", "opacity"]}
 				value={settings.decayMode ?? "both"}
 			/>
+			<SelectControl
+				label="Growth origin"
+				options={decorationPositions}
+				value={settings.decayOrigin ?? "center"}
+				onChange={(value) => update("decayOrigin", value)}
+			/>
 			<RangeControl
 				label="Dot size"
-				max={10}
-				min={0.5}
+				max={32}
+				min={0.1}
 				onChange={(value) => update("dotSize", value)}
 				step={0.5}
 				value={settings.dotSize ?? 3}
 			/>
 			<RangeControl
 				label="Spacing"
-				max={48}
-				min={8}
+				max={120}
+				min={0.5}
 				onChange={(value) => update("spacing", value)}
 				step={1}
 				value={settings.spacing ?? 21}
 			/>
 			<RangeControl
 				label="Falloff"
-				max={1.5}
-				min={0.15}
+				max={5}
+				min={0.05}
 				onChange={(value) => update("falloff", value)}
 				step={0.05}
 				value={settings.falloff ?? 0.82}
@@ -358,7 +411,18 @@ function SpeedLineControls({
 		<>
 			<SelectControl
 				label="Variant"
-				onChange={(value) => update("variant", value)}
+				onChange={(value) =>
+					setSettings((current) => ({
+						...current,
+						variant: value,
+						spread:
+							value === "radial"
+								? 360
+								: value === "fan" || value === "laser"
+									? 90
+									: current.spread,
+					}))
+				}
 				options={[
 					"tapered",
 					"brush",
@@ -392,9 +456,11 @@ function SpeedLineControls({
 			/>
 			<SelectControl
 				label="Direction"
-				onChange={(value) => update("direction", value)}
-				options={directions}
-				value={settings.direction ?? "down-right"}
+				onChange={(value) =>
+					update("direction", value === "auto" ? undefined : value)
+				}
+				options={["auto", ...directions]}
+				value={settings.direction ?? "auto"}
 			/>
 			<SelectControl
 				label="Density"
@@ -408,11 +474,11 @@ function SpeedLineControls({
 				min={-180}
 				onChange={(value) => update("angle", value)}
 				step={1}
-				value={settings.angle ?? 28}
+				value={settings.angle ?? 0}
 			/>
 			<RangeControl
 				label="Quantity"
-				max={72}
+				max={512}
 				min={1}
 				onChange={(value) => update("quantity", value)}
 				step={1}
@@ -420,7 +486,7 @@ function SpeedLineControls({
 			/>
 			<RangeControl
 				label="Length"
-				max={1.4}
+				max={8}
 				min={0.08}
 				onChange={(value) => update("length", value)}
 				step={0.04}
@@ -514,6 +580,30 @@ function SpeedLineControls({
 				step={0.05}
 				value={settings.vignetteFeather ?? 0.18}
 			/>
+			<RangeControl
+				label="Seed"
+				min={0}
+				max={100}
+				step={1}
+				value={settings.seed ?? 29}
+				onChange={(value) => update("seed", value)}
+			/>
+			<RangeControl
+				label="Modulation"
+				min={0}
+				max={1}
+				step={0.05}
+				value={settings.modulation ?? 0}
+				onChange={(value) => update("modulation", value)}
+			/>
+			<RangeControl
+				label="Modulation segments"
+				min={2}
+				max={64}
+				step={1}
+				value={settings.modulationSegments ?? 16}
+				onChange={(value) => update("modulationSegments", value)}
+			/>
 		</>
 	);
 }
@@ -547,6 +637,9 @@ function AccentControls({
 					"burst",
 					"lightning",
 					"cracks",
+					"fracture",
+					"ink",
+					"comet",
 				]}
 				value={settings.variant ?? "brush"}
 			/>
@@ -568,11 +661,11 @@ function AccentControls({
 				min={-180}
 				onChange={(value) => update("angle", value)}
 				step={1}
-				value={settings.angle ?? 28}
+				value={settings.angle ?? 0}
 			/>
 			<RangeControl
 				label="Quantity"
-				max={18}
+				max={64}
 				min={1}
 				onChange={(value) => update("quantity", value)}
 				step={1}
@@ -580,7 +673,7 @@ function AccentControls({
 			/>
 			<RangeControl
 				label="Length"
-				max={1}
+				max={8}
 				min={0.1}
 				onChange={(value) => update("length", value)}
 				step={0.05}
@@ -602,6 +695,281 @@ function AccentControls({
 				step={0.05}
 				value={settings.splatter ?? 0.38}
 			/>
+			<RangeControl
+				label="Stretch"
+				min={0.1}
+				max={8}
+				step={0.1}
+				value={settings.stretch ?? 1}
+				onChange={(value) => update("stretch", value)}
+			/>
+			<RangeControl
+				label="Seed"
+				min={0}
+				max={100}
+				step={1}
+				value={settings.seed ?? 41}
+				onChange={(value) => update("seed", value)}
+			/>
+			<RangeControl
+				label="Roughness"
+				min={0}
+				max={2}
+				step={0.05}
+				value={settings.roughness ?? 0.7}
+				onChange={(value) => update("roughness", value)}
+			/>
+			{settings.variant === "cracks" || settings.variant === "fracture" ? (
+				<RangeControl
+					label="Branching"
+					min={0}
+					max={3}
+					step={1}
+					value={settings.branching ?? 2}
+					onChange={(value) => update("branching", value)}
+				/>
+			) : null}
+		</>
+	);
+}
+
+export function createDecoration(type: DecorationKind): Decoration {
+	if (type === "background-texture")
+		return {
+			type,
+			variant: "paper",
+			color: "neutral",
+			opacity: 0.2,
+			tileSize: 256,
+			grainSize: 0.65,
+			density: "medium",
+			roughness: 0.5,
+			seed: 1,
+		};
+	if (type === "geometric")
+		return {
+			...initialCommon,
+			type,
+			shape: "parallelogram",
+			quantity: 1,
+			fill: "solid",
+		};
+	if (type === "circular-linework")
+		return {
+			...initialCommon,
+			type,
+			variant: "open-arc",
+			quantity: 5,
+			spacing: 22,
+			arc: 270,
+			jitter: 0.35,
+			seed: 1,
+		};
+	return {
+		...initialCommon,
+		aspectRatio: type === "halftone" ? 1 : 2.1,
+		...(type === "halftone"
+			? initialHalftone
+			: type === "speed-lines"
+				? initialSpeedLines
+				: initialAccent),
+		type,
+	} as Decoration;
+}
+
+export function DecorationControls({
+	value,
+	onChange,
+}: { value: Decoration; onChange: (value: Decoration) => void }) {
+	const resolvedCommon = {
+		...initialCommon,
+		aspectRatio:
+			value.type === "halftone" ? 1 : value.type === "speed-lines" ? 1.8 : 2.1,
+		coverage:
+			value.type === "halftone"
+				? 0.5
+				: value.type === "speed-lines"
+					? 0.72
+					: 0.58,
+		position: value.type === "halftone" ? "bottom-left" : "center",
+		color: "neutral",
+		opacity: 1,
+		...value,
+	} as CommonSettings;
+	const setCommon: React.Dispatch<React.SetStateAction<CommonSettings>> = (
+		action,
+	) => {
+		const current = resolvedCommon;
+		const next = typeof action === "function" ? action(current) : action;
+		onChange({
+			...value,
+			...Object.fromEntries(
+				Object.entries(next).filter(
+					([key, entry]) => entry !== current[key as keyof CommonSettings],
+				),
+			),
+		});
+	};
+	return (
+		<div className="grid gap-4">
+			{value.type === "background-texture" ? (
+				<>
+					<ColorPicker
+						label="Color"
+						swatches={colorSwatches}
+						density="compact"
+						value={value.color ?? "neutral"}
+						onChange={(color) => onChange({ ...value, color })}
+					/>
+					<RangeControl
+						label="Opacity"
+						min={0}
+						max={1}
+						step={0.01}
+						value={value.opacity ?? 0.16}
+						onChange={(opacity) => onChange({ ...value, opacity })}
+					/>
+				</>
+			) : (
+				<CommonControls settings={resolvedCommon} setSettings={setCommon} />
+			)}
+			{value.type === "halftone" ? (
+				<HalftoneControls
+					settings={value}
+					setSettings={(action) =>
+						onChange({
+							...(typeof action === "function" ? action(value) : action),
+							type: "halftone",
+						})
+					}
+				/>
+			) : value.type === "speed-lines" ? (
+				<SpeedLineControls
+					settings={value}
+					setSettings={(action) =>
+						onChange({
+							...(typeof action === "function" ? action(value) : action),
+							type: "speed-lines",
+						})
+					}
+				/>
+			) : value.type === "accent-streak" ? (
+				<AccentControls
+					settings={value}
+					setSettings={(action) =>
+						onChange({
+							...(typeof action === "function" ? action(value) : action),
+							type: "accent-streak",
+						})
+					}
+				/>
+			) : (
+				<SurfaceControls value={value} onChange={onChange} />
+			)}
+		</div>
+	);
+}
+
+function SurfaceControls({
+	value,
+	onChange,
+}: {
+	value: Exclude<
+		Decoration,
+		HalftoneDecoration | SpeedLinesDecoration | AccentStreakDecoration
+	>;
+	onChange: (value: Decoration) => void;
+}) {
+	const number = (
+		key: string,
+		label: string,
+		fallback: number,
+		max: number,
+		step = 1,
+		min = 0,
+	) => (
+		<RangeControl
+			key={key}
+			label={label}
+			min={min}
+			max={max}
+			step={step}
+			value={(value as unknown as Record<string, number>)[key] ?? fallback}
+			onChange={(n) => onChange({ ...value, [key]: n })}
+		/>
+	);
+	if (value.type === "background-texture")
+		return (
+			<>
+				<SelectControl
+					label="Variant"
+					options={
+						["paper", "grain", "grunge", "scratches", "scuffs", "wear"] as const
+					}
+					value={value.variant ?? "paper"}
+					onChange={(variant) => onChange({ ...value, variant })}
+				/>
+				<SelectControl
+					label="Density"
+					options={densities}
+					value={value.density ?? "medium"}
+					onChange={(density) => onChange({ ...value, density })}
+				/>
+				{number("tileSize", "Tile size", 256, 512, 1, 8)}
+				{number("grainSize", "Grain size", 0.65, 5, 0.05, 0.05)}
+				{number("roughness", "Roughness", 0.5, 2, 0.05)}
+				{number("angle", "Angle", -32, 180, 1, -180)}
+				{number("seed", "Seed", 1, 100)}
+			</>
+		);
+	if (value.type === "geometric")
+		return (
+			<>
+				<SelectControl
+					label="Shape"
+					options={
+						[
+							"triangle",
+							"square",
+							"rectangle",
+							"diamond",
+							"parallelogram",
+							"chevron",
+							"corner-cut",
+							"notched-frame",
+							"stripes",
+							"cross-grid",
+						] as const
+					}
+					value={value.shape ?? "parallelogram"}
+					onChange={(shape) => onChange({ ...value, shape })}
+				/>
+				<SelectControl
+					label="Fill"
+					options={["solid", "outline"] as const}
+					value={value.fill ?? "solid"}
+					onChange={(fill) => onChange({ ...value, fill })}
+				/>
+				{number("quantity", "Quantity", 1, 128, 1, 1)}
+				{number("spacing", "Spacing", 42, 200, 1)}
+				{number("strokeWidth", "Line width", 3, 30, 0.5)}
+				{number("cut", "Cut size", 100, 270)}
+			</>
+		);
+	return (
+		<>
+			<SelectControl
+				label="Variant"
+				options={["open-arc", "broken-ring", "concentric", "sweep"] as const}
+				value={value.variant ?? "open-arc"}
+				onChange={(variant) => onChange({ ...value, variant })}
+			/>
+			{number("quantity", "Quantity", 5, 32, 1, 1)}
+			{number("spacing", "Spacing", 22, 100)}
+			{number("strokeWidth", "Line width", 2, 20, 0.5)}
+			{number("arc", "Arc", 270, 360, 1, 1)}
+			{number("jitter", "Jitter", 0.35, 2, 0.05)}
+			{number("seed", "Seed", 1, 100)}
 		</>
 	);
 }
@@ -614,67 +982,54 @@ export function DecorationsWorkbench({
 	lockType?: boolean;
 }): React.JSX.Element {
 	const [type, setType] = useState<DecorationKind>(initialType);
-	const [common, setCommon] = useState({
-		...initialCommon,
-		aspectRatio: initialType === "halftone" ? 1 : 1.8,
-	});
-	const [halftone, setHalftone] = useState(initialHalftone);
-	const [speedLines, setSpeedLines] = useState(initialSpeedLines);
-	const [accent, setAccent] = useState(initialAccent);
-
-	const decoration =
-		type === "halftone" ? (
-			<HalftoneDots {...common} {...halftone} />
-		) : type === "speed-lines" ? (
-			<SpeedLines {...common} {...speedLines} />
-		) : (
-			<AccentStreak {...common} {...accent} />
-		);
+	const [values, setValues] = useState(
+		() =>
+			Object.fromEntries(
+				decorationKinds.map((kind) => [kind, createDecoration(kind)]),
+			) as Record<DecorationKind, Decoration>,
+	);
 
 	return (
-		<div className="grid min-h-[38rem] max-w-7xl overflow-hidden border-2 border-foreground bg-card lg:grid-cols-[minmax(0,1fr)_20rem]">
-			<div className="ts-decoration-host relative isolate min-h-[28rem] overflow-hidden bg-background">
-				<Decorations>{decoration}</Decorations>
+		<div
+			data-reader-component="DecorationsWorkbench"
+			data-reader-role="workbench"
+			className="ts-decoration-editor grid max-w-7xl overflow-hidden border-2 border-foreground bg-card md:grid-cols-[minmax(0,1fr)_24rem]"
+		>
+			<div
+				data-reader-component="DecorationsWorkbench"
+				data-reader-role="preview"
+				className="ts-decoration-host relative isolate overflow-hidden bg-background"
+			>
+				<Decorations items={[values[type]]} />
 				<div className="absolute bottom-4 left-4 z-10 bg-card px-3 py-2 font-black text-xs uppercase">
 					{type}
 				</div>
 			</div>
-			<aside className="max-h-[42rem] overflow-y-auto border-foreground border-t bg-card p-4 lg:border-t-0 lg:border-l">
+			<aside
+				data-reader-component="DecorationsWorkbench"
+				data-reader-role="controls"
+				className="ts-editor-inspector overflow-y-auto border-foreground border-t bg-card p-4 md:border-t-0 md:border-l"
+			>
 				<header className="mb-4 border-foreground border-b pb-3">
 					<strong className="font-display text-lg uppercase">
 						Decoration controls
 					</strong>
-					<p className="mt-1 text-muted-foreground text-xs normal-case">
-						Only properties supported by the selected primitive are shown.
-					</p>
 				</header>
 				<div className="grid gap-4">
 					{lockType ? null : (
 						<SelectControl
 							label="Decoration type"
 							onChange={setType}
-							options={["halftone", "speed-lines", "accent-streak"]}
+							options={decorationKinds}
 							value={type}
 						/>
 					)}
-					<CommonControls settings={common} setSettings={setCommon} />
-					<div className="border-border border-t pt-4">
-						<div className="grid gap-4">
-							{type === "halftone" ? (
-								<HalftoneControls
-									settings={halftone}
-									setSettings={setHalftone}
-								/>
-							) : type === "speed-lines" ? (
-								<SpeedLineControls
-									settings={speedLines}
-									setSettings={setSpeedLines}
-								/>
-							) : (
-								<AccentControls settings={accent} setSettings={setAccent} />
-							)}
-						</div>
-					</div>
+					<DecorationControls
+						value={values[type]}
+						onChange={(value) =>
+							setValues((current) => ({ ...current, [type]: value }))
+						}
+					/>
 				</div>
 			</aside>
 		</div>

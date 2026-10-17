@@ -2,16 +2,26 @@
 
 import { BookX, Home } from "lucide-react";
 import Link from "next/link";
+import { PageShell } from "~/components/layout/page-shell";
 import { Button } from "~/components/ui/button";
+import { Panel } from "~/components/ui/panel";
 
 function TaleNotFound(): React.JSX.Element {
 	return (
-		<div
+		<PageShell
+			fullscreen
+			decorations="site-background"
 			data-reader-component="TaleNotFound"
 			data-reader-role="feedback-screen"
-			className="comic-halftone fixed inset-0 z-50 flex items-center justify-center bg-[var(--comic-blue)] p-5 text-center text-foreground"
+			className="ts-decoration-host fixed inset-0 isolate z-50 flex items-center justify-center bg-[var(--comic-blue)] p-5 text-center text-foreground"
 		>
-			<section className="w-full max-w-lg border-[4px] border-foreground bg-card p-6 shadow-[9px_9px_0_var(--comic-ink)] sm:p-9">
+			<Panel
+				shapes="cut-opposite"
+				className="w-full max-w-lg text-center"
+				surfaceClassName="p-6 sm:p-9"
+				data-reader-component="TaleNotFound"
+				data-reader-role="feedback-panel"
+			>
 				<BookX
 					size={44}
 					strokeWidth={2.5}
@@ -31,8 +41,8 @@ function TaleNotFound(): React.JSX.Element {
 						<Home size={17} /> Go to homepage
 					</Link>
 				</Button>
-			</section>
-		</div>
+			</Panel>
+		</PageShell>
 	);
 }
 

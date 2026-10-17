@@ -21,6 +21,7 @@ import {
 	bookAccessCondition,
 	branchAccessCondition,
 	fragmentAccessCondition,
+	frameAccessCondition,
 	getSignedInLibraryUser,
 	pathAccessCondition,
 	taleAccessCondition,
@@ -243,6 +244,7 @@ async function getVisibleFrameCount(userId: string | null) {
 			and(
 				visibleTaleByIdCondition(frames.taleId, userId),
 				blockAccessCondition(scenes.id, scenes, userId),
+				frameAccessCondition(userId),
 			),
 		);
 

@@ -1,0 +1,62 @@
+.ts-editor-layout {
+	contain: layout paint;
+	overflow: clip;
+	height: max(420px, calc(100dvh - 130px));
+	grid-template-rows: minmax(130px, 0.4fr) minmax(0, 1fr);
+}
+.ts-editor-preview,
+.ts-editor-inspector,
+.ts-editor-elements {
+	min-height: 0;
+	max-height: 100%;
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+}
+.ts-editor-preview {
+	height: 100%;
+}
+.ts-editor-inspector {
+	padding: 0 8px 20px 0;
+}
+.ts-editor-inspector [role="tablist"] {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	background: var(--background);
+}
+.ts-editor-inspector [role="tabpanel"] {
+	padding-top: 18px;
+}
+.ts-editor-inspector label {
+	font-size: 13px;
+	line-height: 1.5;
+}
+.ts-composition-layout {
+	grid-template-rows: minmax(80px, 0.2fr) minmax(140px, 0.35fr) minmax(
+			0,
+			0.65fr
+		);
+}
+.ts-decoration-editor {
+	height: max(420px, calc(100dvh - 70px));
+	grid-template-rows: minmax(130px, 0.4fr) minmax(0, 1fr);
+}
+.ts-decoration-editor > * {
+	min-height: 0;
+}
+@media (min-width: 1024px) {
+	.ts-editor-layout:not(.ts-composition-layout) {
+		grid-template-rows: minmax(0, 1fr);
+	}
+}
+@media (min-width: 768px) {
+	.ts-decoration-editor {
+		grid-template-rows: minmax(0, 1fr);
+	}
+}
+@media (min-width: 1280px) {
+	.ts-composition-layout {
+		grid-template-rows: minmax(0, 1fr);
+	}
+}

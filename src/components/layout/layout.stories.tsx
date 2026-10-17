@@ -14,6 +14,7 @@ import {
 	Settings,
 } from "lucide-react";
 import { expect, within } from "storybook/test";
+import { Decorations as SurfaceDecorations } from "~/components/decorations";
 import { Button } from "../ui/button";
 import { Field } from "../ui/field";
 import Input from "../ui/input";
@@ -26,7 +27,11 @@ function LayoutShowcase(): React.JSX.Element {
 	return (
 		<div className="grid w-full max-w-2xl gap-5">
 			<ComicRail accent="primary">Featured entries</ComicRail>
-			<ComicPanel className="grid gap-2 p-5" shape="cut-opposite">
+			<ComicPanel
+				className="grid gap-2"
+				surfaceClassName="p-5"
+				shapes="cut-opposite"
+			>
 				<h3 className="font-black text-lg uppercase">The Ember Archive</h3>
 				<p className="max-w-prose text-muted-foreground text-sm">
 					Angular surfaces frame application content without changing its
@@ -82,7 +87,12 @@ export const PanelShapes: Story = {
 					"cut-opposite-reverse",
 				] as const
 			).map((shape) => (
-				<ComicPanel className="p-4 text-sm" key={shape} shape={shape}>
+				<ComicPanel
+					className="text-sm"
+					surfaceClassName="p-4"
+					key={shape}
+					shape={shape}
+				>
 					<span className="font-bold">{shape}</span>
 				</ComicPanel>
 			))}
@@ -93,10 +103,12 @@ export const PanelShapes: Story = {
 export const Decorations: Story = {
 	render: () => (
 		<div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
-			<ComicPanel className="min-h-28 p-5" decoration="strikes">
+			<ComicPanel className="min-h-28" surfaceClassName="p-5">
+				<SurfaceDecorations preset="brush-halftone" />
 				Strikes remain inside this panel.
 			</ComicPanel>
-			<ComicPanel className="min-h-28 p-5" decoration="dots">
+			<ComicPanel className="min-h-28" surfaceClassName="p-5">
+				<SurfaceDecorations preset="halftone-corner" />
 				Dots remain inside this panel.
 			</ComicPanel>
 		</div>
@@ -221,7 +233,8 @@ export const StudioWorkspaceChrome: Story = {
 						<Button size="sm">Add branch</Button>
 					</div>
 					<ComicPanel
-						className="-translate-x-1/2 absolute top-28 left-1/2 w-52 p-4"
+						className="-translate-x-1/2 absolute top-28 left-1/2 w-52"
+						surfaceClassName="p-4"
 						shape="cut-opposite"
 					>
 						<p className="font-black text-primary text-xs uppercase">

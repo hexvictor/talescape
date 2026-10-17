@@ -125,6 +125,39 @@ const nextFrameReading: TimelineSegment = {
 };
 
 describe("Frame animation phase states", () => {
+	it("keeps scene-owned backgrounds visible through scene and frame phases", () => {
+		const { tale } = createFixture({ elementProgression: true });
+		const element = tale.indexMap.elementsById["element-1"];
+		if (!element) throw new Error("Missing scene background");
+		element.frameId = null;
+		element.animations.intro = { animations: [] };
+		element.animations.outro = { animations: [] };
+		for (const step of Object.values(tale.indexMap.keyframesById))
+			step.actions = [];
+		const segments = [sceneIntro, frameIntro, frameReading, previousBridgeIn];
+		const plan = compileReaderAnimationPlan(
+			{
+				anchors: [{ sceneId: "scene-1" }],
+				segments,
+			} as unknown as CompiledReader,
+			tale,
+			{ width: 1200, height: 800 },
+		);
+		for (const segment of segments) {
+			const values = createAnimationValues();
+			evaluateElementAnimation(
+				plan,
+				element.id,
+				segment,
+				"scene-1",
+				0.5,
+				new Set(),
+				0,
+				values,
+			);
+			expect(values.opacity).toBe(1);
+		}
+	});
 	it("finishes legacy show actions before active progression and applies Frame active tracks", () => {
 		const { plan } = createFixture();
 		const animation = plan.nodeAnimationsById.get("frame-1");

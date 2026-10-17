@@ -28,7 +28,14 @@ export function InspectorSelect({
 			value={value}
 			onValueChange={onChange}
 		>
-			<SelectTrigger className="w-full" density="compact">
+			<SelectTrigger
+				data-reader-component="InspectorSelect"
+				data-reader-role="inspector-select"
+				data-studio-component="InspectorSelect"
+				data-studio-role="inspector-select"
+				className="w-full"
+				density="compact"
+			>
 				<SelectValue />
 			</SelectTrigger>
 			<SelectContent>

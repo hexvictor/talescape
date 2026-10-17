@@ -376,7 +376,18 @@ export type KeyframeActionConfig = {
 
 export type FrameConfig = ReaderFrameConfig;
 
-export type ElementPlacementConfig =
+export type ElementParallaxConfig = {
+	enabled: boolean;
+	source: "scroll" | "mouse" | "both";
+	scrollBasis?: "camera" | "timeline";
+	scrollX: number;
+	scrollY: number;
+	mouseX: number;
+	mouseY: number;
+	scale: number;
+};
+
+export type ElementPlacementConfig = { parallax?: ElementParallaxConfig } & (
 	| {
 			mode: "normal";
 			frameId?: string;
@@ -393,7 +404,8 @@ export type ElementPlacementConfig =
 			x: number;
 			y: number;
 			zIndex?: number;
-	  };
+	  }
+);
 
 export type ElementAnimationConfig = {
 	ambient: AmbientAnimationSelection;

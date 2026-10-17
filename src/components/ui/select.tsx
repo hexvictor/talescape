@@ -41,6 +41,8 @@ function Select({
 }: SelectProps): React.JSX.Element {
 	return (
 		<AriaSelect
+			data-reader-component="Select"
+			data-reader-role="select"
 			{...props}
 			data-slot="select"
 			defaultSelectedKey={defaultValue}
@@ -105,6 +107,8 @@ function SelectTrigger({
 	const resolvedDensity = density ?? (size === "sm" ? "compact" : "default");
 	return (
 		<AriaButton
+			data-reader-component="SelectTrigger"
+			data-reader-role="select-trigger"
 			{...props}
 			data-slot="select-trigger"
 			data-size={size}
@@ -133,6 +137,8 @@ function SelectContent({
 }: SelectContentProps): React.JSX.Element {
 	return (
 		<Popover
+			data-reader-component="SelectContent"
+			data-reader-role="select-content"
 			{...props}
 			data-slot="select-content"
 			className={cn(
@@ -174,6 +180,8 @@ function SelectItem({
 }: SelectItemProps): React.JSX.Element {
 	return (
 		<ListBoxItem
+			data-reader-component="SelectItem"
+			data-reader-role="select-item"
 			{...props}
 			id={value}
 			data-slot="select-item"

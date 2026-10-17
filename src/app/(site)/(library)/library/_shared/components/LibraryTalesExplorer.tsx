@@ -50,8 +50,9 @@ export function LibraryTalesExplorer({
 		<section className="grid gap-4">
 			<ComicPanel
 				accent="secondary"
-				className="comic-panel-content grid gap-3 lg:grid-cols-[1fr_auto_auto_auto] lg:items-center"
-				shape="corners-right"
+				className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto] lg:items-center"
+				surfaceClassName="comic-panel-content"
+				shapes="corners-right"
 				shadow={false}
 				slant="18px"
 			>

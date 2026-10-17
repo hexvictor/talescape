@@ -14,6 +14,8 @@ export function SectionHeader({
 }): React.JSX.Element {
 	return (
 		<header
+			data-reader-component="SectionHeader"
+			data-reader-role="section-header"
 			{...props}
 			data-slot="section-header"
 			className={cn(

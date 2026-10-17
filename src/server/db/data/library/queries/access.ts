@@ -14,18 +14,65 @@ import { db } from "~/server/db";
 import {
 	authorPermissions,
 	authors,
-	scenePermissions,
 	bookPermissions,
 	books,
 	branchPermissions,
 	elementPermissions,
+	frames,
 	pathPermissions,
+	scenePermissions,
 	talePermissions,
 	tales,
 	users,
 } from "~/server/db/schema";
 
 const readablePermissions = ["viewer", "collaborator", "cloner"] as const;
+
+function inheritedTaleAccess(taleId: AnyColumn, userId: string | null) {
+	if (!userId) return undefined;
+	return exists(
+		db
+			.select({ id: tales.id })
+			.from(tales)
+			.where(
+				and(
+					sql`${tales.id} = ${taleId}`,
+					or(
+						eq(tales.creatorId, userId),
+						exists(
+							db
+								.select({ id: talePermissions.id })
+								.from(talePermissions)
+								.where(
+									and(
+										eq(talePermissions.taleId, tales.id),
+										eq(talePermissions.userId, userId),
+										readablePermissionOverlap(talePermissions.permissionTypes),
+									),
+								),
+						),
+					),
+				),
+			),
+	);
+}
+
+export function editableTaleExpression(userId: string | null) {
+	if (!userId) return sql<boolean>`false`;
+	return sql<boolean>`${tales.editable} AND (${tales.creatorId} = ${userId} OR EXISTS (
+		SELECT 1 FROM ${talePermissions} WHERE ${talePermissions.taleId} = ${tales.id}
+		AND ${talePermissions.userId} = ${userId}
+		AND ${talePermissions.permissionTypes} && ARRAY['collaborator']::text[]
+	))`;
+}
+
+export function frameAccessCondition(userId: string | null) {
+	return or(
+		eq(frames.visibility, "public"),
+		userId ? eq(frames.creatorId, userId) : undefined,
+		inheritedTaleAccess(frames.taleId, userId),
+	);
+}
 
 type PermissionRecord = {
 	permissionTypes: readonly string[];
@@ -55,7 +102,6 @@ export async function getSignedInLibraryUser() {
 
 export function taleAccessCondition(userId: string | null) {
 	return or(
-		eq(tales.isOfficial, true),
 		eq(tales.visibility, "public"),
 		userId ? eq(tales.creatorId, userId) : undefined,
 		userId
@@ -99,7 +145,6 @@ export function branchAccessCondition(
 	userId: string | null,
 ) {
 	return or(
-		eq(asset.isOfficial, true),
 		eq(asset.visibility, "public"),
 		userId ? eq(asset.creatorId, userId) : undefined,
 		userId
@@ -125,13 +170,14 @@ export function blockAccessCondition(
 		isOfficial: AnyColumn;
 		visibility: AnyColumn;
 		creatorId: AnyColumn;
+		taleId?: AnyColumn;
 	},
 	userId: string | null,
 ) {
 	return or(
-		eq(asset.isOfficial, true),
 		eq(asset.visibility, "public"),
 		userId ? eq(asset.creatorId, userId) : undefined,
+		asset.taleId ? inheritedTaleAccess(asset.taleId, userId) : undefined,
 		userId
 			? exists(
 					db
@@ -155,13 +201,14 @@ export function fragmentAccessCondition(
 		isOfficial: AnyColumn;
 		visibility: AnyColumn;
 		creatorId: AnyColumn;
+		taleId?: AnyColumn;
 	},
 	userId: string | null,
 ) {
 	return or(
-		eq(asset.isOfficial, true),
 		eq(asset.visibility, "public"),
 		userId ? eq(asset.creatorId, userId) : undefined,
+		asset.taleId ? inheritedTaleAccess(asset.taleId, userId) : undefined,
 		userId
 			? exists(
 					db
@@ -189,7 +236,6 @@ export function pathAccessCondition(
 	userId: string | null,
 ) {
 	return or(
-		eq(asset.isOfficial, true),
 		eq(asset.visibility, "public"),
 		userId ? eq(asset.creatorId, userId) : undefined,
 		userId
@@ -211,7 +257,6 @@ export function pathAccessCondition(
 
 export function bookAccessCondition(userId: string | null) {
 	return or(
-		eq(books.isOfficial, true),
 		eq(books.visibility, "public"),
 		userId ? eq(books.creatorId, userId) : undefined,
 		userId
@@ -233,7 +278,6 @@ export function bookAccessCondition(userId: string | null) {
 
 export function authorAccessCondition(userId: string | null) {
 	return or(
-		eq(authors.isOfficial, true),
 		eq(authors.visibility, "public"),
 		userId ? eq(authors.creatorId, userId) : undefined,
 		userId

@@ -57,6 +57,8 @@ export function ResizeHandle({
 
 	return (
 		<button
+			data-reader-component="ResizeHandle"
+			data-reader-role="resize-handle"
 			{...props}
 			type="button"
 			data-axis={axis}

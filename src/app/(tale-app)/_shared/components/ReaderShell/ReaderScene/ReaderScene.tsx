@@ -8,6 +8,7 @@ import { FixedElements } from "./FixedElements";
 import { KeyframeActionRuntime } from "./KeyframeActionRuntime";
 import { ReaderSceneContent } from "./ReaderSceneContent";
 import { getSharedReaderStyle } from "./readerStyleProperties";
+import { useScenePointerParallax } from "./useScenePointerParallax";
 
 /**
  * Renders one measured reader scene at its compiled world position.
@@ -29,6 +30,15 @@ export function ReaderScene({
 		(state) => state.document.tale.indexMap.scenesById[anchor.sceneId],
 	);
 	const [root, setRoot] = useState<HTMLElement | null>(null);
+	const pointerEnabled = useTaleAppStore(
+		(state) =>
+			!!scene?.elementIds.some((id) => {
+				const config =
+					state.document.tale.indexMap.elementsById[id]?.placement.parallax;
+				return config?.enabled && config.source !== "scroll";
+			}),
+	);
+	useScenePointerParallax(root, pointerEnabled);
 	if (!scene) return null;
 	const paintBounds = resolveReaderScenePaintBounds(anchor);
 

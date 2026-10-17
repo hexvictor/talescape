@@ -1,12 +1,14 @@
-.ts-decoration-host {
+:where(.ts-decoration-host, :has(> .ts-decorations)) {
+	position: relative;
 	isolation: isolate;
 }
 
 .ts-decorations {
 	position: absolute !important;
-	z-index: 0 !important;
+	z-index: -1 !important;
 	inset: 0;
 	overflow: hidden;
+	border-radius: inherit;
 	pointer-events: none;
 	user-select: none;
 }
@@ -16,20 +18,34 @@
 	inset: 0;
 }
 
+.ts-decorations.ts-viewport-decorations {
+	position: fixed !important;
+	inset: 0;
+}
+
+.comic-panel > .ts-decorations {
+	inset: var(--comic-panel-border);
+	clip-path: var(--comic-panel-inner-clip);
+}
+
 .ts-decoration {
 	position: absolute;
 	display: block;
 	width: var(--ts-decoration-coverage);
-	height: var(--ts-decoration-coverage);
+	height: auto;
+	overflow: visible;
 	max-width: none;
 	color: var(--ts-decoration-color);
 	opacity: var(--ts-decoration-opacity);
-	transform: rotate(var(--ts-decoration-rotation))
-		scale(var(--ts-decoration-scale));
 	transform-origin: center;
-	translate: -50% -50%;
 	pointer-events: none;
 	user-select: none;
+}
+
+.ts-decoration:not(.ts-decoration-texture) {
+	transform: rotate(var(--ts-decoration-rotation))
+		scale(var(--ts-decoration-scale));
+	translate: -50% -50%;
 }
 
 .ts-decoration[data-decoration-position="top-left"] {
@@ -101,14 +117,29 @@
 	display: none;
 }
 
-.ts-decoration-host:not([data-decoration-layer="overlay"])
+:where(.ts-decoration-host, :has(> .ts-decorations)):not(
+		[data-decoration-layer="overlay"]
+	)
 	> :not(.ts-decorations, .absolute, .fixed, .sticky) {
 	position: relative;
 	z-index: 1;
 }
 
-.ts-decoration-host[data-decoration-layer="overlay"] > .ts-decorations {
+:where(
+		.ts-decoration-host,
+		:has(> .ts-decorations)
+	)[data-decoration-layer="overlay"]
+	> .ts-decorations {
 	z-index: 2 !important;
+}
+
+.ts-decorations[data-decoration-layer="overlay"] {
+	z-index: 2 !important;
+}
+
+[data-reader-component="DecorationsComposer"][data-decoration-selected="true"] {
+	outline: 2px solid var(--primary);
+	outline-offset: 4px;
 }
 
 @media (max-width: 47.999rem) {
@@ -118,5 +149,21 @@
 
 	.ts-decoration[data-decoration-viewport="mobile"] {
 		display: block;
+	}
+}
+.ts-decoration.ts-decoration-texture {
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	transform: none;
+	translate: none;
+}
+.ts-decoration {
+	transition:
+		width 240ms ease, height 240ms ease, opacity 240ms ease, transform 240ms ease, color 240ms ease, fill 240ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ts-decoration {
+		transition: none;
 	}
 }

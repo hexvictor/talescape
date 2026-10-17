@@ -7,6 +7,8 @@ export function PropertyGroup({
 }: ComponentProps<"dl">): React.JSX.Element {
 	return (
 		<dl
+			data-reader-component="PropertyGroup"
+			data-reader-role="property-group"
 			{...props}
 			data-slot="property-group"
 			className={cn("grid min-w-0 divide-y divide-border", className)}
@@ -25,6 +27,8 @@ export function PropertyRow({
 }): React.JSX.Element {
 	return (
 		<div
+			data-reader-component="PropertyRow"
+			data-reader-role="property-row"
 			{...props}
 			data-slot="property-row"
 			className={cn(

@@ -7,6 +7,7 @@ import {
 	OptionalNumberSetting,
 	TextSetting,
 } from "./InspectorValueFields";
+import { StyleColorSetting } from "./StyleColorSetting";
 import { StyleLayoutSettings } from "./StyleLayoutSettings";
 import { StyleSelect } from "./style/StyleLayoutFields";
 
@@ -29,6 +30,7 @@ export function StyleSettings({
 	showBoxControls = true,
 	showDisplayControls = true,
 	showLayoutItemControls = true,
+	showMediaControls = false,
 	showPositionControls = true,
 	showTypographyControls = true,
 	style,
@@ -42,6 +44,7 @@ export function StyleSettings({
 	showBoxControls?: boolean;
 	showDisplayControls?: boolean;
 	showLayoutItemControls?: boolean;
+	showMediaControls?: boolean;
 	showPositionControls?: boolean;
 	showTypographyControls?: boolean;
 	style?: ReaderStyle;
@@ -62,6 +65,8 @@ export function StyleSettings({
 		<section
 			data-reader-component="StyleSettings"
 			data-reader-role="style-settings"
+			data-studio-component="StyleSettings"
+			data-studio-role="style-settings"
 			className={className}
 		>
 			<div className="space-y-3">
@@ -69,7 +74,7 @@ export function StyleSettings({
 					<DebugCard
 						collapsible={false}
 						icon={<Paintbrush size={15} />}
-						title={title}
+						title={`${title} · Size and spacing`}
 					>
 						<TextSetting
 							label="Width"
@@ -118,7 +123,7 @@ export function StyleSettings({
 					</DebugCard>
 				) : null}
 				{showPositionControls ? (
-					<DebugCard defaultOpen={false} title="Position">
+					<DebugCard defaultOpen={false} title={`${title} · Position`}>
 						<StyleSelect
 							label="Position"
 							value={current.position ?? "static"}
@@ -155,7 +160,7 @@ export function StyleSettings({
 					</DebugCard>
 				) : null}
 				{showDisplayControls ? (
-					<DebugCard title="Display">
+					<DebugCard defaultOpen={false} title={`${title} · Layout`}>
 						{layoutMode ? null : (
 							<StyleSelect
 								label="Display"
@@ -173,11 +178,11 @@ export function StyleSettings({
 					</DebugCard>
 				) : null}
 				{showTypographyControls ? (
-					<DebugCard defaultOpen={false} title="Typography">
-						<TextSetting
-							label="Text color"
-							value={current.color ?? ""}
-							onChange={(value) => setText("color", value)}
+					<DebugCard defaultOpen={false} title={`${title} · Typography`}>
+						<StyleColorSetting
+							property="color"
+							style={current}
+							onChange={onChange}
 						/>
 						<TextSetting
 							label="Font size"
@@ -206,11 +211,14 @@ export function StyleSettings({
 					</DebugCard>
 				) : null}
 				{showAppearanceControls ? (
-					<DebugCard defaultOpen={appearanceDefaultOpen} title="Appearance">
-						<TextSetting
-							label="Background"
-							value={current.backgroundCss ?? current.background ?? ""}
-							onChange={(value) => setText("backgroundCss", value)}
+					<DebugCard
+						defaultOpen={appearanceDefaultOpen}
+						title={`${title} · Background and effects`}
+					>
+						<StyleColorSetting
+							property="backgroundCss"
+							style={current}
+							onChange={onChange}
 						/>
 						<ImageUploadSetting
 							label="Background image"
@@ -249,6 +257,11 @@ export function StyleSettings({
 							value={current.border ?? ""}
 							onChange={(value) => setText("border", value)}
 						/>
+						<StyleColorSetting
+							property="border"
+							style={current}
+							onChange={onChange}
+						/>
 						<NumberSetting
 							label="Border radius"
 							value={current.borderRadius ?? 0}
@@ -268,18 +281,6 @@ export function StyleSettings({
 							onChange={(value) => setText("clipPath", value)}
 						/>
 						<StyleSelect
-							label="Object fit"
-							value={current.objectFit ?? "cover"}
-							options={["cover", "contain", "fill", "none", "scale-down"]}
-							onChange={(objectFit) => onChange({ ...current, objectFit })}
-						/>
-						<TextSetting
-							label="Object position"
-							placeholder="center, top left, 50% 25%"
-							value={current.objectPosition ?? ""}
-							onChange={(value) => setText("objectPosition", value)}
-						/>
-						<StyleSelect
 							label="Overflow"
 							value={current.overflow ?? "visible"}
 							options={["visible", "hidden", "clip"]}
@@ -297,6 +298,22 @@ export function StyleSettings({
 							label="Custom CSS"
 							value={current.cssText ?? ""}
 							onChange={(value) => setText("cssText", value)}
+						/>
+					</DebugCard>
+				) : null}
+				{showMediaControls ? (
+					<DebugCard title={`${title} · Image fitting`}>
+						<StyleSelect
+							label="Object fit"
+							value={current.objectFit ?? "cover"}
+							options={["cover", "contain", "fill", "none", "scale-down"]}
+							onChange={(objectFit) => onChange({ ...current, objectFit })}
+						/>
+						<TextSetting
+							label="Object position"
+							placeholder="center, top left, 50% 25%"
+							value={current.objectPosition ?? ""}
+							onChange={(value) => setText("objectPosition", value)}
 						/>
 					</DebugCard>
 				) : null}

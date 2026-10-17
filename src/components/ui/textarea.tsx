@@ -19,6 +19,8 @@ function Textarea({
 }: TextareaProps): React.JSX.Element {
 	return (
 		<AriaTextArea
+			data-reader-component="Textarea"
+			data-reader-role="textarea"
 			{...props}
 			data-slot="textarea"
 			className={controlClassName(

@@ -35,8 +35,9 @@ export function LibraryBrowsePage({
 			<ComicPanel
 				accent="secondary"
 				as="header"
-				className="comic-panel-content flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-				shape="corners-right"
+				className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+				surfaceClassName="comic-panel-content"
+				shapes="corners-right"
 				shadow={false}
 				slant="20px"
 			>
